@@ -12,7 +12,8 @@ export const AUTH18_AUDIENCES: { value: AuthAudience; label: string }[] = [
 
 export const AUTH18_AUDIENCE_PATHS: Record<AuthAudience, string> = {
   admin: '/admin',
-  colaborador: '/portal-colaborador',
+  // Versión de pruebas (Encuestas): el portal del colaborador no está maquetado, así que los dos ingresos llegan al home del admin.
+  colaborador: '/admin',
 }
 
 // Simula lo que tarda en cargar la plataforma tras «Iniciar sesión»: se ve el «Ingresando…» antes de entrar.
