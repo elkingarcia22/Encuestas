@@ -1,0 +1,3953 @@
+{
+  "$comentario": "Generado por ai-tools/flux-ui/generar-catalogo.mjs. No editar a mano: se regenera.",
+  "generado": "2026-10-15T14:19:25.697Z",
+  "libreria": {
+    "paquete": "@ubits/flux-ui",
+    "version": "0.5.5",
+    "importarDesde": "@ubits/flux-ui"
+  },
+  "huellaReglas": "1ea087572b32a84f9c14f7071f975a253771ddff",
+  "storybook": {
+    "url": "https://libraries-ui.dev.sandteck.com/flux-ui",
+    "consultado": true
+  },
+  "reglas": [
+    "Primero las piezas que el proyecto ya resolvió (PageShell, BotonIcono, notify, DrawerShell, ActionDialog… en src/shared/components y src/modules/design-system), después este catálogo. Están hechas con flux-ui: usarlas es no construir la misma cosa dos veces.",
+    "Toda pieza de interfaz sale de @ubits/flux-ui. Nada de otras librerías de UI, HTML copiado ni componentes hechos a mano si aquí existe uno.",
+    "Solo se usan componentes con \"disponible\" en este catálogo. Los de \"soloEnStorybook\" todavía no están en la versión instalada: no importarlos.",
+    "Iconos: solo Hugeicons desde @hugeicons/core-free-icons, siempre como dato dentro de <HugeiconsIcon icon={NombreIcon} />. Nunca importes iconos desde @ubits/flux-ui aunque aparezcan exportados.",
+    "Colores: solo tokens del tema (bg-card, text-muted-foreground, var(--chart-2)…). Nunca literales ni paleta cruda de Tailwind.",
+    "className solo para layout: ancho, márgenes, gap, truncado, visibilidad.",
+    "Antes de decir que falta un componente, búscalo aquí por \"buscar\" y en node_modules. El MCP flux-ui lista solo 69 de los 89.",
+    "Cerrar siempre con npm run check."
+  ],
+  "paquetesPermitidos": [
+    "@ubits/flux-ui",
+    "@hugeicons/react",
+    "@hugeicons/core-free-icons",
+    "@base-ui/react",
+    "recharts",
+    "react",
+    "react-dom",
+    "react-router"
+  ],
+  "importsProhibidos": [
+    {
+      "patron": "^@reui/",
+      "motivo": "ReUI se usa como plantilla de estructura; los componentes salen de @ubits/flux-ui, que ya lo trae dentro."
+    },
+    {
+      "patron": "^@/components/ui(/|$)",
+      "motivo": "Es la carpeta de shadcn; en el playground no existe. Importa desde @ubits/flux-ui."
+    },
+    {
+      "patron": "^@/reui-reference(/|$)",
+      "motivo": "Es código de referencia local, no se importa en las maquetas."
+    },
+    {
+      "patron": "^lucide-react$",
+      "motivo": "Los iconos son Hugeicons: <HugeiconsIcon icon={…} /> desde @hugeicons/react."
+    },
+    {
+      "patron": "^@tanstack/react-table$",
+      "motivo": "Para tablas usa DataGridList de @ubits/flux-ui."
+    }
+  ],
+  "patronesVerificados": [
+    {
+      "tema": "Estados vacíos, carga y feedback",
+      "ruta": "/design-system/estados",
+      "codigo": "src/modules/design-system/estados/main.tsx"
+    },
+    {
+      "tema": "Data-grid con orden, filtros, paginación y selección",
+      "ruta": "/design-system/data-grid",
+      "codigo": "src/modules/design-system/data-grid/main.tsx"
+    },
+    {
+      "tema": "Formularios, validación y pasos",
+      "ruta": "/design-system/formularios",
+      "codigo": "src/modules/design-system/formularios/main.tsx"
+    },
+    {
+      "tema": "Dashboard completo: shell, tarjetas, pestañas, gráfico y línea de tiempo, sin piezas hechas a mano",
+      "ruta": "/design-system/templates/dashboard",
+      "codigo": "src/modules/design-system/templates/dashboard/"
+    }
+  ],
+  "trampasConocidas": [
+    "Gráficos: usa ChartContainer y ChartTooltipContent de flux-ui con recharts 3. La librería trae su propia copia de recharts, así que el gráfico recibe width y height en números (no ResponsiveContainer) y el Tooltip se importa de \"recharts\" con content={<ChartTooltipContent />}. Patrón: src/modules/admin/desempeno-cultura/encuestas/components/graficos.tsx.",
+    "DataGridList: declara columns y columnFilters fuera del componente; si no, el filtro se cierra solo y el menú de columnas entra en bucle. No ordena ni filtra por sí mismo: resuélvelo tú y pásale data.",
+    "Progress ya pinta su pista e indicador: dentro solo van ProgressLabel y ProgressValue.",
+    "Toast: el proveedor se exporta como ToastToaster; los avisos se lanzan con toast.add({ type, title, description }).",
+    "Badge \"destructive-light\" es ilegible en tema claro; usa \"destructive-outline\".",
+    "Badge \"focus-light\" pinta el texto casi blanco en tema claro; usa \"focus-outline\".",
+    "<Input type=\"file\" className=\"sr-only\" /> se estira a todo el ancho (el w-full del Input le gana al sr-only) y abre scroll horizontal: usa className=\"hidden\".",
+    "Sidebar: el ancho se fija con style={{ \"--sidebar-width\": \"272px\" }}, no con una clase."
+  ],
+  "totales": {
+    "disponibles": 89,
+    "conFichaEnStorybook": 89,
+    "soloEnStorybook": 5
+  },
+  "componentes": [
+    {
+      "slug": "accordion",
+      "nombre": "Accordion",
+      "origen": "flux-ui",
+      "exports": [
+        "Accordion",
+        "AccordionContent",
+        "AccordionItem",
+        "AccordionTrigger"
+      ],
+      "exportsPublicos": [
+        "Accordion",
+        "AccordionContent",
+        "AccordionItem",
+        "AccordionTrigger"
+      ],
+      "variantes": {},
+      "importar": "import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@ubits/flux-ui'",
+      "usarPara": "Secciones que se abren y cierran una a una",
+      "buscar": [
+        "acordeón",
+        "desplegable",
+        "faq",
+        "secciones"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-accordion--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-accordion--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "action-dropdown",
+      "nombre": "ActionDropdown",
+      "origen": "flux-ui",
+      "exports": [
+        "ActionDropdown"
+      ],
+      "exportsPublicos": [
+        "ActionDropdown"
+      ],
+      "variantes": {},
+      "importar": "import { ActionDropdown } from '@ubits/flux-ui'",
+      "usarPara": "Botón que abre una lista de acciones con icono; se alimenta con la prop data",
+      "buscar": [
+        "acciones",
+        "botón con menú",
+        "más opciones"
+      ],
+      "storybook": {
+        "seccion": "Core",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-actiondropdown--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-actiondropdown--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "alert",
+      "nombre": "Alert",
+      "origen": "reui",
+      "exports": [
+        "Alert",
+        "AlertAction",
+        "AlertDescription",
+        "AlertTitle"
+      ],
+      "exportsPublicos": [
+        "Alert",
+        "AlertAction",
+        "AlertDescription",
+        "AlertTitle"
+      ],
+      "variantes": {
+        "Alert": {
+          "variant": [
+            "default",
+            "destructive",
+            "info",
+            "success",
+            "warning",
+            "invert"
+          ]
+        }
+      },
+      "importar": "import { Alert, AlertAction, AlertDescription, AlertTitle } from '@ubits/flux-ui'",
+      "usarPara": "Aviso en línea dentro de una sección (6 tonos: default, info, success, warning, destructive, invert)",
+      "buscar": [
+        "aviso",
+        "alerta",
+        "mensaje",
+        "banner",
+        "error",
+        "advertencia"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-alert--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-alert--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "alert-dialog",
+      "nombre": "AlertDialog",
+      "origen": "flux-ui",
+      "exports": [
+        "AlertDialog",
+        "AlertDialogAction",
+        "AlertDialogCancel",
+        "AlertDialogContent",
+        "AlertDialogDescription",
+        "AlertDialogFooter",
+        "AlertDialogHeader",
+        "AlertDialogMedia",
+        "AlertDialogOverlay",
+        "AlertDialogPortal",
+        "AlertDialogTitle",
+        "AlertDialogTrigger"
+      ],
+      "exportsPublicos": [
+        "AlertDialog",
+        "AlertDialogAction",
+        "AlertDialogCancel",
+        "AlertDialogContent",
+        "AlertDialogDescription",
+        "AlertDialogFooter",
+        "AlertDialogHeader",
+        "AlertDialogMedia",
+        "AlertDialogOverlay",
+        "AlertDialogPortal",
+        "AlertDialogTitle",
+        "AlertDialogTrigger"
+      ],
+      "variantes": {
+        "AlertDialogContent": {
+          "size": [
+            "default",
+            "sm"
+          ]
+        }
+      },
+      "importar": "import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, … } from '@ubits/flux-ui'",
+      "usarPara": "Diálogo que exige confirmar algo irreversible",
+      "buscar": [
+        "confirmar",
+        "eliminar",
+        "borrar",
+        "modal de confirmación"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-alertdialog--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-alertdialog--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "aspect-ratio",
+      "nombre": "AspectRatio",
+      "origen": "flux-ui",
+      "exports": [
+        "AspectRatio"
+      ],
+      "exportsPublicos": [
+        "AspectRatio"
+      ],
+      "variantes": {},
+      "importar": "import { AspectRatio } from '@ubits/flux-ui'",
+      "usarPara": "Mantiene una proporción fija (16:9, 1:1) para imágenes o videos",
+      "buscar": [
+        "proporción",
+        "imagen",
+        "video",
+        "miniatura"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-aspectratio--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-aspectratio--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "attachment",
+      "nombre": "Attachment",
+      "origen": "flux-ui",
+      "exports": [
+        "Attachment",
+        "AttachmentAction",
+        "AttachmentActions",
+        "AttachmentContent",
+        "AttachmentDescription",
+        "AttachmentGroup",
+        "AttachmentMedia",
+        "AttachmentTitle",
+        "AttachmentTrigger"
+      ],
+      "exportsPublicos": [
+        "Attachment",
+        "AttachmentAction",
+        "AttachmentActions",
+        "AttachmentContent",
+        "AttachmentDescription",
+        "AttachmentGroup",
+        "AttachmentMedia",
+        "AttachmentTitle",
+        "AttachmentTrigger"
+      ],
+      "variantes": {
+        "Attachment": {
+          "size": [
+            "default",
+            "xs",
+            "sm"
+          ],
+          "orientation": [
+            "horizontal",
+            "vertical"
+          ]
+        },
+        "AttachmentMedia": {
+          "variant": [
+            "icon",
+            "image"
+          ]
+        }
+      },
+      "importar": "import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, … } from '@ubits/flux-ui'",
+      "usarPara": "Archivo adjunto con estado de subida (idle, uploading, processing, error, done), miniatura y acciones",
+      "buscar": [
+        "adjunto",
+        "archivo",
+        "subir",
+        "documento",
+        "carga de archivos"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-attachment--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-attachment--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "autocomplete",
+      "nombre": "Autocomplete",
+      "origen": "flux-ui",
+      "exports": [
+        "Autocomplete",
+        "AutocompleteArrow",
+        "AutocompleteBackdrop",
+        "AutocompleteClear",
+        "AutocompleteCollection",
+        "AutocompleteContent",
+        "AutocompleteEmpty",
+        "AutocompleteGroup",
+        "AutocompleteGroupLabel",
+        "AutocompleteInput",
+        "AutocompleteItem",
+        "AutocompleteList",
+        "AutocompletePortal",
+        "AutocompletePositioner",
+        "AutocompleteRow",
+        "AutocompleteSeparator",
+        "AutocompleteStatus",
+        "AutocompleteTrigger",
+        "AutocompleteValue"
+      ],
+      "exportsPublicos": [
+        "Autocomplete",
+        "AutocompleteArrow",
+        "AutocompleteBackdrop",
+        "AutocompleteClear",
+        "AutocompleteCollection",
+        "AutocompleteContent",
+        "AutocompleteEmpty",
+        "AutocompleteGroup",
+        "AutocompleteGroupLabel",
+        "AutocompleteInput",
+        "AutocompleteItem",
+        "AutocompleteList",
+        "AutocompletePortal",
+        "AutocompletePositioner",
+        "AutocompleteRow",
+        "AutocompleteSeparator",
+        "AutocompleteStatus",
+        "AutocompleteTrigger",
+        "AutocompleteValue"
+      ],
+      "variantes": {
+        "AutocompleteInput": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "importar": "import { Autocomplete, AutocompleteArrow, AutocompleteBackdrop, AutocompleteClear, … } from '@ubits/flux-ui'",
+      "usarPara": "Campo de texto que sugiere opciones mientras escribes",
+      "buscar": [
+        "autocompletar",
+        "sugerencias",
+        "buscador con opciones"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-autocomplete--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-autocomplete--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "avatar",
+      "nombre": "Avatar",
+      "origen": "flux-ui",
+      "exports": [
+        "Avatar",
+        "AvatarBadge",
+        "AvatarFallback",
+        "AvatarGroup",
+        "AvatarGroupCount",
+        "AvatarImage"
+      ],
+      "exportsPublicos": [
+        "Avatar",
+        "AvatarBadge",
+        "AvatarFallback",
+        "AvatarGroup",
+        "AvatarGroupCount",
+        "AvatarImage"
+      ],
+      "variantes": {
+        "Avatar": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "importar": "import { Avatar, AvatarBadge, AvatarFallback, AvatarGroup, … } from '@ubits/flux-ui'",
+      "usarPara": "Foto o inicial de una persona",
+      "buscar": [
+        "avatar",
+        "foto de perfil",
+        "usuario",
+        "iniciales"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-avatar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-avatar--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "badge",
+      "nombre": "Badge",
+      "origen": "flux-ui",
+      "exports": [
+        "Badge",
+        "badgeVariants"
+      ],
+      "exportsPublicos": [
+        "Badge"
+      ],
+      "variantes": {
+        "Badge": {
+          "variant": [
+            "default",
+            "outline",
+            "secondary",
+            "destructive",
+            "info",
+            "success",
+            "warning",
+            "invert",
+            "focus",
+            "primary-light",
+            "warning-light",
+            "success-light",
+            "info-light",
+            "destructive-light",
+            "invert-light",
+            "focus-light",
+            "primary-outline",
+            "warning-outline",
+            "success-outline",
+            "info-outline",
+            "destructive-outline",
+            "invert-outline",
+            "focus-outline"
+          ],
+          "size": [
+            "default",
+            "xs",
+            "sm",
+            "lg",
+            "xl"
+          ],
+          "radius": [
+            "default",
+            "full"
+          ]
+        }
+      },
+      "importar": "import { Badge } from '@ubits/flux-ui'",
+      "usarPara": "Etiqueta corta de estado o categoría",
+      "buscar": [
+        "etiqueta",
+        "chip",
+        "estado",
+        "tag",
+        "insignia"
+      ],
+      "storybook": {
+        "seccion": "Core",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-badge--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-badge--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "breadcrumb",
+      "nombre": "Breadcrumb",
+      "origen": "flux-ui",
+      "exports": [
+        "Breadcrumb",
+        "BreadcrumbEllipsis",
+        "BreadcrumbItem",
+        "BreadcrumbLink",
+        "BreadcrumbList",
+        "BreadcrumbPage",
+        "BreadcrumbSeparator"
+      ],
+      "exportsPublicos": [
+        "Breadcrumb",
+        "BreadcrumbEllipsis",
+        "BreadcrumbItem",
+        "BreadcrumbLink",
+        "BreadcrumbList",
+        "BreadcrumbPage",
+        "BreadcrumbSeparator"
+      ],
+      "variantes": {},
+      "importar": "import { Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, … } from '@ubits/flux-ui'",
+      "usarPara": "Migas de pan: dónde estás dentro de la navegación",
+      "buscar": [
+        "migas",
+        "ruta",
+        "navegación jerárquica"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-breadcrumb--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-breadcrumb--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "bubble",
+      "nombre": "Bubble",
+      "origen": "flux-ui",
+      "exports": [
+        "Bubble",
+        "BubbleContent",
+        "BubbleGroup",
+        "BubbleReactions"
+      ],
+      "exportsPublicos": [
+        "Bubble",
+        "BubbleContent",
+        "BubbleGroup",
+        "BubbleReactions"
+      ],
+      "variantes": {
+        "Bubble": {
+          "variant": [
+            "default",
+            "outline",
+            "secondary",
+            "ghost",
+            "destructive",
+            "muted",
+            "tinted"
+          ],
+          "align": [
+            "start",
+            "end"
+          ]
+        },
+        "BubbleReactions": {
+          "align": [
+            "start",
+            "end"
+          ],
+          "side": [
+            "top",
+            "bottom"
+          ]
+        }
+      },
+      "importar": "import { Bubble, BubbleContent, BubbleGroup, BubbleReactions } from '@ubits/flux-ui'",
+      "usarPara": "Burbuja de mensaje de chat, alineada a un lado, con reacciones",
+      "buscar": [
+        "burbuja",
+        "chat",
+        "mensaje",
+        "conversación"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-bubble--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-bubble--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "button",
+      "nombre": "Button",
+      "origen": "flux-ui",
+      "exports": [
+        "Button",
+        "buttonVariants"
+      ],
+      "exportsPublicos": [
+        "Button"
+      ],
+      "variantes": {
+        "Button": {
+          "variant": [
+            "link",
+            "default",
+            "outline",
+            "secondary",
+            "ghost",
+            "destructive"
+          ],
+          "size": [
+            "icon",
+            "default",
+            "xs",
+            "sm",
+            "lg",
+            "icon-xs",
+            "icon-sm",
+            "icon-lg"
+          ]
+        }
+      },
+      "importar": "import { Button } from '@ubits/flux-ui'",
+      "usarPara": "Botón de acción (default, outline, secondary, ghost, destructive, link)",
+      "buscar": [
+        "botón",
+        "acción",
+        "cta"
+      ],
+      "storybook": {
+        "seccion": "Core",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-button--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-button--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "button-group",
+      "nombre": "ButtonGroup",
+      "origen": "flux-ui",
+      "exports": [
+        "ButtonGroup",
+        "ButtonGroupSeparator",
+        "ButtonGroupText",
+        "buttonGroupVariants"
+      ],
+      "exportsPublicos": [
+        "ButtonGroup",
+        "ButtonGroupSeparator",
+        "ButtonGroupText"
+      ],
+      "variantes": {
+        "ButtonGroup": {
+          "orientation": [
+            "horizontal",
+            "vertical"
+          ]
+        }
+      },
+      "importar": "import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from '@ubits/flux-ui'",
+      "usarPara": "Varios botones pegados como un solo control",
+      "buscar": [
+        "grupo de botones",
+        "segmentado"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-buttongroup--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-buttongroup--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "calendar",
+      "nombre": "Calendar",
+      "origen": "flux-ui",
+      "exports": [
+        "Calendar",
+        "CalendarDayButton"
+      ],
+      "exportsPublicos": [
+        "Calendar",
+        "CalendarDayButton"
+      ],
+      "variantes": {},
+      "importar": "import { Calendar, CalendarDayButton } from '@ubits/flux-ui'",
+      "usarPara": "Calendario para elegir fechas",
+      "buscar": [
+        "calendario",
+        "fecha",
+        "día"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-calendar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-calendar--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "card",
+      "nombre": "Card",
+      "origen": "flux-ui",
+      "exports": [
+        "Card",
+        "CardAction",
+        "CardContent",
+        "CardDescription",
+        "CardFooter",
+        "CardHeader",
+        "CardTitle"
+      ],
+      "exportsPublicos": [
+        "Card",
+        "CardAction",
+        "CardContent",
+        "CardDescription",
+        "CardFooter",
+        "CardHeader",
+        "CardTitle"
+      ],
+      "variantes": {
+        "Card": {
+          "size": [
+            "default",
+            "sm"
+          ]
+        }
+      },
+      "importar": "import { Card, CardAction, CardContent, CardDescription, … } from '@ubits/flux-ui'",
+      "usarPara": "Tarjeta contenedora con cabecera, contenido y pie",
+      "buscar": [
+        "tarjeta",
+        "card",
+        "panel",
+        "caja",
+        "kpi"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-card--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-card--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "carousel",
+      "nombre": "Carousel",
+      "origen": "flux-ui",
+      "exports": [
+        "Carousel",
+        "CarouselContent",
+        "CarouselItem",
+        "CarouselNext",
+        "CarouselPrevious",
+        "useCarousel",
+        "useFxCarousel"
+      ],
+      "exportsPublicos": [
+        "Carousel",
+        "CarouselContent",
+        "CarouselItem",
+        "CarouselNext",
+        "CarouselPrevious",
+        "useCarousel",
+        "useFxCarousel"
+      ],
+      "variantes": {},
+      "importar": "import { Carousel, CarouselContent, CarouselItem, CarouselNext, … } from '@ubits/flux-ui'",
+      "usarPara": "Carrusel de elementos con flechas anterior y siguiente",
+      "buscar": [
+        "carrusel",
+        "slider de imágenes",
+        "galería"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-carousel--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-carousel--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "cascader",
+      "nombre": "Cascader",
+      "origen": "reui",
+      "exports": [
+        "CASCADER_ACTION_CLASS",
+        "CASCADER_LABELS",
+        "CASCADER_LIST_HEIGHT_CLASS",
+        "CASCADER_LIST_PAD_CLASS",
+        "CASCADER_MORE_PREFIX",
+        "CASCADER_ROOT_KEY",
+        "CASCADER_ROWS_CLASS",
+        "CASCADER_SCROLL_CLASS",
+        "Cascader",
+        "CascaderAction",
+        "CascaderActionsContext",
+        "CascaderBack",
+        "CascaderBreadcrumb",
+        "CascaderChip",
+        "CascaderChips",
+        "CascaderColumnPanel",
+        "CascaderColumns",
+        "CascaderContent",
+        "CascaderEmpty",
+        "CascaderFooter",
+        "CascaderGroup",
+        "CascaderHighlightContext",
+        "CascaderInput",
+        "CascaderItem",
+        "CascaderItems",
+        "CascaderLabel",
+        "CascaderList",
+        "CascaderNav",
+        "CascaderPanel",
+        "CascaderRenderContext",
+        "CascaderSeparator",
+        "CascaderStateContext",
+        "CascaderStatus",
+        "CascaderSubmenu",
+        "CascaderSubmenuContent",
+        "CascaderSubmenuTrigger",
+        "CascaderTrigger",
+        "CascaderValue",
+        "CascaderVirtualColumn",
+        "CascaderVirtualItems",
+        "applyCascadeSelection",
+        "buildCascaderIndex",
+        "collapseCascaderPath",
+        "collectCascaderSubtree",
+        "createCascaderHighlightStore",
+        "createCascaderMoreNode",
+        "filterCascaderLevel",
+        "findAmbiguousCascaderLabels",
+        "findCascaderDataIssues",
+        "flattenCascaderTree",
+        "foldCascaderText",
+        "getCascaderCheckedValues",
+        "getCascaderChildren",
+        "getCascaderCount",
+        "getCascaderFooterStops",
+        "getCascaderIndeterminate",
+        "getCascaderIndeterminateFrom",
+        "getCascaderMoreParent",
+        "getCascaderMoreProps",
+        "getCascaderPath",
+        "getCascaderSelectedDescendants",
+        "getCascaderTabTarget",
+        "isCascaderBranch",
+        "isCascaderMoreNode",
+        "isCascaderRtl",
+        "isCascaderSelectable",
+        "matchesCascaderQuery",
+        "mergeCascaderIndex",
+        "normalizeCascaderQuery",
+        "resetCascaderWarnings",
+        "resolveCascaderLabels",
+        "resolveCascaderSearchLabel",
+        "searchCascaderDeep",
+        "useCascader",
+        "useCascaderActions",
+        "useCascaderAnchor",
+        "useCascaderHasActions",
+        "useCascaderHighlight",
+        "useCascaderLoadState",
+        "useCascaderLoader",
+        "useCascaderRender",
+        "useCascaderSelection",
+        "useCascaderState",
+        "useCascaderSubmenu",
+        "useCascaderVirtualizer",
+        "warnCascaderOnce"
+      ],
+      "exportsPublicos": [
+        "Cascader",
+        "CascaderAction",
+        "CascaderActionsContext",
+        "CascaderBack",
+        "CascaderBreadcrumb",
+        "CascaderChip",
+        "CascaderChips",
+        "CascaderColumnPanel",
+        "CascaderColumns",
+        "CascaderContent",
+        "CascaderEmpty",
+        "CascaderFooter",
+        "CascaderGroup",
+        "CascaderHighlightContext",
+        "CascaderInput",
+        "CascaderItem",
+        "CascaderItems",
+        "CascaderLabel",
+        "CascaderList",
+        "CascaderNav",
+        "CascaderPanel",
+        "CascaderRenderContext",
+        "CascaderSeparator",
+        "CascaderStateContext",
+        "CascaderStatus",
+        "CascaderSubmenu",
+        "CascaderSubmenuContent",
+        "CascaderSubmenuTrigger",
+        "CascaderTrigger",
+        "CascaderValue",
+        "CascaderVirtualColumn",
+        "CascaderVirtualItems",
+        "useCascader",
+        "useCascaderActions",
+        "useCascaderAnchor",
+        "useCascaderHasActions",
+        "useCascaderHighlight",
+        "useCascaderLoadState",
+        "useCascaderLoader",
+        "useCascaderRender",
+        "useCascaderSelection",
+        "useCascaderState",
+        "useCascaderSubmenu",
+        "useCascaderVirtualizer"
+      ],
+      "variantes": {},
+      "importar": "import { Cascader, CascaderAction, CascaderActionsContext, CascaderBack, … } from '@ubits/flux-ui'",
+      "usarPara": "Selector jerárquico por niveles (país → ciudad → sede)",
+      "buscar": [
+        "selector jerárquico",
+        "niveles",
+        "cascada",
+        "árbol de opciones"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-cascader--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-cascader--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "chart",
+      "nombre": "Chart",
+      "origen": "flux-ui",
+      "exports": [
+        "ChartContainer",
+        "ChartLegend",
+        "ChartLegendContent",
+        "ChartStyle",
+        "ChartTooltip",
+        "ChartTooltipContent"
+      ],
+      "exportsPublicos": [
+        "ChartContainer",
+        "ChartLegend",
+        "ChartLegendContent",
+        "ChartStyle",
+        "ChartTooltip",
+        "ChartTooltipContent"
+      ],
+      "variantes": {},
+      "importar": "import { ChartContainer, ChartLegend, ChartLegendContent, ChartStyle, … } from '@ubits/flux-ui'",
+      "usarPara": "Marco de gráficos (ChartContainer, ChartTooltipContent, ChartLegendContent). OJO: trae su propia copia de recharts; ver trampasConocidas",
+      "buscar": [
+        "gráfico",
+        "chart",
+        "estadística"
+      ],
+      "storybook": {
+        "seccion": "Data",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/data-chart--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/data-chart--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "checkbox",
+      "nombre": "Checkbox",
+      "origen": "flux-ui",
+      "exports": [
+        "Checkbox"
+      ],
+      "exportsPublicos": [
+        "Checkbox"
+      ],
+      "variantes": {},
+      "importar": "import { Checkbox } from '@ubits/flux-ui'",
+      "usarPara": "Casilla de verificación",
+      "buscar": [
+        "casilla",
+        "check",
+        "marcar",
+        "aceptar"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-checkbox--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-checkbox--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "code-block",
+      "nombre": "CodeBlock",
+      "origen": "reui",
+      "exports": [
+        "CodeBlock",
+        "CodeBlockContent",
+        "CodeBlockCopyButton",
+        "CodeBlockDownloadButton",
+        "CodeBlockExpandButton",
+        "CodeBlockHeader",
+        "CodeBlockLanguage",
+        "CodeBlockLineActions",
+        "CodeBlockTitle",
+        "CodeBlockWrapToggle",
+        "DEFAULT_CODE_BLOCK_THEMES",
+        "ansiToLines",
+        "buildWordDecorations",
+        "codeBlockLanguages",
+        "codeBlockThemes",
+        "highlightCode",
+        "markdownCodeProps",
+        "markdownFences",
+        "normalizeCode",
+        "parseLineSpec",
+        "parseUnifiedDiff",
+        "resetCodeBlockHighlighter",
+        "resolveCodeBlockLanguage",
+        "stripNotationComments",
+        "toPlainLines",
+        "useCodeBlockConfig",
+        "useCodeBlockFolding",
+        "useCodeBlockSelection"
+      ],
+      "exportsPublicos": [
+        "CodeBlock",
+        "CodeBlockContent",
+        "CodeBlockCopyButton",
+        "CodeBlockDownloadButton",
+        "CodeBlockExpandButton",
+        "CodeBlockHeader",
+        "CodeBlockLanguage",
+        "CodeBlockLineActions",
+        "CodeBlockTitle",
+        "CodeBlockWrapToggle",
+        "useCodeBlockConfig",
+        "useCodeBlockFolding",
+        "useCodeBlockSelection"
+      ],
+      "variantes": {},
+      "importar": "import { CodeBlock, CodeBlockContent, CodeBlockCopyButton, CodeBlockDownloadButton, … } from '@ubits/flux-ui'",
+      "usarPara": "Bloque de código con botones para copiar, descargar y expandir",
+      "buscar": [
+        "código",
+        "snippet",
+        "copiar código"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-codeblock--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-codeblock--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "collapsible",
+      "nombre": "Collapsible",
+      "origen": "flux-ui",
+      "exports": [
+        "Collapsible",
+        "CollapsibleContent",
+        "CollapsibleTrigger"
+      ],
+      "exportsPublicos": [
+        "Collapsible",
+        "CollapsibleContent",
+        "CollapsibleTrigger"
+      ],
+      "variantes": {},
+      "importar": "import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@ubits/flux-ui'",
+      "usarPara": "Bloque que se muestra u oculta",
+      "buscar": [
+        "plegable",
+        "mostrar más",
+        "expandir"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-collapsible--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-collapsible--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "combobox",
+      "nombre": "Combobox",
+      "origen": "flux-ui",
+      "exports": [
+        "Combobox",
+        "ComboboxChip",
+        "ComboboxChips",
+        "ComboboxChipsInput",
+        "ComboboxCollection",
+        "ComboboxContent",
+        "ComboboxEmpty",
+        "ComboboxGroup",
+        "ComboboxInput",
+        "ComboboxItem",
+        "ComboboxLabel",
+        "ComboboxList",
+        "ComboboxSeparator",
+        "ComboboxTrigger",
+        "ComboboxValue",
+        "useComboboxAnchor",
+        "useFxComboboxAnchor"
+      ],
+      "exportsPublicos": [
+        "Combobox",
+        "ComboboxChip",
+        "ComboboxChips",
+        "ComboboxChipsInput",
+        "ComboboxCollection",
+        "ComboboxContent",
+        "ComboboxEmpty",
+        "ComboboxGroup",
+        "ComboboxInput",
+        "ComboboxItem",
+        "ComboboxLabel",
+        "ComboboxList",
+        "ComboboxSeparator",
+        "ComboboxTrigger",
+        "ComboboxValue",
+        "useComboboxAnchor",
+        "useFxComboboxAnchor"
+      ],
+      "variantes": {},
+      "importar": "import { Combobox, ComboboxChip, ComboboxChips, ComboboxChipsInput, … } from '@ubits/flux-ui'",
+      "usarPara": "Selector con buscador",
+      "buscar": [
+        "combobox",
+        "selector con búsqueda"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-combobox--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-combobox--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "command",
+      "nombre": "Command",
+      "origen": "flux-ui",
+      "exports": [
+        "Command",
+        "CommandDialog",
+        "CommandEmpty",
+        "CommandGroup",
+        "CommandInput",
+        "CommandItem",
+        "CommandList",
+        "CommandSeparator",
+        "CommandShortcut"
+      ],
+      "exportsPublicos": [
+        "Command",
+        "CommandDialog",
+        "CommandEmpty",
+        "CommandGroup",
+        "CommandInput",
+        "CommandItem",
+        "CommandList",
+        "CommandSeparator",
+        "CommandShortcut"
+      ],
+      "variantes": {},
+      "importar": "import { Command, CommandDialog, CommandEmpty, CommandGroup, … } from '@ubits/flux-ui'",
+      "usarPara": "Paleta de comandos tipo ⌘K",
+      "buscar": [
+        "buscador global",
+        "paleta de comandos"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-command--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-command--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "context-menu",
+      "nombre": "ContextMenu",
+      "origen": "flux-ui",
+      "exports": [
+        "ContextMenu",
+        "ContextMenuCheckboxItem",
+        "ContextMenuContent",
+        "ContextMenuGroup",
+        "ContextMenuItem",
+        "ContextMenuLabel",
+        "ContextMenuPortal",
+        "ContextMenuRadioGroup",
+        "ContextMenuRadioItem",
+        "ContextMenuSeparator",
+        "ContextMenuShortcut",
+        "ContextMenuSub",
+        "ContextMenuSubContent",
+        "ContextMenuSubTrigger",
+        "ContextMenuTrigger"
+      ],
+      "exportsPublicos": [
+        "ContextMenu",
+        "ContextMenuCheckboxItem",
+        "ContextMenuContent",
+        "ContextMenuGroup",
+        "ContextMenuItem",
+        "ContextMenuLabel",
+        "ContextMenuPortal",
+        "ContextMenuRadioGroup",
+        "ContextMenuRadioItem",
+        "ContextMenuSeparator",
+        "ContextMenuShortcut",
+        "ContextMenuSub",
+        "ContextMenuSubContent",
+        "ContextMenuSubTrigger",
+        "ContextMenuTrigger"
+      ],
+      "variantes": {
+        "ContextMenuItem": {
+          "variant": [
+            "default",
+            "destructive"
+          ]
+        }
+      },
+      "importar": "import { ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuGroup, … } from '@ubits/flux-ui'",
+      "usarPara": "Menú que aparece con clic derecho",
+      "buscar": [
+        "clic derecho",
+        "menú contextual"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-contextmenu--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-contextmenu--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "data-grid",
+      "nombre": "DataGrid",
+      "origen": "reui",
+      "exports": [
+        "DataGrid",
+        "getColumnHeaderLabel",
+        "getDataGridScrollAreaViewport",
+        "getDataGridTableMergedHeaderGroups",
+        "getDataGridTableResolvedRows",
+        "getDataGridTableRowSections",
+        "getDataGridTreeIndentStyle",
+        "getPinningStyles",
+        "hasDataGridTableRightPinnedColumns",
+        "useFxDataGrid"
+      ],
+      "exportsPublicos": [
+        "DataGrid",
+        "useFxDataGrid"
+      ],
+      "variantes": {},
+      "importar": "import { DataGrid, useFxDataGrid } from '@ubits/flux-ui'",
+      "usarPara": "Tabla de bajo nivel (TanStack). Preferir data-grid-list",
+      "buscar": [
+        "tabla avanzada",
+        "grid"
+      ],
+      "storybook": {
+        "seccion": "Data",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/data-datagrid--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/data-datagrid--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "data-grid-list",
+      "nombre": "DataGridList",
+      "origen": "flux-ui",
+      "exports": [
+        "CustomizableListEmptyState",
+        "DataGridList",
+        "DataGridListColumnFilter",
+        "DataGridListTable",
+        "dataGridListFeatures",
+        "dataGridListLabelsEn",
+        "dataGridListLabelsEs",
+        "defaultDataGridListLabels",
+        "reorderColumnOrder",
+        "resolveColumnFilterFn",
+        "resolveDataGridListLabels",
+        "useDataGridListLabels",
+        "withDataGridHeaders"
+      ],
+      "exportsPublicos": [
+        "CustomizableListEmptyState",
+        "DataGridList",
+        "DataGridListColumnFilter",
+        "DataGridListTable",
+        "useDataGridListLabels"
+      ],
+      "variantes": {},
+      "importar": "import { CustomizableListEmptyState, DataGridList, DataGridListColumnFilter, DataGridListTable, … } from '@ubits/flux-ui'",
+      "usarPara": "LA tabla del sistema: orden, filtros, búsqueda, paginación, selección, acciones masivas, densidad y estados vacíos",
+      "buscar": [
+        "tabla",
+        "lista",
+        "grid",
+        "listado",
+        "registros",
+        "filas",
+        "columnas"
+      ],
+      "storybook": {
+        "seccion": "Data",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/data-datagridlist--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/data-datagridlist--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "date-selector",
+      "nombre": "DateSelector",
+      "origen": "flux-ui",
+      "exports": [
+        "DEFAULT_DATE_SELECTOR_I18N",
+        "DateSelector",
+        "formatDateValue",
+        "useDateSelector",
+        "useDateSelectorContext"
+      ],
+      "exportsPublicos": [
+        "DateSelector",
+        "useDateSelector",
+        "useDateSelectorContext"
+      ],
+      "variantes": {},
+      "importar": "import { DateSelector, useDateSelector, useDateSelectorContext } from '@ubits/flux-ui'",
+      "usarPara": "Selector de fecha o rango de fechas",
+      "buscar": [
+        "fecha",
+        "rango de fechas",
+        "date picker"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-dateselector--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-dateselector--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "dialog",
+      "nombre": "Dialog",
+      "origen": "flux-ui",
+      "exports": [
+        "Dialog",
+        "DialogClose",
+        "DialogContent",
+        "DialogDescription",
+        "DialogFooter",
+        "DialogHeader",
+        "DialogOverlay",
+        "DialogPortal",
+        "DialogTitle",
+        "DialogTrigger"
+      ],
+      "exportsPublicos": [
+        "Dialog",
+        "DialogClose",
+        "DialogContent",
+        "DialogDescription",
+        "DialogFooter",
+        "DialogHeader",
+        "DialogOverlay",
+        "DialogPortal",
+        "DialogTitle",
+        "DialogTrigger"
+      ],
+      "variantes": {},
+      "importar": "import { Dialog, DialogClose, DialogContent, DialogDescription, … } from '@ubits/flux-ui'",
+      "usarPara": "Ventana modal",
+      "buscar": [
+        "modal",
+        "diálogo",
+        "ventana emergente"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-dialog--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-dialog--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "direction",
+      "nombre": "Direction",
+      "origen": "flux-ui",
+      "exports": [
+        "DirectionProvider",
+        "useDirection",
+        "useFxDirection"
+      ],
+      "exportsPublicos": [
+        "DirectionProvider",
+        "useDirection",
+        "useFxDirection"
+      ],
+      "variantes": {},
+      "importar": "import { DirectionProvider, useDirection, useFxDirection } from '@ubits/flux-ui'",
+      "usarPara": "Proveedor de dirección de lectura (izquierda a derecha o RTL)",
+      "buscar": [
+        "rtl",
+        "dirección"
+      ],
+      "storybook": {
+        "seccion": "Core",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-directionprovider--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-directionprovider--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "drawer",
+      "nombre": "Drawer",
+      "origen": "flux-ui",
+      "exports": [
+        "Drawer",
+        "DrawerClose",
+        "DrawerContent",
+        "DrawerDescription",
+        "DrawerFooter",
+        "DrawerHeader",
+        "DrawerOverlay",
+        "DrawerPortal",
+        "DrawerSwipeHandle",
+        "DrawerTitle",
+        "DrawerTrigger"
+      ],
+      "exportsPublicos": [
+        "Drawer",
+        "DrawerClose",
+        "DrawerContent",
+        "DrawerDescription",
+        "DrawerFooter",
+        "DrawerHeader",
+        "DrawerOverlay",
+        "DrawerPortal",
+        "DrawerSwipeHandle",
+        "DrawerTitle",
+        "DrawerTrigger"
+      ],
+      "variantes": {},
+      "importar": "import { Drawer, DrawerClose, DrawerContent, DrawerDescription, … } from '@ubits/flux-ui'",
+      "usarPara": "Panel que sube desde abajo (móvil)",
+      "buscar": [
+        "drawer",
+        "panel inferior"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-drawer--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-drawer--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "dropdown-menu",
+      "nombre": "DropdownMenu",
+      "origen": "flux-ui",
+      "exports": [
+        "DropdownMenu",
+        "DropdownMenuCheckboxItem",
+        "DropdownMenuContent",
+        "DropdownMenuGroup",
+        "DropdownMenuItem",
+        "DropdownMenuLabel",
+        "DropdownMenuPortal",
+        "DropdownMenuRadioGroup",
+        "DropdownMenuRadioItem",
+        "DropdownMenuSeparator",
+        "DropdownMenuShortcut",
+        "DropdownMenuSub",
+        "DropdownMenuSubContent",
+        "DropdownMenuSubTrigger",
+        "DropdownMenuTrigger"
+      ],
+      "exportsPublicos": [
+        "DropdownMenu",
+        "DropdownMenuCheckboxItem",
+        "DropdownMenuContent",
+        "DropdownMenuGroup",
+        "DropdownMenuItem",
+        "DropdownMenuLabel",
+        "DropdownMenuPortal",
+        "DropdownMenuRadioGroup",
+        "DropdownMenuRadioItem",
+        "DropdownMenuSeparator",
+        "DropdownMenuShortcut",
+        "DropdownMenuSub",
+        "DropdownMenuSubContent",
+        "DropdownMenuSubTrigger",
+        "DropdownMenuTrigger"
+      ],
+      "variantes": {
+        "DropdownMenuItem": {
+          "variant": [
+            "default",
+            "destructive"
+          ]
+        }
+      },
+      "importar": "import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, … } from '@ubits/flux-ui'",
+      "usarPara": "Menú desplegable de acciones",
+      "buscar": [
+        "menú",
+        "opciones",
+        "tres puntos",
+        "más acciones"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-dropdownmenu--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-dropdownmenu--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "empty",
+      "nombre": "Empty",
+      "origen": "flux-ui",
+      "exports": [
+        "Empty",
+        "EmptyContent",
+        "EmptyDescription",
+        "EmptyHeader",
+        "EmptyMedia",
+        "EmptyTitle"
+      ],
+      "exportsPublicos": [
+        "Empty",
+        "EmptyContent",
+        "EmptyDescription",
+        "EmptyHeader",
+        "EmptyMedia",
+        "EmptyTitle"
+      ],
+      "variantes": {
+        "EmptyMedia": {
+          "variant": [
+            "icon",
+            "default"
+          ]
+        }
+      },
+      "importar": "import { Empty, EmptyContent, EmptyDescription, EmptyHeader, … } from '@ubits/flux-ui'",
+      "usarPara": "Estado vacío: sin datos, sin resultados, error o sin permiso",
+      "buscar": [
+        "vacío",
+        "sin datos",
+        "sin resultados",
+        "empty state"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-empty--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-empty--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "event-calendar",
+      "nombre": "EventCalendar",
+      "origen": "flux-ui",
+      "exports": [
+        "ALL_VIEWS",
+        "BASE_VIEWS",
+        "DEFAULT_VIEW_COMPONENTS",
+        "DEFAULT_VIEW_CONFIG",
+        "EventCalendar",
+        "EventCalendarContent",
+        "EventCalendarContext",
+        "EventCalendarDatePicker",
+        "EventCalendarNav",
+        "EventCalendarNavNext",
+        "EventCalendarNavPrev",
+        "EventCalendarNavToday",
+        "EventCalendarTitle",
+        "EventCalendarToolbar",
+        "EventCalendarViewConfigContext",
+        "EventCalendarViewContext",
+        "EventCalendarViewSwitcher",
+        "useEventCalendar",
+        "useEventCalendarDay",
+        "useEventCalendarInteractions",
+        "useEventCalendarNavigation",
+        "useEventCalendarOccurrences",
+        "useEventCalendarSelection",
+        "useEventCalendarSelector",
+        "useEventCalendarSettings",
+        "useEventCalendarSettingsVersion",
+        "useEventCalendarState",
+        "useEventCalendarView",
+        "useEventCalendarViewConfig",
+        "useEventCalendarViewContext",
+        "useEventCalendarViewSettings",
+        "useEventCalendarWeek"
+      ],
+      "exportsPublicos": [
+        "EventCalendar",
+        "EventCalendarContent",
+        "EventCalendarContext",
+        "EventCalendarDatePicker",
+        "EventCalendarNav",
+        "EventCalendarNavNext",
+        "EventCalendarNavPrev",
+        "EventCalendarNavToday",
+        "EventCalendarTitle",
+        "EventCalendarToolbar",
+        "EventCalendarViewConfigContext",
+        "EventCalendarViewContext",
+        "EventCalendarViewSwitcher",
+        "useEventCalendar",
+        "useEventCalendarDay",
+        "useEventCalendarInteractions",
+        "useEventCalendarNavigation",
+        "useEventCalendarOccurrences",
+        "useEventCalendarSelection",
+        "useEventCalendarSelector",
+        "useEventCalendarSettings",
+        "useEventCalendarSettingsVersion",
+        "useEventCalendarState",
+        "useEventCalendarView",
+        "useEventCalendarViewConfig",
+        "useEventCalendarViewContext",
+        "useEventCalendarViewSettings",
+        "useEventCalendarWeek"
+      ],
+      "variantes": {},
+      "importar": "import { EventCalendar, EventCalendarContent, EventCalendarContext, EventCalendarDatePicker, … } from '@ubits/flux-ui'",
+      "usarPara": "Calendario de eventos con vistas de día, semana y mes",
+      "buscar": [
+        "agenda",
+        "eventos",
+        "calendario de citas",
+        "reuniones"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-eventcalendar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-eventcalendar--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "field",
+      "nombre": "Field",
+      "origen": "flux-ui",
+      "exports": [
+        "Field",
+        "FieldContent",
+        "FieldDescription",
+        "FieldError",
+        "FieldGroup",
+        "FieldLabel",
+        "FieldLegend",
+        "FieldSeparator",
+        "FieldSet",
+        "FieldTitle"
+      ],
+      "exportsPublicos": [
+        "Field",
+        "FieldContent",
+        "FieldDescription",
+        "FieldError",
+        "FieldGroup",
+        "FieldLabel",
+        "FieldLegend",
+        "FieldSeparator",
+        "FieldSet",
+        "FieldTitle"
+      ],
+      "variantes": {
+        "Field": {
+          "orientation": [
+            "horizontal",
+            "vertical",
+            "responsive"
+          ]
+        },
+        "FieldLegend": {
+          "variant": [
+            "legend",
+            "label"
+          ]
+        }
+      },
+      "importar": "import { Field, FieldContent, FieldDescription, FieldError, … } from '@ubits/flux-ui'",
+      "usarPara": "Estructura de un campo de formulario: etiqueta, ayuda y error",
+      "buscar": [
+        "formulario",
+        "campo",
+        "label",
+        "error",
+        "validación"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-field--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-field--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "filters",
+      "nombre": "Filters",
+      "origen": "reui",
+      "exports": [
+        "DEFAULT_FILTER_EDITORS",
+        "DEFAULT_FILTER_LABELS",
+        "DEFAULT_FILTER_OPERATORS",
+        "DEFAULT_FILTER_OPERATOR_LABELS",
+        "FilterAdvancedRow",
+        "FilterChip",
+        "FilterFieldPicker",
+        "FilterOperatorPopover",
+        "FilterRuleMenuItems",
+        "FilterValuePopover",
+        "Filters",
+        "FiltersAdvanced",
+        "FiltersAdvancedPanel",
+        "FiltersBuilder",
+        "FiltersRow",
+        "collectFilterIssues",
+        "copyFilterNodeTo",
+        "countFilterRules",
+        "createFilterGroup",
+        "createFilterQuery",
+        "createFilterRule",
+        "filterReadOnlyProps",
+        "flattenFilterConditions",
+        "flattenFilterRules",
+        "isFilterLocked",
+        "isFilterQueryEmpty",
+        "isFilterRuleComplete",
+        "moveFilterNodeTo",
+        "pruneFilterQuery",
+        "unwrapFilterGroup",
+        "useFilterActions",
+        "useFilterChipAutoOpen",
+        "useFilterChipFocused",
+        "useFilterFocus",
+        "useFilterFocusEmpty",
+        "useFilterFocusStore",
+        "useFilterOptions",
+        "useFilterRender",
+        "useFilterRuleDisplay",
+        "useFilterSegmentFocus",
+        "useFilterState",
+        "useFilterValueResolution",
+        "wrapFilterNodeInGroup"
+      ],
+      "exportsPublicos": [
+        "FilterAdvancedRow",
+        "FilterChip",
+        "FilterFieldPicker",
+        "FilterOperatorPopover",
+        "FilterRuleMenuItems",
+        "FilterValuePopover",
+        "Filters",
+        "FiltersAdvanced",
+        "FiltersAdvancedPanel",
+        "FiltersBuilder",
+        "FiltersRow",
+        "useFilterActions",
+        "useFilterChipAutoOpen",
+        "useFilterChipFocused",
+        "useFilterFocus",
+        "useFilterFocusEmpty",
+        "useFilterFocusStore",
+        "useFilterOptions",
+        "useFilterRender",
+        "useFilterRuleDisplay",
+        "useFilterSegmentFocus",
+        "useFilterState",
+        "useFilterValueResolution"
+      ],
+      "variantes": {
+        "Filters": {
+          "variant": [
+            "basic",
+            "advanced"
+          ],
+          "size": [
+            "sm",
+            "default"
+          ]
+        },
+        "FiltersAdvanced": {
+          "align": [
+            "start",
+            "center",
+            "end"
+          ]
+        }
+      },
+      "importar": "import { FilterAdvancedRow, FilterChip, FilterFieldPicker, FilterOperatorPopover, … } from '@ubits/flux-ui'",
+      "usarPara": "Barra de filtros con chips",
+      "buscar": [
+        "filtros",
+        "filtrar",
+        "chips"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-filters--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-filters--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "floating-action-bar",
+      "nombre": "FloatingActionBar",
+      "origen": "flux-ui",
+      "exports": [
+        "FLOATING_ACTION_BAR_HEIGHT",
+        "FloatingActionBar",
+        "defaultFloatingBarLabels",
+        "isSeparator"
+      ],
+      "exportsPublicos": [
+        "FloatingActionBar"
+      ],
+      "variantes": {},
+      "importar": "import { FloatingActionBar } from '@ubits/flux-ui'",
+      "usarPara": "Barra flotante de acciones sobre una selección",
+      "buscar": [
+        "barra flotante",
+        "acciones masivas"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-floatingactionbar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-floatingactionbar--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "frame",
+      "nombre": "Frame",
+      "origen": "reui",
+      "exports": [
+        "Frame",
+        "FrameDescription",
+        "FrameFooter",
+        "FrameHeader",
+        "FramePanel",
+        "FrameTitle",
+        "frameVariants"
+      ],
+      "exportsPublicos": [
+        "Frame",
+        "FrameDescription",
+        "FrameFooter",
+        "FrameHeader",
+        "FramePanel",
+        "FrameTitle"
+      ],
+      "variantes": {
+        "Frame": {
+          "variant": [
+            "default",
+            "ghost",
+            "inverse"
+          ],
+          "spacing": [
+            "default",
+            "xs",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "importar": "import { Frame, FrameDescription, FrameFooter, FrameHeader, … } from '@ubits/flux-ui'",
+      "usarPara": "Marco con cabecera y paneles",
+      "buscar": [
+        "marco",
+        "frame",
+        "contenedor"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-frame--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-frame--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "gantt",
+      "nombre": "Gantt",
+      "origen": "reui",
+      "exports": [
+        "DEFAULT_GANTT_I18N",
+        "DEFAULT_GANTT_VIEW_CONFIG",
+        "DEFAULT_ROW_ALIGN",
+        "DEFAULT_SCHEDULE_MODE",
+        "GANTT_COLORS",
+        "GANTT_SCALES",
+        "Gantt",
+        "GanttBar",
+        "GanttContext",
+        "GanttDatePicker",
+        "GanttNav",
+        "GanttNavNext",
+        "GanttNavPrev",
+        "GanttNavToday",
+        "GanttScaleSwitcher",
+        "GanttTitle",
+        "GanttToolbar",
+        "GanttView",
+        "GanttViewConfigContext",
+        "mergeGanttI18n",
+        "resolveScheduleMode",
+        "resolveTimelineLines",
+        "useGantt",
+        "useGanttBarContext",
+        "useGanttInteractions",
+        "useGanttNavigation",
+        "useGanttNodeSchedules",
+        "useGanttOccurrences",
+        "useGanttScale",
+        "useGanttSelection",
+        "useGanttSelector",
+        "useGanttSettings",
+        "useGanttSettingsVersion",
+        "useGanttState",
+        "useGanttViewConfig"
+      ],
+      "exportsPublicos": [
+        "Gantt",
+        "GanttBar",
+        "GanttContext",
+        "GanttDatePicker",
+        "GanttNav",
+        "GanttNavNext",
+        "GanttNavPrev",
+        "GanttNavToday",
+        "GanttScaleSwitcher",
+        "GanttTitle",
+        "GanttToolbar",
+        "GanttView",
+        "GanttViewConfigContext",
+        "useGantt",
+        "useGanttBarContext",
+        "useGanttInteractions",
+        "useGanttNavigation",
+        "useGanttNodeSchedules",
+        "useGanttOccurrences",
+        "useGanttScale",
+        "useGanttSelection",
+        "useGanttSelector",
+        "useGanttSettings",
+        "useGanttSettingsVersion",
+        "useGanttState",
+        "useGanttViewConfig"
+      ],
+      "variantes": {},
+      "importar": "import { Gantt, GanttBar, GanttContext, GanttDatePicker, … } from '@ubits/flux-ui'",
+      "usarPara": "Diagrama de Gantt: tareas y dependencias sobre una línea de tiempo",
+      "buscar": [
+        "gantt",
+        "cronograma",
+        "planificación",
+        "proyecto"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-gantt--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-gantt--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "heading",
+      "nombre": "Heading",
+      "origen": "flux-ui",
+      "exports": [
+        "Heading"
+      ],
+      "exportsPublicos": [
+        "Heading"
+      ],
+      "variantes": {
+        "Heading": {
+          "level": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"
+          ]
+        }
+      },
+      "importar": "import { Heading } from '@ubits/flux-ui'",
+      "usarPara": "Títulos (h1–h6) con la tipografía del tema",
+      "buscar": [
+        "título",
+        "encabezado",
+        "heading"
+      ],
+      "storybook": {
+        "seccion": "Core",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-heading--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-heading--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "hover-card",
+      "nombre": "HoverCard",
+      "origen": "flux-ui",
+      "exports": [
+        "HoverCard",
+        "HoverCardContent",
+        "HoverCardTrigger"
+      ],
+      "exportsPublicos": [
+        "HoverCard",
+        "HoverCardContent",
+        "HoverCardTrigger"
+      ],
+      "variantes": {},
+      "importar": "import { HoverCard, HoverCardContent, HoverCardTrigger } from '@ubits/flux-ui'",
+      "usarPara": "Tarjeta flotante al pasar el cursor, como una vista previa de perfil",
+      "buscar": [
+        "vista previa",
+        "tarjeta flotante",
+        "hover"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-hovercard--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-hovercard--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "icon-stack",
+      "nombre": "IconStack",
+      "origen": "reui",
+      "exports": [
+        "IconStack"
+      ],
+      "exportsPublicos": [
+        "IconStack"
+      ],
+      "variantes": {},
+      "importar": "import { IconStack } from '@ubits/flux-ui'",
+      "usarPara": "Varios iconos superpuestos en una pila",
+      "buscar": [
+        "iconos superpuestos",
+        "pila de iconos"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-iconstack--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-iconstack--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "icon-tile",
+      "nombre": "IconTile",
+      "origen": "reui",
+      "exports": [
+        "IconTile",
+        "iconTileVariants"
+      ],
+      "exportsPublicos": [
+        "IconTile"
+      ],
+      "variantes": {
+        "IconTile": {
+          "variant": [
+            "outline",
+            "frame",
+            "solid",
+            "elevated",
+            "soft"
+          ],
+          "size": [
+            "default",
+            "xs",
+            "sm",
+            "lg",
+            "xl"
+          ],
+          "radius": [
+            "default",
+            "full"
+          ]
+        }
+      },
+      "importar": "import { IconTile } from '@ubits/flux-ui'",
+      "usarPara": "Icono dentro de una baldosa de color",
+      "buscar": [
+        "icono con fondo",
+        "tile"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-icontile--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-icontile--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "input",
+      "nombre": "Input",
+      "origen": "flux-ui",
+      "exports": [
+        "Input"
+      ],
+      "exportsPublicos": [
+        "Input"
+      ],
+      "variantes": {},
+      "importar": "import { Input } from '@ubits/flux-ui'",
+      "usarPara": "Campo de texto de una línea",
+      "buscar": [
+        "input",
+        "campo de texto",
+        "caja de texto"
+      ],
+      "storybook": {
+        "seccion": "Core",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-input--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-input--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "input-group",
+      "nombre": "InputGroup",
+      "origen": "flux-ui",
+      "exports": [
+        "InputGroup",
+        "InputGroupAddon",
+        "InputGroupButton",
+        "InputGroupInput",
+        "InputGroupText",
+        "InputGroupTextarea"
+      ],
+      "exportsPublicos": [
+        "InputGroup",
+        "InputGroupAddon",
+        "InputGroupButton",
+        "InputGroupInput",
+        "InputGroupText",
+        "InputGroupTextarea"
+      ],
+      "variantes": {
+        "InputGroupAddon": {
+          "align": [
+            "inline-end",
+            "inline-start",
+            "block-end",
+            "block-start"
+          ]
+        },
+        "InputGroupButton": {
+          "variant": [
+            "link",
+            "default",
+            "outline",
+            "secondary",
+            "ghost",
+            "destructive"
+          ],
+          "size": [
+            "icon",
+            "default",
+            "xs",
+            "sm",
+            "lg",
+            "icon-xs",
+            "icon-sm",
+            "icon-lg"
+          ]
+        }
+      },
+      "importar": "import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, … } from '@ubits/flux-ui'",
+      "usarPara": "Campo con icono, prefijo, sufijo o botón pegado",
+      "buscar": [
+        "input con icono",
+        "buscador",
+        "prefijo"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-inputgroup--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-inputgroup--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "input-otp",
+      "nombre": "InputOtp",
+      "origen": "flux-ui",
+      "exports": [
+        "InputOTP",
+        "InputOTPGroup",
+        "InputOTPSeparator",
+        "InputOTPSlot"
+      ],
+      "exportsPublicos": [
+        "InputOTP",
+        "InputOTPGroup",
+        "InputOTPSeparator",
+        "InputOTPSlot"
+      ],
+      "variantes": {},
+      "importar": "import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@ubits/flux-ui'",
+      "usarPara": "Código de un solo uso por dígitos",
+      "buscar": [
+        "otp",
+        "código",
+        "verificación"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-inputotp--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-inputotp--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "item",
+      "nombre": "Item",
+      "origen": "flux-ui",
+      "exports": [
+        "Item",
+        "ItemActions",
+        "ItemContent",
+        "ItemDescription",
+        "ItemFooter",
+        "ItemGroup",
+        "ItemHeader",
+        "ItemMedia",
+        "ItemSeparator",
+        "ItemTitle"
+      ],
+      "exportsPublicos": [
+        "Item",
+        "ItemActions",
+        "ItemContent",
+        "ItemDescription",
+        "ItemFooter",
+        "ItemGroup",
+        "ItemHeader",
+        "ItemMedia",
+        "ItemSeparator",
+        "ItemTitle"
+      ],
+      "variantes": {
+        "Item": {
+          "variant": [
+            "default",
+            "outline",
+            "muted"
+          ],
+          "size": [
+            "default",
+            "xs",
+            "sm"
+          ]
+        },
+        "ItemMedia": {
+          "variant": [
+            "icon",
+            "image",
+            "default"
+          ]
+        }
+      },
+      "importar": "import { Item, ItemActions, ItemContent, ItemDescription, … } from '@ubits/flux-ui'",
+      "usarPara": "Fila de lista con icono, título, descripción y acciones",
+      "buscar": [
+        "fila",
+        "ítem",
+        "elemento de lista",
+        "lista"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-item--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-item--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "kanban",
+      "nombre": "Kanban",
+      "origen": "reui",
+      "exports": [
+        "Kanban",
+        "KanbanBoard",
+        "KanbanColumn",
+        "KanbanColumnContent",
+        "KanbanColumnHandle",
+        "KanbanItem",
+        "KanbanItemHandle",
+        "KanbanOverlay"
+      ],
+      "exportsPublicos": [
+        "Kanban",
+        "KanbanBoard",
+        "KanbanColumn",
+        "KanbanColumnContent",
+        "KanbanColumnHandle",
+        "KanbanItem",
+        "KanbanItemHandle",
+        "KanbanOverlay"
+      ],
+      "variantes": {},
+      "importar": "import { Kanban, KanbanBoard, KanbanColumn, KanbanColumnContent, … } from '@ubits/flux-ui'",
+      "usarPara": "Tablero de columnas con tarjetas arrastrables",
+      "buscar": [
+        "kanban",
+        "tablero",
+        "columnas"
+      ],
+      "storybook": {
+        "seccion": "Data",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/data-kanban--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/data-kanban--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "kbd",
+      "nombre": "Kbd",
+      "origen": "flux-ui",
+      "exports": [
+        "Kbd",
+        "KbdGroup"
+      ],
+      "exportsPublicos": [
+        "Kbd",
+        "KbdGroup"
+      ],
+      "variantes": {},
+      "importar": "import { Kbd, KbdGroup } from '@ubits/flux-ui'",
+      "usarPara": "Atajo de teclado",
+      "buscar": [
+        "tecla",
+        "atajo",
+        "shortcut"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-kbd--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-kbd--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "label",
+      "nombre": "Label",
+      "origen": "flux-ui",
+      "exports": [
+        "Label"
+      ],
+      "exportsPublicos": [
+        "Label"
+      ],
+      "variantes": {},
+      "importar": "import { Label } from '@ubits/flux-ui'",
+      "usarPara": "Etiqueta de un campo",
+      "buscar": [
+        "label",
+        "etiqueta"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-label--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-label--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "marker",
+      "nombre": "Marker",
+      "origen": "flux-ui",
+      "exports": [
+        "Marker",
+        "MarkerContent",
+        "MarkerIcon",
+        "markerVariants"
+      ],
+      "exportsPublicos": [
+        "Marker",
+        "MarkerContent",
+        "MarkerIcon"
+      ],
+      "variantes": {
+        "Marker": {
+          "variant": [
+            "separator",
+            "default",
+            "border"
+          ]
+        }
+      },
+      "importar": "import { Marker, MarkerContent, MarkerIcon } from '@ubits/flux-ui'",
+      "usarPara": "Marcador en línea con icono y texto (variantes default, border, separator)",
+      "buscar": [
+        "marcador",
+        "separador con texto",
+        "etiqueta en línea"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-marker--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-marker--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "menubar",
+      "nombre": "Menubar",
+      "origen": "flux-ui",
+      "exports": [
+        "Menubar",
+        "MenubarCheckboxItem",
+        "MenubarContent",
+        "MenubarGroup",
+        "MenubarItem",
+        "MenubarLabel",
+        "MenubarMenu",
+        "MenubarPortal",
+        "MenubarRadioGroup",
+        "MenubarRadioItem",
+        "MenubarSeparator",
+        "MenubarShortcut",
+        "MenubarSub",
+        "MenubarSubContent",
+        "MenubarSubTrigger",
+        "MenubarTrigger"
+      ],
+      "exportsPublicos": [
+        "Menubar",
+        "MenubarCheckboxItem",
+        "MenubarContent",
+        "MenubarGroup",
+        "MenubarItem",
+        "MenubarLabel",
+        "MenubarMenu",
+        "MenubarPortal",
+        "MenubarRadioGroup",
+        "MenubarRadioItem",
+        "MenubarSeparator",
+        "MenubarShortcut",
+        "MenubarSub",
+        "MenubarSubContent",
+        "MenubarSubTrigger",
+        "MenubarTrigger"
+      ],
+      "variantes": {},
+      "importar": "import { Menubar, MenubarCheckboxItem, MenubarContent, MenubarGroup, … } from '@ubits/flux-ui'",
+      "usarPara": "Barra de menús tipo aplicación de escritorio (Archivo, Editar…)",
+      "buscar": [
+        "barra de menús",
+        "menubar"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-menubar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-menubar--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "message",
+      "nombre": "Message",
+      "origen": "flux-ui",
+      "exports": [
+        "Message",
+        "MessageAvatar",
+        "MessageContent",
+        "MessageFooter",
+        "MessageGroup",
+        "MessageHeader"
+      ],
+      "exportsPublicos": [
+        "Message",
+        "MessageAvatar",
+        "MessageContent",
+        "MessageFooter",
+        "MessageGroup",
+        "MessageHeader"
+      ],
+      "variantes": {
+        "Message": {
+          "align": [
+            "start",
+            "end"
+          ]
+        }
+      },
+      "importar": "import { Message, MessageAvatar, MessageContent, MessageFooter, … } from '@ubits/flux-ui'",
+      "usarPara": "Mensaje de conversación con avatar, cabecera y pie",
+      "buscar": [
+        "mensaje",
+        "chat",
+        "comentario",
+        "conversación"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-message--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-message--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "message-scroller",
+      "nombre": "MessageScroller",
+      "origen": "flux-ui",
+      "exports": [
+        "MessageScroller",
+        "MessageScrollerButton",
+        "MessageScrollerContent",
+        "MessageScrollerItem",
+        "MessageScrollerProvider",
+        "MessageScrollerViewport",
+        "useFxMessageScroller",
+        "useFxMessageScrollerScrollable",
+        "useFxMessageScrollerVisibility",
+        "useMessageScroller",
+        "useMessageScrollerScrollable",
+        "useMessageScrollerVisibility"
+      ],
+      "exportsPublicos": [
+        "MessageScroller",
+        "MessageScrollerButton",
+        "MessageScrollerContent",
+        "MessageScrollerItem",
+        "MessageScrollerProvider",
+        "MessageScrollerViewport",
+        "useFxMessageScroller",
+        "useFxMessageScrollerScrollable",
+        "useFxMessageScrollerVisibility",
+        "useMessageScroller",
+        "useMessageScrollerScrollable",
+        "useMessageScrollerVisibility"
+      ],
+      "variantes": {},
+      "importar": "import { MessageScroller, MessageScrollerButton, MessageScrollerContent, MessageScrollerItem, … } from '@ubits/flux-ui'",
+      "usarPara": "Contenedor de conversación con scroll que sigue al último mensaje",
+      "buscar": [
+        "chat",
+        "scroll de mensajes",
+        "conversación"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-messagescroller--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-messagescroller--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "multi-select",
+      "nombre": "MultiSelect",
+      "origen": "flux-ui",
+      "exports": [
+        "MultiSelect"
+      ],
+      "exportsPublicos": [
+        "MultiSelect"
+      ],
+      "variantes": {},
+      "importar": "import { MultiSelect } from '@ubits/flux-ui'",
+      "usarPara": "Selector de varias opciones",
+      "buscar": [
+        "selección múltiple",
+        "varias opciones"
+      ],
+      "storybook": {
+        "seccion": "Core",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-multiselect--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-multiselect--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "native-select",
+      "nombre": "NativeSelect",
+      "origen": "flux-ui",
+      "exports": [
+        "NativeSelect",
+        "NativeSelectOptGroup",
+        "NativeSelectOption"
+      ],
+      "exportsPublicos": [
+        "NativeSelect",
+        "NativeSelectOptGroup",
+        "NativeSelectOption"
+      ],
+      "variantes": {},
+      "importar": "import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '@ubits/flux-ui'",
+      "usarPara": "Selector nativo del navegador; útil en móvil",
+      "buscar": [
+        "select nativo",
+        "desplegable simple"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-nativeselect--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-nativeselect--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "navigation-menu",
+      "nombre": "NavigationMenu",
+      "origen": "flux-ui",
+      "exports": [
+        "NavigationMenu",
+        "NavigationMenuContent",
+        "NavigationMenuIndicator",
+        "NavigationMenuItem",
+        "NavigationMenuLink",
+        "NavigationMenuList",
+        "NavigationMenuPositioner",
+        "NavigationMenuTrigger",
+        "navigationMenuTriggerStyle"
+      ],
+      "exportsPublicos": [
+        "NavigationMenu",
+        "NavigationMenuContent",
+        "NavigationMenuIndicator",
+        "NavigationMenuItem",
+        "NavigationMenuLink",
+        "NavigationMenuList",
+        "NavigationMenuPositioner",
+        "NavigationMenuTrigger"
+      ],
+      "variantes": {},
+      "importar": "import { NavigationMenu, NavigationMenuContent, NavigationMenuIndicator, NavigationMenuItem, … } from '@ubits/flux-ui'",
+      "usarPara": "Menú de navegación horizontal con submenús desplegables",
+      "buscar": [
+        "menú superior",
+        "navegación",
+        "mega menú"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-navigationmenu--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-navigationmenu--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "number-field",
+      "nombre": "NumberField",
+      "origen": "reui",
+      "exports": [
+        "NumberField",
+        "NumberFieldDecrement",
+        "NumberFieldGroup",
+        "NumberFieldIncrement",
+        "NumberFieldInput",
+        "NumberFieldScrubArea"
+      ],
+      "exportsPublicos": [
+        "NumberField",
+        "NumberFieldDecrement",
+        "NumberFieldGroup",
+        "NumberFieldIncrement",
+        "NumberFieldInput",
+        "NumberFieldScrubArea"
+      ],
+      "variantes": {
+        "NumberField": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        },
+        "NumberFieldDecrement": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        },
+        "NumberFieldGroup": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        },
+        "NumberFieldIncrement": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        },
+        "NumberFieldInput": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "importar": "import { NumberField, NumberFieldDecrement, NumberFieldGroup, NumberFieldIncrement, … } from '@ubits/flux-ui'",
+      "usarPara": "Campo numérico con botones − y +",
+      "buscar": [
+        "número",
+        "cantidad",
+        "contador"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-numberfield--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-numberfield--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "pagination",
+      "nombre": "Pagination",
+      "origen": "flux-ui",
+      "exports": [
+        "Pagination",
+        "PaginationContent",
+        "PaginationEllipsis",
+        "PaginationItem",
+        "PaginationLink",
+        "PaginationNext",
+        "PaginationPrevious"
+      ],
+      "exportsPublicos": [
+        "Pagination",
+        "PaginationContent",
+        "PaginationEllipsis",
+        "PaginationItem",
+        "PaginationLink",
+        "PaginationNext",
+        "PaginationPrevious"
+      ],
+      "variantes": {},
+      "importar": "import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, … } from '@ubits/flux-ui'",
+      "usarPara": "Paginación suelta (data-grid-list ya la trae)",
+      "buscar": [
+        "paginación",
+        "páginas"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-pagination--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-pagination--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "phone-input",
+      "nombre": "PhoneInput",
+      "origen": "reui",
+      "exports": [
+        "PhoneInput"
+      ],
+      "exportsPublicos": [
+        "PhoneInput"
+      ],
+      "variantes": {},
+      "importar": "import { PhoneInput } from '@ubits/flux-ui'",
+      "usarPara": "Campo de teléfono con prefijo de país",
+      "buscar": [
+        "teléfono",
+        "celular"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-phoneinput--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-phoneinput--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "popover",
+      "nombre": "Popover",
+      "origen": "flux-ui",
+      "exports": [
+        "Popover",
+        "PopoverContent",
+        "PopoverDescription",
+        "PopoverHeader",
+        "PopoverTitle",
+        "PopoverTrigger"
+      ],
+      "exportsPublicos": [
+        "Popover",
+        "PopoverContent",
+        "PopoverDescription",
+        "PopoverHeader",
+        "PopoverTitle",
+        "PopoverTrigger"
+      ],
+      "variantes": {},
+      "importar": "import { Popover, PopoverContent, PopoverDescription, PopoverHeader, … } from '@ubits/flux-ui'",
+      "usarPara": "Globo flotante con contenido",
+      "buscar": [
+        "popover",
+        "globo"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-popover--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-popover--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "progress",
+      "nombre": "Progress",
+      "origen": "flux-ui",
+      "exports": [
+        "Progress",
+        "ProgressIndicator",
+        "ProgressLabel",
+        "ProgressTrack",
+        "ProgressValue"
+      ],
+      "exportsPublicos": [
+        "Progress",
+        "ProgressIndicator",
+        "ProgressLabel",
+        "ProgressTrack",
+        "ProgressValue"
+      ],
+      "variantes": {},
+      "importar": "import { Progress, ProgressIndicator, ProgressLabel, ProgressTrack, … } from '@ubits/flux-ui'",
+      "usarPara": "Barra de avance (renderiza su propia pista: no añadir ProgressTrack)",
+      "buscar": [
+        "progreso",
+        "avance",
+        "barra",
+        "porcentaje",
+        "carga"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-progress--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-progress--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "radio-group",
+      "nombre": "RadioGroup",
+      "origen": "flux-ui",
+      "exports": [
+        "RadioGroup",
+        "RadioGroupItem"
+      ],
+      "exportsPublicos": [
+        "RadioGroup",
+        "RadioGroupItem"
+      ],
+      "variantes": {},
+      "importar": "import { RadioGroup, RadioGroupItem } from '@ubits/flux-ui'",
+      "usarPara": "Opción única entre varias",
+      "buscar": [
+        "radio",
+        "opción única"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-radiogroup--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-radiogroup--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "rating",
+      "nombre": "Rating",
+      "origen": "reui",
+      "exports": [
+        "Rating"
+      ],
+      "exportsPublicos": [
+        "Rating"
+      ],
+      "variantes": {
+        "Rating": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "importar": "import { Rating } from '@ubits/flux-ui'",
+      "usarPara": "Puntuación con estrellas",
+      "buscar": [
+        "estrellas",
+        "valoración",
+        "calificación"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-rating--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-rating--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "resizable",
+      "nombre": "Resizable",
+      "origen": "flux-ui",
+      "exports": [
+        "ResizableHandle",
+        "ResizablePanel",
+        "ResizablePanelGroup"
+      ],
+      "exportsPublicos": [
+        "ResizableHandle",
+        "ResizablePanel",
+        "ResizablePanelGroup"
+      ],
+      "variantes": {},
+      "importar": "import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@ubits/flux-ui'",
+      "usarPara": "Paneles que se redimensionan arrastrando el borde",
+      "buscar": [
+        "paneles",
+        "dividir pantalla",
+        "redimensionar"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-resizable--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-resizable--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "scroll-area",
+      "nombre": "ScrollArea",
+      "origen": "flux-ui",
+      "exports": [
+        "ScrollArea",
+        "ScrollBar"
+      ],
+      "exportsPublicos": [
+        "ScrollArea",
+        "ScrollBar"
+      ],
+      "variantes": {},
+      "importar": "import { ScrollArea, ScrollBar } from '@ubits/flux-ui'",
+      "usarPara": "Área con barra de desplazamiento con el estilo del tema",
+      "buscar": [
+        "scroll",
+        "desplazamiento",
+        "barra de scroll"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-scrollarea--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-scrollarea--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "scrollspy",
+      "nombre": "Scrollspy",
+      "origen": "reui",
+      "exports": [
+        "Scrollspy"
+      ],
+      "exportsPublicos": [
+        "Scrollspy"
+      ],
+      "variantes": {},
+      "importar": "import { Scrollspy } from '@ubits/flux-ui'",
+      "usarPara": "Resalta en un índice la sección visible mientras se hace scroll",
+      "buscar": [
+        "índice",
+        "tabla de contenidos",
+        "scrollspy"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-scrollspy--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-scrollspy--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "select",
+      "nombre": "Select",
+      "origen": "flux-ui",
+      "exports": [
+        "Select",
+        "SelectContent",
+        "SelectGroup",
+        "SelectItem",
+        "SelectLabel",
+        "SelectScrollDownButton",
+        "SelectScrollUpButton",
+        "SelectSeparator",
+        "SelectTrigger",
+        "SelectValue"
+      ],
+      "exportsPublicos": [
+        "Select",
+        "SelectContent",
+        "SelectGroup",
+        "SelectItem",
+        "SelectLabel",
+        "SelectScrollDownButton",
+        "SelectScrollUpButton",
+        "SelectSeparator",
+        "SelectTrigger",
+        "SelectValue"
+      ],
+      "variantes": {
+        "SelectTrigger": {
+          "size": [
+            "sm",
+            "default"
+          ]
+        }
+      },
+      "importar": "import { Select, SelectContent, SelectGroup, SelectItem, … } from '@ubits/flux-ui'",
+      "usarPara": "Selector de una opción",
+      "buscar": [
+        "select",
+        "desplegable",
+        "lista de opciones"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-select--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-select--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "separator",
+      "nombre": "Separator",
+      "origen": "flux-ui",
+      "exports": [
+        "Separator"
+      ],
+      "exportsPublicos": [
+        "Separator"
+      ],
+      "variantes": {},
+      "importar": "import { Separator } from '@ubits/flux-ui'",
+      "usarPara": "Línea divisoria",
+      "buscar": [
+        "separador",
+        "divisor",
+        "línea"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-separator--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-separator--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "sheet",
+      "nombre": "Sheet",
+      "origen": "flux-ui",
+      "exports": [
+        "Sheet",
+        "SheetClose",
+        "SheetContent",
+        "SheetDescription",
+        "SheetFooter",
+        "SheetHeader",
+        "SheetTitle",
+        "SheetTrigger"
+      ],
+      "exportsPublicos": [
+        "Sheet",
+        "SheetClose",
+        "SheetContent",
+        "SheetDescription",
+        "SheetFooter",
+        "SheetHeader",
+        "SheetTitle",
+        "SheetTrigger"
+      ],
+      "variantes": {
+        "SheetContent": {
+          "side": [
+            "top",
+            "right",
+            "bottom",
+            "left"
+          ]
+        }
+      },
+      "importar": "import { Sheet, SheetClose, SheetContent, SheetDescription, … } from '@ubits/flux-ui'",
+      "usarPara": "Panel lateral deslizante",
+      "buscar": [
+        "panel lateral",
+        "sheet",
+        "cajón"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-sheet--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-sheet--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "sidebar",
+      "nombre": "Sidebar",
+      "origen": "flux-ui",
+      "exports": [
+        "Sidebar",
+        "SidebarContent",
+        "SidebarFooter",
+        "SidebarGroup",
+        "SidebarGroupAction",
+        "SidebarGroupContent",
+        "SidebarGroupLabel",
+        "SidebarHeader",
+        "SidebarInput",
+        "SidebarInset",
+        "SidebarMenu",
+        "SidebarMenuAction",
+        "SidebarMenuBadge",
+        "SidebarMenuButton",
+        "SidebarMenuItem",
+        "SidebarMenuSkeleton",
+        "SidebarMenuSub",
+        "SidebarMenuSubButton",
+        "SidebarMenuSubItem",
+        "SidebarProvider",
+        "SidebarRail",
+        "SidebarSeparator",
+        "SidebarTrigger",
+        "useFxSidebar",
+        "useSidebar"
+      ],
+      "exportsPublicos": [
+        "Sidebar",
+        "SidebarContent",
+        "SidebarFooter",
+        "SidebarGroup",
+        "SidebarGroupAction",
+        "SidebarGroupContent",
+        "SidebarGroupLabel",
+        "SidebarHeader",
+        "SidebarInput",
+        "SidebarInset",
+        "SidebarMenu",
+        "SidebarMenuAction",
+        "SidebarMenuBadge",
+        "SidebarMenuButton",
+        "SidebarMenuItem",
+        "SidebarMenuSkeleton",
+        "SidebarMenuSub",
+        "SidebarMenuSubButton",
+        "SidebarMenuSubItem",
+        "SidebarProvider",
+        "SidebarRail",
+        "SidebarSeparator",
+        "SidebarTrigger",
+        "useFxSidebar",
+        "useSidebar"
+      ],
+      "variantes": {
+        "Sidebar": {
+          "side": [
+            "left",
+            "right"
+          ],
+          "variant": [
+            "sidebar",
+            "floating",
+            "inset"
+          ]
+        },
+        "SidebarMenuButton": {
+          "variant": [
+            "default",
+            "outline"
+          ],
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        },
+        "SidebarMenuSubButton": {
+          "size": [
+            "sm",
+            "md"
+          ]
+        }
+      },
+      "importar": "import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, … } from '@ubits/flux-ui'",
+      "usarPara": "Barra lateral de navegación",
+      "buscar": [
+        "sidebar",
+        "menú lateral",
+        "navegación"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-sidebar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-sidebar--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "skeleton",
+      "nombre": "Skeleton",
+      "origen": "flux-ui",
+      "exports": [
+        "Skeleton"
+      ],
+      "exportsPublicos": [
+        "Skeleton"
+      ],
+      "variantes": {},
+      "importar": "import { Skeleton } from '@ubits/flux-ui'",
+      "usarPara": "Esqueleto de carga con la silueta del contenido",
+      "buscar": [
+        "skeleton",
+        "cargando",
+        "placeholder"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-skeleton--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-skeleton--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "slider",
+      "nombre": "Slider",
+      "origen": "flux-ui",
+      "exports": [
+        "Slider"
+      ],
+      "exportsPublicos": [
+        "Slider"
+      ],
+      "variantes": {},
+      "importar": "import { Slider } from '@ubits/flux-ui'",
+      "usarPara": "Deslizador de valor",
+      "buscar": [
+        "slider",
+        "rango"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-slider--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-slider--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "sonner",
+      "nombre": "Sonner",
+      "origen": "flux-ui",
+      "exports": [
+        "SonnerToaster"
+      ],
+      "exportsPublicos": [
+        "SonnerToaster"
+      ],
+      "variantes": {},
+      "importar": "import { SonnerToaster } from '@ubits/flux-ui'",
+      "usarPara": "Toasts estilo Sonner (el export se llama SonnerToaster)",
+      "buscar": [
+        "toast",
+        "notificación"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-sonner--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-sonner--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "sortable",
+      "nombre": "Sortable",
+      "origen": "reui",
+      "exports": [
+        "Sortable",
+        "SortableItem",
+        "SortableItemHandle",
+        "SortableOverlay"
+      ],
+      "exportsPublicos": [
+        "Sortable",
+        "SortableItem",
+        "SortableItemHandle",
+        "SortableOverlay"
+      ],
+      "variantes": {},
+      "importar": "import { Sortable, SortableItem, SortableItemHandle, SortableOverlay } from '@ubits/flux-ui'",
+      "usarPara": "Lista que se reordena arrastrando sus elementos",
+      "buscar": [
+        "arrastrar",
+        "reordenar",
+        "drag and drop",
+        "ordenar"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-sortable--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-sortable--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "spinner",
+      "nombre": "Spinner",
+      "origen": "flux-ui",
+      "exports": [
+        "Spinner"
+      ],
+      "exportsPublicos": [
+        "Spinner"
+      ],
+      "variantes": {},
+      "importar": "import { Spinner } from '@ubits/flux-ui'",
+      "usarPara": "Indicador de carga giratorio",
+      "buscar": [
+        "spinner",
+        "cargando",
+        "loader"
+      ],
+      "storybook": {
+        "seccion": "Feedback",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/feedback-spinner--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/feedback-spinner--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "stepper",
+      "nombre": "Stepper",
+      "origen": "reui",
+      "exports": [
+        "Stepper",
+        "StepperContent",
+        "StepperDescription",
+        "StepperIndicator",
+        "StepperItem",
+        "StepperNav",
+        "StepperPanel",
+        "StepperSeparator",
+        "StepperTitle",
+        "StepperTrigger",
+        "useStepItem",
+        "useStepper"
+      ],
+      "exportsPublicos": [
+        "Stepper",
+        "StepperContent",
+        "StepperDescription",
+        "StepperIndicator",
+        "StepperItem",
+        "StepperNav",
+        "StepperPanel",
+        "StepperSeparator",
+        "StepperTitle",
+        "StepperTrigger",
+        "useStepItem",
+        "useStepper"
+      ],
+      "variantes": {},
+      "importar": "import { Stepper, StepperContent, StepperDescription, StepperIndicator, … } from '@ubits/flux-ui'",
+      "usarPara": "Formulario o flujo por pasos",
+      "buscar": [
+        "pasos",
+        "stepper",
+        "wizard",
+        "asistente"
+      ],
+      "storybook": {
+        "seccion": "Progress",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/progress-stepper--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/progress-stepper--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "switch",
+      "nombre": "Switch",
+      "origen": "flux-ui",
+      "exports": [
+        "Switch"
+      ],
+      "exportsPublicos": [
+        "Switch"
+      ],
+      "variantes": {
+        "Switch": {
+          "size": [
+            "sm",
+            "default"
+          ]
+        }
+      },
+      "importar": "import { Switch } from '@ubits/flux-ui'",
+      "usarPara": "Interruptor encendido/apagado",
+      "buscar": [
+        "switch",
+        "interruptor",
+        "toggle"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-switch--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-switch--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "table",
+      "nombre": "Table",
+      "origen": "flux-ui",
+      "exports": [
+        "Table",
+        "TableBody",
+        "TableCaption",
+        "TableCell",
+        "TableFooter",
+        "TableHead",
+        "TableHeader",
+        "TableRow"
+      ],
+      "exportsPublicos": [
+        "Table",
+        "TableBody",
+        "TableCaption",
+        "TableCell",
+        "TableFooter",
+        "TableHead",
+        "TableHeader",
+        "TableRow"
+      ],
+      "variantes": {},
+      "importar": "import { Table, TableBody, TableCaption, TableCell, … } from '@ubits/flux-ui'",
+      "usarPara": "Tabla HTML simple sin lógica",
+      "buscar": [
+        "tabla simple"
+      ],
+      "storybook": {
+        "seccion": "ReUI",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-table--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-table--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "tabs",
+      "nombre": "Tabs",
+      "origen": "flux-ui",
+      "exports": [
+        "Tabs",
+        "TabsContent",
+        "TabsList",
+        "TabsTrigger",
+        "tabsListVariants"
+      ],
+      "exportsPublicos": [
+        "Tabs",
+        "TabsContent",
+        "TabsList",
+        "TabsTrigger"
+      ],
+      "variantes": {
+        "TabsList": {
+          "variant": [
+            "line",
+            "view",
+            "page",
+            "default"
+          ]
+        }
+      },
+      "importar": "import { Tabs, TabsContent, TabsList, TabsTrigger } from '@ubits/flux-ui'",
+      "usarPara": "Pestañas (variants: default, line, view, page)",
+      "buscar": [
+        "pestañas",
+        "tabs"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-tabs--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-tabs--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "text",
+      "nombre": "Text",
+      "origen": "flux-ui",
+      "exports": [
+        "Text",
+        "textVariants"
+      ],
+      "exportsPublicos": [
+        "Text"
+      ],
+      "variantes": {
+        "Text": {
+          "variant": [
+            "blockquote",
+            "p",
+            "small",
+            "list",
+            "default",
+            "secondary",
+            "destructive",
+            "muted",
+            "large",
+            "lead",
+            "inlineCode"
+          ],
+          "size": [
+            "base",
+            "xs",
+            "sm",
+            "lg",
+            "xl"
+          ],
+          "weight": [
+            "bold",
+            "normal",
+            "medium",
+            "semibold"
+          ]
+        }
+      },
+      "importar": "import { Text } from '@ubits/flux-ui'",
+      "usarPara": "Texto con variantes del tema (muted, lead, small…)",
+      "buscar": [
+        "texto",
+        "párrafo"
+      ],
+      "storybook": {
+        "seccion": "Core",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-text--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-text--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "textarea",
+      "nombre": "Textarea",
+      "origen": "flux-ui",
+      "exports": [
+        "Textarea"
+      ],
+      "exportsPublicos": [
+        "Textarea"
+      ],
+      "variantes": {},
+      "importar": "import { Textarea } from '@ubits/flux-ui'",
+      "usarPara": "Campo de texto de varias líneas",
+      "buscar": [
+        "textarea",
+        "comentario",
+        "descripción"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-textarea--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-textarea--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "theme-provider",
+      "nombre": "ThemeProvider",
+      "origen": "flux-ui",
+      "exports": [
+        "ThemeContext",
+        "ThemeProvider",
+        "useFxTheme",
+        "useTheme"
+      ],
+      "exportsPublicos": [
+        "ThemeContext",
+        "ThemeProvider",
+        "useFxTheme",
+        "useTheme"
+      ],
+      "variantes": {},
+      "importar": "import { ThemeContext, ThemeProvider, useFxTheme, useTheme } from '@ubits/flux-ui'",
+      "usarPara": "Proveedor del tema de Ubits y del modo claro u oscuro; va en la raíz de la app",
+      "buscar": [
+        "tema",
+        "modo oscuro",
+        "dark mode",
+        "claro"
+      ],
+      "storybook": {
+        "seccion": "Core",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-themeprovider--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-themeprovider--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "timeline",
+      "nombre": "Timeline",
+      "origen": "reui",
+      "exports": [
+        "Timeline",
+        "TimelineContent",
+        "TimelineDate",
+        "TimelineHeader",
+        "TimelineIndicator",
+        "TimelineItem",
+        "TimelineSeparator",
+        "TimelineTitle"
+      ],
+      "exportsPublicos": [
+        "Timeline",
+        "TimelineContent",
+        "TimelineDate",
+        "TimelineHeader",
+        "TimelineIndicator",
+        "TimelineItem",
+        "TimelineSeparator",
+        "TimelineTitle"
+      ],
+      "variantes": {
+        "Timeline": {
+          "orientation": [
+            "horizontal",
+            "vertical"
+          ]
+        }
+      },
+      "importar": "import { Timeline, TimelineContent, TimelineDate, TimelineHeader, … } from '@ubits/flux-ui'",
+      "usarPara": "Línea de tiempo de eventos",
+      "buscar": [
+        "timeline",
+        "actividad",
+        "historial"
+      ],
+      "storybook": {
+        "seccion": "Feedback",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/feedback-timeline--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/feedback-timeline--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "toast",
+      "nombre": "Toast",
+      "origen": "flux-ui",
+      "exports": [
+        "Toast",
+        "ToastAction",
+        "ToastClose",
+        "ToastContent",
+        "ToastDescription",
+        "ToastPortal",
+        "ToastProvider",
+        "ToastTitle",
+        "ToastToaster",
+        "ToastViewport",
+        "createToastManager",
+        "toast",
+        "useToastManager"
+      ],
+      "exportsPublicos": [
+        "Toast",
+        "ToastAction",
+        "ToastClose",
+        "ToastContent",
+        "ToastDescription",
+        "ToastPortal",
+        "ToastProvider",
+        "ToastTitle",
+        "ToastToaster",
+        "ToastViewport",
+        "toast",
+        "useToastManager"
+      ],
+      "variantes": {},
+      "importar": "import { Toast, ToastAction, ToastClose, ToastContent, … } from '@ubits/flux-ui'",
+      "usarPara": "Avisos flotantes: toast.add({ type, title }) dentro de <ToastToaster>",
+      "buscar": [
+        "toast",
+        "notificación",
+        "aviso flotante"
+      ],
+      "storybook": {
+        "seccion": "Feedback",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/feedback-toaster--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/feedback-toaster--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "toggle",
+      "nombre": "Toggle",
+      "origen": "flux-ui",
+      "exports": [
+        "Toggle",
+        "toggleVariants"
+      ],
+      "exportsPublicos": [
+        "Toggle"
+      ],
+      "variantes": {
+        "Toggle": {
+          "variant": [
+            "default",
+            "outline"
+          ],
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "importar": "import { Toggle } from '@ubits/flux-ui'",
+      "usarPara": "Botón que se queda presionado",
+      "buscar": [
+        "toggle"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-toggle--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-toggle--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "toggle-group",
+      "nombre": "ToggleGroup",
+      "origen": "flux-ui",
+      "exports": [
+        "ToggleGroup",
+        "ToggleGroupItem"
+      ],
+      "exportsPublicos": [
+        "ToggleGroup",
+        "ToggleGroupItem"
+      ],
+      "variantes": {
+        "ToggleGroup": {
+          "variant": [
+            "default",
+            "outline"
+          ],
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ],
+          "orientation": [
+            "horizontal",
+            "vertical"
+          ]
+        },
+        "ToggleGroupItem": {
+          "variant": [
+            "default",
+            "outline"
+          ],
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "importar": "import { ToggleGroup, ToggleGroupItem } from '@ubits/flux-ui'",
+      "usarPara": "Grupo de toggles",
+      "buscar": [
+        "segmentado",
+        "toggle group"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-togglegroup--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-togglegroup--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "tooltip",
+      "nombre": "Tooltip",
+      "origen": "flux-ui",
+      "exports": [
+        "Tooltip",
+        "TooltipContent",
+        "TooltipProvider",
+        "TooltipTrigger"
+      ],
+      "exportsPublicos": [
+        "Tooltip",
+        "TooltipContent",
+        "TooltipProvider",
+        "TooltipTrigger"
+      ],
+      "variantes": {},
+      "importar": "import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@ubits/flux-ui'",
+      "usarPara": "Texto de ayuda al pasar el cursor",
+      "buscar": [
+        "tooltip",
+        "ayuda"
+      ],
+      "storybook": {
+        "seccion": "Components",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-tooltip--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-tooltip--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "traffic-light",
+      "nombre": "TrafficLight",
+      "origen": "flux-ui",
+      "exports": [
+        "TrafficLight"
+      ],
+      "exportsPublicos": [
+        "TrafficLight"
+      ],
+      "variantes": {},
+      "importar": "import { TrafficLight } from '@ubits/flux-ui'",
+      "usarPara": "Semáforo de estados: punto de color con etiqueta y valor; se alimenta con la prop data",
+      "buscar": [
+        "semáforo",
+        "estado",
+        "indicador de color"
+      ],
+      "storybook": {
+        "seccion": "Core",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-trafficlight--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-trafficlight--playground"
+      },
+      "disponible": true
+    },
+    {
+      "slug": "tree",
+      "nombre": "Tree",
+      "origen": "reui",
+      "exports": [
+        "Tree",
+        "TreeDragLine",
+        "TreeItem",
+        "TreeItemLabel"
+      ],
+      "exportsPublicos": [
+        "Tree",
+        "TreeDragLine",
+        "TreeItem",
+        "TreeItemLabel"
+      ],
+      "variantes": {},
+      "importar": "import { Tree, TreeDragLine, TreeItem, TreeItemLabel } from '@ubits/flux-ui'",
+      "usarPara": "Árbol jerárquico",
+      "buscar": [
+        "árbol",
+        "jerarquía",
+        "carpetas"
+      ],
+      "storybook": {
+        "seccion": "Data",
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/data-tree--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/data-tree--playground"
+      },
+      "disponible": true
+    }
+  ],
+  "soloEnStorybook": [
+    {
+      "slug": "file-upload",
+      "titulo": "Components/FileUpload",
+      "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-fileupload--docs"
+    },
+    {
+      "slug": "action-rail",
+      "titulo": "Components/ActionRail",
+      "docs": null
+    },
+    {
+      "slug": "animated-icon",
+      "titulo": "Components/AnimatedIcon",
+      "docs": null
+    },
+    {
+      "slug": "dual-date-range-picker",
+      "titulo": "Components/DualDateRangePicker",
+      "docs": null
+    },
+    {
+      "slug": "icon",
+      "titulo": "Components/Icon",
+      "docs": null
+    }
+  ]
+}

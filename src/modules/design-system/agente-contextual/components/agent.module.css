@@ -1,0 +1,88 @@
+/* Movimientos del agente contextual (los del editor más «pensando» y «resaltar en la pantalla»). */
+
+/* Aplicar un cambio: el contenido se desvanece y desenfoca un instante mientras cambia. */
+.blurPulse {
+  animation: blur-pulse 0.6s ease-in-out;
+}
+
+@keyframes blur-pulse {
+  50% {
+    opacity: 0.2;
+    filter: blur(4px);
+  }
+}
+
+/* Propuesta nueva: entra desde abajo y se enfoca. */
+.propIn {
+  animation: prop-in 0.45s ease-out both;
+}
+
+@keyframes prop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(5px);
+  }
+}
+
+/* Señalar dónde está algo: late una vez. */
+.nudge {
+  animation: nudge 0.5s ease-in-out;
+}
+
+@keyframes nudge {
+  50% {
+    transform: scale(1.015);
+  }
+}
+
+/* Listas: cada línea entra desde la izquierda, escalonada con animation-delay. */
+.lineIn {
+  animation: line-in 0.35s ease-out both;
+}
+
+@keyframes line-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+/* Mensajes del panel. */
+.msgIn {
+  animation: msg-in 0.35s ease-out both;
+}
+
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Resaltar en la pantalla lo que el agente cita o acaba de cambiar. */
+.flash {
+  animation: flash 1.8s ease-out;
+}
+
+@keyframes flash {
+  0%,
+  35% {
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 28%, transparent);
+    background-color: color-mix(in oklch, var(--primary) 7%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blurPulse,
+  .propIn,
+  .nudge,
+  .lineIn,
+  .msgIn,
+  .flash {
+    animation: none;
+  }
+}

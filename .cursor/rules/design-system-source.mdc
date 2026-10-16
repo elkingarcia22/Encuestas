@@ -1,0 +1,31 @@
+---
+description: Armar pantallas reutilizando lo elegido en design-system
+alwaysApply: true
+---
+
+# Design system como fuente de las pantallas
+
+Las piezas elegidas para el producto viven en `src/modules/design-system/`.
+Las demás pantallas **reutilizan** esas piezas; no se copian ni se reinventan.
+
+## Antes de maquetar
+
+1. Busca en `src/modules/design-system/` (componentes, bloques, templates) si ya existe lo que hace falta.
+2. Si existe, **impórtalo** desde ahí. No dupliques el JSX en otro módulo.
+3. Si no existe, créalo primero en design-system y luego úsalo en la pantalla.
+
+```tsx
+// ❌ BAD — otra copia del login
+export function SignInCard() { /* formulario propio */ }
+
+// ✅ GOOD — la pantalla usa el template elegido
+import { Auth19View } from '@/modules/design-system/templates/auth-19/components/auth-19-view'
+```
+
+## Qué no hacer
+
+- Copiar un bloque de design-system y cambiarlo solo en `/auth`, `/admin` u otro módulo.
+- Inventar un control (tabs, card, formulario) si ya está resuelto en design-system.
+- Tratar design-system como documentación muerta: es el catálogo de lo que se usa.
+
+Sigue aplicando `AGENTS.md`: UI de `@ubits/flux-ui`, iconos Hugeicons, tokens del tema.

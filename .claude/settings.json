@@ -1,0 +1,86 @@
+{
+  "enabledMcpjsonServers": [
+    "ds-ubits",
+    "flux-ui",
+    "reui"
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/ai-tools/flux-ui/generar-catalogo.mjs\" --si-cambio",
+            "timeout": 30,
+            "statusMessage": "Revisando el catálogo de flux-ui"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/ai-tools/grafo/generar-grafo.mjs\" --si-cambio",
+            "timeout": 30,
+            "statusMessage": "Actualizando el grafo del playground"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/ai-tools/hooks/revisar-acceso.mjs\"",
+            "timeout": 15,
+            "statusMessage": "Revisando el acceso a la librería"
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/ai-tools/hooks/revisar-identidad.mjs\" < /dev/null",
+            "timeout": 10,
+            "statusMessage": "Revisando con qué correo se firman los commits"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/ai-tools/hooks/recordatorio.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/ai-tools/hooks/guardia-imports.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Revisando que la UI salga de flux-ui"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/ai-tools/hooks/revisar-identidad.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Revisando el correo del commit"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/ai-tools/hooks/revisar-al-cerrar.mjs\"",
+            "timeout": 30,
+            "statusMessage": "Revisando los cambios en src/"
+          }
+        ]
+      }
+    ]
+  }
+}

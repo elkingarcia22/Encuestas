@@ -1,0 +1,1244 @@
+window.SIMULADOR_SCORM_SRCDOC = `<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simulador de Conversación</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ENTERPRISE DESIGN SYSTEM - PURE CSS3 */
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #eff6ff;
+
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+
+  --emerald-500: #10b981;
+  --rose-500: #f43f5e;
+  --amber-500: #f59e0b;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: 'Inter Tight', -apple-system, system-ui, sans-serif;
+  background-color: #0f172a;
+  background-image:
+    radial-gradient(at 15% 25%, rgba(37, 99, 235, 0.18) 0, transparent 55%),
+    radial-gradient(at 85% 75%, rgba(99, 102, 241, 0.12) 0, transparent 55%),
+    radial-gradient(at 50% 0%, rgba(37, 99, 235, 0.08) 0, transparent 40%);
+  color: var(--slate-900);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+#app-container {
+  width: 95%;
+  max-width: 1100px;
+  height: 88vh;
+  min-height: 600px;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* HEADER */
+header {
+  height: 68px;
+  background: var(--slate-900);
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 3px solid var(--primary);
+  z-index: 50;
+  flex-shrink: 0;
+}
+
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-box {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
+
+header h1 {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: white;
+}
+
+header h1 span {
+  color: var(--slate-400);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* NAVIGATION VIEWS */
+.view {
+  display: none;
+  flex: 1;
+  overflow: hidden;
+}
+
+.view.active {
+  display: flex;
+}
+
+/* =====================
+   INTRO VIEW
+   ===================== */
+#intro-view {
+  flex-direction: column;
+  padding: 48px 48px 40px;
+  overflow-y: auto;
+  align-items: center;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.welcome-header {
+  text-align: center;
+  margin-bottom: 44px;
+  position: relative;
+}
+
+.welcome-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 5px 14px;
+  border-radius: 99px;
+  border: 1px solid #bfdbfe;
+  margin-bottom: 18px;
+}
+
+.welcome-eyebrow::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+.welcome-header h2 {
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  margin-bottom: 12px;
+  color: var(--slate-900);
+  line-height: 1.1;
+}
+
+.welcome-header h2 em {
+  font-style: normal;
+  background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-header p {
+  color: var(--slate-500);
+  font-size: 17px;
+  max-width: 460px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.scenarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.scenario-card {
+  background: white;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  text-align: left;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.scenario-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--card-accent, var(--slate-200));
+  transition: opacity 0.25s;
+}
+
+.scenario-card:hover {
+  border-color: var(--card-accent, var(--primary));
+  box-shadow: 0 8px 32px -8px rgba(37, 99, 235, 0.22), 0 2px 8px rgba(0,0,0,0.06);
+  transform: translateY(-6px);
+}
+
+.card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 18px;
+  background: var(--icon-bg, var(--primary-light));
+  flex-shrink: 0;
+}
+
+.card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--slate-900);
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+
+.card-role {
+  font-size: 12px;
+  color: var(--slate-500);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.card-context {
+  font-size: 13.5px;
+  color: var(--slate-600);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--slate-100);
+}
+
+.card-cta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: -0.01em;
+  transition: gap 0.2s;
+}
+
+.scenario-card:hover .card-cta {
+  gap: 8px;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  width: fit-content;
+}
+
+.badge-facil  { background: #dcfce7; color: #15803d; }
+.badge-media  { background: #fef9c3; color: #a16207; }
+.badge-dificil{ background: #fee2e2; color: #b91c1c; }
+
+/* =====================
+   SIMULATOR LAYOUT
+   ===================== */
+#simulator-view {
+  flex-direction: row;
+}
+
+@media (max-width: 900px) {
+  #app-container {
+    height: 100vh;
+    width: 100%;
+    border-radius: 0;
+  }
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+#chat-history {
+  flex: 1;
+  padding: 36px 40px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#chat-history::-webkit-scrollbar { width: 5px; }
+#chat-history::-webkit-scrollbar-track { background: transparent; }
+#chat-history::-webkit-scrollbar-thumb { background: var(--slate-200); border-radius: 10px; }
+
+.message {
+  max-width: 82%;
+  padding: 16px 22px;
+  border-radius: var(--radius-lg);
+  font-size: 15px;
+  line-height: 1.65;
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+}
+
+.message-user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+}
+
+.message-employee {
+  align-self: flex-start;
+  background: var(--slate-50);
+  color: var(--slate-800);
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--slate-200);
+}
+
+.message-context {
+  align-self: center;
+  max-width: 100% !important;
+  width: 100%;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  padding: 20px 24px !important;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-style: italic;
+  display: block;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.message-context strong {
+  color: var(--primary);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 6px;
+  font-style: normal;
+}
+
+.decision-section {
+  padding: 28px 40px;
+  background: var(--slate-50);
+  border-top: 1px solid var(--slate-200);
+  flex-shrink: 0;
+}
+
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-btn {
+  background: white;
+  border: 1.5px solid var(--slate-200);
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--slate-700);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Inter Tight', sans-serif;
+}
+
+.option-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  transform: translateX(4px);
+  box-shadow: 0 2px 12px rgba(37, 99, 235, 0.12);
+}
+
+.option-btn::before {
+  content: '›';
+  color: var(--slate-300);
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.18s, transform 0.18s;
+}
+
+.option-btn:hover::before {
+  color: var(--primary);
+  transform: translateX(2px);
+}
+
+/* =====================
+   RESULTS VIEW
+   ===================== */
+#results-view {
+  padding: 32px 48px;
+  overflow-y: auto;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 60%);
+}
+
+.result-card {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Score hero section */
+.score-hero {
+  width: 100%;
+  background: var(--slate-900);
+  border-radius: var(--radius-lg);
+  padding: 28px 40px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.score-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.score-hero-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.score-hero-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+}
+
+.score-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--slate-400);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+
+.score-ring-wrap {
+  position: relative;
+  width: 110px;
+  height: 110px;
+}
+
+.score-ring {
+  width: 110px;
+  height: 110px;
+  transform: rotate(-90deg);
+}
+
+.score-ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.08);
+  stroke-width: 8;
+}
+
+.score-ring-fill {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 314;
+  stroke-dashoffset: 314;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s;
+}
+
+.score-ring-number {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.score-number {
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: white;
+  line-height: 1;
+}
+
+.score-denom {
+  font-size: 11px;
+  color: var(--slate-400);
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+.score-hero-label {
+  font-size: 22px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.style-indicator {
+  padding: 5px 18px;
+  border-radius: 99px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 12px;
+  border: 2px solid currentColor;
+  margin-bottom: 10px;
+}
+
+/* Summary now lives inside score-hero */
+
+/* Metrics grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.metrica-card {
+  background: white;
+  padding: 24px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--slate-200);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.metrica-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.metrica-card.card-strengths::before { background: linear-gradient(90deg, #10b981, #34d399); }
+.metrica-card.card-improvements::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+.metrica-card h4 {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-strengths h4   { color: #059669; }
+.card-improvements h4 { color: #d97706; }
+
+.metrica-card ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metrica-card li {
+  font-size: 13.5px;
+  color: var(--slate-700);
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.metrica-card li::before {
+  content: var(--li-icon, '•');
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.card-strengths li::before   { content: '✓'; color: #10b981; font-weight: 700; font-size: 13px; }
+.card-improvements li::before { content: '→'; color: #f59e0b; font-weight: 700; font-size: 13px; }
+
+/* Button */
+.btn-primary {
+  background: var(--slate-900);
+  color: white;
+  padding: 15px 48px;
+  border-radius: 99px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 13px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-md);
+  font-family: 'Inter Tight', sans-serif;
+}
+
+.btn-primary:hover {
+  background: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -6px rgba(37, 99, 235, 0.4);
+}
+
+/* Animations */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.scenario-card {
+  animation: cardIn 0.4s ease-out both;
+}
+.scenario-card:nth-child(1) { animation-delay: 0.05s; }
+.scenario-card:nth-child(2) { animation-delay: 0.12s; }
+.scenario-card:nth-child(3) { animation-delay: 0.19s; }
+
+
+</style>
+</head>
+<body>
+  <div id="app-container">
+    <header>
+      <div class="logo-group">
+        <div class="logo-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h1 id="app-title-main">Simulador de Conversación <span id="app-subtitle"></span></h1>
+      </div>
+    </header>
+    <main id="intro-view" class="view active">
+      <div class="welcome-header">
+        <div class="welcome-eyebrow">Entrenamiento de Liderazgo</div>
+        <h2>Conversaciones <em>difíciles</em></h2>
+        <p>Practica cómo manejar situaciones complejas con tu equipo y potencia tu comunicación directiva.</p>
+      </div>
+      <div class="scenarios-grid"></div>
+    </main>
+    <main id="simulator-view" class="view">
+      <section class="chat-container">
+        <div id="chat-history"></div>
+        <div class="decision-section">
+          <div id="options-container" class="options-grid"></div>
+          <button id="finish-btn" class="btn-primary" style="display:none;width:100%;" onclick="window.app.showResults()">Finalizar y Evaluar</button>
+        </div>
+      </section>
+    </main>
+    <main id="results-view" class="view">
+      <div class="result-card">
+        <div class="score-hero">
+          <div class="score-hero-left">
+            <div class="score-ring-wrap">
+              <svg class="score-ring" viewBox="0 0 120 120">
+                <circle class="score-ring-bg" cx="60" cy="60" r="50"/>
+                <circle class="score-ring-fill" cx="60" cy="60" r="50" id="score-ring-fill"/>
+              </svg>
+              <div class="score-ring-number">
+                <span id="res-score" class="score-number">0</span>
+                <span class="score-denom">/ 100</span>
+              </div>
+            </div>
+          </div>
+          <div class="score-hero-right">
+            <p class="score-eyebrow">Evaluación de Desempeño</p>
+            <p class="score-hero-label">Tu resultado</p>
+            <div id="res-style" class="style-indicator">Estilo</div>
+            <p id="res-summary" style="font-size:14px;color:var(--slate-400);line-height:1.6;margin:0;"></p>
+          </div>
+        </div>
+        <div class="metrics-grid">
+          <div class="metrica-card card-strengths"><h4>Fortalezas Clave</h4><ul id="res-strengths"></ul></div>
+          <div class="metrica-card card-improvements"><h4>Oportunidades de Mejora</h4><ul id="res-improvements"></ul></div>
+        </div>
+        <button class="btn-primary" onclick="window.app.renderIntro()">Probar otro escenario</button>
+      </div>
+    </main>
+  </div>
+<script>
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+window.SCORM = {
+  initialized: false,
+
+  init() {
+    if (this.initialized) return true;
+    try {
+      const win = window.parent.API || window.API;
+      if (win) {
+        win.LMSInitialize("");
+        this.initialized = true;
+        return true;
+      }
+    } catch (e) {
+      console.warn("SCORM API not found (expected outside of LMS)");
+    }
+    return false;
+  },
+
+  setScore(score) {
+    try {
+      const win = window.parent.API || window.API;
+      if (win) {
+        win.LMSSetValue("cmi.core.score.raw", score.toString());
+        win.LMSCommit("");
+      }
+    } catch (e) {
+      console.error("SCORM setScore failed", e);
+    }
+  },
+
+  finish() {
+    try {
+      const win = window.parent.API || window.API;
+      if (win) {
+        win.LMSSetValue("cmi.core.lesson_status", "completed");
+        win.LMSCommit("");
+        win.LMSFinish("");
+      }
+    } catch (e) {
+      console.error("SCORM finish failed", e);
+    }
+  },
+};
+
+</script>
+<script>
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+window.SCENARIOS = [
+  {
+    id: "deadlines",
+    title: "Plazos Incumplidos",
+    role: "Alejandro - Analista de Marketing",
+    difficulty: "Fácil",
+    context: "Alejandro entrega reportes tarde por 'perfeccionismo'. Tu reto: exigir puntualidad sin desmotivarlo.",
+    initialNodeId: "1",
+    nodes: {
+      "1": {
+        id: "1",
+        employeeText: "Hola Jefe, ¿querías verme? Tengo mucho trabajo con la nueva campaña, espero que sea rápido.",
+        options: [
+          {
+            id: "1a",
+            text: "Hola Alejandro. He notado que los últimos tres reportes llegaron con retraso. ¿Qué está pasando?",
+            assertiveness: 8,
+            cooperation: 7,
+            nextNodeId: "2",
+          },
+          {
+            id: "1b",
+            text: "Alejandro, esto no puede seguir así. Tres retrasos en un mes es inaceptable. Necesito esos reportes a tiempo ya.",
+            assertiveness: 10,
+            cooperation: 2,
+            nextNodeId: "2_comp",
+          },
+          {
+            id: "1c",
+            text: "No te preocupes, sé que estás liado. Solo quería saber cómo vas con todo en general.",
+            assertiveness: 2,
+            cooperation: 8,
+            nextNodeId: "2_evit",
+          },
+        ],
+      },
+      "2": {
+        id: "2",
+        employeeText: "Bueno, es que la parte creativa toma tiempo. No quiero enviar algo mediocre solo por cumplir un reloj.",
+        options: [
+          {
+            id: "2a",
+            text: "Entiendo que valoras la calidad, pero la puntualidad es parte de la calidad profesional. ¿Cómo podemos organizar mejor tus tiempos?",
+            assertiveness: 10,
+            cooperation: 9,
+            nextNodeId: "3",
+          },
+          {
+            id: "2b",
+            text: "El reloj es lo que paga las facturas de los clientes. Menos perfección y más velocidad, por favor.",
+            assertiveness: 10,
+            cooperation: 1,
+            nextNodeId: "3_comp",
+          },
+          {
+            id: "2c",
+            text: "Tienes razón, la creatividad no tiene horarios. Avísame cuando puedas terminarlos.",
+            assertiveness: 1,
+            cooperation: 10,
+            nextNodeId: "3_acom",
+          },
+        ],
+      },
+      "3": {
+        id: "3",
+        employeeText: "Supongo que podría usar un software de gestión o delegar la parte de maquetación.",
+        options: [
+          {
+            id: "3a",
+            text: "Me parece una gran idea. Definamos los pasos para implementar eso y revisemos los plazos el lunes.",
+            assertiveness: 10,
+            cooperation: 10,
+            nextNodeId: "4",
+          },
+          {
+            id: "3b",
+            text: "No gastaremos en software. Simplemente trabaja más rápido.",
+            assertiveness: 9,
+            cooperation: 2,
+            nextNodeId: "4",
+          },
+          {
+            id: "3c",
+            text: "Lo que tú veas mejor, confío en que lo solucionarás.",
+            assertiveness: 4,
+            cooperation: 8,
+            nextNodeId: "4",
+          },
+        ],
+      },
+      "2_comp": { employeeText: "¡Me cansa que solo vean los números y no el esfuerzo! Estoy haciendo lo que puedo.", options: [{ text: "Lamento que te sientas así, busquemos una solución juntos.", nextNodeId: "3", assertiveness: 7, cooperation: 8 }, { text: "No quiero excusas.", nextNodeId: "2_comp", assertiveness: 10, cooperation: 0 }] },
+      "2_evit": { employeeText: "Voy bien, un poco estresado. Si no hay nada urgente, vuelvo a mi mesa.", options: [{ text: "Es urgente hablar de los reportes. Hablemos ahora.", nextNodeId: "2", assertiveness: 9, cooperation: 6 }, { text: "Vale, ánimo.", nextNodeId: "4", assertiveness: 0, cooperation: 5 }] },
+      "3_comp": { employeeText: "Dudo que la velocidad arregle el diseño, pero usted es el jefe.", options: [{ text: "Exacto, confío en tu criterio pero con rapidez.", nextNodeId: "4", assertiveness: 8, cooperation: 5 }] },
+      "3_acom": { employeeText: "Gracias, valoro que no me meta presión. Le avisaré.", options: [{ text: "De nada.", nextNodeId: "4", assertiveness: 2, cooperation: 9 }] },
+      "4": {
+        id: "4",
+        employeeText: "Vale, espero que esto sirva para mejorar las cosas. Gracias por la charla.",
+        options: [],
+        isEnd: true,
+      },
+    },
+  },
+  {
+    id: "toxic",
+    title: "Actitud Tóxica",
+    role: "Sofía - Dev Backend",
+    difficulty: "Media",
+    context: "Sofía es sarcástica en las revisiones de código, afectando a los juniors. Debes corregir su actitud.",
+    initialNodeId: "1",
+    nodes: {
+      "1": {
+        id: "1",
+        employeeText: "¿Pasa algo? Tengo una migración pendiente y los juniors no paran de preguntarme tonterías.",
+        options: [
+          { id: "1a", text: "Quería hablar sobre el tono de tus comentarios en Code Reviews. Buscamos ser constructivos.", nextNodeId: "2", assertiveness: 9, cooperation: 7 },
+          { id: "1b", text: "Sofía, siempre eres igual de cortante. Los chicos te tienen miedo.", nextNodeId: "2_def", assertiveness: 8, cooperation: 2 },
+          { id: "1c", text: "Solo quería saber cómo van los juniors con tu ayuda.", nextNodeId: "1", assertiveness: 3, cooperation: 9 },
+        ],
+      },
+      "2": {
+        id: "2",
+        employeeText: "Solo digo la verdad. Si el código es basura, hay que decirlo para que aprendan.",
+        options: [
+          { id: "2a", text: "La verdad no tiene por qué ser hiriente. Prueba a dar sugerencias técnicas en lugar de juicios.", nextNodeId: "3", assertiveness: 10, cooperation: 9 },
+          { id: "2b", text: "No me importa la verdad si el ambiente es tóxico.", nextNodeId: "2_def", assertiveness: 8, cooperation: 1 },
+        ],
+      },
+      "3": {
+        id: "3",
+        employeeText: "Supongo que puedo limitarme a sugerencias técnicas en Slack.",
+        options: [
+          { id: "3a", text: "Excelente. Si necesitas apoyo para gestionar tu tiempo con ellos, dímelo.", nextNodeId: "4", assertiveness: 9, cooperation: 10 },
+        ],
+      },
+      "2_def": { employeeText: "Genial, ahora soy el monstruo porque me importa la calidad.", options: [{ text: "No eres un monstruo, valoramos tu rigor pero el respeto es norma.", nextNodeId: "3", assertiveness: 9, cooperation: 6 }] },
+      "4": { id: "4", employeeText: "Entendido. Volveré al trabajo.", options: [], isEnd: true },
+    },
+  },
+  {
+    id: "performance",
+    title: "Bajo Rendimiento Repentino",
+    role: "Marcos - Analista de Datos",
+    difficulty: "Difícil",
+    context: "Un divorcio está afectando el rendimiento de tu mejor analista. Descubre la causa con tacto y ayúdale.",
+    initialNodeId: "1",
+    nodes: {
+      "1": {
+        id: "1",
+        employeeText: "Hola... perdón si estoy un poco lento. No he dormido bien.",
+        options: [
+          { id: "1a", text: "He notado que tu rendimiento ha bajado. Me preocupa, ¿hay algo en lo que pueda apoyarte?", nextNodeId: "2", assertiveness: 8, cooperation: 10 },
+          { id: "1b", text: "Marcos, los datos del último dashboard están mal. Necesito que te centres.", nextNodeId: "1", assertiveness: 10, cooperation: 2 },
+        ],
+      },
+      "2": {
+        id: "2",
+        employeeText: "Es un tema personal. Me está costando mucho concentrarme.",
+        options: [
+          { id: "2a", text: "Es comprensible. ¿Te parece si ajustamos tus tareas críticas estas dos semanas?", nextNodeId: "3", assertiveness: 9, cooperation: 10 },
+          { id: "2b", text: "Bueno, todos tenemos problemas. Necesitamos resultados.", nextNodeId: "2", assertiveness: 9, cooperation: 2 },
+        ],
+      },
+      "3": {
+        id: "3",
+        employeeText: "Eso significaría mucho. Me da vergüenza estar así.",
+        options: [
+          { id: "3a", text: "No hay de qué avergonzarse. Hagamos un seguimiento semanal breve para apoyarte.", nextNodeId: "4", assertiveness: 9, cooperation: 10 },
+        ],
+      },
+      "4": { id: "4", employeeText: "Gracias por entenderlo. Haré lo posible por no defraudar al equipo.", options: [], isEnd: true },
+    },
+  },
+];
+
+</script>
+<script>
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+class SimulatorApp {
+  constructor() {
+    this.state = {
+      view: 'intro',
+      selectedScenario: null,
+      currentNodeId: '1',
+      scores: { assertiveness: 0, cooperation: 0, turns: 0 },
+      history: []
+    };
+
+    this.init();
+  }
+
+  init() {
+    if (window.SCORM) window.SCORM.init();
+    this.renderIntro();
+    window.app = this;
+  }
+
+  switchView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(\`\${viewId}-view\`).classList.add('active');
+    this.state.view = viewId;
+  }
+
+  renderIntro() {
+    this.switchView('intro');
+    
+    // Header update for intro
+    document.getElementById('app-title-main').childNodes[0].textContent = "Simulador de Conversación ";
+    document.getElementById('app-subtitle').innerText = "";
+
+    const container = document.querySelector('.scenarios-grid');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const scenarioMeta = {
+      deadlines:   { icon: '⏰', accent: '#2563eb', iconBg: '#eff6ff' },
+      toxic:       { icon: '💬', accent: '#7c3aed', iconBg: '#f5f3ff' },
+      performance: { icon: '📊', accent: '#0891b2', iconBg: '#ecfeff' },
+    };
+
+    const scenarios = window.SCENARIOS || [];
+    scenarios.forEach(scenario => {
+      const card = document.createElement('div');
+      card.className = 'scenario-card';
+
+      const diffClass = scenario.difficulty.toLowerCase()
+        .replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u');
+
+      const meta = scenarioMeta[scenario.id] || { icon: '🎯', accent: '#2563eb', iconBg: '#eff6ff' };
+      card.style.setProperty('--card-accent', meta.accent);
+      card.style.setProperty('--icon-bg', meta.iconBg);
+
+      card.innerHTML = \`
+        <div class="card-icon">\${meta.icon}</div>
+        <div class="card-content">
+          <div class="card-title">\${scenario.title}</div>
+          <div class="card-role">\${scenario.role}</div>
+          <div class="card-context">\${scenario.context}</div>
+        </div>
+        <div class="card-footer">
+          <span class="badge badge-\${diffClass}">\${scenario.difficulty}</span>
+          <span class="card-cta">Iniciar <span>→</span></span>
+        </div>
+      \`;
+      card.onclick = () => this.startScenario(scenario);
+      container.appendChild(card);
+    });
+  }
+
+  startScenario(scenario) {
+    this.state.selectedScenario = scenario;
+    this.state.currentNodeId = scenario.initialNodeId;
+    this.state.scores = { assertiveness: 0, cooperation: 0, turns: 0 };
+    this.state.history = [{ sender: 'employee', text: scenario.nodes[scenario.initialNodeId].employeeText }];
+    
+    // Header update for scenario
+    const name = scenario.role.split(' - ')[0];
+    const role = scenario.role.split(' - ')[1];
+    document.getElementById('app-title-main').childNodes[0].textContent = name + " ";
+    document.getElementById('app-subtitle').innerText = role;
+
+    this.switchView('simulator');
+    this.updateSimulatorUI();
+  }
+
+  updateSimulatorUI() {
+    const scenario = this.state.selectedScenario;
+    const node = scenario.nodes[this.state.currentNodeId];
+
+    // Chat history
+    const historyContainer = document.getElementById('chat-history');
+    historyContainer.innerHTML = \`
+      <div class="message message-context">
+        <strong>Contexto del Escenario:</strong><br>
+        \${scenario.context}
+      </div>
+    \`;
+    this.state.history.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = \`message message-\${msg.sender}\`;
+      div.innerText = msg.text;
+      historyContainer.appendChild(div);
+    });
+    
+    // Smooth scroll to bottom
+    setTimeout(() => {
+      historyContainer.scrollTo({ top: historyContainer.scrollHeight, behavior: 'smooth' });
+    }, 100);
+
+    // Decision panel
+    const optionsContainer = document.getElementById('options-container');
+    const finishBtn = document.getElementById('finish-btn');
+
+    optionsContainer.innerHTML = '';
+    
+    if (node.isEnd) {
+      optionsContainer.style.display = 'none';
+      finishBtn.style.display = 'block';
+    } else {
+      optionsContainer.style.display = 'flex';
+      finishBtn.style.display = 'none';
+      node.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt.text;
+        btn.onclick = () => this.handleOption(opt);
+        optionsContainer.appendChild(btn);
+      });
+    }
+  }
+
+  handleOption(option) {
+    this.state.history.push({ sender: 'user', text: option.text });
+    this.state.scores.assertiveness += option.assertiveness;
+    this.state.scores.cooperation += option.cooperation;
+    this.state.scores.turns += 1;
+
+    const nextNode = this.state.selectedScenario.nodes[option.nextNodeId];
+    if (nextNode) {
+      this.state.history.push({ sender: 'employee', text: nextNode.employeeText });
+      this.state.currentNodeId = option.nextNodeId;
+    }
+    
+    this.updateSimulatorUI();
+  }
+
+  showResults() {
+    this.switchView('results');
+    const res = this.calculateResults();
+
+    // Score ring animation
+    const circumference = 314; // 2 * π * 50
+    const ringEl = document.getElementById('score-ring-fill');
+    const scoreColor = res.score >= 75 ? '#10b981' : res.score >= 50 ? '#f59e0b' : '#f43f5e';
+    ringEl.style.stroke = scoreColor;
+    // Trigger animation after paint
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        ringEl.style.strokeDashoffset = circumference * (1 - res.score / 100);
+      });
+    });
+
+    document.getElementById('res-score').innerText = res.score;
+
+    const styleBadge = document.getElementById('res-style');
+    styleBadge.innerText = res.style;
+
+    const styleColors = {
+      "Colaborador": { bg: "rgba(16,185,129,0.15)", text: "#34d399" },
+      "Compromiso":  { bg: "rgba(37,99,235,0.15)",  text: "#60a5fa" },
+      "Acomodador":  { bg: "rgba(245,158,11,0.15)", text: "#fbbf24" },
+      "Competitivo": { bg: "rgba(244,63,94,0.15)",  text: "#fb7185" },
+      "Evitativo":   { bg: "rgba(148,163,184,0.15)", text: "#94a3b8" }
+    };
+    const colors = styleColors[res.style] || styleColors["Compromiso"];
+    styleBadge.style.backgroundColor = colors.bg;
+    styleBadge.style.color = colors.text;
+    styleBadge.style.borderColor = colors.text;
+
+    document.getElementById('res-summary').innerText = res.summary;
+
+    document.getElementById('res-strengths').innerHTML =
+      res.strengths.map(s => \`<li>\${s}</li>\`).join('');
+    document.getElementById('res-improvements').innerHTML =
+      res.improvements.map(s => \`<li>\${s}</li>\`).join('');
+
+    if (window.SCORM) {
+      window.SCORM.setScore(res.score);
+      window.SCORM.finish();
+    }
+  }
+
+  calculateResults() {
+    const scores = this.state.scores;
+    const maxPoints = scores.turns * 10;
+    const nAssert = (scores.assertiveness / maxPoints) * 100;
+    const nCoop = (scores.cooperation / maxPoints) * 100;
+    const globalScore = Math.round((nAssert + nCoop) / 2);
+
+    let style = "Compromiso";
+    if (nAssert >= 75 && nCoop >= 75) style = "Colaborador";
+    else if (nAssert >= 75 && nCoop < 50) style = "Competitivo";
+    else if (nAssert < 50 && nCoop >= 75) style = "Acomodador";
+    else if (nAssert < 50 && nCoop < 50) style = "Evitativo";
+
+    return {
+      score: globalScore,
+      style: style,
+      strengths: nAssert > 70 ? ["Manejo de asertividad", "Claridad de objetivos"] : ["Empatía básica"],
+      improvements: nCoop < 70 ? ["Escucha activa insuficiente", "Enfoque punitivo"] : ["Firmeza directiva"],
+      summary: \`Resolución final con éxito. Tu estilo es \${style}.\`
+    };
+  }
+}
+
+// Start the app when files are loaded
+document.addEventListener('DOMContentLoaded', () => {
+  new SimulatorApp();
+});
+
+</script>
+</body>
+</html>`;

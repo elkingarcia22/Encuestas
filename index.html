@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es" class="style-vega">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=ubits" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Playground UX — React 19, Vite y router por módulos" />
+    <title>Playground UX</title>
+    <script>
+      (() => {
+        const theme = localStorage.getItem('ubits-theme') || 'default'
+        const storedMode = localStorage.getItem('flux-ui-mode')
+        const mode =
+          storedMode === 'light' || storedMode === 'dark' || storedMode === 'system'
+            ? storedMode
+            : 'light'
+        const resolved =
+          mode === 'system'
+            ? matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+            : mode
+        const root = document.documentElement
+        root.setAttribute('data-theme', theme)
+        root.setAttribute('data-mode', resolved)
+        root.classList.toggle('dark', resolved === 'dark')
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,945 @@
+{
+  "componentes": [
+    {
+      "id": "marco-pagina",
+      "nombre": "Marco de página (cabecera de pantalla, contenedor de 1140, pie)",
+      "fuentes": [
+        "src/shared/components/PageShell.tsx",
+        "src/shared/components/page-width.ts",
+        "src/shared/components/AppFooter.tsx",
+        "src/shared/layouts/RootLayout.tsx",
+        "src/shared/pages/createPage.tsx",
+        "src/shared/components/PlaceholderPage.tsx",
+        "src/shared/components/LayoutSlot.tsx",
+        "src/shared/components/SlotArea.tsx",
+        "src/shared/components/slot.module.css"
+      ],
+      "importa": [
+        "@/shared/components/PageShell",
+        "@/shared/components/page-width",
+        "@/shared/components/AppFooter"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/navegacion",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/navegacion/components/page-config.ts",
+            "src/modules/design-system/navegacion/components/page-preview.tsx",
+            "src/modules/design-system/navegacion/components/nav-parts.tsx",
+            "src/modules/design-system/navegacion/main.tsx"
+          ],
+          "que": "La vista previa usa el PageShell real: lo visual se actualiza solo. A mano: opciones del configurador (PageConfig), nombres de partes (deben ser iguales a los data-region que pone PageShell), textos de cada parte, casos y notas de la guía."
+        },
+        {
+          "ruta": "/design-system/navegacion/basica (y los otros 10 patrones)",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/navegacion/*/main.tsx",
+            "src/modules/design-system/navegacion/components/case-frame.tsx"
+          ],
+          "que": "Pantallas completas armadas con PageShell. Revisar que sigan viéndose bien y que el marco del caso (franja «Patrones de navegación») mida lo mismo que el contenido."
+        }
+      ],
+      "palabras": [
+        "Contenedor",
+        "1140",
+        "Acciones",
+        "Botón primario",
+        "Botón secundario",
+        "Más acciones",
+        "Migas de pan",
+        "Pestañas",
+        "Título",
+        "Descripción"
+      ]
+    },
+    {
+      "id": "header",
+      "nombre": "Header (barra de arriba) y sus paneles",
+      "fuentes": [
+        "src/shared/components/AppHeader.tsx",
+        "src/shared/components/header-icon.ts",
+        "src/shared/components/CommandPalette.tsx",
+        "src/shared/components/useCommandPalette.ts",
+        "src/shared/components/NotificationsPopover.tsx",
+        "src/shared/components/ProcessCenter.tsx",
+        "src/shared/components/process-store.ts",
+        "src/shared/components/ProfilePopover.tsx",
+        "src/shared/components/Hint.tsx",
+        "src/shared/components/shell-data.ts"
+      ],
+      "importa": [
+        "@/shared/components/AppHeader",
+        "@/shared/components/header-icon",
+        "@/shared/components/CommandPalette",
+        "@/shared/components/NotificationsPopover",
+        "@/shared/components/ProcessCenter",
+        "@/shared/components/process-store",
+        "@/shared/components/ProfilePopover",
+        "@/shared/components/Hint"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/header",
+          "relacion": "replica",
+          "archivos": [
+            "src/modules/design-system/header/components/header-preview.tsx",
+            "src/modules/design-system/header/components/header-preview.module.css",
+            "src/modules/design-system/header/components/header-config.ts",
+            "src/modules/design-system/header/main.tsx"
+          ],
+          "que": "RÉPLICA: la vista previa copia medidas (botones de 32px y foto de 34px, Novedades de 119px, 8px entre acciones), umbrales (920/664px) y paneles abiertos resumidos (notificaciones, procesos, perfil). Si cambia el header real, cambia la réplica a mano. Solo el buscador (⌘K) y Novedades abren los componentes reales. El caso «Pantalla enfocada» documenta la cabecera del editor de LMS (src/modules/admin/aprendizaje/lms-creator/components/editor-view.tsx)."
+        }
+      ],
+      "palabras": [
+        "Novedades",
+        "Buscador",
+        "Notificaciones",
+        "Centro de procesos",
+        "Perfil",
+        "Tooltip",
+        "Abrir o cerrar menú",
+        "Estado"
+      ]
+    },
+    {
+      "id": "barra-lateral",
+      "nombre": "Barra lateral abierta, riel plegado y menú de empresa",
+      "fuentes": [
+        "src/shared/layouts/AppSidebar.tsx",
+        "src/shared/layouts/nav-config.ts",
+        "src/shared/layouts/new-chat.module.css",
+        "src/shared/components/SidebarRail.tsx",
+        "src/shared/components/AccountPopover.tsx",
+        "src/shared/components/account-gauge.module.css",
+        "src/shared/components/InviteCard.tsx",
+        "src/shared/components/ChatStatusDot.tsx",
+        "src/shared/components/chat-status.ts",
+        "src/shared/components/chat-status.module.css"
+      ],
+      "importa": [
+        "@/shared/layouts/nav-config",
+        "@/shared/layouts/new-chat.module.css",
+        "@/shared/components/SidebarRail",
+        "@/shared/components/AccountPopover",
+        "@/shared/components/InviteCard",
+        "@/shared/components/ChatStatusDot"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/barra-lateral",
+          "relacion": "replica",
+          "archivos": [
+            "src/modules/design-system/barra-lateral/components/sidebar-styles.ts",
+            "src/modules/design-system/barra-lateral/components/open-sidebar.tsx",
+            "src/modules/design-system/barra-lateral/components/rail-sidebar.tsx",
+            "src/modules/design-system/barra-lateral/components/sidebar-config.ts",
+            "src/modules/design-system/barra-lateral/components/sidebar-preview.tsx",
+            "src/modules/design-system/barra-lateral/components/sidebar-preview.module.css",
+            "src/modules/design-system/barra-lateral/main.tsx"
+          ],
+          "que": "RÉPLICA: sidebar-styles.ts COPIA las clases de AppSidebar y SidebarRail («si cambian allá, hay que cambiarlas aquí»); open-sidebar.tsx y rail-sidebar.tsx son réplicas fijas. Reutiliza de verdad: nav-config (datos), InviteCard, AccountPopover, ChatStatusDot y new-chat.module.css."
+        }
+      ],
+      "palabras": [
+        "Nueva conversación",
+        "Workspace",
+        "Suite AI",
+        "Tercer nivel",
+        "Riel",
+        "Enviar feedback",
+        "Invitar",
+        "Licencias",
+        "Créditos"
+      ],
+      "copias": [
+        {
+          "copia": "src/modules/design-system/barra-lateral/components/sidebar-styles.ts",
+          "originales": [
+            "src/shared/layouts/AppSidebar.tsx",
+            "src/shared/components/SidebarRail.tsx"
+          ],
+          "equivalencias": {
+            "ROW_MARK": "RAIL"
+          },
+          "propias": [
+            "AIR",
+            "FLOAT_MENU"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "menus",
+      "nombre": "Menús desplegables (perfil, empresa, «+», riel) y su hover",
+      "fuentes": [
+        "src/shared/styles/global.css",
+        "src/shared/components/ProfilePopover.tsx",
+        "src/shared/components/AccountPopover.tsx"
+      ],
+      "importa": [
+        "DropdownMenuContent",
+        "SelectContent"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/header",
+          "relacion": "replica",
+          "archivos": [
+            "src/modules/design-system/header/components/header-preview.tsx"
+          ],
+          "que": "Menú de perfil abierto resumido: filas, orden, iconos y textos deben coincidir con ProfilePopover."
+        },
+        {
+          "ruta": "/design-system/barra-lateral",
+          "relacion": "replica",
+          "archivos": [
+            "src/modules/design-system/barra-lateral/components/sidebar-styles.ts",
+            "src/modules/design-system/barra-lateral/components/rail-sidebar.tsx"
+          ],
+          "que": "Menú flotante del riel (réplica fija del desplegable de flux-ui): mismo hover y esquinas."
+        }
+      ],
+      "palabras": [
+        "Portal colaborador",
+        "Cambiar contraseña",
+        "Tema",
+        "Cerrar sesión",
+        "Cambiar de empresa",
+        "Conectores",
+        "Agregar archivos"
+      ]
+    },
+    {
+      "id": "modales",
+      "nombre": "Ventanas: Novedades, Bienvenida, «Ver qué cambió», ActionDialog, X estándar, feedback y tour",
+      "fuentes": [
+        "src/shared/components/Announcements.tsx",
+        "src/shared/components/ActionDialog.tsx",
+        "src/shared/components/CloseButton.tsx",
+        "src/shared/components/FeedbackDialog.tsx",
+        "src/shared/components/CapturaArea.tsx",
+        "src/shared/components/TourDialog.tsx"
+      ],
+      "importa": [
+        "@/shared/components/Announcements",
+        "@/shared/components/ActionDialog",
+        "@/shared/components/CloseButton",
+        "@/shared/components/FeedbackDialog",
+        "@/shared/components/CapturaArea",
+        "@/shared/components/TourDialog"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/modales",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/modales/components/ventana-config.ts",
+            "src/modules/design-system/modales/components/ventana-parts.tsx",
+            "src/modules/design-system/modales/components/example-modals.tsx",
+            "src/modules/design-system/modales/main.tsx"
+          ],
+          "que": "Desde el 5-oct la página documenta solo ActionDialog, la ventana única (también para confirmar): 9 casos fijos (el noveno, «Enviar feedback», abre la FeedbackDialog real con su CapturaArea; debajo, la tarjeta del tour, TourDialog de 1.040 px, la excepción documentada) y un configurador con lo que la pieza permite (tamaño 448/620/736/completa, icono, volver, lead, pestañas o pasos, pie, nota, spinner, clic afuera). «Probar en pantalla» abre un ActionDialog real. Si cambia ActionDialog, cambian ventana-config y ventana-parts. Novedades, bienvenida y ⌘K se documentan en Ajustes y en Marco."
+        },
+        {
+          "ruta": "/design-system/drawers",
+          "relacion": "replica",
+          "archivos": [
+            "src/modules/design-system/drawers/components/drawer-shell.tsx"
+          ],
+          "que": "La X de los drawers debe ser la misma X estándar (CloseButton)."
+        }
+      ],
+      "palabras": [
+        "Ventana de alerta",
+        "Probar en pantalla",
+        "No volver a mostrar",
+        "Cerrar",
+        "Novedades",
+        "Bienvenida"
+      ]
+    },
+    {
+      "id": "paneles",
+      "nombre": "Paneles laterales (drawers): actividad del agente, centro de procesos, panel del agente",
+      "fuentes": [
+        "src/modules/admin/suite-ai/chat/components/activity-panel.tsx",
+        "src/modules/admin/suite-ai/chat/components/approval-plan.tsx",
+        "src/shared/components/ProcessCenter.tsx",
+        "src/shared/components/right-panel-store.ts"
+      ],
+      "importa": [
+        "activity-panel",
+        "@/shared/components/ProcessCenter",
+        "@/shared/components/right-panel-store"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/drawers",
+          "relacion": "replica",
+          "archivos": [
+            "src/modules/design-system/drawers/components/drawer-config.ts",
+            "src/modules/design-system/drawers/components/drawer-shell.tsx",
+            "src/modules/design-system/drawers/components/drawer-styles.ts",
+            "src/modules/design-system/drawers/components/drawer-parts.tsx",
+            "src/modules/design-system/drawers/components/agent-drawer.tsx",
+            "src/modules/design-system/drawers/components/process-drawer.tsx",
+            "src/modules/design-system/drawers/components/notifications-drawer.tsx",
+            "src/modules/design-system/drawers/main.tsx"
+          ],
+          "que": "RÉPLICAS: los drawers de ejemplo (agente, proceso, notificaciones, menú en celular…) son versiones propias; no importan los componentes reales. drawer-styles.ts define pasos, líneas y kickers que también debe respetar la app."
+        }
+      ],
+      "palabras": [
+        "Actividad del agente",
+        "Proceso en curso",
+        "Centro de avisos",
+        "Plegar",
+        "Ver todos los procesos"
+      ]
+    },
+    {
+      "id": "chat-suite-ai",
+      "nombre": "Chat de Suite AI: composer, mensajes, «escribiendo», tarjetas de propuesta, plan y métricas",
+      "fuentes": [
+        "src/modules/admin/suite-ai/shared/composer.tsx",
+        "src/modules/admin/suite-ai/shared/composer.module.css",
+        "src/modules/admin/suite-ai/shared/reply-details.ts",
+        "src/modules/admin/suite-ai/chat/components/agent-message.tsx",
+        "src/modules/admin/suite-ai/chat/components/user-message.tsx",
+        "src/modules/admin/suite-ai/chat/components/typing-indicator.tsx",
+        "src/modules/admin/suite-ai/chat/components/proposal-card.tsx",
+        "src/modules/admin/suite-ai/chat/components/approval-plan.tsx",
+        "src/modules/admin/suite-ai/chat/components/metrics-card.tsx",
+        "src/modules/admin/suite-ai/chat/components/chat-view.tsx",
+        "src/modules/admin/suite-ai/chat/components/use-approval-flow.ts",
+        "src/modules/admin/suite-ai/chat/components/message-feedback.tsx",
+        "src/modules/admin/suite-ai/chat/components/message-tip.tsx",
+        "src/modules/admin/suite-ai/chat/components/message.module.css",
+        "src/modules/admin/suite-ai/chat/components/greeting.module.css",
+        "src/modules/admin/suite-ai/voz/main.tsx"
+      ],
+      "importa": [
+        "@/modules/admin/suite-ai/shared/composer",
+        "@/modules/admin/suite-ai/chat/components/"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/agente-contextual/configurador",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/agente-contextual/configurador/components/agent-config.ts",
+            "src/modules/design-system/agente-contextual/configurador/components/agent-preview.tsx",
+            "src/modules/design-system/agente-contextual/configurador/main.tsx"
+          ],
+          "que": "Usa los componentes reales del chat (composer, mensajes, tarjetas): lo visual se actualiza solo. A mano: interruptores (AgentConfig: request, answer, typing, sources, actions, followups, news, chip, attach, voice), nombres de partes (PART, props `regions`) y textos. Si un componente del chat suma o quita una pieza, suma o quita su interruptor, su `regions` y su texto."
+        },
+        {
+          "ruta": "/design-system/navegacion/suite-ai",
+          "relacion": "replica",
+          "archivos": [
+            "src/modules/design-system/navegacion/suite-ai/components/proposal.tsx",
+            "src/modules/design-system/navegacion/suite-ai/components/sources-history.tsx",
+            "src/modules/design-system/navegacion/suite-ai/main.tsx"
+          ],
+          "que": "RÉPLICA del resultado de Suite AI como pantalla del Workspace: revisar que la propuesta y las fuentes se vean como las del chat real."
+        },
+        {
+          "ruta": "/design-system/drawers",
+          "relacion": "replica",
+          "archivos": [
+            "src/modules/design-system/drawers/components/agent-drawer.tsx"
+          ],
+          "que": "RÉPLICA del panel del agente en formato drawer."
+        }
+      ],
+      "palabras": [
+        "Composer",
+        "Caja del chat",
+        "Novedad",
+        "Pastilla de contexto",
+        "Voz",
+        "Enviar",
+        "Fuentes",
+        "Acciones del mensaje",
+        "Seguimientos",
+        "Escribiendo",
+        "Propuesta"
+      ]
+    },
+    {
+      "id": "agente-contextual",
+      "nombre": "Agente contextual: panel, estados (abierto, ampliado, minimizado, cerrado) y propuesta del editor",
+      "fuentes": [
+        "src/modules/design-system/agente-contextual/components/agent-kit.tsx",
+        "src/modules/design-system/agente-contextual/components/agent-styles.ts",
+        "src/modules/design-system/agente-contextual/components/agent.module.css",
+        "src/modules/design-system/agente-contextual/components/use-agent-thread.ts",
+        "src/modules/admin/aprendizaje/lms-creator/components/agent-panel.tsx",
+        "src/modules/admin/aprendizaje/lms-creator/components/agent-replies.ts",
+        "src/modules/admin/aprendizaje/lms-creator/components/agent-focus.ts",
+        "src/modules/admin/aprendizaje/lms-creator/components/editor-view.tsx",
+        "src/modules/design-system/agente-contextual/components/agent-sketch.tsx"
+      ],
+      "importa": [
+        "components/agent-kit",
+        "lms-creator/components/agent-panel",
+        "lms-creator/components/agent-focus"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/agente-contextual/configurador",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/agente-contextual/configurador/components/agent-config.ts",
+            "src/modules/design-system/agente-contextual/configurador/components/agent-preview.tsx",
+            "src/modules/design-system/agente-contextual/configurador/components/agent-preview.module.css",
+            "src/modules/design-system/agente-contextual/configurador/main.tsx"
+          ],
+          "que": "El caso base «Mejorar un campo del editor» es el panel del editor de LMS tal cual: si cambia el editor, cambia BASE y ese caso. Estados, anchos (452 / 720 / riel 60) y reglas de «Orbit Flow» se describen en agent-config.ts y en la guía de main.tsx."
+        },
+        {
+          "ruta": "/design-system/agente-contextual (galería y 8 casos)",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/agente-contextual/main.tsx",
+            "src/modules/design-system/agente-contextual/*/main.tsx",
+            "src/modules/design-system/agente-contextual/*/components/*.tsx"
+          ],
+          "que": "Los casos usan agent-kit. Si cambia una regla del panel, revisar los 8 casos y la lista de partes de la galería."
+        }
+      ],
+      "palabras": [
+        "Agente contextual",
+        "Orbit Flow",
+        "Contexto",
+        "Minimizar",
+        "Ampliar",
+        "Actual",
+        "Propuesta",
+        "Aplicar",
+        "Deshacer",
+        "Sobre este contenido"
+      ]
+    },
+    {
+      "id": "modo-ia",
+      "nombre": "Botón «Orbit Flow» y orbe",
+      "fuentes": [
+        "src/modules/design-system/agente-contextual/components/agent-kit.tsx",
+        "src/shared/components/Orb.tsx",
+        "src/modules/admin/aprendizaje/lms-creator/components/editor-view.tsx"
+      ],
+      "importa": [
+        "ReopenAgentButton",
+        "data-agent-reopen",
+        "Orbit Flow"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/navegacion",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/navegacion/components/page-preview.tsx",
+            "src/modules/design-system/navegacion/components/page-config.ts",
+            "src/modules/design-system/navegacion/main.tsx"
+          ],
+          "que": "Opción «Orbit Flow» (No / Completo / Solo el orbe), su lugar en la fila de acciones, su nombre en la anatomía y el texto de la regla."
+        },
+        {
+          "ruta": "/design-system/agente-contextual/configurador",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/agente-contextual/configurador/components/agent-preview.tsx",
+            "src/modules/design-system/agente-contextual/configurador/components/agent-config.ts",
+            "src/modules/design-system/agente-contextual/configurador/main.tsx"
+          ],
+          "que": "Estado cerrado: forma (reopen: full | orb), lugar junto a los botones de la pantalla y textos."
+        },
+        {
+          "ruta": "/design-system/header",
+          "relacion": "texto",
+          "archivos": [
+            "src/modules/design-system/header/main.tsx",
+            "src/modules/design-system/header/components/header-config.ts"
+          ],
+          "que": "Nota: «Orbit Flow» no va en el header."
+        }
+      ],
+      "palabras": [
+        "Orbit Flow",
+        "orbe",
+        "Solo el orbe",
+        "Completo"
+      ]
+    },
+    {
+      "id": "botones-ia",
+      "nombre": "Botones de IA: el primario único (BotonIa, degradado) y el secundario (BotonIaSecundario)",
+      "fuentes": [
+        "src/shared/components/BotonIa.tsx",
+        "src/shared/components/BotonIaSecundario.tsx",
+        "src/shared/layouts/new-chat.module.css"
+      ],
+      "importa": [
+        "BotonIa",
+        "BotonIaSecundario"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/ia/botones",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/ia/main.tsx"
+          ],
+          "que": "La jerarquía de IA: un solo primario (BotonIa) por vista, la segunda acción con BotonIaSecundario, ambos al final de la fila. Desde el 5-oct no hay AiButton ni BotonIaPrimario."
+        },
+        {
+          "ruta": "/design-system/componentes (fichas)",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/ajustes/main.tsx",
+            "src/modules/design-system/ajustes/demos.tsx"
+          ],
+          "que": "Ficha «Botones de IA» (por qué el degradado es propio y no el AiButton de la librería)."
+        },
+        {
+          "ruta": "/design-system/botones",
+          "relacion": "texto",
+          "archivos": [
+            "src/modules/design-system/botones/main.tsx"
+          ],
+          "que": "Texto sobre el botón de IA y la fila de acciones."
+        }
+      ],
+      "palabras": [
+        "BotonIa",
+        "primario de IA",
+        "degradado"
+      ]
+    },
+    {
+      "id": "ayudas",
+      "nombre": "Ayudas: Hint al pasar el cursor (también controlado), BotonAyuda (icono «i» que abre con clic) y TextoCompleto (texto cortado que se lee entero), con el mismo globo oscuro",
+      "fuentes": [
+        "src/shared/components/Hint.tsx",
+        "src/shared/components/BotonAyuda.tsx",
+        "src/shared/components/TextoCompleto.tsx"
+      ],
+      "importa": [
+        "Hint",
+        "HintContent",
+        "BotonAyuda",
+        "TextoCompleto"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/botones",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/botones/main.tsx"
+          ],
+          "que": "Pestaña Tamaños: «Ayuda que abre con clic · BotonAyuda» y la regla de los botones de solo icono con su ayuda flotante."
+        },
+        {
+          "ruta": "/design-system/data-grid",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/data-grid/main.tsx",
+            "src/modules/design-system/data-grid/textos-cortados.tsx"
+          ],
+          "que": "Regla «Lo cortado se puede leer entero» (TextoCompleto y Hint controlado) y sección «Textos que no caben» con las piezas reales."
+        }
+      ],
+      "palabras": [
+        "Qué mide",
+        "BotonAyuda",
+        "ayuda flotante",
+        "TextoCompleto"
+      ]
+    },
+    {
+      "id": "flujo-creacion",
+      "nombre": "Flujos de creación: salida única (BotonSalirCreacion), barra de los pasos sin «Cancelar» y con ChipGuardado (BarraEditor) y marco a pantalla completa con pie (MarcoInmersivo)",
+      "fuentes": [
+        "src/modules/admin/aprendizaje/lms-creator/crear-contenido/components/barras.tsx",
+        "src/modules/admin/aprendizaje/lms-creator/crear-contenido/components/marco-inmersivo.tsx",
+        "src/shared/components/ChipGuardado.tsx"
+      ],
+      "importa": [
+        "BarraEditor",
+        "MarcoInmersivo",
+        "BotonSalirCreacion",
+        "ChipGuardado"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/navegacion (caso Asistente por pasos)",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/navegacion/pasos/main.tsx",
+            "src/modules/design-system/navegacion/components/page-config.ts",
+            "src/modules/design-system/navegacion/components/page-preview.tsx"
+          ],
+          "que": "Salida única «Salir de la creación» (BotonSalirCreacion real) sin flecha junto al título; barra de acciones con ChipGuardado a la izquierda y sin «Cancelar»; salir con cambios en DialogoConfirmar de tres salidas."
+        },
+        {
+          "ruta": "/design-system/componentes (fichas) (Marco de flujo a pantalla completa, Indicador de guardado)",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/ajustes/main.tsx",
+            "src/modules/design-system/ajustes/demos-lms.tsx"
+          ],
+          "que": "Ficha del marco inmersivo con la salida y la barra reales, el pie fijo y qué ventana va en cada caso."
+        }
+      ],
+      "palabras": [
+        "Salir de la creación",
+        "Volver a añadir página",
+        "Salir de la edición"
+      ]
+    },
+    {
+      "id": "tabla-sistema",
+      "nombre": "La tabla única del sistema (TablaDatos), su celda de título y su paginador",
+      "fuentes": [
+        "src/modules/design-system/data-grid/tabla-datos.tsx",
+        "src/modules/design-system/data-grid/tabla-datos.css",
+        "src/modules/design-system/data-grid/celda-titulo.tsx",
+        "src/modules/admin/seleccion/propuestas/components/paginacion.tsx"
+      ],
+      "importa": [
+        "TablaDatos",
+        "CeldaTitulo",
+        "PiePaginacion"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/data-grid",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/data-grid/main.tsx",
+            "src/modules/design-system/data-grid/casos/contenidos.tsx",
+            "src/modules/design-system/data-grid/casos/evaluaciones-360.tsx",
+            "src/modules/design-system/data-grid/casos/seguimiento.tsx",
+            "src/modules/design-system/data-grid/casos/resultados.tsx"
+          ],
+          "que": "Reglas «Cómo es la tabla» (cabecera como Vacantes, encabezados con asidero, CeldaTitulo con o sin imagen y en dos renglones con dosLineas, un solo paginador), la sección «Textos que no caben» y el configurador, que arranca igual que TablaDatos."
+        },
+        {
+          "ruta": "/design-system/navegacion/basica (y los patrones con listas)",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/navegacion/basica/main.tsx",
+            "src/modules/design-system/navegacion/seleccion-masiva/main.tsx",
+            "src/modules/design-system/navegacion/tablero/components/views.tsx"
+          ],
+          "que": "Los patrones que muestran una lista la arman con TablaDatos."
+        }
+      ],
+      "palabras": [
+        "TablaDatos",
+        "Filas por página",
+        "Viendo",
+        "Personalizar columnas"
+      ]
+    },
+    {
+      "id": "estados-vacios",
+      "nombre": "Vacíos con ilustración: PrimeraVez y SinResultados",
+      "fuentes": [
+        "src/shared/components/PrimeraVez.tsx",
+        "src/shared/components/SinResultados.tsx",
+        "src/shared/components/ImagenGlass.tsx"
+      ],
+      "importa": [
+        "PrimeraVez",
+        "SinResultados",
+        "ImagenGlass"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/estados",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/estados/main.tsx"
+          ],
+          "que": "Los cuatro vacíos: Primera vez y Sin resultados son las piezas reales; error y sin permiso, Empty con ilustración glass."
+        }
+      ],
+      "palabras": [
+        "Sin resultados para",
+        "Todavía no hay",
+        "Limpiar búsqueda"
+      ]
+    },
+    {
+      "id": "cifras",
+      "nombre": "Cifras de un tablero (Indicadores, FilaCifras, CeldaCifra, TarjetaIndicador) y la fila con comparación y ayuda de Selección",
+      "fuentes": [
+        "src/modules/design-system/metricas/cifras.tsx",
+        "src/modules/design-system/graficos/fila-indicadores.tsx",
+        "src/modules/admin/seleccion/propuestas/components/cifras.tsx",
+        "src/shared/components/MetricasDestacadas.tsx"
+      ],
+      "importa": [
+        "Indicadores",
+        "FilaCifras",
+        "CeldaCifra",
+        "FilaIndicadores",
+        "ColumnaIndicador",
+        "Cambio",
+        "Ayuda",
+        "MetricasDestacadas"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/metricas",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/metricas/main.tsx"
+          ],
+          "que": "Una sola fila partida por líneas; la comparación frente al periodo anterior y la ayuda de clic, con las piezas de Nicolás (6-oct)."
+        }
+      ],
+      "palabras": [
+        "variación",
+        "comparación",
+        "Indicadores",
+        "FilaCifras"
+      ]
+    },
+    {
+      "id": "tablero-atencion",
+      "nombre": "Lo que necesita tu atención (TableroAtencion de Nicolás)",
+      "fuentes": [
+        "src/modules/design-system/metricas/tablero-atencion.tsx"
+      ],
+      "importa": [
+        "TableroAtencion",
+        "TableroCreditos",
+        "ListaAsuntos",
+        "TarjetaSugerencia"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/metricas",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/metricas/main.tsx"
+          ],
+          "que": "El tablero real de Créditos de IA: columnas por grupo, recogido y «Expandir», panel por asunto."
+        }
+      ],
+      "palabras": [
+        "Lo que necesita tu atención",
+        "Necesitan atención",
+        "Expandir"
+      ]
+    },
+    {
+      "id": "tema",
+      "nombre": "Tema y reglas globales (colores, radios, tipografía, menús, foco)",
+      "fuentes": [
+        "src/index.css",
+        "src/shared/styles/global.css",
+        "index.html"
+      ],
+      "importa": [],
+      "designSystem": [
+        {
+          "ruta": "todas las páginas del design system (lo visual se actualiza solo)",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/barra-lateral/components/sidebar-styles.ts",
+            "src/modules/design-system/drawers/components/drawer-styles.ts",
+            "src/modules/design-system/header/components/header-preview.tsx",
+            "src/modules/design-system/components/anatomy/anatomy.module.css"
+          ],
+          "que": "Lo visual se actualiza solo. A mano: textos que citan medidas o colores (px, radios, «azul», «gris», contrastes), réplicas con clases copiadas (sidebar-styles.ts, drawer-styles.ts, header-preview.tsx) y la tabla de reglas vigentes de esta skill. Pasa el escaneo AA en claro y oscuro: un token cambiado puede romper contraste en cualquier pantalla."
+        }
+      ],
+      "palabras": [
+        "px",
+        "azul",
+        "gris",
+        "esquina",
+        "radio",
+        "contraste",
+        "oscuro"
+      ]
+    },
+    {
+      "id": "avisos",
+      "nombre": "Avisos flotantes (toasts) y notify",
+      "fuentes": [
+        "src/shared/components/Toaster.tsx",
+        "src/shared/components/notify.ts"
+      ],
+      "importa": [
+        "@/shared/components/notify",
+        "@/shared/components/Toaster"
+      ],
+      "designSystem": [],
+      "sinPagina": "Todavía no hay página del design system para los avisos flotantes. Si el cambio es de diseño (textos, posición, duración, estilo), proponle a Nicolás documentarlo (p. ej. un caso en /design-system/modales o una página nueva) antes de darlo por cerrado.",
+      "palabras": [
+        "Avisos",
+        "Cerrar aviso"
+      ]
+    },
+    {
+      "id": "tarjeta-ia",
+      "nombre": "Tarjeta de invitación a la IA («Crear un curso»)",
+      "fuentes": [
+        "src/shared/components/AiCard.tsx",
+        "src/shared/components/tarjeta-ia.module.css"
+      ],
+      "importa": [
+        "@/shared/components/AiCard"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/tarjeta-ia",
+          "archivos": [
+            "src/modules/design-system/tarjeta-ia/main.tsx",
+            "src/modules/design-system/tarjeta-ia/components/card-config.ts",
+            "src/modules/design-system/tarjeta-ia/components/card-preview.tsx"
+          ],
+          "relacion": "reutiliza",
+          "que": "El configurador usa el mismo AiCard que el Inicio: una parte nueva necesita interruptor, PART y texto."
+        }
+      ],
+      "pantallas": [
+        "/design-system/templates/home-operativo"
+      ],
+      "palabras": [
+        "Crear un curso",
+        "Crear ahora"
+      ]
+    },
+    {
+      "id": "suite-ai-chat",
+      "nombre": "Chat de Suite AI (conversación completa)",
+      "fuentes": [
+        "src/modules/admin/suite-ai/chat/components/chat-view.tsx",
+        "src/modules/admin/suite-ai/shared/composer.tsx"
+      ],
+      "importa": [
+        "@/modules/admin/suite-ai/chat/components"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/suite-ai-chat",
+          "archivos": [
+            "src/modules/design-system/suite-ai-chat/main.tsx",
+            "src/modules/design-system/suite-ai-chat/components/chat-config.ts",
+            "src/modules/design-system/suite-ai-chat/components/chat-preview.tsx"
+          ],
+          "relacion": "reutiliza",
+          "que": "La vista previa importa los componentes reales del chat: una pieza nueva necesita interruptor, PART y texto."
+        }
+      ],
+      "pantallas": [
+        "/suite-ai",
+        "/suite-ai/chat/vacaciones",
+        "/suite-ai/chat/evaluaciones"
+      ],
+      "palabras": [
+        "Actividad del agente",
+        "Escribe una tarea o una pregunta"
+      ]
+    },
+    {
+      "id": "razonando",
+      "nombre": "Estado «Razonando» (la IA está trabajando)",
+      "fuentes": [
+        "src/shared/components/AiThinking.tsx",
+        "src/shared/components/ai-thinking.module.css",
+        "src/modules/admin/suite-ai/chat/components/typing-indicator.tsx"
+      ],
+      "importa": [
+        "@/shared/components/AiThinking",
+        "@/modules/admin/suite-ai/chat/components/typing-indicator"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/ia/estados",
+          "archivos": [
+            "src/modules/design-system/ia/main.tsx"
+          ],
+          "relacion": "reutiliza",
+          "que": "La demo «Razonando» muestra la pieza real: si cambia el texto, el orbe o los segundos, se ve sola; revisa la descripción y el vocabulario."
+        },
+        {
+          "ruta": "/design-system/suite-ai-chat",
+          "archivos": [
+            "src/modules/design-system/suite-ai-chat/main.tsx",
+            "src/modules/design-system/suite-ai-chat/components/chat-config.ts"
+          ],
+          "relacion": "reutiliza",
+          "que": "Parte «Razonando» del configurador: interruptor, PART y texto de la parte."
+        },
+        {
+          "ruta": "/design-system/agente-contextual/configurador",
+          "archivos": [
+            "src/modules/design-system/agente-contextual/configurador/main.tsx",
+            "src/modules/design-system/agente-contextual/configurador/components/agent-config.ts"
+          ],
+          "relacion": "reutiliza",
+          "que": "Misma parte en el panel del agente; aquí el texto dice lo que está haciendo («Buscando en la ficha…»)."
+        }
+      ],
+      "pantallas": [
+        "/suite-ai",
+        "/admin/aprendizaje/lms-creator"
+      ],
+      "palabras": [
+        "Razonando",
+        "Generando otra versión"
+      ]
+    },
+    {
+      "id": "tarjeta-contenido",
+      "nombre": "Tarjeta de contenido (la ficha de un curso, ruta, evento o podcast)",
+      "fuentes": [
+        "src/shared/components/TarjetaContenido.tsx",
+        "src/modules/portal-colaborador/aprendizaje/zona-de-estudio/components/pestana-eventos.tsx"
+      ],
+      "importa": [
+        "@/shared/components/TarjetaContenido"
+      ],
+      "palabras": [
+        "En progreso",
+        "Completado",
+        "Antiguo LMS",
+        "Borrador",
+        "Publicado",
+        "Descargar el certificado"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/componentes (fichas)",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/ajustes/demos.tsx",
+            "src/modules/design-system/ajustes/main.tsx"
+          ],
+          "que": "La demo monta la tarjeta real, así que lo visual se actualiza solo. A mano: la lista «qué cambia», las versiones que enseña la demo (VERSIONES_TARJETA) y «dónde se usa». Ojo: la tarjeta de Eventos es otro componente (TarjetaSesion) y comparte el tamaño del título y el trato del logo, así que cualquier cambio en esos dos hay que hacerlo en los dos sitios."
+        }
+      ]
+    }
+  ],
+  "paginasDesignSystem": [
+    "/design-system/navegacion",
+    "/design-system/drawers",
+    "/design-system/modales",
+    "/design-system/barra-lateral",
+    "/design-system/header",
+    "/design-system/agente-contextual",
+    "/design-system/agente-contextual/configurador"
+  ],
+  "ignorar": [
+    "src/shared/styles/pages.module.css"
+  ]
+}

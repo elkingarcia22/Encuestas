@@ -1,0 +1,131 @@
+/* Las 15 entradas entre escenas del editor de video (0,52 s, easeOutCubic, como el render del prototipo). La capa que
+ * entra lleva `.entra-*`; las que además mueven la escena que sale (push, cubo, iris cerrar) llevan `.sale-*` en la
+ * de abajo. `.bucle` repite la animación para la vista previa al pasar el cursor en el modal «Transición». */
+
+.entra,
+.sale {
+  animation-duration: 0.52s;
+  animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  animation-fill-mode: both;
+}
+
+.bucle {
+  animation-duration: 1.1s;
+  animation-iteration-count: infinite;
+}
+
+.soft-dissolve { animation-name: dissolve; }
+.slide-left { animation-name: slide-left; }
+.push-h { animation-name: push-h-in; }
+.push-v { animation-name: push-v-in; }
+.wipe-left { animation-name: wipe-left; }
+.wipe-right { animation-name: wipe-right; }
+.wipe-down { animation-name: wipe-down; }
+.iris-open { animation-name: iris-open; }
+.zoom-in { animation-name: zoom-in; }
+.zoom-out { animation-name: zoom-out; }
+.zoom-blur { animation-name: zoom-blur; }
+.cube { animation-name: cube-in; transform-origin: left center; }
+.barn { animation-name: barn; }
+.split-v { animation-name: split-v; }
+/* Iris cerrar: la escena que sale se cierra encima de la nueva. */
+.iris-close { animation-name: none; }
+
+.sale-push-h { animation-name: push-h-out; }
+.sale-push-v { animation-name: push-v-out; }
+.sale-cube { animation-name: cube-out; transform-origin: right center; }
+.sale-iris-close { animation-name: iris-close; z-index: 2; }
+
+.escenario3d {
+  perspective: 1400px;
+}
+
+@keyframes dissolve {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-left {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes push-h-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes push-h-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes push-v-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes push-v-out {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100%); }
+}
+
+@keyframes wipe-left {
+  from { clip-path: inset(0 0 0 100%); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes wipe-right {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes wipe-down {
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes iris-open {
+  from { clip-path: circle(0% at 50% 50%); }
+  to { clip-path: circle(75% at 50% 50%); }
+}
+
+@keyframes iris-close {
+  from { clip-path: circle(75% at 50% 50%); }
+  to { clip-path: circle(0% at 50% 50%); }
+}
+
+@keyframes zoom-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes zoom-out {
+  from { opacity: 0; transform: scale(1.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes zoom-blur {
+  from { opacity: 0; transform: scale(1.2); filter: blur(12px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+@keyframes cube-in {
+  from { transform: translateX(100%) rotateY(-90deg); }
+  to { transform: translateX(0) rotateY(0); }
+}
+
+@keyframes cube-out {
+  from { transform: translateX(0) rotateY(0); }
+  to { transform: translateX(-100%) rotateY(90deg); }
+}
+
+@keyframes barn {
+  from { clip-path: inset(0 50% 0 50%); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes split-v {
+  from { clip-path: inset(50% 0 50% 0); }
+  to { clip-path: inset(0 0 0 0); }
+}

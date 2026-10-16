@@ -1,0 +1,45 @@
+/* Ajustes de la anatomía propios de la vista previa del agente. El kit compartido no se toca: estas reglas son más
+   específicas que las suyas y solo valen dentro de esta vista previa. Algunas apuntan al nombre de la pieza porque
+   la pieza vive dentro de un componente compartido (el chat de Suite AI) y no se le puede poner otro atributo. */
+
+/* Nombre pegado al borde derecho: el del panel, para que no choque con el de la cabecera (a la izquierda) en la misma
+   franja de arriba. */
+.preview [data-region][data-edge][data-edge]::after {
+  left: auto;
+  right: -4px;
+}
+
+/* El pedido va a la derecha y su nombre también: a la izquierda cuelga el de «Contexto». */
+.preview [data-region='Pedido'][data-region][data-region]::after {
+  left: auto;
+  right: -4px;
+}
+
+/* «Menú «+»» abre la fila de la caja del chat y «Voz» va pegada a «Enviar»: sus nombres corren hacia la derecha desde
+   su borde izquierdo, para no salirse de la caja ni encimarse con el de al lado. */
+.preview button[data-region='Menú «+»'][data-region][data-region]::after,
+.preview button[data-region='Voz'][data-region][data-region]::after {
+  left: -4px;
+  right: auto;
+}
+
+/* Los botones de la pantalla van pegados al borde derecho: su nombre también, para no salirse de la vista previa. */
+.preview [data-slot-region='Botones de la pantalla'][data-slot-region]::after {
+  left: auto;
+  right: -4px;
+}
+
+/* Piezas a lo ancho de la caja del chat, que recorta lo que sobresale: con los nombres visibles se separan un poco de
+   los bordes para que su contorno se vea entero. */
+.named [data-region='Novedad'],
+.named [data-region='Caja de texto'] {
+  margin-inline: 6px;
+}
+
+/* Con poco ancho y el panel abierto, la pantalla de trabajo queda angosta y su nombre de afuera se metería debajo del
+   panel. Se quita: el mismo nombre ya se lee dentro del slot. */
+@container (max-width: 40rem) {
+  .named.split [data-slot-region='Pantalla de trabajo'][data-slot-region]::after {
+    display: none;
+  }
+}

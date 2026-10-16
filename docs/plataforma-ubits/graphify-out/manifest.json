@@ -1,0 +1,502 @@
+{
+  "01-que-es-ubits.md": {
+    "mtime": 1789144461.689064,
+    "ast_hash": "feb3341a12f8c19fe19247dda7c6d9d6",
+    "semantic_hash": "feb3341a12f8c19fe19247dda7c6d9d6"
+  },
+  "02-navegacion-y-marcos.md": {
+    "mtime": 1789144461.6891718,
+    "ast_hash": "a90aefc9e24a3500cc371bf38d520fc1",
+    "semantic_hash": "a90aefc9e24a3500cc371bf38d520fc1"
+  },
+  "03-marco-a-colaborador.md": {
+    "mtime": 1789144461.6892886,
+    "ast_hash": "a693b0b537576b19c24c6b6b7aeb4356",
+    "semantic_hash": "a693b0b537576b19c24c6b6b7aeb4356"
+  },
+  "04-marco-b-administrador.md": {
+    "mtime": 1789144461.6894484,
+    "ast_hash": "571d054947914746415a8b786ed3bf42",
+    "semantic_hash": "571d054947914746415a8b786ed3bf42"
+  },
+  "05-marco-c-creator.md": {
+    "mtime": 1789144461.6895792,
+    "ast_hash": "fbbce6fa67dbd717adb2ce24164337f0",
+    "semantic_hash": "fbbce6fa67dbd717adb2ce24164337f0"
+  },
+  "06-marco-d-reclutamiento.md": {
+    "mtime": 1789144461.689678,
+    "ast_hash": "8361aa9cef21a6e43abbccfd95546afa",
+    "semantic_hash": "8361aa9cef21a6e43abbccfd95546afa"
+  },
+  "07-marco-e-metricas-y-nomina.md": {
+    "mtime": 1789144461.689814,
+    "ast_hash": "d70a81fe144f43af699fb6d10919d123",
+    "semantic_hash": "d70a81fe144f43af699fb6d10919d123"
+  },
+  "08-inteligencia-artificial.md": {
+    "mtime": 1789144461.689895,
+    "ast_hash": "92b76849659158a36e1ff8a13487cb54",
+    "semantic_hash": "92b76849659158a36e1ff8a13487cb54"
+  },
+  "09-flujos-de-datos.md": {
+    "mtime": 1789144461.6899834,
+    "ast_hash": "25703657a1d38dbc4afce4e77a72e57b",
+    "semantic_hash": "25703657a1d38dbc4afce4e77a72e57b"
+  },
+  "10-recorridos.md": {
+    "mtime": 1789144461.6900673,
+    "ast_hash": "6cd0f580ed4b7e845be01e7c26885eb1",
+    "semantic_hash": "6cd0f580ed4b7e845be01e7c26885eb1"
+  },
+  "11-hallazgos.md": {
+    "mtime": 1789144461.6901495,
+    "ast_hash": "65d0b4789c4e7d132c9f52d74ecb5e08",
+    "semantic_hash": "65d0b4789c4e7d132c9f52d74ecb5e08"
+  },
+  "README.md": {
+    "mtime": 1789144461.6889207,
+    "ast_hash": "b3f648f7308a0624ce73f257f3e8bd13",
+    "semantic_hash": "b3f648f7308a0624ce73f257f3e8bd13"
+  },
+  "12-nuevo-ubits-especificado.md": {
+    "mtime": 1789144461.690235,
+    "ast_hash": "19e7141cd6c3d3caedf239af7347888e",
+    "semantic_hash": "19e7141cd6c3d3caedf239af7347888e"
+  },
+  "13-historias-de-usuario.md": {
+    "mtime": 1789144461.690435,
+    "ast_hash": "8e522baca450ed6088a98a460275573f",
+    "semantic_hash": "8e522baca450ed6088a98a460275573f"
+  },
+  "14-hoy-vs-especificado.md": {
+    "mtime": 1789144461.6906464,
+    "ast_hash": "a34eb3e7f231e171a4dc39b4abe70fa3",
+    "semantic_hash": "a34eb3e7f231e171a4dc39b4abe70fa3"
+  },
+  "15-hallazgos-frente-a-la-especificacion.md": {
+    "mtime": 1789144461.6907682,
+    "ast_hash": "0bf1bda6f21b50670eb82fbf13b5f0e7",
+    "semantic_hash": "0bf1bda6f21b50670eb82fbf13b5f0e7"
+  },
+  "fuentes/contexto-producto/README.md": {
+    "mtime": 1788908977.0,
+    "ast_hash": "e5dc6c71935a3578180332d538959125",
+    "semantic_hash": "e5dc6c71935a3578180332d538959125"
+  },
+  "fuentes/contexto-producto/_indice-hus.md": {
+    "mtime": 1788908985.0,
+    "ast_hash": "ff8c28378bf540d8684ac7cedcd8cc2d",
+    "semantic_hash": "ff8c28378bf540d8684ac7cedcd8cc2d"
+  },
+  "fuentes/contexto-producto/_plantilla-hu.md": {
+    "mtime": 1785972304.0,
+    "ast_hash": "5bdd70c9616d51e74e98fcd9079c72c6",
+    "semantic_hash": "5bdd70c9616d51e74e98fcd9079c72c6"
+  },
+  "fuentes/contexto-producto/admin/configuracion/datos-empresa/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "ed08021f8de84fa0d940d7f7fe704eb7",
+    "semantic_hash": "ed08021f8de84fa0d940d7f7fe704eb7"
+  },
+  "fuentes/contexto-producto/admin/configuracion/gestion-usuarios/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "0d5078241be3a68fcb2869c9f910e69d",
+    "semantic_hash": "0d5078241be3a68fcb2869c9f910e69d"
+  },
+  "fuentes/contexto-producto/admin/configuracion/organigrama/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "c809b00e9f3ca37e89010df686fbf409",
+    "semantic_hash": "c809b00e9f3ca37e89010df686fbf409"
+  },
+  "fuentes/contexto-producto/admin/configuracion/personalizacion/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "9fe049cc8e8241a43a56d3c7081b9369",
+    "semantic_hash": "9fe049cc8e8241a43a56d3c7081b9369"
+  },
+  "fuentes/contexto-producto/admin/configuracion/roles-y-permisos/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "718e16c813ae80f24347d1baf5584b18",
+    "semantic_hash": "718e16c813ae80f24347d1baf5584b18"
+  },
+  "fuentes/contexto-producto/admin/herramientas/agente-de-tu-empresa/HU-agente-de-tu-empresa.md": {
+    "mtime": 1788545836.0,
+    "ast_hash": "324c5611da6d59603afa4068ac115371",
+    "semantic_hash": "324c5611da6d59603afa4068ac115371"
+  },
+  "fuentes/contexto-producto/admin/herramientas/agente-de-tu-empresa/_flujo.md": {
+    "mtime": 1788545836.0,
+    "ast_hash": "c6edb97fe669926c6f08c848a8992da0",
+    "semantic_hash": "c6edb97fe669926c6f08c848a8992da0"
+  },
+  "fuentes/contexto-producto/admin/herramientas/avisos-internos/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "87d63b0c1f34037e1d54ba3bff504262",
+    "semantic_hash": "87d63b0c1f34037e1d54ba3bff504262"
+  },
+  "fuentes/contexto-producto/admin/herramientas/tareas/HU-seguimiento-hr.md": {
+    "mtime": 1788909008.0,
+    "ast_hash": "ea95c2d31b84e59e9cda39b635d9ded3",
+    "semantic_hash": "ea95c2d31b84e59e9cda39b635d9ded3"
+  },
+  "fuentes/contexto-producto/admin/inicio/HU-dashboard-admin.md": {
+    "mtime": 1786466393.0,
+    "ast_hash": "642060d7af34ecffc00175e52a3cd0e2",
+    "semantic_hash": "642060d7af34ecffc00175e52a3cd0e2"
+  },
+  "fuentes/contexto-producto/admin/inicio/HU-navegacion-workspace.md": {
+    "mtime": 1788908999.0,
+    "ast_hash": "0ac417324ecbbde1ed8d273ddde84b4e",
+    "semantic_hash": "0ac417324ecbbde1ed8d273ddde84b4e"
+  },
+  "fuentes/contexto-producto/admin/inicio/HU-workspace-footer.md": {
+    "mtime": 1786466393.0,
+    "ast_hash": "7a748cacbbc09ca8b737d545b744f383",
+    "semantic_hash": "7a748cacbbc09ca8b737d545b744f383"
+  },
+  "fuentes/contexto-producto/admin/inicio/_flujo.md": {
+    "mtime": 1788909000.0,
+    "ast_hash": "17754fc0b2fecd4e6ae32352d1c5f10e",
+    "semantic_hash": "17754fc0b2fecd4e6ae32352d1c5f10e"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/certificados/configuracion/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "4aed283e92c7056996d3045ad0e0221d",
+    "semantic_hash": "4aed283e92c7056996d3045ad0e0221d"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/certificados/descarga/HU-certificados-descarga.md": {
+    "mtime": 1786466393.0,
+    "ast_hash": "2ae30cf25efb4f8b6e418f058ff83ec9",
+    "semantic_hash": "2ae30cf25efb4f8b6e418f058ff83ec9"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/diagnostico/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "bcdc24e738b4fec34dfee4b9ea9547c0",
+    "semantic_hash": "bcdc24e738b4fec34dfee4b9ea9547c0"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/_flujo.md": {
+    "mtime": 1788908292.0,
+    "ast_hash": "9b9986f0004ff0ce580bf8fb8d065df3",
+    "semantic_hash": "9b9986f0004ff0ce580bf8fb8d065df3"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/categorias/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "5f23536c76c63786c8a9480035946d68",
+    "semantic_hash": "5f23536c76c63786c8a9480035946d68"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/HU-contenidos-listado.md": {
+    "mtime": 1788905947.0,
+    "ast_hash": "922d28c50e3176a6ebfce1b5e8b07f4a",
+    "semantic_hash": "922d28c50e3176a6ebfce1b5e8b07f4a"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/HU-crear-contenido.md": {
+    "mtime": 1788905979.0,
+    "ast_hash": "ab3b37f59c84555595e168134f3e8c0a",
+    "semantic_hash": "ab3b37f59c84555595e168134f3e8c0a"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/HU-crear-evento.md": {
+    "mtime": 1788907176.0,
+    "ast_hash": "050a853939d61a42ddd957edc48a5236",
+    "semantic_hash": "050a853939d61a42ddd957edc48a5236"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/HU-crear-ruta.md": {
+    "mtime": 1786554658.0,
+    "ast_hash": "dccefe40a13d19f94baa96d11117369d",
+    "semantic_hash": "dccefe40a13d19f94baa96d11117369d"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/HU-editar-contenido.md": {
+    "mtime": 1788907176.0,
+    "ast_hash": "41ebd5d812e3252151696604e25f0ee9",
+    "semantic_hash": "41ebd5d812e3252151696604e25f0ee9"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/navegacion/HU-tipo-navegacion-ruta.md": {
+    "mtime": 1786554636.0,
+    "ast_hash": "479c822e8e7915d23290b37b1fb1b099",
+    "semantic_hash": "479c822e8e7915d23290b37b1fb1b099"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/navegacion/HU-tipo-navegacion.md": {
+    "mtime": 1786554655.0,
+    "ast_hash": "3ddbd0528e99e673ecc47cb26779f9be",
+    "semantic_hash": "3ddbd0528e99e673ecc47cb26779f9be"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/recursos/HU-agregar-evaluacion.md": {
+    "mtime": 1787758854.0,
+    "ast_hash": "58d6b8e724b60e210df7d96bfa3b0e75",
+    "semantic_hash": "58d6b8e724b60e210df7d96bfa3b0e75"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/recursos/HU-ocultar-evaluacion-pesos.md": {
+    "mtime": 1787341803.0,
+    "ast_hash": "d400bbdae22bb411d41337258b3ca8a7",
+    "semantic_hash": "d400bbdae22bb411d41337258b3ca8a7"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/recursos/HU-presentacion-interactiva.md": {
+    "mtime": 1787337140.0,
+    "ast_hash": "644a6a34c05dbdcd1558c73365b3f595",
+    "semantic_hash": "644a6a34c05dbdcd1558c73365b3f595"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/recursos/HU-recurso-asistencia.md": {
+    "mtime": 1788906003.0,
+    "ast_hash": "23c1a9a5b99539f3677b3e5809db41df",
+    "semantic_hash": "23c1a9a5b99539f3677b3e5809db41df"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/recursos/HU-scorm-con-ia.md": {
+    "mtime": 1787330034.0,
+    "ast_hash": "6da2a6e1bb29e1a5692eccdf90e38029",
+    "semantic_hash": "6da2a6e1bb29e1a5692eccdf90e38029"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/recursos/HU-video-con-ia.md": {
+    "mtime": 1787756227.0,
+    "ast_hash": "2d9a8f6b26ed4967d29a345dffde231d",
+    "semantic_hash": "2d9a8f6b26ed4967d29a345dffde231d"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/recursos/guia-copy-diapositivas.md": {
+    "mtime": 1788908292.0,
+    "ast_hash": "3475efac62d44d1d9fdf50a257febfd6",
+    "semantic_hash": "3475efac62d44d1d9fdf50a257febfd6"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/resultados/HU-progreso-estudiante-resultados.md": {
+    "mtime": 1787341020.0,
+    "ast_hash": "db0bb0d5b743b986cd2c8c0e1306a6e5",
+    "semantic_hash": "db0bb0d5b743b986cd2c8c0e1306a6e5"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/resultados/HU-resultados-asistencias.md": {
+    "mtime": 1788906044.0,
+    "ast_hash": "b5b6e1fac0515702b397bb088ddf8907",
+    "semantic_hash": "b5b6e1fac0515702b397bb088ddf8907"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/contenidos/resultados/HU-resultados-contenido.md": {
+    "mtime": 1786466393.0,
+    "ast_hash": "7145fdb2a2f4cb9c9a98dcae6dbaca0c",
+    "semantic_hash": "7145fdb2a2f4cb9c9a98dcae6dbaca0c"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/lms-ai/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "caf0843c7cb1e459fccee11855337f81",
+    "semantic_hash": "caf0843c7cb1e459fccee11855337f81"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/lms-creator/universidad-corporativa/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "07d67ee3e283c21e4ef80af99ea9a9ff",
+    "semantic_hash": "07d67ee3e283c21e4ef80af99ea9a9ff"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/metricas/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "d9cf720abd53f0b73354cbc26711ea58",
+    "semantic_hash": "d9cf720abd53f0b73354cbc26711ea58"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/planes-de-formacion/grupos/HU-chat-ia-grupos.md": {
+    "mtime": 1785973018.0,
+    "ast_hash": "fdd1486d61b9e5795e0a3b2c3f2aeff4",
+    "semantic_hash": "fdd1486d61b9e5795e0a3b2c3f2aeff4"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/planes-de-formacion/grupos/HU-grupos.md": {
+    "mtime": 1785973179.0,
+    "ast_hash": "d397d55c285995fdf2d9a306129ad164",
+    "semantic_hash": "d397d55c285995fdf2d9a306129ad164"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/planes-de-formacion/planes/HU-planes-formacion.md": {
+    "mtime": 1785973166.0,
+    "ast_hash": "06cae6ba617c265a94f6b807293b04e1",
+    "semantic_hash": "06cae6ba617c265a94f6b807293b04e1"
+  },
+  "fuentes/contexto-producto/admin/productos/aprendizaje/reportes/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "043fb38e18795e140a89fc3d4d026778",
+    "semantic_hash": "043fb38e18795e140a89fc3d4d026778"
+  },
+  "fuentes/contexto-producto/admin/productos/desempeno-y-cultura/encuestas/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "ed1c7daea91ae08f94720be6e3c01761",
+    "semantic_hash": "ed1c7daea91ae08f94720be6e3c01761"
+  },
+  "fuentes/contexto-producto/admin/productos/desempeno-y-cultura/evaluaciones-360/HU-crear-evaluacion-360.md": {
+    "mtime": 1785973074.0,
+    "ast_hash": "879ad18990ae9d0b076b589230b3e7e5",
+    "semantic_hash": "879ad18990ae9d0b076b589230b3e7e5"
+  },
+  "fuentes/contexto-producto/admin/productos/desempeno-y-cultura/evaluaciones-360/HU-lista-evaluaciones-360.md": {
+    "mtime": 1785973076.0,
+    "ast_hash": "7552cf8c164a0a128fadb4b25cfe5541",
+    "semantic_hash": "7552cf8c164a0a128fadb4b25cfe5541"
+  },
+  "fuentes/contexto-producto/admin/productos/desempeno-y-cultura/evaluaciones-360/_flujo.md": {
+    "mtime": 1785972403.0,
+    "ast_hash": "4be5f17acdbc3c0655ab6a63806ba3e5",
+    "semantic_hash": "4be5f17acdbc3c0655ab6a63806ba3e5"
+  },
+  "fuentes/contexto-producto/admin/productos/desempeno-y-cultura/matriz-de-talento/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "035d4ec66a3e33ba6979a6a1ae2cf7e4",
+    "semantic_hash": "035d4ec66a3e33ba6979a6a1ae2cf7e4"
+  },
+  "fuentes/contexto-producto/admin/productos/desempeno-y-cultura/objetivos/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "45e8ecd11cfd143f51af322c16814e6b",
+    "semantic_hash": "45e8ecd11cfd143f51af322c16814e6b"
+  },
+  "fuentes/contexto-producto/admin/productos/desempeno-y-cultura/pdi/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "441a7b3274edb54819397789a7ccf21f",
+    "semantic_hash": "441a7b3274edb54819397789a7ccf21f"
+  },
+  "fuentes/contexto-producto/admin/productos/seleccion/dashboard/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "1505036fc2f9074c69e412193c25a088",
+    "semantic_hash": "1505036fc2f9074c69e412193c25a088"
+  },
+  "fuentes/contexto-producto/admin/productos/seleccion/onboarding/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "b7c1b4e5ca88fbd896a5a9bd7e0f5ebe",
+    "semantic_hash": "b7c1b4e5ca88fbd896a5a9bd7e0f5ebe"
+  },
+  "fuentes/contexto-producto/admin/productos/seleccion/plantillas/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "2af18f6601617f3929938ab62c67d899",
+    "semantic_hash": "2af18f6601617f3929938ab62c67d899"
+  },
+  "fuentes/contexto-producto/admin/productos/seleccion/vacantes/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "6711bd60b189bbaa9cd0e51740255a01",
+    "semantic_hash": "6711bd60b189bbaa9cd0e51740255a01"
+  },
+  "fuentes/contexto-producto/colaborador/herramientas/tareas/_flujo.md": {
+    "mtime": 1788909012.0,
+    "ast_hash": "7e12fdfdb0286d1c84ed81d761c00cf1",
+    "semantic_hash": "7e12fdfdb0286d1c84ed81d761c00cf1"
+  },
+  "fuentes/contexto-producto/colaborador/herramientas/tareas/planes/HU-planes-colaborador.md": {
+    "mtime": 1785973210.0,
+    "ast_hash": "c54468123840576b3a95b9c334f3f896",
+    "semantic_hash": "c54468123840576b3a95b9c334f3f896"
+  },
+  "fuentes/contexto-producto/colaborador/herramientas/tareas/plantillas/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "9c54b81365fd4a30374f38d1b8259e9f",
+    "semantic_hash": "9c54b81365fd4a30374f38d1b8259e9f"
+  },
+  "fuentes/contexto-producto/colaborador/herramientas/tareas/seguimiento/HU-seguimiento-lider.md": {
+    "mtime": 1788404438.0,
+    "ast_hash": "81f46dc1f537bf633b8174618320d1b6",
+    "semantic_hash": "81f46dc1f537bf633b8174618320d1b6"
+  },
+  "fuentes/contexto-producto/colaborador/herramientas/tareas/tareas/HU-detalle-tarea.md": {
+    "mtime": 1785973500.0,
+    "ast_hash": "5fd051996a43be6bc857a619eddde1c4",
+    "semantic_hash": "5fd051996a43be6bc857a619eddde1c4"
+  },
+  "fuentes/contexto-producto/colaborador/herramientas/tareas/tareas/HU-mi-lista.md": {
+    "mtime": 1785973159.0,
+    "ast_hash": "714f546cf031e917729c63856d13df0b",
+    "semantic_hash": "714f546cf031e917729c63856d13df0b"
+  },
+  "fuentes/contexto-producto/colaborador/ia-para-hr/HU-ia-para-hr.md": {
+    "mtime": 1788545836.0,
+    "ast_hash": "81c7a0b03da6100c922424964af664f9",
+    "semantic_hash": "81c7a0b03da6100c922424964af664f9"
+  },
+  "fuentes/contexto-producto/colaborador/inicio/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "d7bfbb7463d307ef183a5eac744e9fbc",
+    "semantic_hash": "d7bfbb7463d307ef183a5eac744e9fbc"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/_flujo.md": {
+    "mtime": 1788908292.0,
+    "ast_hash": "1e9cfc60599617f1364eb6bc6b668311",
+    "semantic_hash": "1e9cfc60599617f1364eb6bc6b668311"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/catalogo/HU-home-catalogo.md": {
+    "mtime": 1785973058.0,
+    "ast_hash": "ededd66a306b4510f30d6ba390a638b9",
+    "semantic_hash": "ededd66a306b4510f30d6ba390a638b9"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/diagnostico/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "7807969e8b8cd530152da60d43ac5d9a",
+    "semantic_hash": "7807969e8b8cd530152da60d43ac5d9a"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/experiencia-estudio/HU-asistir-sesion.md": {
+    "mtime": 1788907191.0,
+    "ast_hash": "145676323d625234b950411bd8861837",
+    "semantic_hash": "145676323d625234b950411bd8861837"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/experiencia-estudio/HU-experiencia-estudio.md": {
+    "mtime": 1788907188.0,
+    "ast_hash": "d7fd0d2d79ff5073b8a05d00c0e58968",
+    "semantic_hash": "d7fd0d2d79ff5073b8a05d00c0e58968"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/experiencia-estudio/HU-experiencia-ruta.md": {
+    "mtime": 1786557516.0,
+    "ast_hash": "5153a941a8ada15622cc40f06fa9b162",
+    "semantic_hash": "5153a941a8ada15622cc40f06fa9b162"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/experiencia-estudio/HU-navegacion-libre.md": {
+    "mtime": 1786554657.0,
+    "ast_hash": "994a17b6e939ad95b4447ad90913c823",
+    "semantic_hash": "994a17b6e939ad95b4447ad90913c823"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/metricas/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "4ae301ecc8cd0dfa41856d6d48f14e7c",
+    "semantic_hash": "4ae301ecc8cd0dfa41856d6d48f14e7c"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/modo-estudio-ia/HU-modo-estudio-ia.md": {
+    "mtime": 1788545836.0,
+    "ast_hash": "727c667381ff854ec8ca6dbf1639fa49",
+    "semantic_hash": "727c667381ff854ec8ca6dbf1639fa49"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/progreso/HU-progreso.md": {
+    "mtime": 1786466393.0,
+    "ast_hash": "278d4591ff6648159197fb65947a0c58",
+    "semantic_hash": "278d4591ff6648159197fb65947a0c58"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/universidad-corporativa/HU-u-corporativa.md": {
+    "mtime": 1788404438.0,
+    "ast_hash": "7ccd49a6c9a5bf9975f4b116facd1287",
+    "semantic_hash": "7ccd49a6c9a5bf9975f4b116facd1287"
+  },
+  "fuentes/contexto-producto/colaborador/productos/aprendizaje/zona-estudio/HU-zona-estudio.md": {
+    "mtime": 1788404438.0,
+    "ast_hash": "895dd171025ed60693dda31f59ec4be6",
+    "semantic_hash": "895dd171025ed60693dda31f59ec4be6"
+  },
+  "fuentes/contexto-producto/colaborador/productos/desempeno-y-cultura/encuestas/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "f73224e7189e8ba23c2cad1afff34e08",
+    "semantic_hash": "f73224e7189e8ba23c2cad1afff34e08"
+  },
+  "fuentes/contexto-producto/colaborador/productos/desempeno-y-cultura/evaluaciones-360/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "3d3cf7f8e9f68d5e853f8379269732c3",
+    "semantic_hash": "3d3cf7f8e9f68d5e853f8379269732c3"
+  },
+  "fuentes/contexto-producto/colaborador/productos/desempeno-y-cultura/matriz-de-talento/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "3f6c0b93fe9c644df42cbae5da1c0c82",
+    "semantic_hash": "3f6c0b93fe9c644df42cbae5da1c0c82"
+  },
+  "fuentes/contexto-producto/colaborador/productos/desempeno-y-cultura/objetivos/_pendiente.md": {
+    "mtime": 1788908429.0,
+    "ast_hash": "6dab7750a1d9c644dd044131bde3eff9",
+    "semantic_hash": "6dab7750a1d9c644dd044131bde3eff9"
+  },
+  "fuentes/contexto-producto/fundamentos/00-mapa.md": {
+    "mtime": 1788908981.0,
+    "ast_hash": "029cc766c5e6f626be652752eec43be8",
+    "semantic_hash": "029cc766c5e6f626be652752eec43be8"
+  },
+  "fuentes/contexto-producto/fundamentos/01-vocabulario.md": {
+    "mtime": 1788908982.0,
+    "ast_hash": "72feff1a96e58512f68d205a7858fe32",
+    "semantic_hash": "72feff1a96e58512f68d205a7858fe32"
+  },
+  "fuentes/contexto-producto/fundamentos/02-personas-y-roles.md": {
+    "mtime": 1788404438.0,
+    "ast_hash": "fab20e516fd173094ef0d909833e29e6",
+    "semantic_hash": "fab20e516fd173094ef0d909833e29e6"
+  },
+  "fuentes/contexto-producto/transversal/errores-sistema/HU-errores-sistema.md": {
+    "mtime": 1786642729.0,
+    "ast_hash": "3c3a8695d350f959b8fa1628335d00e3",
+    "semantic_hash": "3c3a8695d350f959b8fa1628335d00e3"
+  }
+}

@@ -1,0 +1,5 @@
+# PDI
+
+Sidenav: **Admin → Productos → Desempeño y cultura → PDI**.
+
+Aún no hay HU. No inventar producto aquí hasta que se pida. Cuando toque: copiar [`_plantilla-hu.md`](../../../../_plantilla-hu.md) y registrar el ID en [`_indice-hus.md`](../../../../_indice-hus.md).

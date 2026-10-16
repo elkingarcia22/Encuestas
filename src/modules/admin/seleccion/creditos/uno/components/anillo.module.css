@@ -1,0 +1,124 @@
+/* El anillo de lo usado de la bolsa de créditos (8 oct, Nicolás: «hazlo más hermoso, un glow up»). Va por capas:
+   - la escala: 48 marcas finas alrededor, como un instrumento;
+   - el brillo: el mismo degradado, difuminado detrás del arco;
+   - la pista: el anillo entero en gris;
+   - el arco: el degradado de la IA de UBITS (azul → morado → rosa → naranja) hasta lo usado, con las dos puntas
+     redondas y una perilla al final;
+   - el centro: el porcentaje.
+   Los cuatro tonos los pone la clase `vars` de src/shared/components/tarjeta-ia.module.css (no son tokens del tema).
+   Las máscaras usan `--foreground` solo por ser opaco: dejan ver lo que tapan, no pintan.
+   `--v` es el porcentaje en número (0–100); está registrado para que el arco se llene animado al llegar. */
+
+@property --v {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+.anillo {
+  --grosor: 0.75rem;
+  --anillo: radial-gradient(farthest-side, transparent calc(100% - var(--grosor) - 0.5px), var(--foreground) calc(100% - var(--grosor)));
+  --degradado: conic-gradient(
+    var(--ia-azul) 0%,
+    var(--ia-morado) calc(var(--v) * 0.4%),
+    var(--ia-rosa) calc(var(--v) * 0.75%),
+    var(--ia-naranja) calc(var(--v) * 1%),
+    transparent calc(var(--v) * 1%)
+  );
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 9rem;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+  transition: --v 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.escala {
+  position: absolute;
+  inset: -0.625rem;
+  border-radius: 50%;
+  background: repeating-conic-gradient(var(--border) 0deg 1.4deg, transparent 1.4deg 7.5deg);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 0.3125rem), var(--foreground) calc(100% - 0.25rem));
+}
+
+.brillo {
+  position: absolute;
+  inset: 0.25rem;
+  border-radius: 50%;
+  background: var(--degradado);
+  filter: blur(0.875rem);
+  opacity: 0.55;
+}
+
+.pista,
+.arco {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  mask: var(--anillo);
+}
+
+.pista {
+  background: var(--muted);
+}
+
+.arco {
+  background: var(--degradado);
+}
+
+/* Las puntas: un punto del grosor del anillo arriba (el inicio, en azul) y la perilla que gira con lo usado. */
+.inicio,
+.punta {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.inicio::after,
+.punta::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  border-radius: 50%;
+  translate: -50% 0;
+}
+
+.inicio::after {
+  width: var(--grosor);
+  height: var(--grosor);
+  background: var(--ia-azul);
+}
+
+.punta {
+  rotate: calc(var(--v) * 3.6deg);
+}
+
+.punta::after {
+  top: -0.1875rem;
+  width: calc(var(--grosor) + 0.375rem);
+  height: calc(var(--grosor) + 0.375rem);
+  background: var(--card);
+  border: 0.1875rem solid var(--ia-naranja);
+  box-shadow: 0 0 0.75rem color-mix(in oklab, var(--ia-naranja) 70%, transparent);
+}
+
+.centro {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - 2 * var(--grosor) - 0.75rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, var(--card) 55%, color-mix(in oklab, var(--muted) 60%, var(--card)));
+  box-shadow: inset 0 1px 2px color-mix(in oklab, var(--foreground) 6%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anillo {
+    transition: none;
+  }
+}

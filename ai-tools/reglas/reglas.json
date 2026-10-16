@@ -1,0 +1,1426 @@
+{
+ "$para_que": "La fuente única de las reglas del Playground UX para personas y para la IA. De aquí salen la tabla y las reglas de AGENTS.md, las reglas y piezas del catálogo (ai-tools/flux-ui/flux-ui-para-ia.json), el recordatorio de cada mensaje, el grafo y la herramienta del design system. Se edita a mano y luego se corre node ai-tools/reglas/generar-reglas.mjs; los demás archivos no se tocan a mano.",
+ "actualizado": "2026-10-09",
+ "reglas": [
+  {
+   "id": "orden",
+   "fecha": "2026-09-17",
+   "tema": "piezas",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Primero la pieza del proyecto, después flux-ui del catálogo; si no hay ninguna, para y pregunta.",
+   "texto": "Primero la pieza que el proyecto ya resolvió (ver «piezas»), después el componente de @ubits/flux-ui del catálogo, y si no hay ninguno, para y pregunta. Hay una sola versión de cada pieza: si se queda corta se amplía, no se hace otra al lado."
+  },
+  {
+   "id": "preguntar-antes",
+   "fecha": "2026-10-08",
+   "tema": "interaccion",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Enviar, borrar, desactivar, mover o descartar pregunta antes: DialogoConfirmar + RegistroConfirmar. Nunca un «enviado» sin preguntar.",
+   "texto": "Todo lo que envía (correo, recordatorio, invitación, pedido), borra, desactiva, archiva, mueve de etapa o descarta pregunta antes con DialogoConfirmar y la tarjeta RegistroConfirmar (qué se toca y a cuántos afecta). Solo un cambio simple que se puede deshacer va directo, con notifyAction y «Deshacer». Nunca un aviso de «enviado» sin haber preguntado.",
+   "piezas": [
+    "DialogoConfirmar",
+    "RegistroConfirmar"
+   ],
+   "ejemplo": "src/modules/admin/aprendizaje/planes-de-formacion/components/detalle-plan.tsx (Enviar recordatorio)",
+   "hallazgos": [
+    "H-009",
+    "H-036",
+    "H-250",
+    "H-270",
+    "H-360",
+    "H-667",
+    "H-799"
+   ]
+  },
+  {
+   "id": "dos-ventanas",
+   "fecha": "2026-10-06",
+   "tema": "ventanas",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Preguntar va en DialogoConfirmar; todo lo que tiene contenido, en ActionDialog. Títulos de ventana fijos; el nombre del registro en el cuerpo.",
+   "texto": "Dos ventanas, cada una con su trabajo: preguntar va en DialogoConfirmar; todo lo que tiene contenido (formulario, lista para elegir, vista previa, escribir un correo, confirmar con la lista de a quiénes afecta) va en ActionDialog. El título de una ventana dice qué es la ventana y es fijo; el nombre del registro va en el cuerpo.",
+   "piezas": [
+    "DialogoConfirmar",
+    "ActionDialog"
+   ],
+   "reemplaza": "ventana-unica (5-oct: «ActionDialog, la única»)"
+  },
+  {
+   "id": "crear-en-pagina",
+   "fecha": "2026-10-06",
+   "tema": "creacion",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Crear y editar en una página; una sola salida, BotonSalirCreacion, en la cabecera; sin flecha, X ni «Cancelar»; ChipGuardado a la izquierda de la barra.",
+   "texto": "Crear y editar viven en una página (PageShell + PageHeader + PageActionBar), nunca en una ventana ni en un panel. Hay una sola salida, BotonSalirCreacion («Salir de la creación» o «Salir de la edición») en las acciones de la cabecera: sin flecha junto al título, sin X y sin «Cancelar» en la barra. La barra lleva ChipGuardado a la izquierda y «Atrás» y seguir a la derecha. Excepción (Cristian, 9-oct): «Agregar una persona a tu base», en Mis candidatos, es una ventana (ActionDialog) con «Cancelar», como la diseñó Nicolás.",
+   "piezas": [
+    "PageShell",
+    "PageHeader",
+    "PageActionBar",
+    "ChipGuardado",
+    "BotonSalirCreacion"
+   ],
+   "ejemplo": "src/modules/admin/aprendizaje/planes-de-formacion/components/formulario-plan.tsx",
+   "hallazgos": [
+    "H-034",
+    "H-246",
+    "H-289",
+    "H-337",
+    "H-403"
+   ]
+  },
+  {
+   "id": "salir-con-cambios",
+   "fecha": "2026-10-08",
+   "tema": "creacion",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Salir con cambios: DialogoConfirmar «Seguir editando · Salir sin guardar · Guardar y salir» (dos salidas si no hay borrador); sin cambios, sale directo.",
+   "texto": "Salir con cambios pregunta con DialogoConfirmar en su tamaño normal: tres salidas («Seguir editando» · «Salir sin guardar» · «Guardar y salir») si hay algo que guardar; dos («Seguir editando» · «Salir sin guardar», destructiva) si no hay borrador posible. Sin cambios, sale directo. Copia el título y los textos de la pantalla modelo; no inventes otros.",
+   "piezas": [
+    "DialogoConfirmar"
+   ],
+   "ejemplo": "src/modules/admin/aprendizaje/planes-de-formacion/components/formulario-plan.tsx",
+   "hallazgos": [
+    "H-035",
+    "H-057"
+   ]
+  },
+  {
+   "id": "panel-con-datos",
+   "fecha": "2026-10-08",
+   "tema": "paneles",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Un panel con datos no se cierra al tocar fuera; cerrarlo con cambios pregunta.",
+   "texto": "Un panel (DrawerShell) con algo escrito no se cierra al tocar fuera; cerrarlo con la X, Escape o «Cancelar» con cambios pregunta («Seguir editando» · «Descartar»).",
+   "piezas": [
+    "DrawerShell",
+    "DialogoConfirmar"
+   ],
+   "ejemplo": "src/modules/admin/desempeno-cultura/objetivos/crear/components/asignados/panel-asignacion.tsx",
+   "hallazgos": [
+    "H-150"
+   ]
+  },
+  {
+   "id": "guardado-honesto",
+   "fecha": "2026-10-08",
+   "tema": "creacion",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "ChipGuardado y los textos dicen la verdad: nada de «Guardado» sin haber guardado.",
+   "texto": "ChipGuardado dice la verdad: «Cambios sin guardar» mientras no se haya guardado nada y «Guardado» solo cuando de verdad hay un borrador. Una ventana nunca dice «no has hecho cambios» si los hay, ni promete algo que la pantalla no deja hacer.",
+   "piezas": [
+    "ChipGuardado"
+   ],
+   "hallazgos": [
+    "H-197",
+    "H-391"
+   ]
+  },
+  {
+   "id": "tabla-cabe",
+   "fecha": "2026-10-08",
+   "tema": "tablas",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Toda tabla es TablaDatos y cabe en 1.104 px; el «⋯» de la fila siempre se ve.",
+   "texto": "Toda tabla es TablaDatos y cabe en su marco (1.104 px con la barra lateral abierta): reparte los anchos, apaga el cambio de ancho si no cabe y deja que la columna de texto se corte con «…» y TextoCompleto. El «⋯» de cada fila se ve siempre.",
+   "piezas": [
+    "TablaDatos",
+    "TextoCompleto",
+    "CeldaTitulo"
+   ],
+   "hallazgos": [
+    "H-151",
+    "H-199",
+    "H-376",
+    "H-657"
+   ]
+  },
+  {
+   "id": "elegir-a-la-izquierda",
+   "fecha": "2026-10-09",
+   "tema": "listas",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "En una lista para elegir, la casilla o el círculo van siempre a la izquierda de la fila.",
+   "texto": "En toda lista para elegir (participantes, el comparativo, demográficos, asignaciones…), la casilla (Checkbox) o el círculo (RadioGroupItem) van siempre a la izquierda de la fila, antes del icono y del texto; a la derecha solo va lo de apoyo (cifras, insignias, acciones). La fila entera elige. Homologado por Elkin el 9-oct.",
+   "piezas": [
+    "ListaElegible",
+    "FilaElegible"
+   ],
+   "hallazgos": []
+  },
+  {
+   "id": "avisos-con-tipo",
+   "fecha": "2026-10-08",
+   "tema": "avisos",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Avisos con notify(título, detalle, tipo); nunca toast.add suelto.",
+   "texto": "Los avisos usan notify(título, detalle, tipo) con su tipo ('success', 'info', 'warning' o 'error'). Nada de toast.add suelto ni ToastToaster en la pantalla.",
+   "piezas": [
+    "notify"
+   ],
+   "reemplaza": "avisos-toast-add (29-sep: «con tipo → toast.add»)"
+  },
+  {
+   "id": "ia-orbe",
+   "fecha": "2026-10-01",
+   "tema": "ia",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "IA: el orbe (IconoIA, EtiquetaIA), BotonIa, «Orbit Flow» el último de la fila; el «⋯» el primero.",
+   "texto": "Lo que hizo la IA lleva el orbe (IconoIA; como insignia, EtiquetaIA), nunca estrellas ni chispas. El primario de IA es BotonIa y la segunda acción BotonIaSecundario. El botón que abre el agente es ReopenAgentButton y se llama «Orbit Flow». Orden de una fila: «⋯» (BotonIcono) · terciario · secundario · primario · IA · Orbit Flow.",
+   "piezas": [
+    "IconoIA",
+    "EtiquetaIA",
+    "BotonIa",
+    "BotonIaSecundario",
+    "ReopenAgentButton",
+    "BotonIcono"
+   ]
+  },
+  {
+   "id": "medidas-del-tema",
+   "fecha": "2026-09-25",
+   "tema": "estilo",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Ancho de PageShell, letra de Heading y Text, colores de los tokens, Badge del proyecto; className solo para layout.",
+   "texto": "El ancho lo pone PageShell (nada de max-w a mano), la letra sale de Heading y Text, los colores de los tokens del tema y las insignias del Badge del proyecto (10,5 px mínimo). className solo para layout.",
+   "piezas": [
+    "PageShell",
+    "Badge"
+   ]
+  },
+  {
+   "id": "forzados-con-ficha",
+   "fecha": "2026-10-05",
+   "tema": "estilo",
+   "en": [
+    "agents",
+    "recordatorio"
+   ],
+   "corto": "Un «!» nuevo lleva su ficha (Ajustes propios o diferencias.json); los de otras personas se conservan.",
+   "texto": "Un «!» que fuerza a la librería solo se pone con su ficha en Design system › Marco › Ajustes propios o su entrada en ai-tools/flux-ui/diferencias.json, y un comentario que diga por qué. Los «!» de otras personas se conservan."
+  },
+  {
+   "id": "textos-y-formatos",
+   "fecha": "2026-10-08",
+   "tema": "textos",
+   "en": [
+    "agents",
+    "catalogo"
+   ],
+   "texto": "Todo en español, también lo que solo oye el lector de pantalla. Fechas, plurales, cifras y porcentajes salen de las utilidades de formato (formato.ts, formatoAvance), no de toLocaleString ni de funciones propias.",
+   "piezas": [
+    "plural",
+    "fechaCorta"
+   ]
+  },
+  {
+   "id": "archivos-ajenos",
+   "fecha": "2026-09-29",
+   "tema": "equipo",
+   "en": [
+    "agents",
+    "recordatorio"
+   ],
+   "corto": "Archivo de otra persona: solo la línea exacta, y se dice; zona protegida solo con permiso.",
+   "texto": "En un archivo de otra persona se cambia solo la línea exacta, sin Prettier ni reescribir bloques, y se dice en la respuesta. La zona protegida (src/shared, src/app, src/index.css, scripts/, AGENTS.md) se toca solo con permiso."
+  },
+  {
+   "id": "atencion-solo-super-home",
+   "fecha": "2026-10-05",
+   "tema": "marco",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "El panel «Lo que necesita tu atención» va solo en la Super Home (/admin); los inicios de cada módulo no lo llevan.",
+   "texto": "El panel de lo que necesita atención (TableroAtencion, BloqueAtencion o la lista de la Super Home) vive solo en la Super Home (/admin), que reúne Selección, Aprendizaje y Cultura. Los inicios de cada módulo (Vacantes, Créditos, Contenidos, Encuestas…) no lo llevan; lo urgente de un módulo llega a la Super Home o a las notificaciones.",
+   "piezas": [
+    "TableroAtencion",
+    "BloqueAtencion"
+   ],
+   "ejemplo": "src/modules/admin/inicio/main.tsx",
+   "fuente": "War Room 5-oct"
+  },
+  {
+   "id": "footer-solo-home",
+   "fecha": "2026-10-05",
+   "tema": "marco",
+   "en": [
+    "agents",
+    "recordatorio"
+   ],
+   "corto": "El footer sale solo en las páginas de inicio (home), nunca en creación ni en subvistas.",
+   "texto": "El pie de página (AppFooter) se muestra solo en las páginas de inicio (home) de la plataforma. En las pantallas de creación, edición y subvistas no aparece, para no competir con la barra de acciones fija. Lo monta el marco (zona protegida): el cambio es de ingeniería. Desde el 9-oct (con permiso de Cristian) ya no sale en Selección ni en las pantallas de creación del LMS Creator; el resto sigue pendiente de ingeniería.",
+   "fuente": "War Room 5-oct (reemplaza «footer transversal» del 1-oct)"
+  },
+  {
+   "id": "pestanas-solo-texto",
+   "fecha": "2026-10-05",
+   "tema": "navegacion",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Todas las pestañas son solo texto, sin ícono.",
+   "texto": "Todas las pestañas de la plataforma (TabsTrigger, incluidas las de los editores y paneles) llevan solo texto, sin ícono. Se usa la pestaña maestra subrayada (TabsList variant=\"line\"), sin pestañas anidadas.",
+   "fuente": "War Room 5-oct"
+  },
+  {
+   "id": "orbit-flow-compacto",
+   "fecha": "2026-10-05",
+   "tema": "ia",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Con más de dos llamados a la acción (contando a Orbit Flow, sin contar el «⋯»), Orbit Flow va solo con ícono (ReopenAgentButton compact).",
+   "texto": "Cuando una cabecera o una barra tiene más de dos llamados a la acción, contando al propio Orbit Flow y sin contar el «⋯» (que ya es un ícono), el botón del agente pasa a solo ícono (ReopenAgentButton con compact) para que el título y la descripción no se monten con los botones. Sigue siendo el último de la fila. El caso que lo originó: Encuestas, con «Crear con plantilla», «Crear encuesta» y Orbit Flow.",
+   "piezas": [
+    "ReopenAgentButton"
+   ],
+   "fuente": "War Room 5-oct",
+   "ejemplo": "src/modules/admin/desempeno-cultura/encuestas/main.tsx"
+  },
+  {
+   "id": "dos-acciones-secundarias",
+   "fecha": "2026-10-01",
+   "tema": "botones",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Con dos llamados a la acción del mismo nivel, los dos van como secundarios.",
+   "texto": "Cuando una cabecera o un bloque tiene dos llamados a la acción del mismo nivel, los dos van como secundarios (outline); el primario se reserva para cuando hay una sola acción principal. Los botones de IA y Orbit Flow siguen sus propias reglas.",
+   "fuente": "War Room 1-oct"
+  },
+  {
+   "id": "avisos-cortos",
+   "fecha": "2026-10-01",
+   "tema": "avisos",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Avisos cortos: título de una línea (unos 60 caracteres) y detalle de una o dos líneas (unos 120).",
+   "texto": "Los avisos (notify) llevan un título de una línea, de unos 60 caracteres como máximo, y un detalle opcional de una o dos líneas, de unos 120. Lo que no cabe va a una ventana o al panel. Las cifras exactas las fija Nicolás (ver «por_decidir»).",
+   "piezas": [
+    "notify"
+   ],
+   "fuente": "War Room 1-oct"
+  },
+  {
+   "id": "sin-buscador-global",
+   "fecha": "2026-10-07",
+   "tema": "marco",
+   "en": [
+    "agents",
+    "recordatorio"
+   ],
+   "corto": "El buscador global quedó fuera del rediseño: no se suma a pantallas ni se documenta como pieza nueva.",
+   "texto": "El buscador global (CommandPalette, ⌘K) quedó fuera del alcance del rediseño por inviable. No se suma a pantallas nuevas ni se amplía. Retirarlo del encabezado y del DS › Marco es un cambio de ingeniería (zona protegida).",
+   "piezas": [
+    "CommandPalette"
+   ],
+   "fuente": "Sync Rediseño 7-oct"
+  },
+  {
+   "id": "secciones-en-caja-gris",
+   "fecha": "2026-10-09",
+   "tema": "marco",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Cada sección vive en un marco gris (Frame + FramePanel) con su título y su bajada en el gris; nada de secciones blancas sueltas.",
+   "texto": "En la plataforma no van secciones blancas sueltas: cada una vive dentro de un marco gris (Frame + FramePanel), y su título y su bajada van en el gris, nunca repetidos dentro del panel blanco. Si el contenido se nombra solo (unas cifras con su etiqueta, un estado vacío, un campo con su label), el marco va sin encabezado.",
+   "piezas": [
+    "Frame",
+    "FramePanel"
+   ],
+   "ejemplo": "src/modules/admin/aprendizaje/certificados/descarga/main.tsx",
+   "fuente": "PR #31 de David (039c557), aprobado por Cristian al unir el 9-oct"
+  },
+  {
+   "id": "contenidos-tabla-o-tarjetas",
+   "fecha": "2026-10-09",
+   "tema": "tablas",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Una lista de contenidos con portada se ve como tabla (TablaDatos) o como tarjetas, con el cambio Tabla/Cuadrícula.",
+   "texto": "Una lista de contenidos con portada (Contenidos del LMS Creator, Universidad corporativa, Zona de estudio) se puede ver como tabla o como tarjetas, con el cambio Tabla/Cuadrícula de los controles compartidos de Contenidos (CambioDeVista y MarcoCuadricula). El modo tabla es siempre TablaDatos con CeldaTitulo; la cuadrícula va en el marco gris con PiePaginacion. En el portal del colaborador arranca en Cuadrícula. Las demás tablas (las de gestionar) siguen siendo solo TablaDatos.",
+   "piezas": [
+    "TablaDatos",
+    "CeldaTitulo",
+    "PiePaginacion",
+    "TarjetaContenido"
+   ],
+   "ejemplo": "src/modules/admin/aprendizaje/lms-creator/contenidos/main.tsx",
+   "reemplaza": "«una lista de contenidos con portada es una tabla con CeldaTitulo e imagen» (auditoría del 6-oct, decisión 1)",
+   "fuente": "Decisiones 1b y 2a de Cristian al unir el 9-oct («puedo verlo como tabla o como card»)"
+  },
+  {
+   "id": "preguntar-dentro-del-panel",
+   "fecha": "2026-10-09",
+   "tema": "paneles",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Lo que se pide desde un panel (confirmar, escribir, mover, otro detalle) se abre en el mismo panel con «← título» para volver; nada encima.",
+   "texto": "Lo que se pide dentro de un panel lateral (confirmar, escribir un correo, mover, abrir otro detalle) se abre en el mismo panel: su contenido cambia por el de la ventana y arriba queda «← título del panel» para volver. Nada de otra ventana ni otro panel encima. DrawerShell, VentanaDeAccion y DialogoConfirmar lo hacen solos con DrawerAnidado; no hay que armarlo en cada pantalla.",
+   "piezas": [
+    "DrawerShell",
+    "DrawerAnidado",
+    "DialogoConfirmar"
+   ],
+   "ejemplo": "src/modules/design-system/drawers/components/drawer-anidado.tsx («Rechazar» desde la ficha del candidato, en Selección)",
+   "fuente": "PR #10 de Nicolás (8-oct), aprobado por Cristian al unir el 9-oct"
+  },
+  {
+   "id": "errores-con-reintentar",
+   "fecha": "2026-10-09",
+   "tema": "estados",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Lo que no carga o no se guarda dice qué pasó en una línea y trae «Reintentar»; si venía de una ventana con datos, la ventana se queda abierta.",
+   "texto": "Todo lo que carga o guarda tiene su error. Si no se guarda, nada cambia: el aviso rojo dice «No pudimos …» y una línea con la consecuencia («Sigue en …», «No salió ningún correo»), y trae «Reintentar», que repite lo mismo y cierra ese aviso. Si la acción venía de una ventana con datos escritos, la ventana se queda abierta con lo escrito. Un bloque que no carga muestra su error en el sitio, con la ilustración glass-danger y «Reintentar». Se prueba con ?simular=error y ?simular=falla-guardar.",
+   "piezas": [
+    "notify",
+    "PrimeraVez"
+   ],
+   "ejemplo": "src/modules/design-system/estados/carga.tsx",
+   "fuente": "Nicolás, 8-oct (escrita en su skill), aprobada por Cristian al unir el 9-oct"
+  },
+  {
+   "id": "nada-visible-de-prueba",
+   "fecha": "2026-10-09",
+   "tema": "contenido",
+   "en": [
+    "agents",
+    "recordatorio"
+   ],
+   "corto": "Nada de atajos de demostración ni textos de maqueta a la vista; los casos raros se enseñan con ?simular= o ?como=.",
+   "texto": "Ninguna pantalla lleva atajos de demostración a la vista («Probar con archivos de ejemplo», «Usar uno de ejemplo») ni textos de maqueta («en el playground…», «sonaría…»). Cada control se comporta como en el producto. Los estados raros se enseñan con los simuladores de la dirección (?simular=, ?como=), que no se ven.",
+   "ejemplo": "src/modules/admin/seleccion/propuestas/simular.ts",
+   "fuente": "Nicolás, 8-oct (escrita en su skill), aprobada por Cristian al unir el 9-oct"
+  },
+  {
+   "id": "vacios-con-glass",
+   "fecha": "2026-10-09",
+   "tema": "estados",
+   "en": [
+    "agents",
+    "catalogo",
+    "recordatorio"
+   ],
+   "corto": "Los estados vacíos y de error van con su ilustración glass (PrimeraVez, SinResultados; glass-danger para errores), nunca con un icono de línea.",
+   "texto": "Los estados vacíos y los de error van con los iconos glass del design system, no con un icono de línea de Hugeicons: PrimeraVez cuando todavía no hay nada, SinResultados cuando la búsqueda o los filtros lo dejan todo fuera, y la ilustración glass-danger con «Reintentar» cuando algo no cargó. Nada de un Empty armado a mano.",
+   "piezas": [
+    "PrimeraVez",
+    "SinResultados",
+    "ImagenGlass"
+   ],
+   "ejemplo": "src/modules/admin/desempeno-cultura/objetivos/crear/components/asignados/lista-roster.tsx",
+   "fuente": "Cristian, 9-oct"
+  },
+  {
+   "id": "cambiar-una-regla",
+   "fecha": "2026-10-08",
+   "tema": "proceso",
+   "en": [
+    "agents",
+    "recordatorio"
+   ],
+   "corto": "Una regla nueva o cambiada va primero a ai-tools/reglas/reglas.json; luego se regenera y se barren sus usos.",
+   "texto": "Una regla nueva o cambiada se escribe primero en ai-tools/reglas/reglas.json (con fecha y, si reemplaza otra, cuál), se regenera con node ai-tools/reglas/generar-reglas.mjs y se barren todos sus usos con Grep en src/ y en los documentos el mismo día. Lo que no se pueda barrer ese día va a «por_decidir» (o a la ficha del dueño) con quién lo resuelve."
+  },
+  {
+   "id": "libreria-1",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "Toda pieza visible de la interfaz sale de un componente de la lista \"componentes\" de este archivo. Si se ve en pantalla (botón, campo, tabla, tarjeta, modal, menú, pestaña, aviso, etiqueta, avatar, barra de progreso, gráfico, calendario…), es un componente de @ubits/flux-ui."
+  },
+  {
+   "id": "libreria-2",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "Antes de escribir código de interfaz, analiza qué piezas necesita la pantalla y búscalas aquí por \"nombre\", \"usar_para\" y \"buscar\". Usa la que mejor encaje."
+  },
+  {
+   "id": "libreria-3",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "No crees componentes visuales nuevos. No dibujes con div o span y clases algo que la librería ya resuelve: un círculo con una inicial es Avatar, una barra de color es Progress, un recuadro vacío con un mensaje es Empty, una etiqueta de estado es Badge."
+  },
+  {
+   "id": "libreria-4",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "No inventes variantes, tamaños ni props visuales: usa solo los valores de \"variantes\". Si hace falta otro valor, pregunta."
+  },
+  {
+   "id": "libreria-5",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "No uses nada de \"en_storybook_pero_no_publicados\": está documentado pero no existe en la versión publicada y rompe la pantalla."
+  },
+  {
+   "id": "libreria-6",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "No instales ni importes otras librerías de interfaz (\"librerias_de_ui_prohibidas\"), ni copies componentes de shadcn, ReUI, MUI u otras aunque se parezcan: flux-ui ya los trae."
+  },
+  {
+   "id": "libreria-7",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "No construyas componentes propios con primitivas sin estilo (@base-ui/react, @radix-ui). flux-ui ya las envuelve."
+  },
+  {
+   "id": "libreria-8",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "No cambies la apariencia de los componentes. \"className\" solo para layout: ancho, alto, márgenes, padding de contenedores, gap, grid, flex, posición, truncado y visibilidad. Nada de colores, bordes, sombras, radios ni tipografía sobre un componente de la librería."
+  },
+  {
+   "id": "libreria-9",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "Iconos: solo Hugeicons, siempre como dato dentro de <HugeiconsIcon icon={NombreIcon} />."
+  },
+  {
+   "id": "libreria-10",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "Colores: solo los tokens de \"tokens_del_tema\". Nunca colores literales (#hex, rgb, oklch) ni la paleta cruda de Tailwind (bg-blue-500, text-slate-700…). Para texto usa Heading y Text."
+  },
+  {
+   "id": "libreria-11",
+   "fecha": "2026-09-17",
+   "tema": "libreria",
+   "en": [
+    "catalogo"
+   ],
+   "texto": "Si ningún componente cubre la necesidad, detente: no la improvises a mano. Explica qué falta, qué componentes se acercan y pregunta si se pide al equipo de la librería o se resuelve con uno existente."
+  }
+ ],
+ "piezas": [
+  {
+   "necesidad": "El marco de una página: ancho, título, migas, cabecera, secciones y barra de acciones",
+   "nombres": [
+    "PageShell",
+    "PageHeader",
+    "PageBreadcrumbs",
+    "PageContent",
+    "PageSection",
+    "PageActionBar"
+   ],
+   "usa": "PageShell, PageHeader, PageBreadcrumbs, PageContent, PageSection, PageActionBar",
+   "desde": "@/shared/components/PageShell",
+   "en_vez_de": "armarlo a mano con Frame y Heading"
+  },
+  {
+   "necesidad": "Un aviso",
+   "nombres": [
+    "notify",
+    "notifyAction"
+   ],
+   "usa": "notify(título, detalle, tipo) o notifyAction(…), siempre con su tipo: 'success', 'info', 'warning' o 'error' (el tipo pone el icono en su color)",
+   "desde": "@/shared/components/notify",
+   "en_vez_de": "toast.add suelto (la excepción del 29-sep venció: notify ya recibe el tipo) o ToastToaster en la pantalla, que duplica los avisos"
+  },
+  {
+   "necesidad": "Botón terciario de solo icono",
+   "nombres": [
+    "BotonIcono"
+   ],
+   "usa": "BotonIcono (redondo)",
+   "desde": "@/shared/components/BotonIcono",
+   "en_vez_de": "Button con un icono dentro"
+  },
+  {
+   "necesidad": "El orbe del agente (de 16 a 180 px)",
+   "nombres": [
+    "Orb"
+   ],
+   "usa": "Orb",
+   "desde": "@/shared/components/Orb",
+   "en_vez_de": "dibujarlo con div y degradados"
+  },
+  {
+   "necesidad": "Preguntar antes de hacer algo: eliminar, salir sin guardar, activar, descartar, enviar (también cuando muestra lo que se pierde)",
+   "nombres": [
+    "DialogoConfirmar"
+   ],
+   "usa": "DialogoConfirmar: icono arriba, título y texto centrados, el registro y lo que se pierde como hijos, «cancelar» y la acción (destructiva en rojo), «otra» para una tercera salida (guardar y salir) y «enCurso» para el spinner. Acuerdo del 6-oct",
+   "desde": "@/modules/design-system/estados/confirmaciones",
+   "en_vez_de": "ActionDialog para una confirmación sin contenido, o AlertDialog suelto (se documenta en /design-system/estados › Confirmaciones)"
+  },
+  {
+   "necesidad": "Una ventana con contenido: formulario corto, lista para elegir, vista previa, detalle, ajustes, o confirmar mostrando la lista de a quiénes afecta",
+   "nombres": [
+    "ActionDialog"
+   ],
+   "usa": "ActionDialog (size sm 448, default 620, wide 736 para formularios largos, full para editores; lead, media, onBack, headerActions, dismissible, hideFooter, footer)",
+   "desde": "@/shared/components/ActionDialog",
+   "en_vez_de": "ConfiguredModal (retirado el 5-oct), Dialog o AlertDialog sueltos. Crear o editar algo no va en una ventana: va en una página con PageActionBar"
+  },
+  {
+   "necesidad": "Una tabla o un listado, con o sin paginación",
+   "nombres": [
+    "TablaDatos",
+    "Vacantes",
+    "Personalizar",
+    "BotonIcono",
+    "PiePaginacion",
+    "CeldaTitulo"
+   ],
+   "usa": "TablaDatos, la única tabla del sistema: cabecera como Vacantes (conteo a la izquierda, buscador y «Personalizar columnas» a la derecha, sin título dentro del marco), encabezados de 40 px con asidero, orden y filtro por columna, columna «Acciones» con BotonIcono ⋯ y el paginador en español PiePaginacion (10/20/50, «Viendo 1–10 de 84 …»). La celda que nombra algo, con o sin imagen, es CeldaTitulo",
+   "desde": "@/modules/design-system/data-grid/tabla-datos y @/modules/design-system/data-grid/celda-titulo (el paginador vive en @/modules/admin/seleccion/propuestas/components/paginacion)",
+   "en_vez_de": "MarcoTabla (retirada el 5-oct), DataGridList o Table sueltos, otro paginador, o una cuadrícula de tarjetas dentro de un marco de tabla. Una lista de contenidos con portada puede verse además como tarjetas con el cambio Tabla/Cuadrícula (regla contenidos-tabla-o-tarjetas, 9-oct); su modo tabla sigue siendo TablaDatos con CeldaTitulo e imagen"
+  },
+  {
+   "necesidad": "Una lista para elegir dentro de un contenedor (acordeón, panel lateral, sección con marco)",
+   "nombres": [
+    "ListaElegible",
+    "FilaElegible"
+   ],
+   "usa": "ListaElegible: buscador y herramientas (filtros, «Agrupar por», «Ver elegidos») sueltos encima y un solo panel blanco con la casilla de la página, las filas (FilaElegible: casilla, título y detalle o un contenido propio, y lo de apoyo a la derecha; tamano=\"xs\" para filas de una línea, como Participantes) y el pie PiePaginacion solo si hace falta. Sin columnas ni orden: es para elegir (9-oct, Elkin, Participantes de Encuestas y Objetivos)",
+   "desde": "@/modules/design-system/listas/lista-elegible",
+   "en_vez_de": "una TablaDatos dentro de un acordeón o de otro marco (tabla dentro de contenedor dentro de contenedor), o filas con casilla armadas a mano. Si hay que comparar, ordenar por columna o actuar por fila, es TablaDatos en su propia página. Se documenta en Design system › Ajustes propios › Piezas del sistema"
+  },
+  {
+   "necesidad": "Un panel lateral",
+   "nombres": [
+    "DrawerShell"
+   ],
+   "usa": "DrawerShell",
+   "desde": "@/modules/design-system/drawers/components/drawer-shell",
+   "en_vez_de": "Sheet directo"
+  },
+  {
+   "necesidad": "Cerrar una ventana o panel",
+   "nombres": [
+    "CloseButton"
+   ],
+   "usa": "CloseButton",
+   "desde": "@/shared/components/CloseButton",
+   "en_vez_de": "una X a mano"
+  },
+  {
+   "necesidad": "El estado «Razonando»",
+   "nombres": [
+    "AiThinking"
+   ],
+   "usa": "AiThinking",
+   "desde": "@/shared/components/AiThinking",
+   "en_vez_de": "otro indicador de carga"
+  },
+  {
+   "necesidad": "Una ayuda contextual",
+   "nombres": [
+    "Hint",
+    "HintContent",
+    "BotonAyuda"
+   ],
+   "usa": "Hint, HintContent al pasar el cursor; BotonAyuda para el icono «i» que explica al hacer clic; una leyenda con insignias o colores, Popover",
+   "desde": "@/shared/components/Hint y @/shared/components/BotonAyuda",
+   "en_vez_de": "Tooltip suelto (solo abre con hover), el atributo title del navegador u otro icono de ayuda con su propio globo (AyudaCampo de Crear vacante es una copia por retirar; QueMide de Encuestas ya envuelve a BotonAyuda). BotonAyuda se documenta en /design-system/botones. Hint acepta open y onOpenChange para controlarlo desde afuera"
+  },
+  {
+   "necesidad": "Un texto que se corta y debe poder leerse entero",
+   "nombres": [
+    "TextoCompleto",
+    "Hint",
+    "CeldaTitulo"
+   ],
+   "usa": "TextoCompleto (envuelve el texto ya cortado con truncate o line-clamp; el texto entero sale en el globo del sistema, Hint, al pasar el cursor o enfocar, y solo si de verdad está cortado). En una celda de tabla angosta, CeldaTitulo con dosLineas",
+   "desde": "@/shared/components/TextoCompleto",
+   "en_vez_de": "el atributo title del navegador, un Tooltip suelto armado en cada pantalla o un texto cortado que no se puede leer. Se documenta en /design-system/data-grid (Textos que no caben)"
+  },
+  {
+   "necesidad": "Invitar a que la IA haga el trabajo, dentro de una pantalla normal",
+   "nombres": [
+    "AiCard"
+   ],
+   "usa": "AiCard",
+   "desde": "@/shared/components/AiCard",
+   "en_vez_de": "una Card con degradado a mano (se documenta en /design-system/tarjeta-ia)"
+  },
+  {
+   "necesidad": "Botones de IA",
+   "nombres": [
+    "BotonIa",
+    "BotonIaSecundario"
+   ],
+   "usa": "BotonIa (el único primario de IA: el degradado de marca en pastilla) y BotonIaSecundario (la segunda acción de IA de la vista). Van al final de su fila",
+   "desde": "@/shared/components/BotonIa y @/shared/components/BotonIaSecundario",
+   "en_vez_de": "AiButton y BotonIaPrimario (retirados el 5-oct), o el AiButton de la librería: no viene publicado en 0.5.5 y su degradado es otro"
+  },
+  {
+   "necesidad": "El agente contextual: panel, hilo, burbujas, propuestas y sugerencias",
+   "nombres": [
+    "AgentStage",
+    "AgentRail",
+    "ContextPanel",
+    "AgentThread",
+    "UserBubble",
+    "AgentNote",
+    "AgentThinking",
+    "ProposalCard",
+    "AgentCard",
+    "AgentList",
+    "UndoRow",
+    "AgentSuggestions",
+    "SourcePills",
+    "ReopenAgentButton",
+    "Composer"
+   ],
+   "usa": "AgentStage, AgentRail, ContextPanel, AgentThread, UserBubble, AgentNote, AgentThinking, ProposalCard, AgentCard, AgentList, UndoRow, AgentSuggestions, SourcePills, ReopenAgentButton (el botón que lo abre: se llama «Orbit Flow» y va siempre el último de su fila). El cuadro de escribir es Composer (@/modules/admin/suite-ai/shared/composer)",
+   "desde": "@/modules/design-system/agente-contextual/components/agent-kit",
+   "en_vez_de": "rehacer el panel o las tarjetas del agente, o un botón «Agente IA» armado a mano",
+   "ver_tambien": "use-agent-thread para el estado del hilo, y agent-styles + agent.module.css para sus medidas"
+  },
+  {
+   "necesidad": "Una tarjeta de incidencia en una revisión del agente",
+   "nombres": [],
+   "usa": "issue-card",
+   "desde": "@/modules/design-system/agente-contextual/revision/components/issue-card",
+   "en_vez_de": "una Card a mano"
+  },
+  {
+   "necesidad": "Diálogos de novedades, cambios y bienvenida",
+   "nombres": [
+    "FeatureDialog",
+    "ChangelogDialog",
+    "WelcomeDialog"
+   ],
+   "usa": "FeatureDialog, ChangelogDialog, WelcomeDialog",
+   "desde": "@/shared/components/Announcements",
+   "en_vez_de": "un Dialog montado desde cero"
+  },
+  {
+   "necesidad": "El buscador de comandos",
+   "nombres": [
+    "CommandPalette"
+   ],
+   "usa": "CommandPalette. Fuera del rediseño desde el 7-oct: no se suma a pantallas nuevas",
+   "desde": "@/shared/components/CommandPalette",
+   "en_vez_de": "Command suelto"
+  },
+  {
+   "necesidad": "El centro de procesos",
+   "nombres": [
+    "ProcessCenter",
+    "Historial",
+    "PrimeraVez"
+   ],
+   "usa": "ProcessCenter (lo monta el marco; no tiene botón en el header, se abre desde Notificaciones). Una pantalla publica sus procesos con publishProcess/updateProcess/removeProcess y registra qué abre «Historial» con setProcessHistory (process-store). Sin procesos muestra el vacío PrimeraVez; los de ejemplo solo con `ejemplos`, en el design system",
+   "desde": "@/shared/components/ProcessCenter y @/shared/components/process-store",
+   "en_vez_de": "una lista de progreso a mano o un botón de procesos en el header"
+  },
+  {
+   "necesidad": "El punto de estado de una conversación de Suite AI",
+   "nombres": [
+    "ChatStatusDot"
+   ],
+   "usa": "ChatStatusDot",
+   "desde": "@/shared/components/ChatStatusDot",
+   "en_vez_de": "un Badge o un div redondo"
+  },
+  {
+   "necesidad": "La tarjeta de invitar a otra persona",
+   "nombres": [
+    "InviteCard"
+   ],
+   "usa": "InviteCard",
+   "desde": "@/shared/components/InviteCard",
+   "en_vez_de": "una Card con avatar a mano"
+  },
+  {
+   "necesidad": "Renombrar algo en el sitio, sin abrir un modal",
+   "nombres": [
+    "EdicionEnLinea"
+   ],
+   "usa": "EdicionEnLinea",
+   "desde": "@/shared/components/EdicionEnLinea",
+   "en_vez_de": "un Input suelto que aparece y desaparece: Enter guarda, Escape descarta y salir del campo guarda"
+  },
+  {
+   "necesidad": "La tarjeta de un contenido de aprendizaje",
+   "nombres": [
+    "TarjetaContenido"
+   ],
+   "usa": "TarjetaContenido",
+   "desde": "@/shared/components/TarjetaContenido",
+   "en_vez_de": "una Card con imagen a mano"
+  },
+  {
+   "necesidad": "Marcar lo que hizo la IA (pestaña, título, ítem, etiqueta)",
+   "nombres": [
+    "IconoIA",
+    "EtiquetaIA"
+   ],
+   "usa": "IconoIA (el orbe a 16 px); para una insignia, EtiquetaIA",
+   "desde": "@/modules/design-system/ia/icono-ia y @/modules/design-system/ia/etiqueta-ia",
+   "en_vez_de": "SparklesIcon, AiMagicIcon, MagicWand01Icon o StarsIcon, o un Badge de color con «IA» a mano (se documenta en /design-system/ia/superficies)"
+  },
+  {
+   "necesidad": "Las cifras de un tablero",
+   "nombres": [
+    "Indicadores",
+    "FilaCifras",
+    "CeldaCifra",
+    "TarjetaIndicador",
+    "FilaIndicadores",
+    "ColumnaIndicador",
+    "Cambio",
+    "Ayuda",
+    "Cifra",
+    "Pie"
+   ],
+   "usa": "Indicadores (la fila en su marco), FilaCifras (dentro de una tarjeta), CeldaCifra, TarjetaIndicador. Con comparación frente al periodo anterior y ayuda, la fila de Selección: FilaIndicadores + ColumnaIndicador con Cambio, Ayuda, Cifra y Pie (6-oct, forma de Nicolás). Cambio es la única insignia de comparación, también en tablas: decimales, sinColor, enCelda («0 pp» gris) y ayuda (nota en el globo)",
+   "desde": "@/modules/design-system/metricas/cifras; la de Selección en @/modules/design-system/graficos/fila-indicadores y @/modules/admin/seleccion/propuestas/components/cifras",
+   "en_vez_de": "una tarjeta suelta por cifra, un número grande a mano o una insignia de variación propia: las métricas van en una sola fila partida por líneas (se documenta en /design-system/metricas)"
+  },
+  {
+   "necesidad": "Lo que necesita tu atención (asuntos por resolver, arriba de una pantalla)",
+   "nombres": [
+    "TableroAtencion",
+    "ListaAsuntos",
+    "TarjetaSugerencia",
+    "MediaGrupo"
+   ],
+   "usa": "TableroAtencion: una columna por grupo (Críticas, Necesitan atención, Acción manual, Sugerencias de la IA), recogido con lo más urgente y «Expandir»; cada asunto se resuelve en su panel (ListaAsuntos, TarjetaSugerencia, MediaGrupo). Va solo en la Super Home (decisión del 5-oct): los inicios de cada módulo no lo llevan",
+   "desde": "@/modules/design-system/metricas/tablero-atencion",
+   "en_vez_de": "un aviso amarillo con la lista o un tablero propio (se documenta en /design-system/metricas)"
+  },
+  {
+   "necesidad": "Un gráfico de tablero",
+   "nombres": [
+    "GraficoArea",
+    "Dona",
+    "Anillo",
+    "BarraSegmentada",
+    "Tendencia",
+    "Sparkline"
+   ],
+   "usa": "GraficoArea, Dona, Anillo, BarraSegmentada, Tendencia, Sparkline",
+   "desde": "@/modules/design-system/metricas/graficos",
+   "en_vez_de": "un gráfico de recharts armado desde cero con colores propios (se documenta en /design-system/metricas)"
+  },
+  {
+   "necesidad": "Una persona en una celda de tabla (avatar con iniciales, nombre y detalle)",
+   "nombres": [
+    "Persona"
+   ],
+   "usa": "Persona (el detalle es la línea gris: cargo, área o usuario)",
+   "desde": "@/modules/design-system/data-grid/casos/seguimiento",
+   "en_vez_de": "un Avatar con texto armado en cada tabla. Si le falta algo (foto, enlace), se amplía Persona; no se copia (auditoría, 5-oct). Se documenta en /design-system/data-grid"
+  },
+  {
+   "necesidad": "Confirmar un borrado escribiendo la palabra",
+   "nombres": [
+    "ConfirmarEliminar",
+    "DialogoConfirmar"
+   ],
+   "usa": "ConfirmarEliminar (por dentro es un DialogoConfirmar)",
+   "desde": "@/modules/design-system/data-grid/casos/seguimiento",
+   "en_vez_de": "un AlertDialog con un Input dentro"
+  },
+  {
+   "necesidad": "El chip «Guardado / Guardando» de un formulario o asistente",
+   "nombres": [
+    "ChipGuardado"
+   ],
+   "usa": "ChipGuardado",
+   "desde": "@/shared/components/ChipGuardado",
+   "en_vez_de": "una copia con otro color (Crear vacante tenía una en verde relleno). Se documenta en /design-system/navegacion (pie del asistente) y en Marco › Ajustes propios"
+  },
+  {
+   "necesidad": "La franja plegable «N cosas necesitan tu atención» encima de una lista",
+   "nombres": [
+    "BloqueAtencion"
+   ],
+   "usa": "BloqueAtencion (alertas de la más grave a la menos, cada una con su «Ver»; si no hay ninguna, no se pinta). Desde el 5-oct lo urgente va solo en la Super Home: no se suma a inicios de módulo nuevos",
+   "desde": "@/shared/components/BloqueAtencion",
+   "en_vez_de": "un Collapsible con Item armado en cada lista. La usan Vacantes y Contenidos; se documenta en Marco › Ajustes propios › Vacantes (Alertas plegables)"
+  },
+  {
+   "necesidad": "Una ilustración de vidrio (Glass) en una tarjeta, un vacío o un atajo",
+   "nombres": [
+    "ImagenGlass"
+   ],
+   "usa": "ImagenGlass (nombre del icono y tamaño; ya trae @2x y @4x)",
+   "desde": "@/shared/components/ImagenGlass",
+   "en_vez_de": "otra copia que arme la ruta del PNG (había cuatro). Se documenta en /design-system/icons"
+  },
+  {
+   "necesidad": "Un estado vacío o de error",
+   "nombres": [
+    "PrimeraVez",
+    "SinResultados"
+   ],
+   "usa": "PrimeraVez (todavía no hay nada: ilustración glass, título, una línea y la acción para empezar; con icono glass-danger y «Reintentar» si algo no cargó) y SinResultados (la búsqueda o los filtros no encuentran nada: ilustración, lo buscado entre comillas y el botón para limpiar)",
+   "desde": "@/shared/components/PrimeraVez y @/shared/components/SinResultados",
+   "en_vez_de": "un Empty con lupa o con un icono de línea y texto fijo armado a mano (se documenta en /design-system/estados)"
+  },
+  {
+   "necesidad": "Un chip de filtro rápido con su «x» para quitarlo",
+   "nombres": [
+    "FiltroChip"
+   ],
+   "usa": "FiltroChip (icono, texto y cuántos hay; puesto lleva la «x» y el globo «Quitar el filtro»; sin chip «Todas»)",
+   "desde": "@/modules/design-system/navegacion/filtro-chip",
+   "en_vez_de": "un Toggle suelto, un ToggleGroup de filtros o una insignia con una «x» aparte. Es el único chip de filtro (Selección, Créditos, Encuestas › Resultados); se documenta en /design-system/navegacion (Filtros rápidos)"
+  },
+  {
+   "necesidad": "Esqueletos y espera simulada en Selección",
+   "nombres": [
+    "useCarga",
+    "useAccion",
+    "Esqueleto",
+    "LineaEsqueleto"
+   ],
+   "usa": "useCarga, useAccion, Esqueleto, LineaEsqueleto",
+   "desde": "@/modules/design-system/estados/carga",
+   "en_vez_de": "otro hook de carga o un spinner a pantalla completa (fuera de Selección, Skeleton de la librería; se documenta en /design-system/estados)"
+  },
+  {
+   "necesidad": "Un bloque con título dentro de una ficha o un detalle: título, bajada, una acción arriba a la derecha y sus paneles blancos adentro",
+   "nombres": [
+    "Marco",
+    "Rotulo"
+   ],
+   "usa": "Marco (y Rotulo para el rótulo pequeño dentro de un panel). Lleva el orbe si el bloque lo hizo la IA y late cuando el agente lo cita",
+   "desde": "@/modules/design-system/patrones/ficha",
+   "en_vez_de": "un Frame con la cabecera armada a mano en cada ficha. Lo usan el expediente del candidato y las fichas de Selección › propuestas (ficha-base, ficha-persona, perfil-candidato, requisitos-persona, bloque-importada)"
+  },
+  {
+   "necesidad": "Una lista de dato y valor en el resumen de una ficha",
+   "nombres": [
+    "Filas"
+   ],
+   "usa": "Filas: el dato en gris a la izquierda y el valor alineado a la derecha, sin líneas entre filas",
+   "desde": "@/modules/design-system/patrones/ficha",
+   "en_vez_de": "una tabla o filas armadas a mano. Configuración tiene otra (lista-datos.tsx: con líneas, valor en seminegrita y «Sin dato»); falta decidir si se juntan"
+  },
+  {
+   "necesidad": "Una insignia de estado",
+   "nombres": [
+    "Badge"
+   ],
+   "usa": "Badge del proyecto: la misma insignia de flux-ui (mismas variantes, alto y relleno) con la letra de «xs» y «sm» subida a 10.5 px, el mínimo legible (25-sep, accesibilidad)",
+   "desde": "@/shared/components/Badge",
+   "en_vez_de": "el Badge de la librería en xs (9.6 px) o sm (10 px): su letra queda por debajo del mínimo. Es temporal (decisión 22 de la auditoría, 5-oct): ingeniería fija el tamaño mínimo con una regla global, se borra el envoltorio y se vuelve a importar el de flux-ui. Está en ai-tools/flux-ui/diferencias.json (badge-letra-minima) y en Marco › Ajustes propios › Insignias chicas a 10.5 px"
+  },
+  {
+   "necesidad": "Elegir varias opciones con buscador (fichas)",
+   "nombres": [
+    "SelectorMultiple"
+   ],
+   "usa": "SelectorMultiple",
+   "desde": "@/modules/design-system/formularios/asignacion",
+   "en_vez_de": "un Combobox con fichas armado en cada pantalla, o el SelectorEtiquetas de Selección (sus textos ya van en español). Se documenta en /design-system/formularios"
+  },
+  {
+   "necesidad": "Una pantalla de error del sistema (sin conexión, licencia, servidor)",
+   "nombres": [
+    "PantallaDeError"
+   ],
+   "usa": "PantallaDeError",
+   "desde": "@/modules/design-system/estados/errores-sistema",
+   "en_vez_de": "un Empty con texto propio (se documenta en /design-system/estados)"
+  },
+  {
+   "necesidad": "Subir un archivo (CSV, PDF, imagen, video) con su avance y su error",
+   "nombres": [
+    "AdjuntoCsv"
+   ],
+   "usa": "AdjuntoCsv",
+   "desde": "@/modules/design-system/estados/procesos",
+   "en_vez_de": "otro cargador con Attachment y Progress: hay uno solo (Ajustes propios › Cargador de archivos). Para una imagen: icono, imagen y etiquetaElegir con el nombre del campo, como CampoImagen de Configuración"
+  },
+  {
+   "necesidad": "La única salida de una creación o edición (asistente, editor, formulario de alta)",
+   "nombres": [
+    "BotonSalirCreacion"
+   ],
+   "usa": "BotonSalirCreacion: contorno e icono de salir, dice a dónde lleva («Salir de la creación», «Salir de la edición», «Volver a añadir página»). Va en las acciones de PageHeader, a la derecha del título",
+   "desde": "@/modules/design-system/navegacion/boton-salir-creacion",
+   "en_vez_de": "una flecha junto al título, una X, o «Cancelar» en la barra de abajo"
+  },
+  {
+   "necesidad": "La tarjeta de lo que se toca dentro de una confirmación (nombre, detalle e insignia de estado)",
+   "nombres": [
+    "RegistroConfirmar"
+   ],
+   "usa": "RegistroConfirmar, como hijo de DialogoConfirmar",
+   "desde": "@/modules/design-system/estados/confirmaciones",
+   "en_vez_de": "un párrafo con el nombre en negrita o una Card armada a mano"
+  },
+  {
+   "necesidad": "Escribirle un correo a una o varias personas de un proceso (plantilla y mensaje)",
+   "nombres": [
+    "DialogoEscribir"
+   ],
+   "usa": "DialogoEscribir («Escribirle a N personas»: plantilla, mensaje y el correo sale al confirmar). Pieza de Selección: depende de sus datos (vacantes, etapas, plantillas de correo), por eso no vive en el sistema de diseño; fuera de Selección no se usa",
+   "desde": "@/modules/admin/seleccion/propuestas/components/dialogo-escribir",
+   "en_vez_de": "un notify de «correo enviado» sin ventana, u otra ventana de correo",
+   "solo_en": "Selección"
+  },
+  {
+   "necesidad": "Compartir una vacante (enlace para candidatos y acceso del equipo)",
+   "nombres": [
+    "DialogoCompartirVacante",
+    "BotonCompartirVacante"
+   ],
+   "usa": "DialogoCompartirVacante y BotonCompartirVacante, desde la tabla, la cabecera y el detalle. Pieza de Selección: depende de sus datos (vacantes, etapas, plantillas de correo), por eso no vive en el sistema de diseño; fuera de Selección no se usa",
+   "desde": "@/modules/admin/seleccion/propuestas/components/acciones-vacante",
+   "en_vez_de": "otra ventana de compartir (la de vacantes/detalle/components/compartir-vacante.tsx se retiró el 8-oct)",
+   "solo_en": "Selección"
+  },
+  {
+   "necesidad": "Mover a una persona de etapa en un proceso de selección",
+   "nombres": [
+    "DialogoMover"
+   ],
+   "usa": "pedirMover y DialogoMover (avisa si la vacante está cerrada y abre «Mover a otra etapa» cuando el cambio tiene consecuencias; lo simple va al instante con «Deshacer»). Pieza de Selección: depende de sus datos (vacantes, etapas, plantillas de correo), por eso no vive en el sistema de diseño; fuera de Selección no se usa",
+   "desde": "@/modules/admin/seleccion/propuestas/components/dialogo-mover y use-proceso",
+   "en_vez_de": "mover al instante sin revisar saltos, retrocesos ni entrevistas sin terminar",
+   "solo_en": "Selección"
+  }
+ ],
+ "tabla_agents": [
+  {
+   "necesidad": "El marco de una página: ancho, título, migas, secciones, barra de acciones",
+   "usa": "`PageShell`, `PageHeader`, `PageBreadcrumbs`, `PageContent`, `PageSection`, `PageActionBar`",
+   "no_uses": "armarlo a mano"
+  },
+  {
+   "necesidad": "Un aviso",
+   "usa": "`notify(título, detalle, tipo)`, siempre con su tipo",
+   "no_uses": "`toast.add` suelto o `ToastToaster` en la pantalla: duplica los avisos"
+  },
+  {
+   "necesidad": "Un botón terciario de solo icono",
+   "usa": "`BotonIcono` (redondo)",
+   "no_uses": "`Button` con un icono dentro"
+  },
+  {
+   "necesidad": "El orbe del agente (16 a 180 px)",
+   "usa": "`Orb`",
+   "no_uses": "dibujarlo con `div` y degradados"
+  },
+  {
+   "necesidad": "Preguntar antes de hacer algo: eliminar, enviar, desactivar, mover, descartar, salir sin guardar",
+   "usa": "`DialogoConfirmar` con la tarjeta `RegistroConfirmar` (lo que se toca y a cuántos afecta); `otra` para la tercera salida («Guardar y salir»)",
+   "no_uses": "`ActionDialog` para confirmar, un `notify` de «enviado» sin preguntar, `AlertDialog` suelto"
+  },
+  {
+   "necesidad": "Una ventana con contenido: formulario corto, lista para elegir, vista previa, detalle, escribir un correo",
+   "usa": "`ActionDialog`, la única (tamaños `sm`, `default`, `wide`, `full`)",
+   "no_uses": "`ConfiguredModal` (retirado), `Dialog` o `AlertDialog` sueltos"
+  },
+  {
+   "necesidad": "Crear o editar algo",
+   "usa": "una página con `PageShell`, `PageHeader` y `PageActionBar` (barra fija abajo con `ChipGuardado`)",
+   "no_uses": "una ventana o un panel (única excepción: «Agregar una persona a tu base», en ventana)"
+  },
+  {
+   "necesidad": "Salir de una creación o edición",
+   "usa": "`BotonSalirCreacion` («Salir de la creación» / «Salir de la edición») en las acciones de `PageHeader`",
+   "no_uses": "flecha junto al título, X, «Cancelar» en la barra de abajo"
+  },
+  {
+   "necesidad": "Una tabla o un listado",
+   "usa": "`TablaDatos`, la única: conteo a la izquierda, buscador a la derecha, orden y filtro por columna y su paginador `PiePaginacion`. La fila que nombra algo, con o sin imagen, es `CeldaTitulo`. Una lista de contenidos con portada suma el cambio Tabla/Cuadrícula (`CambioDeVista`)",
+   "no_uses": "`MarcoTabla` (retirada), `DataGridList` o `Table` sueltos, otro paginador"
+  },
+  {
+   "necesidad": "Un panel lateral",
+   "usa": "`DrawerShell`",
+   "no_uses": "`Sheet` directo"
+  },
+  {
+   "necesidad": "Cerrar una ventana o panel",
+   "usa": "`CloseButton`",
+   "no_uses": "una `X` a mano. En una creación no hay X: la salida es `BotonSalirCreacion`"
+  },
+  {
+   "necesidad": "El menú «⋯» de más acciones",
+   "usa": "`BotonIcono` con los tres puntos, el primero de la fila",
+   "no_uses": "un botón con la palabra «Acciones»"
+  },
+  {
+   "necesidad": "El estado «Razonando»",
+   "usa": "`AiThinking`",
+   "no_uses": "otro indicador de carga"
+  },
+  {
+   "necesidad": "Una ayuda contextual",
+   "usa": "al pasar el cursor, `Hint` y `HintContent`; un icono que explica al hacer clic, `BotonAyuda`",
+   "no_uses": "`Tooltip` suelto (solo abre con hover), el `title` del navegador"
+  },
+  {
+   "necesidad": "La marca de la IA",
+   "usa": "`IconoIA` (el orbe) y, como insignia, `EtiquetaIA`",
+   "no_uses": "estrellas, chispas o varitas"
+  },
+  {
+   "necesidad": "Invitar a que la IA haga el trabajo",
+   "usa": "`AiCard`",
+   "no_uses": "una `Card` con degradado a mano"
+  },
+  {
+   "necesidad": "Botones de IA",
+   "usa": "`BotonIa` (el primario, con el degradado) y `BotonIaSecundario` (la segunda acción de IA). Van al final de la fila",
+   "no_uses": "`AiButton` (retirado)"
+  },
+  {
+   "necesidad": "El botón que abre el agente contextual",
+   "usa": "`ReopenAgentButton`, que se llama «Orbit Flow» y va siempre el último de la fila",
+   "no_uses": "un botón armado a mano, «Agente IA»"
+  },
+  {
+   "necesidad": "El agente contextual (panel, hilo, propuestas)",
+   "usa": "el `agent-kit`: `AgentStage`, `AgentThread`, `ProposalCard`, `AgentCard`…; el cuadro de escribir es `Composer` (Suite AI)",
+   "no_uses": "rehacer el panel o sus tarjetas"
+  },
+  {
+   "necesidad": "Cifras de un tablero",
+   "usa": "`Indicadores` (con su marco) o `FilaCifras` (dentro de una tarjeta): una sola fila partida por líneas",
+   "no_uses": "tarjetas sueltas por cifra"
+  },
+  {
+   "necesidad": "Un estado vacío o de error",
+   "usa": "`PrimeraVez` (aún no hay nada; con `glass-danger` y «Reintentar» si algo no cargó) o `SinResultados` (la búsqueda o los filtros no encuentran nada), siempre con su ilustración glass",
+   "no_uses": "`Empty` armado a mano o con un icono de línea"
+  },
+  {
+   "necesidad": "La ficha de un curso, ruta, evento o sesión",
+   "usa": "`TarjetaContenido` (de pie o acostada)",
+   "no_uses": "otra tarjeta con portada"
+  },
+  {
+   "necesidad": "Subir un archivo",
+   "usa": "`AdjuntoCsv`",
+   "no_uses": "otra zona para soltar"
+  },
+  {
+   "necesidad": "Una fecha o un rango",
+   "usa": "`CampoFecha`, `RangoDeFechas`",
+   "no_uses": "un calendario armado aparte"
+  },
+  {
+   "necesidad": "El chip «Guardado», un filtro rápido, elegir varias opciones, «N cosas necesitan tu atención», una persona en una fila, una ilustración de vidrio",
+   "usa": "`ChipGuardado`, `FiltroChip`, `SelectorMultiple`, `BloqueAtencion`, `Persona`, `ImagenGlass`",
+   "no_uses": "copias de cada una"
+  },
+  {
+   "necesidad": "Una insignia",
+   "usa": "`Badge` de `@/shared/components/Badge`: la misma de la librería, con la letra de `xs` y `sm` subida a 10.5 px, el mínimo legible. Es temporal: se borra cuando ingeniería fije ese mínimo con una regla global (ver `/design-system/diferencias`)",
+   "no_uses": "el `Badge` de la librería en `xs` o `sm` (9.6 y 10 px)"
+  },
+  {
+   "necesidad": "El esqueleto mientras carga",
+   "usa": "`Skeleton`; en Selección, `useCarga` y `Esqueleto`",
+   "no_uses": "un spinner a pantalla completa"
+  },
+  {
+   "necesidad": "Diálogos de novedades y bienvenida",
+   "usa": "`FeatureDialog`, `ChangelogDialog`, `WelcomeDialog`",
+   "no_uses": "un `Dialog` desde cero"
+  },
+  {
+   "necesidad": "El buscador de comandos",
+   "usa": "`CommandPalette` (fuera del rediseño desde el 7-oct: no se suma a pantallas nuevas)",
+   "no_uses": "`Command` suelto"
+  },
+  {
+   "necesidad": "El centro de procesos",
+   "usa": "`ProcessCenter`",
+   "no_uses": "una lista de progreso a mano"
+  },
+  {
+   "necesidad": "El punto de estado de una conversación",
+   "usa": "`ChatStatusDot`",
+   "no_uses": "un `Badge` o un `div` redondo"
+  },
+  {
+   "necesidad": "La tarjeta de invitar a alguien",
+   "usa": "`InviteCard`",
+   "no_uses": "una `Card` con avatar a mano"
+  },
+  {
+   "necesidad": "Fechas, iniciales, rangos, plurales",
+   "usa": "`formato` (`fechaCorta`, `iniciales`, `plural`…)",
+   "no_uses": "`toLocaleDateString` suelto"
+  }
+ ],
+ "retiradas": [
+  {
+   "pieza": "ConfiguredModal",
+   "fecha": "2026-10-05",
+   "usa": "DialogoConfirmar para preguntar; ActionDialog para todo lo demás",
+   "patron": "\\bConfiguredModal\\b",
+   "exentas": []
+  },
+  {
+   "pieza": "MarcoTabla",
+   "fecha": "2026-10-05",
+   "usa": "TablaDatos",
+   "patron": "\\bMarcoTabla\\b",
+   "exentas": [
+    "src/modules/admin/seleccion/propuestas/components/marco-tabla.tsx"
+   ]
+  },
+  {
+   "pieza": "AiButton",
+   "fecha": "2026-10-05",
+   "usa": "BotonIa",
+   "patron": "\\bAiButton\\b",
+   "exentas": [
+    "src/shared/components/AiButton.tsx",
+    "src/shared/components/BotonIa.tsx"
+   ]
+  },
+  {
+   "pieza": "BotonIaPrimario",
+   "fecha": "2026-10-05",
+   "usa": "BotonIa",
+   "patron": "\\bBotonIaPrimario\\b",
+   "exentas": [
+    "src/shared/components/BotonIa.tsx"
+   ]
+  },
+  {
+   "pieza": "DataGridList directo en una pantalla",
+   "fecha": "2026-10-05",
+   "usa": "TablaDatos (con CeldaTitulo y PiePaginacion)",
+   "patron": "import\\s*\\{[^}]*\\bDataGridList\\b[^}]*\\}\\s*from\\s*['\"]@ubits/flux-ui['\"]",
+   "exentas": [
+    "src/modules/design-system/data-grid/"
+   ]
+  },
+  {
+   "pieza": "ToastToaster en una pantalla",
+   "fecha": "2026-09-30",
+   "usa": "notify (el Toaster ya está en el RootLayout)",
+   "patron": "\\bToastToaster\\b",
+   "exentas": [
+    "src/shared/"
+   ]
+  },
+  {
+   "pieza": "toast.add suelto",
+   "fecha": "2026-10-08",
+   "usa": "notify(título, detalle, tipo): ya recibe el tipo",
+   "patron": "\\btoast\\.add\\(",
+   "exentas": [
+    "src/shared/components/notify.ts",
+    "src/shared/components/Toaster.tsx"
+   ]
+  },
+  {
+   "pieza": "Sheet directo",
+   "fecha": "2026-09-29",
+   "usa": "DrawerShell",
+   "patron": "import\\s*\\{[^}]*\\bSheet\\b[^}]*\\}\\s*from\\s*['\"]@ubits/flux-ui['\"]",
+   "exentas": [
+    "src/modules/design-system/drawers/"
+   ]
+  },
+  {
+   "pieza": "Estrellas, chispas o varitas para marcar IA",
+   "fecha": "2026-09-23",
+   "usa": "IconoIA (el orbe) o EtiquetaIA",
+   "patron": "\\b(SparklesIcon|AiMagicIcon|MagicWand01Icon|StarsIcon)\\b",
+   "exentas": []
+  },
+  {
+   "pieza": "Badge de la librería en xs o sm",
+   "fecha": "2026-09-25",
+   "usa": "Badge de @/shared/components/Badge (10,5 px mínimo)",
+   "patron": null,
+   "exentas": []
+  },
+  {
+   "pieza": "«Agente IA» como nombre del botón del agente",
+   "fecha": "2026-10-01",
+   "usa": "ReopenAgentButton, que dice «Orbit Flow»",
+   "patron": "Agente IA",
+   "exentas": []
+  },
+  {
+   "pieza": "Flecha junto al título, X o «Cancelar» para salir de una creación",
+   "fecha": "2026-10-06",
+   "usa": "BotonSalirCreacion",
+   "patron": null,
+   "exentas": []
+  },
+  {
+   "pieza": "vacantes/detalle/components/compartir-vacante",
+   "fecha": "2026-10-08",
+   "usa": "DialogoCompartirVacante",
+   "patron": "detalle/components/compartir-vacante",
+   "exentas": []
+  }
+ ],
+ "carpetas_congeladas": [
+  "src/modules/design-system/templates/suite-ai",
+  "src/modules/design-system/templates/home-suite-ai",
+  "src/modules/design-system/templates/dashboard",
+  "src/modules/design-system/templates/dashboard-rrhh",
+  "src/modules/design-system/templates/app-shell-2",
+  "src/modules/design-system/templates/app-shell-3",
+  "src/modules/design-system/templates/shell-test"
+ ],
+ "historicos": [
+  "src/modules/design-system/ajustes/",
+  "src/modules/design-system/unificacion/",
+  "src/modules/design-system/diferencias/"
+ ],
+ "por_decidir": [
+  {
+   "id": "H-180",
+   "pregunta": "La asignación de objetivos: ¿panel lateral (excepción documentada) o vista dentro del paso?",
+   "decide": "Cristian con Elkin"
+  },
+  {
+   "id": "H-249",
+   "pregunta": "Sacar a alguien de un proceso: ¿«Rechazar» o «Descartar», y una sola ventana?",
+   "decide": "Nicolás"
+  },
+  {
+   "id": "titulo-salida",
+   "pregunta": "El título de la ventana de salida: «¿Salir sin guardar los cambios?», «¿Salir de la creación?» o «¿Salir sin guardar?» (hoy conviven los tres)",
+   "decide": "Cristian"
+  },
+  {
+   "id": "guardar-sin-borrador",
+   "pregunta": "«Guardar y salir» y el chip «Guardado» en pantallas que no tienen borrador real (carga masiva, Crear usuario, Crear tarea, Agregar persona)",
+   "decide": "Cristian"
+  },
+  {
+   "id": "vocabulario",
+   "pregunta": "Añadir o Agregar, Crear o Nuevo, «40 %» o «40%», «sept» o «sep»",
+   "decide": "diseño"
+  },
+  {
+   "id": "avisos-largo",
+   "pregunta": "Los límites exactos de título y detalle de los avisos (la regla usa unos 60 y 120 caracteres como provisional).",
+   "decide": "Nicolás"
+  },
+  {
+   "id": "atencion-modulos",
+   "pregunta": "¿Se quita ya el panel de atención de Vacantes, Créditos, Contenidos, Encuestas y el inicio de Selección, o se integra con las notificaciones?",
+   "decide": "Carlos con Nicolás y Elkin"
+  },
+  {
+   "id": "paginador-cuadricula",
+   "pregunta": "La cuadrícula de contenidos pagina de a 10, 20 o 50 (lo que deja PiePaginacion) y la última fila de tres puede quedar con una tarjeta suelta; antes iba de a 12, 24 o 48. ¿Se amplía PiePaginacion o se queda así?",
+   "decide": "Cristian"
+  },
+  {
+   "id": "vacantes-asidero",
+   "pregunta": "En la tabla de Vacantes no caben 8 columnas con asidero y cambio de ancho en 1.104 px: se apagaron para que el nombre no quede en 150 px. ¿Se acepta o se quita una columna?",
+   "decide": "Cristian con Nicolás"
+  },
+  {
+   "id": "reintentar-con-id",
+   "pregunta": "El aviso de error con «Reintentar» de Selección sigue usando toast.add porque notifyAction no devuelve el id del aviso para cerrarlo. Que notifyAction lo devuelva (src/shared/components/notify.ts, zona protegida).",
+   "decide": "ingeniería"
+  }
+ ]
+}

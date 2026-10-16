@@ -1,0 +1,73 @@
+/* Explosión de confeti del agradecimiento (1 oct, «Enviar feedback»). El origen es un punto fijo sin tamaño en el centro
+   del icono, por encima de la ventana. Para que se sienta la gravedad, cada pieza se mueve en dos ejes por separado y su
+   recorrido dibuja una curva:
+   - .eje (horizontal): sale disparada hacia su lado y frena por el roce del aire.
+   - .pieza (vertical, giro y opacidad): la explosión la lanza rápido (más hacia arriba que hacia abajo); luego cae
+     acelerando, como cae un objeto, y se desvanece mientras cae.
+   Las variables viven en .eje y la pieza las hereda. Solo se animan transform y opacity, para que vaya fluido. Con
+   «reducir movimiento» no se muestra. */
+.origen {
+  position: fixed;
+  z-index: 60;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.eje {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  animation: horizontal var(--duracion) cubic-bezier(0.12, 0.8, 0.3, 1) var(--retraso) both;
+}
+
+.pieza {
+  position: absolute;
+  top: calc(var(--alto) / -2);
+  left: calc(var(--ancho) / -2);
+  width: var(--ancho);
+  height: var(--alto);
+  border-radius: var(--radio);
+  background: var(--color);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  animation: vertical var(--duracion) linear var(--retraso) both;
+}
+
+@keyframes horizontal {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--dx), 0, 0);
+  }
+}
+
+@keyframes vertical {
+  /* La explosión: sale rápido y frena arriba (o abajo) del icono. */
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(0.4);
+    animation-timing-function: cubic-bezier(0.15, 0.85, 0.35, 1);
+  }
+  /* La gravedad: desde aquí cae acelerando. */
+  26% {
+    transform: translate3d(0, var(--dy), 0) rotate(calc(var(--giro) * 0.3)) scale(1);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+  /* Visible hasta la mitad de la caída; luego se desvanece. */
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, calc(var(--dy) + var(--caida)), 0) rotate(var(--giro)) scale(0.85);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .origen {
+    display: none;
+  }
+}

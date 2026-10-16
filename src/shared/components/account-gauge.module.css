@@ -1,0 +1,50 @@
+/* Anillos de consumo del menú de empresa.
+   - Licencias: azul del tema, pase lo que pase (antes se volvía amarillo desde el 90%).
+   - Créditos de IA: el degradado de marca de la IA de UBITS (azul → morado → rosa → naranja), el mismo del botón
+     «Nueva conversación». No existe como token del tema, por eso van los valores aquí.
+   `--p` es el porcentaje usado; el resto del anillo queda en el color del borde. */
+
+.ai {
+  --ai-blue: #285ee6;
+  --ai-purple: #7e2be0;
+  --ai-pink: #d6306e;
+  --ai-orange: #eb6233;
+  background: conic-gradient(
+    var(--ai-blue) 0%,
+    var(--ai-purple) calc(var(--p) * 0.45),
+    var(--ai-pink) calc(var(--p) * 0.75),
+    var(--ai-orange) var(--p),
+    var(--border) 0
+  );
+}
+
+/* Puntas redondas del trazo (1 oct, Charlie): el degradado cónico corta el trazo en seco, así que en cada extremo va un
+   punto del grosor del anillo (3px) y del color de ese extremo. El del final gira con el porcentaje (`--p`). */
+.cap {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cap::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: calc(50% - 1.5px);
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--cap, var(--primary));
+}
+
+.capEnd {
+  transform: rotate(calc(var(--p-num) * 3.6deg));
+}
+
+.ai .capStart {
+  --cap: var(--ai-blue);
+}
+
+.ai .capEnd {
+  --cap: var(--ai-orange);
+}

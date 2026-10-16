@@ -1,0 +1,92 @@
+/* Anatomía: contorno punteado y etiqueta con el nombre de cada parte del marco (data-region). El contenido de
+   la pantalla es un slot (data-slot-region): va en gris y con «Slot ·» delante, porque no es parte del componente.
+   Las etiquetas van por fuera del contorno para no tapar el contenido: arriba en bloques (que ganan
+   aire con un margen extra mientras la anatomía está encendida) y abajo en botones. Los nombres son solo visuales:
+   el `/ ''` los deja fuera del nombre accesible de cada parte (si no, se leería «Guardar Botón primario»). */
+.anatomy :global([data-region]) {
+  outline: 1px dashed color-mix(in oklch, var(--primary) 65%, transparent);
+  outline-offset: 3px;
+}
+
+.anatomy :global([data-region]:not(.sticky)) {
+  position: relative;
+}
+
+.anatomy :global([data-region]:not(button):not([data-region^='Contenedor'])) {
+  margin-top: 22px !important;
+}
+
+.anatomy :global([data-region])::after {
+  content: attr(data-region);
+  content: attr(data-region) / '';
+  position: absolute;
+  top: -5px;
+  left: -4px;
+  z-index: 20;
+  transform: translateY(-100%);
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.anatomy :global(button[data-region])::after {
+  top: auto;
+  bottom: -5px;
+  transform: translateY(100%);
+}
+
+/* Nombre de los botones alineado a su borde derecho: así no se enciman los de botones angostos que van seguidos
+   (secundario y primario). «Volver» queda a la izquierda porque va primero en su fila. */
+.anatomy :global(button[data-region]:not([data-region='Volver']))::after {
+  left: auto;
+  right: -4px;
+}
+
+.anatomy :global(button[data-region][data-chip='top'])::after {
+  top: -5px;
+  bottom: auto;
+  transform: translateY(-100%);
+}
+
+.anatomy :global([data-region^='Contenedor'])::after,
+.anatomy :global([data-region='Acciones'])::after {
+  left: auto;
+  right: -4px;
+}
+
+/* Slot: el contenido de cada pantalla. Gris, un poco más separado para no tapar lo de adentro. */
+.anatomy :global([data-slot-region]) {
+  position: relative;
+  margin-top: 22px;
+  border-radius: 12px;
+  outline: 1.5px dashed color-mix(in oklch, var(--muted-foreground) 55%, transparent);
+  outline-offset: 6px;
+}
+
+.anatomy :global([data-slot-region])::after {
+  content: 'Slot · ' attr(data-slot-region);
+  content: 'Slot · ' attr(data-slot-region) / '';
+  position: absolute;
+  top: -8px;
+  left: -7px;
+  z-index: 20;
+  transform: translateY(-100%);
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+}

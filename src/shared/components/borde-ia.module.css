@@ -1,0 +1,45 @@
+/* Borde con el degradado de marca de la IA, para una zona en la que la IA puede hacer el trabajo (la caja de la
+   portada, por ejemplo). Aparece al pasar por encima.
+
+   Técnica: dos fondos a la vez —el de la tarjeta recortado al padding y el degradado recortado al borde— con el borde
+   transparente. Es lo que permite un degradado en el borde respetando el redondeo, que con `border-image` se pierde.
+   Va en propiedades separadas y no en el atajo `background:`: con dos capas y los recortes dentro del atajo, el
+   procesador se come la imagen y no se pinta nada.
+
+   Los cuatro colores son los mismos de «Nueva conversación» (new-chat.module.css), que es el degradado de marca de la
+   IA entregado por diseño el 14-sep y que no existe como token del tema. Si allí cambian, aquí también. */
+
+.borde {
+  --ai-blue: #285ee6;
+  --ai-purple: #7e2be0;
+  --ai-pink: #d22d6a;
+  --ai-orange: #eb6233;
+
+  /* El borde ocupa su sitio desde el principio, en transparente: al pasar el cursor no se mueve nada. */
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(var(--card), var(--card)),
+    linear-gradient(var(--border), var(--border));
+  background-origin: padding-box, border-box;
+  background-clip: padding-box, border-box;
+  transition:
+    background-image 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.borde:hover {
+  background-image:
+    linear-gradient(var(--card), var(--card)),
+    linear-gradient(90deg, var(--ai-blue), var(--ai-purple) 35%, var(--ai-pink) 65%, var(--ai-orange));
+  /* El resplandor remata el degradado por sus dos extremos: azul hacia arriba y naranja hacia abajo, como en el
+     playground de React. Suave (20%) porque acompaña al borde, no compite con él. */
+  box-shadow:
+    0 -4px 14px 0 color-mix(in srgb, var(--ai-blue) 20%, transparent),
+    0 4px 14px 0 color-mix(in srgb, var(--ai-orange) 20%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .borde {
+    transition: none;
+  }
+}

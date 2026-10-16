@@ -1,0 +1,77 @@
+/* Tarjeta de invitación a la IA («Crear un curso» del Inicio). Variante elegida por Nicolás el 18 sep: «Halo».
+   La paleta de la IA de UBITS (azul → morado → rosa → naranja) la entregó diseño y no existe como token del tema,
+   así que vive aquí, igual que en «Nueva conversación» (src/shared/layouts/new-chat.module.css). */
+
+.vars {
+  --ia-azul: #285ee6;
+  --ia-morado: #7e2be0;
+  --ia-rosa: #d6306e;
+  --ia-naranja: #eb6233;
+}
+
+/* El color no rellena la tarjeta: vive difuminado en las esquinas, como el resplandor que rodea al orbe del chat.
+   Va en un `::before` propio para que el texto y los botones queden por encima y nunca se tiñan. */
+.halo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(70% 120% at 100% 0%, color-mix(in oklch, var(--ia-morado) 42%, transparent), transparent 62%),
+    radial-gradient(55% 100% at 82% 8%, color-mix(in oklch, var(--ia-rosa) 34%, transparent), transparent 58%),
+    radial-gradient(85% 130% at 0% 100%, color-mix(in oklch, var(--ia-azul) 26%, transparent), transparent 60%);
+  transition: transform 700ms ease-out;
+}
+
+/* Al pasar el cursor el halo crece desde su esquina: el movimiento es del fondo, no de la tarjeta. */
+.halo:hover::before,
+.grupo:hover .halo::before {
+  transform: scale(1.18);
+}
+
+/* Halo suave, para tarjetas pequeñas donde el halo completo pesaría demasiado (la tarjeta «Crear contenido» de las
+   acciones rápidas del Inicio, 1 oct). Se usa junto con .halo y reemplaza su fondo:
+   - Gama ordenada: el morado y el azul de la IA, que son tonos vecinos, hacen la base (morado arriba a la derecha, azul
+     abajo a la izquierda); el rosa queda como un toque leve en el centro, para dar calidez sin ensuciar.
+   - Las mezclas van en OKLab, que pasa de un tono a otro sin el gris fangoso de la mezcla normal.
+   - Poca intensidad (16, 12 y 8 %) y manchas grandes y abiertas, para que el color se funda con el fondo. */
+.haloSuave::before {
+  background:
+    radial-gradient(in oklab 120% 95% at 100% 0%, color-mix(in oklab, var(--ia-morado) 16%, transparent), transparent 72%),
+    radial-gradient(in oklab 95% 85% at 0% 100%, color-mix(in oklab, var(--ia-azul) 12%, transparent), transparent 72%),
+    radial-gradient(in oklab 70% 60% at 70% 40%, color-mix(in oklab, var(--ia-rosa) 8%, transparent), transparent 70%);
+}
+
+/* Halo apagado: la misma tarjeta sin color, para cuando ya hay otra pieza de IA en la pantalla. */
+.sinHalo::before {
+  display: none;
+}
+
+/* El botón repite el degradado de marca de «Nueva conversación». Los cuatro tonos caben en su ancho y, al pasar el
+   cursor, el relleno se desliza y el recorrido se invierte. */
+.botonMarca {
+  background: linear-gradient(
+    90deg,
+    var(--ia-azul) 0%,
+    var(--ia-morado) 24%,
+    var(--ia-rosa) 46%,
+    var(--ia-naranja) 60%,
+    var(--ia-rosa) 74%,
+    var(--ia-morado) 88%,
+    var(--ia-azul) 100%
+  );
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  color: white;
+  transition: background-position 500ms ease;
+}
+
+.botonMarca:hover {
+  background-position: 100% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .halo::before,
+  .botonMarca {
+    transition: none;
+  }
+}

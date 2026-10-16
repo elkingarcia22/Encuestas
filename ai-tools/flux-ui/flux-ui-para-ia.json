@@ -1,0 +1,3689 @@
+{
+  "$archivo": "flux-ui-para-ia.json",
+  "$para_que": "Reglas y catálogo para que cualquier IA construya el frontend del Playground UX sin inventar componentes: primero las piezas que el proyecto ya resolvió (\"piezas_del_proyecto\"), después @ubits/flux-ui. Se comparte tal cual con el equipo.",
+  "$version_formato": "1.0",
+  "generado": "2026-10-15T14:19:25.711Z",
+  "libreria": {
+    "paquete": "@ubits/flux-ui",
+    "version": "0.5.5",
+    "basada_en": "ReUI y shadcn sobre Base UI, con el tema de Ubits",
+    "storybook": "https://libraries-ui.dev.sandteck.com/flux-ui",
+    "iconos": "@hugeicons/react + @hugeicons/core-free-icons"
+  },
+  "instrucciones_para_la_ia": {
+    "mision": "Construyes interfaces de frontend para Ubits sin dibujar nada a mano. Buscas en un orden: primero las piezas que el proyecto ya resolvió (\"piezas_del_proyecto\"), después los componentes de @ubits/flux-ui de este archivo. Tu trabajo es analizar qué resuelve cada necesidad y combinarlo. Nunca creas componentes visuales nuevos.",
+    "reglas_obligatorias": [
+      "Primero la pieza que el proyecto ya resolvió (ver «piezas»), después el componente de @ubits/flux-ui del catálogo, y si no hay ninguno, para y pregunta. Hay una sola versión de cada pieza: si se queda corta se amplía, no se hace otra al lado.",
+      "Todo lo que envía (correo, recordatorio, invitación, pedido), borra, desactiva, archiva, mueve de etapa o descarta pregunta antes con DialogoConfirmar y la tarjeta RegistroConfirmar (qué se toca y a cuántos afecta). Solo un cambio simple que se puede deshacer va directo, con notifyAction y «Deshacer». Nunca un aviso de «enviado» sin haber preguntado.",
+      "Dos ventanas, cada una con su trabajo: preguntar va en DialogoConfirmar; todo lo que tiene contenido (formulario, lista para elegir, vista previa, escribir un correo, confirmar con la lista de a quiénes afecta) va en ActionDialog. El título de una ventana dice qué es la ventana y es fijo; el nombre del registro va en el cuerpo.",
+      "Crear y editar viven en una página (PageShell + PageHeader + PageActionBar), nunca en una ventana ni en un panel. Hay una sola salida, BotonSalirCreacion («Salir de la creación» o «Salir de la edición») en las acciones de la cabecera: sin flecha junto al título, sin X y sin «Cancelar» en la barra. La barra lleva ChipGuardado a la izquierda y «Atrás» y seguir a la derecha. Excepción (Cristian, 9-oct): «Agregar una persona a tu base», en Mis candidatos, es una ventana (ActionDialog) con «Cancelar», como la diseñó Nicolás.",
+      "Salir con cambios pregunta con DialogoConfirmar en su tamaño normal: tres salidas («Seguir editando» · «Salir sin guardar» · «Guardar y salir») si hay algo que guardar; dos («Seguir editando» · «Salir sin guardar», destructiva) si no hay borrador posible. Sin cambios, sale directo. Copia el título y los textos de la pantalla modelo; no inventes otros.",
+      "Un panel (DrawerShell) con algo escrito no se cierra al tocar fuera; cerrarlo con la X, Escape o «Cancelar» con cambios pregunta («Seguir editando» · «Descartar»).",
+      "ChipGuardado dice la verdad: «Cambios sin guardar» mientras no se haya guardado nada y «Guardado» solo cuando de verdad hay un borrador. Una ventana nunca dice «no has hecho cambios» si los hay, ni promete algo que la pantalla no deja hacer.",
+      "Toda tabla es TablaDatos y cabe en su marco (1.104 px con la barra lateral abierta): reparte los anchos, apaga el cambio de ancho si no cabe y deja que la columna de texto se corte con «…» y TextoCompleto. El «⋯» de cada fila se ve siempre.",
+      "En toda lista para elegir (participantes, el comparativo, demográficos, asignaciones…), la casilla (Checkbox) o el círculo (RadioGroupItem) van siempre a la izquierda de la fila, antes del icono y del texto; a la derecha solo va lo de apoyo (cifras, insignias, acciones). La fila entera elige. Homologado por Elkin el 9-oct.",
+      "Los avisos usan notify(título, detalle, tipo) con su tipo ('success', 'info', 'warning' o 'error'). Nada de toast.add suelto ni ToastToaster en la pantalla.",
+      "Lo que hizo la IA lleva el orbe (IconoIA; como insignia, EtiquetaIA), nunca estrellas ni chispas. El primario de IA es BotonIa y la segunda acción BotonIaSecundario. El botón que abre el agente es ReopenAgentButton y se llama «Orbit Flow». Orden de una fila: «⋯» (BotonIcono) · terciario · secundario · primario · IA · Orbit Flow.",
+      "El ancho lo pone PageShell (nada de max-w a mano), la letra sale de Heading y Text, los colores de los tokens del tema y las insignias del Badge del proyecto (10,5 px mínimo). className solo para layout.",
+      "Todo en español, también lo que solo oye el lector de pantalla. Fechas, plurales, cifras y porcentajes salen de las utilidades de formato (formato.ts, formatoAvance), no de toLocaleString ni de funciones propias.",
+      "El panel de lo que necesita atención (TableroAtencion, BloqueAtencion o la lista de la Super Home) vive solo en la Super Home (/admin), que reúne Selección, Aprendizaje y Cultura. Los inicios de cada módulo (Vacantes, Créditos, Contenidos, Encuestas…) no lo llevan; lo urgente de un módulo llega a la Super Home o a las notificaciones.",
+      "Todas las pestañas de la plataforma (TabsTrigger, incluidas las de los editores y paneles) llevan solo texto, sin ícono. Se usa la pestaña maestra subrayada (TabsList variant=\"line\"), sin pestañas anidadas.",
+      "Cuando una cabecera o una barra tiene más de dos llamados a la acción, contando al propio Orbit Flow y sin contar el «⋯» (que ya es un ícono), el botón del agente pasa a solo ícono (ReopenAgentButton con compact) para que el título y la descripción no se monten con los botones. Sigue siendo el último de la fila. El caso que lo originó: Encuestas, con «Crear con plantilla», «Crear encuesta» y Orbit Flow.",
+      "Cuando una cabecera o un bloque tiene dos llamados a la acción del mismo nivel, los dos van como secundarios (outline); el primario se reserva para cuando hay una sola acción principal. Los botones de IA y Orbit Flow siguen sus propias reglas.",
+      "Los avisos (notify) llevan un título de una línea, de unos 60 caracteres como máximo, y un detalle opcional de una o dos líneas, de unos 120. Lo que no cabe va a una ventana o al panel. Las cifras exactas las fija Nicolás (ver «por_decidir»).",
+      "En la plataforma no van secciones blancas sueltas: cada una vive dentro de un marco gris (Frame + FramePanel), y su título y su bajada van en el gris, nunca repetidos dentro del panel blanco. Si el contenido se nombra solo (unas cifras con su etiqueta, un estado vacío, un campo con su label), el marco va sin encabezado.",
+      "Una lista de contenidos con portada (Contenidos del LMS Creator, Universidad corporativa, Zona de estudio) se puede ver como tabla o como tarjetas, con el cambio Tabla/Cuadrícula de los controles compartidos de Contenidos (CambioDeVista y MarcoCuadricula). El modo tabla es siempre TablaDatos con CeldaTitulo; la cuadrícula va en el marco gris con PiePaginacion. En el portal del colaborador arranca en Cuadrícula. Las demás tablas (las de gestionar) siguen siendo solo TablaDatos.",
+      "Lo que se pide dentro de un panel lateral (confirmar, escribir un correo, mover, abrir otro detalle) se abre en el mismo panel: su contenido cambia por el de la ventana y arriba queda «← título del panel» para volver. Nada de otra ventana ni otro panel encima. DrawerShell, VentanaDeAccion y DialogoConfirmar lo hacen solos con DrawerAnidado; no hay que armarlo en cada pantalla.",
+      "Todo lo que carga o guarda tiene su error. Si no se guarda, nada cambia: el aviso rojo dice «No pudimos …» y una línea con la consecuencia («Sigue en …», «No salió ningún correo»), y trae «Reintentar», que repite lo mismo y cierra ese aviso. Si la acción venía de una ventana con datos escritos, la ventana se queda abierta con lo escrito. Un bloque que no carga muestra su error en el sitio, con la ilustración glass-danger y «Reintentar». Se prueba con ?simular=error y ?simular=falla-guardar.",
+      "Los estados vacíos y los de error van con los iconos glass del design system, no con un icono de línea de Hugeicons: PrimeraVez cuando todavía no hay nada, SinResultados cuando la búsqueda o los filtros lo dejan todo fuera, y la ilustración glass-danger con «Reintentar» cuando algo no cargó. Nada de un Empty armado a mano.",
+      "Toda pieza visible de la interfaz sale de un componente de la lista \"componentes\" de este archivo. Si se ve en pantalla (botón, campo, tabla, tarjeta, modal, menú, pestaña, aviso, etiqueta, avatar, barra de progreso, gráfico, calendario…), es un componente de @ubits/flux-ui.",
+      "Antes de escribir código de interfaz, analiza qué piezas necesita la pantalla y búscalas aquí por \"nombre\", \"usar_para\" y \"buscar\". Usa la que mejor encaje.",
+      "No crees componentes visuales nuevos. No dibujes con div o span y clases algo que la librería ya resuelve: un círculo con una inicial es Avatar, una barra de color es Progress, un recuadro vacío con un mensaje es Empty, una etiqueta de estado es Badge.",
+      "No inventes variantes, tamaños ni props visuales: usa solo los valores de \"variantes\". Si hace falta otro valor, pregunta.",
+      "No uses nada de \"en_storybook_pero_no_publicados\": está documentado pero no existe en la versión publicada y rompe la pantalla.",
+      "No instales ni importes otras librerías de interfaz (\"librerias_de_ui_prohibidas\"), ni copies componentes de shadcn, ReUI, MUI u otras aunque se parezcan: flux-ui ya los trae.",
+      "No construyas componentes propios con primitivas sin estilo (@base-ui/react, @radix-ui). flux-ui ya las envuelve.",
+      "No cambies la apariencia de los componentes. \"className\" solo para layout: ancho, alto, márgenes, padding de contenedores, gap, grid, flex, posición, truncado y visibilidad. Nada de colores, bordes, sombras, radios ni tipografía sobre un componente de la librería.",
+      "Iconos: solo Hugeicons, siempre como dato dentro de <HugeiconsIcon icon={NombreIcon} />.",
+      "Colores: solo los tokens de \"tokens_del_tema\". Nunca colores literales (#hex, rgb, oklch) ni la paleta cruda de Tailwind (bg-blue-500, text-slate-700…). Para texto usa Heading y Text.",
+      "Si ningún componente cubre la necesidad, detente: no la improvises a mano. Explica qué falta, qué componentes se acercan y pregunta si se pide al equipo de la librería o se resuelve con uno existente."
+    ],
+    "protocolo_por_cada_pieza": [
+      "Describe en una frase qué verá la persona (por ejemplo: \"lista de colaboradores con filtros y paginación\").",
+      "Mira si el proyecto ya la resolvió: busca en \"piezas_del_proyecto\" y en las carpetas de \"piezas_del_proyecto.donde_buscar\". Si existe, úsala y no sigas buscando aquí.",
+      "Busca candidatos en \"componentes\" comparando con \"usar_para\" y \"buscar\". Si hay varios, elige el más específico. Una tabla nunca sale de aquí: es TablaDatos, de \"piezas_del_proyecto\".",
+      "Revisa sus \"exports\" (subcomponentes) y \"variantes\". Si necesitas ver cómo se compone, abre \"storybook.docs\".",
+      "Escribe el código combinando esos componentes. El layout (grid, flex, gap, anchos) va en contenedores neutros.",
+      "Si no hay ningún candidato, no sigas: aplica \"si_no_existe\"."
+    ],
+    "si_esta_permitido": [
+      "Usar las piezas de \"piezas_del_proyecto\": están hechas con esta misma librería y llevan las decisiones que ya tomó el equipo.",
+      "Componer pantallas, secciones y bloques que combinan componentes de la librería.",
+      "Usar contenedores neutros (div, section, header, main, nav, ul, li) con clases de layout.",
+      "Crear funciones locales que SOLO agrupan componentes de la librería para no repetir JSX, sin estilos visuales propios.",
+      "Pasar datos, estado y eventos a los componentes."
+    ],
+    "esta_prohibido": [
+      "Crear un componente visual nuevo (botón, tarjeta, modal, tabla, badge, avatar, barra, pestañas, menú, input…) aunque sea \"parecido\".",
+      "Usar <button>, <input>, <select>, <textarea>, <table>, <dialog> o <svg> sueltos cuando la librería tiene el componente.",
+      "Inventar variantes, tamaños o props visuales que no estén en \"variantes\".",
+      "Importar otras librerías de interfaz o copiar componentes de otros sistemas.",
+      "Sobrescribir colores, bordes, sombras, radios, tipografía o estados (hover, focus) de un componente con className o CSS.",
+      "Usar componentes de \"en_storybook_pero_no_publicados\".",
+      "Armar con componentes sueltos una pieza que el proyecto ya tiene envuelta en \"piezas_del_proyecto\", o hacer una versión paralela al lado en vez de ampliar la que existe."
+    ],
+    "si_no_existe": "Detente y responde con este formato: \"La librería no tiene un componente para <necesidad>. Lo más cercano es <componentes y por qué no alcanzan>. ¿Lo pedimos al equipo de flux-ui o lo resolvemos con <alternativa con componentes existentes>?\". No lo dibujes a mano mientras tanto.",
+    "verificacion_antes_de_entregar": [
+      "Cada import de interfaz viene de @ubits/flux-ui, de @hugeicons/* o de una pieza del propio proyecto (\"piezas_del_proyecto\").",
+      "Ninguna pieza de \"piezas_del_proyecto\" quedó rehecha a mano con componentes sueltos.",
+      "No queda ninguna pieza visual hecha a mano con div, span o elementos HTML nativos.",
+      "Cada variante usada aparece en \"variantes\" de su componente.",
+      "Los colores son tokens de \"tokens_del_tema\" y className solo tiene layout.",
+      "Ningún componente usado está en \"en_storybook_pero_no_publicados\"."
+    ]
+  },
+  "piezas_del_proyecto": {
+    "$comentario": "Piezas que este proyecto ya resolvió envolviendo flux-ui con las decisiones del equipo. Se miran ANTES del catálogo: volver a armarlas con componentes sueltos crea una segunda versión que se desincroniza.",
+    "donde_buscar": [
+      "src/shared/components/ — las piezas compartidas del marco.",
+      "src/modules/design-system/ — las piezas del sistema de diseño, cada una documentada en su pantalla /design-system/*.",
+      "Una pantalla parecida ya hecha, en src/modules/admin/ o src/modules/portal-colaborador/."
+    ],
+    "ya_resueltas": [
+      {
+        "necesidad": "El marco de una página: ancho, título, migas, cabecera, secciones y barra de acciones",
+        "usa": "PageShell, PageHeader, PageBreadcrumbs, PageContent, PageSection, PageActionBar",
+        "desde": "@/shared/components/PageShell",
+        "en_vez_de": "armarlo a mano con Frame y Heading"
+      },
+      {
+        "necesidad": "Un aviso",
+        "usa": "notify(título, detalle, tipo) o notifyAction(…), siempre con su tipo: 'success', 'info', 'warning' o 'error' (el tipo pone el icono en su color)",
+        "desde": "@/shared/components/notify",
+        "en_vez_de": "toast.add suelto (la excepción del 29-sep venció: notify ya recibe el tipo) o ToastToaster en la pantalla, que duplica los avisos"
+      },
+      {
+        "necesidad": "Botón terciario de solo icono",
+        "usa": "BotonIcono (redondo)",
+        "desde": "@/shared/components/BotonIcono",
+        "en_vez_de": "Button con un icono dentro"
+      },
+      {
+        "necesidad": "El orbe del agente (de 16 a 180 px)",
+        "usa": "Orb",
+        "desde": "@/shared/components/Orb",
+        "en_vez_de": "dibujarlo con div y degradados"
+      },
+      {
+        "necesidad": "Preguntar antes de hacer algo: eliminar, salir sin guardar, activar, descartar, enviar (también cuando muestra lo que se pierde)",
+        "usa": "DialogoConfirmar: icono arriba, título y texto centrados, el registro y lo que se pierde como hijos, «cancelar» y la acción (destructiva en rojo), «otra» para una tercera salida (guardar y salir) y «enCurso» para el spinner. Acuerdo del 6-oct",
+        "desde": "@/modules/design-system/estados/confirmaciones",
+        "en_vez_de": "ActionDialog para una confirmación sin contenido, o AlertDialog suelto (se documenta en /design-system/estados › Confirmaciones)"
+      },
+      {
+        "necesidad": "Una ventana con contenido: formulario corto, lista para elegir, vista previa, detalle, ajustes, o confirmar mostrando la lista de a quiénes afecta",
+        "usa": "ActionDialog (size sm 448, default 620, wide 736 para formularios largos, full para editores; lead, media, onBack, headerActions, dismissible, hideFooter, footer)",
+        "desde": "@/shared/components/ActionDialog",
+        "en_vez_de": "ConfiguredModal (retirado el 5-oct), Dialog o AlertDialog sueltos. Crear o editar algo no va en una ventana: va en una página con PageActionBar"
+      },
+      {
+        "necesidad": "Una tabla o un listado, con o sin paginación",
+        "usa": "TablaDatos, la única tabla del sistema: cabecera como Vacantes (conteo a la izquierda, buscador y «Personalizar columnas» a la derecha, sin título dentro del marco), encabezados de 40 px con asidero, orden y filtro por columna, columna «Acciones» con BotonIcono ⋯ y el paginador en español PiePaginacion (10/20/50, «Viendo 1–10 de 84 …»). La celda que nombra algo, con o sin imagen, es CeldaTitulo",
+        "desde": "@/modules/design-system/data-grid/tabla-datos y @/modules/design-system/data-grid/celda-titulo (el paginador vive en @/modules/admin/seleccion/propuestas/components/paginacion)",
+        "en_vez_de": "MarcoTabla (retirada el 5-oct), DataGridList o Table sueltos, otro paginador, o una cuadrícula de tarjetas dentro de un marco de tabla. Una lista de contenidos con portada puede verse además como tarjetas con el cambio Tabla/Cuadrícula (regla contenidos-tabla-o-tarjetas, 9-oct); su modo tabla sigue siendo TablaDatos con CeldaTitulo e imagen"
+      },
+      {
+        "necesidad": "Una lista para elegir dentro de un contenedor (acordeón, panel lateral, sección con marco)",
+        "usa": "ListaElegible: buscador y herramientas (filtros, «Agrupar por», «Ver elegidos») sueltos encima y un solo panel blanco con la casilla de la página, las filas (FilaElegible: casilla, título y detalle o un contenido propio, y lo de apoyo a la derecha; tamano=\"xs\" para filas de una línea, como Participantes) y el pie PiePaginacion solo si hace falta. Sin columnas ni orden: es para elegir (9-oct, Elkin, Participantes de Encuestas y Objetivos)",
+        "desde": "@/modules/design-system/listas/lista-elegible",
+        "en_vez_de": "una TablaDatos dentro de un acordeón o de otro marco (tabla dentro de contenedor dentro de contenedor), o filas con casilla armadas a mano. Si hay que comparar, ordenar por columna o actuar por fila, es TablaDatos en su propia página. Se documenta en Design system › Ajustes propios › Piezas del sistema"
+      },
+      {
+        "necesidad": "Un panel lateral",
+        "usa": "DrawerShell",
+        "desde": "@/modules/design-system/drawers/components/drawer-shell",
+        "en_vez_de": "Sheet directo"
+      },
+      {
+        "necesidad": "Cerrar una ventana o panel",
+        "usa": "CloseButton",
+        "desde": "@/shared/components/CloseButton",
+        "en_vez_de": "una X a mano"
+      },
+      {
+        "necesidad": "El estado «Razonando»",
+        "usa": "AiThinking",
+        "desde": "@/shared/components/AiThinking",
+        "en_vez_de": "otro indicador de carga"
+      },
+      {
+        "necesidad": "Una ayuda contextual",
+        "usa": "Hint, HintContent al pasar el cursor; BotonAyuda para el icono «i» que explica al hacer clic; una leyenda con insignias o colores, Popover",
+        "desde": "@/shared/components/Hint y @/shared/components/BotonAyuda",
+        "en_vez_de": "Tooltip suelto (solo abre con hover), el atributo title del navegador u otro icono de ayuda con su propio globo (AyudaCampo de Crear vacante es una copia por retirar; QueMide de Encuestas ya envuelve a BotonAyuda). BotonAyuda se documenta en /design-system/botones. Hint acepta open y onOpenChange para controlarlo desde afuera"
+      },
+      {
+        "necesidad": "Un texto que se corta y debe poder leerse entero",
+        "usa": "TextoCompleto (envuelve el texto ya cortado con truncate o line-clamp; el texto entero sale en el globo del sistema, Hint, al pasar el cursor o enfocar, y solo si de verdad está cortado). En una celda de tabla angosta, CeldaTitulo con dosLineas",
+        "desde": "@/shared/components/TextoCompleto",
+        "en_vez_de": "el atributo title del navegador, un Tooltip suelto armado en cada pantalla o un texto cortado que no se puede leer. Se documenta en /design-system/data-grid (Textos que no caben)"
+      },
+      {
+        "necesidad": "Invitar a que la IA haga el trabajo, dentro de una pantalla normal",
+        "usa": "AiCard",
+        "desde": "@/shared/components/AiCard",
+        "en_vez_de": "una Card con degradado a mano (se documenta en /design-system/tarjeta-ia)"
+      },
+      {
+        "necesidad": "Botones de IA",
+        "usa": "BotonIa (el único primario de IA: el degradado de marca en pastilla) y BotonIaSecundario (la segunda acción de IA de la vista). Van al final de su fila",
+        "desde": "@/shared/components/BotonIa y @/shared/components/BotonIaSecundario",
+        "en_vez_de": "AiButton y BotonIaPrimario (retirados el 5-oct), o el AiButton de la librería: no viene publicado en 0.5.5 y su degradado es otro"
+      },
+      {
+        "necesidad": "El agente contextual: panel, hilo, burbujas, propuestas y sugerencias",
+        "usa": "AgentStage, AgentRail, ContextPanel, AgentThread, UserBubble, AgentNote, AgentThinking, ProposalCard, AgentCard, AgentList, UndoRow, AgentSuggestions, SourcePills, ReopenAgentButton (el botón que lo abre: se llama «Orbit Flow» y va siempre el último de su fila). El cuadro de escribir es Composer (@/modules/admin/suite-ai/shared/composer)",
+        "desde": "@/modules/design-system/agente-contextual/components/agent-kit",
+        "en_vez_de": "rehacer el panel o las tarjetas del agente, o un botón «Agente IA» armado a mano",
+        "ver_tambien": "use-agent-thread para el estado del hilo, y agent-styles + agent.module.css para sus medidas"
+      },
+      {
+        "necesidad": "Una tarjeta de incidencia en una revisión del agente",
+        "usa": "issue-card",
+        "desde": "@/modules/design-system/agente-contextual/revision/components/issue-card",
+        "en_vez_de": "una Card a mano"
+      },
+      {
+        "necesidad": "Diálogos de novedades, cambios y bienvenida",
+        "usa": "FeatureDialog, ChangelogDialog, WelcomeDialog",
+        "desde": "@/shared/components/Announcements",
+        "en_vez_de": "un Dialog montado desde cero"
+      },
+      {
+        "necesidad": "El buscador de comandos",
+        "usa": "CommandPalette. Fuera del rediseño desde el 7-oct: no se suma a pantallas nuevas",
+        "desde": "@/shared/components/CommandPalette",
+        "en_vez_de": "Command suelto"
+      },
+      {
+        "necesidad": "El centro de procesos",
+        "usa": "ProcessCenter (lo monta el marco; no tiene botón en el header, se abre desde Notificaciones). Una pantalla publica sus procesos con publishProcess/updateProcess/removeProcess y registra qué abre «Historial» con setProcessHistory (process-store). Sin procesos muestra el vacío PrimeraVez; los de ejemplo solo con `ejemplos`, en el design system",
+        "desde": "@/shared/components/ProcessCenter y @/shared/components/process-store",
+        "en_vez_de": "una lista de progreso a mano o un botón de procesos en el header"
+      },
+      {
+        "necesidad": "El punto de estado de una conversación de Suite AI",
+        "usa": "ChatStatusDot",
+        "desde": "@/shared/components/ChatStatusDot",
+        "en_vez_de": "un Badge o un div redondo"
+      },
+      {
+        "necesidad": "La tarjeta de invitar a otra persona",
+        "usa": "InviteCard",
+        "desde": "@/shared/components/InviteCard",
+        "en_vez_de": "una Card con avatar a mano"
+      },
+      {
+        "necesidad": "Renombrar algo en el sitio, sin abrir un modal",
+        "usa": "EdicionEnLinea",
+        "desde": "@/shared/components/EdicionEnLinea",
+        "en_vez_de": "un Input suelto que aparece y desaparece: Enter guarda, Escape descarta y salir del campo guarda"
+      },
+      {
+        "necesidad": "La tarjeta de un contenido de aprendizaje",
+        "usa": "TarjetaContenido",
+        "desde": "@/shared/components/TarjetaContenido",
+        "en_vez_de": "una Card con imagen a mano"
+      },
+      {
+        "necesidad": "Marcar lo que hizo la IA (pestaña, título, ítem, etiqueta)",
+        "usa": "IconoIA (el orbe a 16 px); para una insignia, EtiquetaIA",
+        "desde": "@/modules/design-system/ia/icono-ia y @/modules/design-system/ia/etiqueta-ia",
+        "en_vez_de": "SparklesIcon, AiMagicIcon, MagicWand01Icon o StarsIcon, o un Badge de color con «IA» a mano (se documenta en /design-system/ia/superficies)"
+      },
+      {
+        "necesidad": "Las cifras de un tablero",
+        "usa": "Indicadores (la fila en su marco), FilaCifras (dentro de una tarjeta), CeldaCifra, TarjetaIndicador. Con comparación frente al periodo anterior y ayuda, la fila de Selección: FilaIndicadores + ColumnaIndicador con Cambio, Ayuda, Cifra y Pie (6-oct, forma de Nicolás). Cambio es la única insignia de comparación, también en tablas: decimales, sinColor, enCelda («0 pp» gris) y ayuda (nota en el globo)",
+        "desde": "@/modules/design-system/metricas/cifras; la de Selección en @/modules/design-system/graficos/fila-indicadores y @/modules/admin/seleccion/propuestas/components/cifras",
+        "en_vez_de": "una tarjeta suelta por cifra, un número grande a mano o una insignia de variación propia: las métricas van en una sola fila partida por líneas (se documenta en /design-system/metricas)"
+      },
+      {
+        "necesidad": "Lo que necesita tu atención (asuntos por resolver, arriba de una pantalla)",
+        "usa": "TableroAtencion: una columna por grupo (Críticas, Necesitan atención, Acción manual, Sugerencias de la IA), recogido con lo más urgente y «Expandir»; cada asunto se resuelve en su panel (ListaAsuntos, TarjetaSugerencia, MediaGrupo). Va solo en la Super Home (decisión del 5-oct): los inicios de cada módulo no lo llevan",
+        "desde": "@/modules/design-system/metricas/tablero-atencion",
+        "en_vez_de": "un aviso amarillo con la lista o un tablero propio (se documenta en /design-system/metricas)"
+      },
+      {
+        "necesidad": "Un gráfico de tablero",
+        "usa": "GraficoArea, Dona, Anillo, BarraSegmentada, Tendencia, Sparkline",
+        "desde": "@/modules/design-system/metricas/graficos",
+        "en_vez_de": "un gráfico de recharts armado desde cero con colores propios (se documenta en /design-system/metricas)"
+      },
+      {
+        "necesidad": "Una persona en una celda de tabla (avatar con iniciales, nombre y detalle)",
+        "usa": "Persona (el detalle es la línea gris: cargo, área o usuario)",
+        "desde": "@/modules/design-system/data-grid/casos/seguimiento",
+        "en_vez_de": "un Avatar con texto armado en cada tabla. Si le falta algo (foto, enlace), se amplía Persona; no se copia (auditoría, 5-oct). Se documenta en /design-system/data-grid"
+      },
+      {
+        "necesidad": "Confirmar un borrado escribiendo la palabra",
+        "usa": "ConfirmarEliminar (por dentro es un DialogoConfirmar)",
+        "desde": "@/modules/design-system/data-grid/casos/seguimiento",
+        "en_vez_de": "un AlertDialog con un Input dentro"
+      },
+      {
+        "necesidad": "El chip «Guardado / Guardando» de un formulario o asistente",
+        "usa": "ChipGuardado",
+        "desde": "@/shared/components/ChipGuardado",
+        "en_vez_de": "una copia con otro color (Crear vacante tenía una en verde relleno). Se documenta en /design-system/navegacion (pie del asistente) y en Marco › Ajustes propios"
+      },
+      {
+        "necesidad": "La franja plegable «N cosas necesitan tu atención» encima de una lista",
+        "usa": "BloqueAtencion (alertas de la más grave a la menos, cada una con su «Ver»; si no hay ninguna, no se pinta). Desde el 5-oct lo urgente va solo en la Super Home: no se suma a inicios de módulo nuevos",
+        "desde": "@/shared/components/BloqueAtencion",
+        "en_vez_de": "un Collapsible con Item armado en cada lista. La usan Vacantes y Contenidos; se documenta en Marco › Ajustes propios › Vacantes (Alertas plegables)"
+      },
+      {
+        "necesidad": "Una ilustración de vidrio (Glass) en una tarjeta, un vacío o un atajo",
+        "usa": "ImagenGlass (nombre del icono y tamaño; ya trae @2x y @4x)",
+        "desde": "@/shared/components/ImagenGlass",
+        "en_vez_de": "otra copia que arme la ruta del PNG (había cuatro). Se documenta en /design-system/icons"
+      },
+      {
+        "necesidad": "Un estado vacío o de error",
+        "usa": "PrimeraVez (todavía no hay nada: ilustración glass, título, una línea y la acción para empezar; con icono glass-danger y «Reintentar» si algo no cargó) y SinResultados (la búsqueda o los filtros no encuentran nada: ilustración, lo buscado entre comillas y el botón para limpiar)",
+        "desde": "@/shared/components/PrimeraVez y @/shared/components/SinResultados",
+        "en_vez_de": "un Empty con lupa o con un icono de línea y texto fijo armado a mano (se documenta en /design-system/estados)"
+      },
+      {
+        "necesidad": "Un chip de filtro rápido con su «x» para quitarlo",
+        "usa": "FiltroChip (icono, texto y cuántos hay; puesto lleva la «x» y el globo «Quitar el filtro»; sin chip «Todas»)",
+        "desde": "@/modules/design-system/navegacion/filtro-chip",
+        "en_vez_de": "un Toggle suelto, un ToggleGroup de filtros o una insignia con una «x» aparte. Es el único chip de filtro (Selección, Créditos, Encuestas › Resultados); se documenta en /design-system/navegacion (Filtros rápidos)"
+      },
+      {
+        "necesidad": "Esqueletos y espera simulada en Selección",
+        "usa": "useCarga, useAccion, Esqueleto, LineaEsqueleto",
+        "desde": "@/modules/design-system/estados/carga",
+        "en_vez_de": "otro hook de carga o un spinner a pantalla completa (fuera de Selección, Skeleton de la librería; se documenta en /design-system/estados)"
+      },
+      {
+        "necesidad": "Un bloque con título dentro de una ficha o un detalle: título, bajada, una acción arriba a la derecha y sus paneles blancos adentro",
+        "usa": "Marco (y Rotulo para el rótulo pequeño dentro de un panel). Lleva el orbe si el bloque lo hizo la IA y late cuando el agente lo cita",
+        "desde": "@/modules/design-system/patrones/ficha",
+        "en_vez_de": "un Frame con la cabecera armada a mano en cada ficha. Lo usan el expediente del candidato y las fichas de Selección › propuestas (ficha-base, ficha-persona, perfil-candidato, requisitos-persona, bloque-importada)"
+      },
+      {
+        "necesidad": "Una lista de dato y valor en el resumen de una ficha",
+        "usa": "Filas: el dato en gris a la izquierda y el valor alineado a la derecha, sin líneas entre filas",
+        "desde": "@/modules/design-system/patrones/ficha",
+        "en_vez_de": "una tabla o filas armadas a mano. Configuración tiene otra (lista-datos.tsx: con líneas, valor en seminegrita y «Sin dato»); falta decidir si se juntan"
+      },
+      {
+        "necesidad": "Una insignia de estado",
+        "usa": "Badge del proyecto: la misma insignia de flux-ui (mismas variantes, alto y relleno) con la letra de «xs» y «sm» subida a 10.5 px, el mínimo legible (25-sep, accesibilidad)",
+        "desde": "@/shared/components/Badge",
+        "en_vez_de": "el Badge de la librería en xs (9.6 px) o sm (10 px): su letra queda por debajo del mínimo. Es temporal (decisión 22 de la auditoría, 5-oct): ingeniería fija el tamaño mínimo con una regla global, se borra el envoltorio y se vuelve a importar el de flux-ui. Está en ai-tools/flux-ui/diferencias.json (badge-letra-minima) y en Marco › Ajustes propios › Insignias chicas a 10.5 px"
+      },
+      {
+        "necesidad": "Elegir varias opciones con buscador (fichas)",
+        "usa": "SelectorMultiple",
+        "desde": "@/modules/design-system/formularios/asignacion",
+        "en_vez_de": "un Combobox con fichas armado en cada pantalla, o el SelectorEtiquetas de Selección (sus textos ya van en español). Se documenta en /design-system/formularios"
+      },
+      {
+        "necesidad": "Una pantalla de error del sistema (sin conexión, licencia, servidor)",
+        "usa": "PantallaDeError",
+        "desde": "@/modules/design-system/estados/errores-sistema",
+        "en_vez_de": "un Empty con texto propio (se documenta en /design-system/estados)"
+      },
+      {
+        "necesidad": "Subir un archivo (CSV, PDF, imagen, video) con su avance y su error",
+        "usa": "AdjuntoCsv",
+        "desde": "@/modules/design-system/estados/procesos",
+        "en_vez_de": "otro cargador con Attachment y Progress: hay uno solo (Ajustes propios › Cargador de archivos). Para una imagen: icono, imagen y etiquetaElegir con el nombre del campo, como CampoImagen de Configuración"
+      },
+      {
+        "necesidad": "La única salida de una creación o edición (asistente, editor, formulario de alta)",
+        "usa": "BotonSalirCreacion: contorno e icono de salir, dice a dónde lleva («Salir de la creación», «Salir de la edición», «Volver a añadir página»). Va en las acciones de PageHeader, a la derecha del título",
+        "desde": "@/modules/design-system/navegacion/boton-salir-creacion",
+        "en_vez_de": "una flecha junto al título, una X, o «Cancelar» en la barra de abajo"
+      },
+      {
+        "necesidad": "La tarjeta de lo que se toca dentro de una confirmación (nombre, detalle e insignia de estado)",
+        "usa": "RegistroConfirmar, como hijo de DialogoConfirmar",
+        "desde": "@/modules/design-system/estados/confirmaciones",
+        "en_vez_de": "un párrafo con el nombre en negrita o una Card armada a mano"
+      },
+      {
+        "necesidad": "Escribirle un correo a una o varias personas de un proceso (plantilla y mensaje)",
+        "usa": "DialogoEscribir («Escribirle a N personas»: plantilla, mensaje y el correo sale al confirmar). Pieza de Selección: depende de sus datos (vacantes, etapas, plantillas de correo), por eso no vive en el sistema de diseño; fuera de Selección no se usa",
+        "desde": "@/modules/admin/seleccion/propuestas/components/dialogo-escribir",
+        "en_vez_de": "un notify de «correo enviado» sin ventana, u otra ventana de correo"
+      },
+      {
+        "necesidad": "Compartir una vacante (enlace para candidatos y acceso del equipo)",
+        "usa": "DialogoCompartirVacante y BotonCompartirVacante, desde la tabla, la cabecera y el detalle. Pieza de Selección: depende de sus datos (vacantes, etapas, plantillas de correo), por eso no vive en el sistema de diseño; fuera de Selección no se usa",
+        "desde": "@/modules/admin/seleccion/propuestas/components/acciones-vacante",
+        "en_vez_de": "otra ventana de compartir (la de vacantes/detalle/components/compartir-vacante.tsx se retiró el 8-oct)"
+      },
+      {
+        "necesidad": "Mover a una persona de etapa en un proceso de selección",
+        "usa": "pedirMover y DialogoMover (avisa si la vacante está cerrada y abre «Mover a otra etapa» cuando el cambio tiene consecuencias; lo simple va al instante con «Deshacer»). Pieza de Selección: depende de sus datos (vacantes, etapas, plantillas de correo), por eso no vive en el sistema de diseño; fuera de Selección no se usa",
+        "desde": "@/modules/admin/seleccion/propuestas/components/dialogo-mover y use-proceso",
+        "en_vez_de": "mover al instante sin revisar saltos, retrocesos ni entrevistas sin terminar"
+      }
+    ],
+    "patrones_de_partida": {
+      "$comentario": "Pantallas del design system que ya resuelven un caso completo y se copian como punto de partida, en vez de montarlo desde cero.",
+      "casos": [
+        "Tablas: /design-system/data-grid, y sus casos reutilizables data-grid/casos/seguimiento y data-grid/casos/sin-arrastre.",
+        "Estados vacíos, de carga y de error: /design-system/estados.",
+        "Formularios y fechas: /design-system/formularios; el campo de un día (CampoFecha; con `accion` se abre desde un botón como «Cambiar fecha», y Tareas lo envuelve como CambiarFecha y CalendarioFecha), el de un rango (RangoDeFechas) y el mes en español para cualquier Calendar (CALENDARIO_ES) están en src/modules/design-system/formularios/rango-de-fechas.tsx.",
+        "Tableros: las cifras y gráficos de /design-system/metricas y el Inicio del admin (/admin). El Dashboard de /design-system/templates es del Archivo: sus piezas se mudaron a Métricas el 29-sep."
+      ]
+    },
+    "utilidades": [
+      {
+        "necesidad": "El ancho del contenedor de página",
+        "usa": "PAGE_WIDTH",
+        "desde": "@/shared/components/page-width",
+        "detalle": "narrow 720 (formularios y pasos), default 1140 (el ancho de diseño), wide 1600 (tableros densos), full (paneles divididos). PageShell ya lo aplica: no pongas max-w a mano."
+      },
+      {
+        "necesidad": "Formatear fechas, iniciales, rangos y plurales",
+        "usa": "iniciales, fechaCorta, fechaSinAnio, fechaHora, hora, HOY, diasDesde, isoHaceDias, formatoKM, plural, textoDeRango, generador",
+        "desde": "@/modules/design-system/patrones/formato",
+        "detalle": "No escribas tus propios formateadores ni uses toLocaleDateString suelto."
+      },
+      {
+        "necesidad": "El estilo del botón de icono del header",
+        "usa": "HEADER_ICON",
+        "desde": "@/shared/components/header-icon",
+        "detalle": "Ya trae los estados abierto/activo en azul; no los repitas con className."
+      },
+      {
+        "necesidad": "Mostrar o cerrar el aviso global de arriba",
+        "usa": "mostrarBanner, cerrarBanner, useBanner",
+        "desde": "@/shared/components/banner",
+        "detalle": "El GlobalBanner ya está puesto en el marco: se controla con estas funciones, no poniendo un Alert en la pantalla."
+      },
+      {
+        "necesidad": "Abrir o cerrar el panel derecho",
+        "usa": "setRightPanelOpen, useRightPanelOpen",
+        "desde": "@/shared/components/right-panel-store",
+        "detalle": "No montes tu propio estado para el panel: se desincroniza con el marco."
+      }
+    ],
+    "estado_interno_del_marco": "chat-status (markChatRead, useChatStatus), shell-data (datos de ejemplo del marco) y useCommandPalette son estado y datos internos: se usan desde el marco, no desde una pantalla.",
+    "las_monta_el_marco": {
+      "$comentario": "Estas ya están puestas por el RootLayout. No las metas dentro de una pantalla: se duplican.",
+      "piezas": [
+        "Toaster — hay uno solo, en el RootLayout. Un ToastToaster en la pantalla duplica los avisos: usa notify.",
+        "AppHeader, HeaderActions, AppFooter, SidebarRail, UbitsLogo, GlobalBanner.",
+        "AccountPopover, ProfilePopover, NotificationsPopover, NovedadesButton — los menús del header.",
+        "LayoutSlot, SlotArea, PageAmbience, PageFallback, PlaceholderPage, ThemeSwitch, ThemeToggle.",
+        "FeedbackDialog (la ventana de «Enviar feedback», sobre ActionDialog, con CapturaArea para recortar un área de la pantalla) y TourDialog (el tour «Nos renovamos para ti» de «Hacer el tour»). Las abre la barra lateral y el riel; se documentan en /design-system/modales."
+      ]
+    },
+    "si_se_queda_corta": "Se amplía la pieza que ya existe. No se hace una paralela al lado: así aparecen los dos vocabularios que el proyecto ya arrastra."
+  },
+  "reglas_del_equipo": {
+    "$comentario": "Las decisiones vigentes del equipo, con su fecha y su pantalla modelo. Salen de ai-tools/reglas/reglas.json.",
+    "vigentes": [
+      {
+        "id": "orden",
+        "fecha": "2026-09-17",
+        "texto": "Primero la pieza que el proyecto ya resolvió (ver «piezas»), después el componente de @ubits/flux-ui del catálogo, y si no hay ninguno, para y pregunta. Hay una sola versión de cada pieza: si se queda corta se amplía, no se hace otra al lado."
+      },
+      {
+        "id": "preguntar-antes",
+        "fecha": "2026-10-08",
+        "texto": "Todo lo que envía (correo, recordatorio, invitación, pedido), borra, desactiva, archiva, mueve de etapa o descarta pregunta antes con DialogoConfirmar y la tarjeta RegistroConfirmar (qué se toca y a cuántos afecta). Solo un cambio simple que se puede deshacer va directo, con notifyAction y «Deshacer». Nunca un aviso de «enviado» sin haber preguntado.",
+        "modelo": "src/modules/admin/aprendizaje/planes-de-formacion/components/detalle-plan.tsx (Enviar recordatorio)"
+      },
+      {
+        "id": "dos-ventanas",
+        "fecha": "2026-10-06",
+        "texto": "Dos ventanas, cada una con su trabajo: preguntar va en DialogoConfirmar; todo lo que tiene contenido (formulario, lista para elegir, vista previa, escribir un correo, confirmar con la lista de a quiénes afecta) va en ActionDialog. El título de una ventana dice qué es la ventana y es fijo; el nombre del registro va en el cuerpo."
+      },
+      {
+        "id": "crear-en-pagina",
+        "fecha": "2026-10-06",
+        "texto": "Crear y editar viven en una página (PageShell + PageHeader + PageActionBar), nunca en una ventana ni en un panel. Hay una sola salida, BotonSalirCreacion («Salir de la creación» o «Salir de la edición») en las acciones de la cabecera: sin flecha junto al título, sin X y sin «Cancelar» en la barra. La barra lleva ChipGuardado a la izquierda y «Atrás» y seguir a la derecha. Excepción (Cristian, 9-oct): «Agregar una persona a tu base», en Mis candidatos, es una ventana (ActionDialog) con «Cancelar», como la diseñó Nicolás.",
+        "modelo": "src/modules/admin/aprendizaje/planes-de-formacion/components/formulario-plan.tsx"
+      },
+      {
+        "id": "salir-con-cambios",
+        "fecha": "2026-10-08",
+        "texto": "Salir con cambios pregunta con DialogoConfirmar en su tamaño normal: tres salidas («Seguir editando» · «Salir sin guardar» · «Guardar y salir») si hay algo que guardar; dos («Seguir editando» · «Salir sin guardar», destructiva) si no hay borrador posible. Sin cambios, sale directo. Copia el título y los textos de la pantalla modelo; no inventes otros.",
+        "modelo": "src/modules/admin/aprendizaje/planes-de-formacion/components/formulario-plan.tsx"
+      },
+      {
+        "id": "panel-con-datos",
+        "fecha": "2026-10-08",
+        "texto": "Un panel (DrawerShell) con algo escrito no se cierra al tocar fuera; cerrarlo con la X, Escape o «Cancelar» con cambios pregunta («Seguir editando» · «Descartar»).",
+        "modelo": "src/modules/admin/desempeno-cultura/objetivos/crear/components/asignados/panel-asignacion.tsx"
+      },
+      {
+        "id": "guardado-honesto",
+        "fecha": "2026-10-08",
+        "texto": "ChipGuardado dice la verdad: «Cambios sin guardar» mientras no se haya guardado nada y «Guardado» solo cuando de verdad hay un borrador. Una ventana nunca dice «no has hecho cambios» si los hay, ni promete algo que la pantalla no deja hacer."
+      },
+      {
+        "id": "tabla-cabe",
+        "fecha": "2026-10-08",
+        "texto": "Toda tabla es TablaDatos y cabe en su marco (1.104 px con la barra lateral abierta): reparte los anchos, apaga el cambio de ancho si no cabe y deja que la columna de texto se corte con «…» y TextoCompleto. El «⋯» de cada fila se ve siempre."
+      },
+      {
+        "id": "elegir-a-la-izquierda",
+        "fecha": "2026-10-09",
+        "texto": "En toda lista para elegir (participantes, el comparativo, demográficos, asignaciones…), la casilla (Checkbox) o el círculo (RadioGroupItem) van siempre a la izquierda de la fila, antes del icono y del texto; a la derecha solo va lo de apoyo (cifras, insignias, acciones). La fila entera elige. Homologado por Elkin el 9-oct."
+      },
+      {
+        "id": "avisos-con-tipo",
+        "fecha": "2026-10-08",
+        "texto": "Los avisos usan notify(título, detalle, tipo) con su tipo ('success', 'info', 'warning' o 'error'). Nada de toast.add suelto ni ToastToaster en la pantalla."
+      },
+      {
+        "id": "ia-orbe",
+        "fecha": "2026-10-01",
+        "texto": "Lo que hizo la IA lleva el orbe (IconoIA; como insignia, EtiquetaIA), nunca estrellas ni chispas. El primario de IA es BotonIa y la segunda acción BotonIaSecundario. El botón que abre el agente es ReopenAgentButton y se llama «Orbit Flow». Orden de una fila: «⋯» (BotonIcono) · terciario · secundario · primario · IA · Orbit Flow."
+      },
+      {
+        "id": "medidas-del-tema",
+        "fecha": "2026-09-25",
+        "texto": "El ancho lo pone PageShell (nada de max-w a mano), la letra sale de Heading y Text, los colores de los tokens del tema y las insignias del Badge del proyecto (10,5 px mínimo). className solo para layout."
+      },
+      {
+        "id": "forzados-con-ficha",
+        "fecha": "2026-10-05",
+        "texto": "Un «!» que fuerza a la librería solo se pone con su ficha en Design system › Marco › Ajustes propios o su entrada en ai-tools/flux-ui/diferencias.json, y un comentario que diga por qué. Los «!» de otras personas se conservan."
+      },
+      {
+        "id": "textos-y-formatos",
+        "fecha": "2026-10-08",
+        "texto": "Todo en español, también lo que solo oye el lector de pantalla. Fechas, plurales, cifras y porcentajes salen de las utilidades de formato (formato.ts, formatoAvance), no de toLocaleString ni de funciones propias."
+      },
+      {
+        "id": "archivos-ajenos",
+        "fecha": "2026-09-29",
+        "texto": "En un archivo de otra persona se cambia solo la línea exacta, sin Prettier ni reescribir bloques, y se dice en la respuesta. La zona protegida (src/shared, src/app, src/index.css, scripts/, AGENTS.md) se toca solo con permiso."
+      },
+      {
+        "id": "atencion-solo-super-home",
+        "fecha": "2026-10-05",
+        "texto": "El panel de lo que necesita atención (TableroAtencion, BloqueAtencion o la lista de la Super Home) vive solo en la Super Home (/admin), que reúne Selección, Aprendizaje y Cultura. Los inicios de cada módulo (Vacantes, Créditos, Contenidos, Encuestas…) no lo llevan; lo urgente de un módulo llega a la Super Home o a las notificaciones.",
+        "modelo": "src/modules/admin/inicio/main.tsx"
+      },
+      {
+        "id": "footer-solo-home",
+        "fecha": "2026-10-05",
+        "texto": "El pie de página (AppFooter) se muestra solo en las páginas de inicio (home) de la plataforma. En las pantallas de creación, edición y subvistas no aparece, para no competir con la barra de acciones fija. Lo monta el marco (zona protegida): el cambio es de ingeniería. Desde el 9-oct (con permiso de Cristian) ya no sale en Selección ni en las pantallas de creación del LMS Creator; el resto sigue pendiente de ingeniería."
+      },
+      {
+        "id": "pestanas-solo-texto",
+        "fecha": "2026-10-05",
+        "texto": "Todas las pestañas de la plataforma (TabsTrigger, incluidas las de los editores y paneles) llevan solo texto, sin ícono. Se usa la pestaña maestra subrayada (TabsList variant=\"line\"), sin pestañas anidadas."
+      },
+      {
+        "id": "orbit-flow-compacto",
+        "fecha": "2026-10-05",
+        "texto": "Cuando una cabecera o una barra tiene más de dos llamados a la acción, contando al propio Orbit Flow y sin contar el «⋯» (que ya es un ícono), el botón del agente pasa a solo ícono (ReopenAgentButton con compact) para que el título y la descripción no se monten con los botones. Sigue siendo el último de la fila. El caso que lo originó: Encuestas, con «Crear con plantilla», «Crear encuesta» y Orbit Flow.",
+        "modelo": "src/modules/admin/desempeno-cultura/encuestas/main.tsx"
+      },
+      {
+        "id": "dos-acciones-secundarias",
+        "fecha": "2026-10-01",
+        "texto": "Cuando una cabecera o un bloque tiene dos llamados a la acción del mismo nivel, los dos van como secundarios (outline); el primario se reserva para cuando hay una sola acción principal. Los botones de IA y Orbit Flow siguen sus propias reglas."
+      },
+      {
+        "id": "avisos-cortos",
+        "fecha": "2026-10-01",
+        "texto": "Los avisos (notify) llevan un título de una línea, de unos 60 caracteres como máximo, y un detalle opcional de una o dos líneas, de unos 120. Lo que no cabe va a una ventana o al panel. Las cifras exactas las fija Nicolás (ver «por_decidir»)."
+      },
+      {
+        "id": "sin-buscador-global",
+        "fecha": "2026-10-07",
+        "texto": "El buscador global (CommandPalette, ⌘K) quedó fuera del alcance del rediseño por inviable. No se suma a pantallas nuevas ni se amplía. Retirarlo del encabezado y del DS › Marco es un cambio de ingeniería (zona protegida)."
+      },
+      {
+        "id": "secciones-en-caja-gris",
+        "fecha": "2026-10-09",
+        "texto": "En la plataforma no van secciones blancas sueltas: cada una vive dentro de un marco gris (Frame + FramePanel), y su título y su bajada van en el gris, nunca repetidos dentro del panel blanco. Si el contenido se nombra solo (unas cifras con su etiqueta, un estado vacío, un campo con su label), el marco va sin encabezado.",
+        "modelo": "src/modules/admin/aprendizaje/certificados/descarga/main.tsx"
+      },
+      {
+        "id": "contenidos-tabla-o-tarjetas",
+        "fecha": "2026-10-09",
+        "texto": "Una lista de contenidos con portada (Contenidos del LMS Creator, Universidad corporativa, Zona de estudio) se puede ver como tabla o como tarjetas, con el cambio Tabla/Cuadrícula de los controles compartidos de Contenidos (CambioDeVista y MarcoCuadricula). El modo tabla es siempre TablaDatos con CeldaTitulo; la cuadrícula va en el marco gris con PiePaginacion. En el portal del colaborador arranca en Cuadrícula. Las demás tablas (las de gestionar) siguen siendo solo TablaDatos.",
+        "modelo": "src/modules/admin/aprendizaje/lms-creator/contenidos/main.tsx"
+      },
+      {
+        "id": "preguntar-dentro-del-panel",
+        "fecha": "2026-10-09",
+        "texto": "Lo que se pide dentro de un panel lateral (confirmar, escribir un correo, mover, abrir otro detalle) se abre en el mismo panel: su contenido cambia por el de la ventana y arriba queda «← título del panel» para volver. Nada de otra ventana ni otro panel encima. DrawerShell, VentanaDeAccion y DialogoConfirmar lo hacen solos con DrawerAnidado; no hay que armarlo en cada pantalla.",
+        "modelo": "src/modules/design-system/drawers/components/drawer-anidado.tsx («Rechazar» desde la ficha del candidato, en Selección)"
+      },
+      {
+        "id": "errores-con-reintentar",
+        "fecha": "2026-10-09",
+        "texto": "Todo lo que carga o guarda tiene su error. Si no se guarda, nada cambia: el aviso rojo dice «No pudimos …» y una línea con la consecuencia («Sigue en …», «No salió ningún correo»), y trae «Reintentar», que repite lo mismo y cierra ese aviso. Si la acción venía de una ventana con datos escritos, la ventana se queda abierta con lo escrito. Un bloque que no carga muestra su error en el sitio, con la ilustración glass-danger y «Reintentar». Se prueba con ?simular=error y ?simular=falla-guardar.",
+        "modelo": "src/modules/design-system/estados/carga.tsx"
+      },
+      {
+        "id": "nada-visible-de-prueba",
+        "fecha": "2026-10-09",
+        "texto": "Ninguna pantalla lleva atajos de demostración a la vista («Probar con archivos de ejemplo», «Usar uno de ejemplo») ni textos de maqueta («en el playground…», «sonaría…»). Cada control se comporta como en el producto. Los estados raros se enseñan con los simuladores de la dirección (?simular=, ?como=), que no se ven.",
+        "modelo": "src/modules/admin/seleccion/propuestas/simular.ts"
+      },
+      {
+        "id": "vacios-con-glass",
+        "fecha": "2026-10-09",
+        "texto": "Los estados vacíos y los de error van con los iconos glass del design system, no con un icono de línea de Hugeicons: PrimeraVez cuando todavía no hay nada, SinResultados cuando la búsqueda o los filtros lo dejan todo fuera, y la ilustración glass-danger con «Reintentar» cuando algo no cargó. Nada de un Empty armado a mano.",
+        "modelo": "src/modules/admin/desempeno-cultura/objetivos/crear/components/asignados/lista-roster.tsx"
+      },
+      {
+        "id": "cambiar-una-regla",
+        "fecha": "2026-10-08",
+        "texto": "Una regla nueva o cambiada se escribe primero en ai-tools/reglas/reglas.json (con fecha y, si reemplaza otra, cuál), se regenera con node ai-tools/reglas/generar-reglas.mjs y se barren todos sus usos con Grep en src/ y en los documentos el mismo día. Lo que no se pueda barrer ese día va a «por_decidir» (o a la ficha del dueño) con quién lo resuelve."
+      }
+    ],
+    "retiradas": [
+      {
+        "pieza": "ConfiguredModal",
+        "desde": "2026-10-05",
+        "usa": "DialogoConfirmar para preguntar; ActionDialog para todo lo demás"
+      },
+      {
+        "pieza": "MarcoTabla",
+        "desde": "2026-10-05",
+        "usa": "TablaDatos"
+      },
+      {
+        "pieza": "AiButton",
+        "desde": "2026-10-05",
+        "usa": "BotonIa"
+      },
+      {
+        "pieza": "BotonIaPrimario",
+        "desde": "2026-10-05",
+        "usa": "BotonIa"
+      },
+      {
+        "pieza": "DataGridList directo en una pantalla",
+        "desde": "2026-10-05",
+        "usa": "TablaDatos (con CeldaTitulo y PiePaginacion)"
+      },
+      {
+        "pieza": "ToastToaster en una pantalla",
+        "desde": "2026-09-30",
+        "usa": "notify (el Toaster ya está en el RootLayout)"
+      },
+      {
+        "pieza": "toast.add suelto",
+        "desde": "2026-10-08",
+        "usa": "notify(título, detalle, tipo): ya recibe el tipo"
+      },
+      {
+        "pieza": "Sheet directo",
+        "desde": "2026-09-29",
+        "usa": "DrawerShell"
+      },
+      {
+        "pieza": "Estrellas, chispas o varitas para marcar IA",
+        "desde": "2026-09-23",
+        "usa": "IconoIA (el orbe) o EtiquetaIA"
+      },
+      {
+        "pieza": "Badge de la librería en xs o sm",
+        "desde": "2026-09-25",
+        "usa": "Badge de @/shared/components/Badge (10,5 px mínimo)"
+      },
+      {
+        "pieza": "«Agente IA» como nombre del botón del agente",
+        "desde": "2026-10-01",
+        "usa": "ReopenAgentButton, que dice «Orbit Flow»"
+      },
+      {
+        "pieza": "Flecha junto al título, X o «Cancelar» para salir de una creación",
+        "desde": "2026-10-06",
+        "usa": "BotonSalirCreacion"
+      },
+      {
+        "pieza": "vacantes/detalle/components/compartir-vacante",
+        "desde": "2026-10-08",
+        "usa": "DialogoCompartirVacante"
+      }
+    ],
+    "por_decidir": [
+      {
+        "id": "H-180",
+        "pregunta": "La asignación de objetivos: ¿panel lateral (excepción documentada) o vista dentro del paso?",
+        "decide": "Cristian con Elkin"
+      },
+      {
+        "id": "H-249",
+        "pregunta": "Sacar a alguien de un proceso: ¿«Rechazar» o «Descartar», y una sola ventana?",
+        "decide": "Nicolás"
+      },
+      {
+        "id": "titulo-salida",
+        "pregunta": "El título de la ventana de salida: «¿Salir sin guardar los cambios?», «¿Salir de la creación?» o «¿Salir sin guardar?» (hoy conviven los tres)",
+        "decide": "Cristian"
+      },
+      {
+        "id": "guardar-sin-borrador",
+        "pregunta": "«Guardar y salir» y el chip «Guardado» en pantallas que no tienen borrador real (carga masiva, Crear usuario, Crear tarea, Agregar persona)",
+        "decide": "Cristian"
+      },
+      {
+        "id": "vocabulario",
+        "pregunta": "Añadir o Agregar, Crear o Nuevo, «40 %» o «40%», «sept» o «sep»",
+        "decide": "diseño"
+      },
+      {
+        "id": "avisos-largo",
+        "pregunta": "Los límites exactos de título y detalle de los avisos (la regla usa unos 60 y 120 caracteres como provisional).",
+        "decide": "Nicolás"
+      },
+      {
+        "id": "atencion-modulos",
+        "pregunta": "¿Se quita ya el panel de atención de Vacantes, Créditos, Contenidos, Encuestas y el inicio de Selección, o se integra con las notificaciones?",
+        "decide": "Carlos con Nicolás y Elkin"
+      },
+      {
+        "id": "paginador-cuadricula",
+        "pregunta": "La cuadrícula de contenidos pagina de a 10, 20 o 50 (lo que deja PiePaginacion) y la última fila de tres puede quedar con una tarjeta suelta; antes iba de a 12, 24 o 48. ¿Se amplía PiePaginacion o se queda así?",
+        "decide": "Cristian"
+      },
+      {
+        "id": "vacantes-asidero",
+        "pregunta": "En la tabla de Vacantes no caben 8 columnas con asidero y cambio de ancho en 1.104 px: se apagaron para que el nombre no quede en 150 px. ¿Se acepta o se quita una columna?",
+        "decide": "Cristian con Nicolás"
+      },
+      {
+        "id": "reintentar-con-id",
+        "pregunta": "El aviso de error con «Reintentar» de Selección sigue usando toast.add porque notifyAction no devuelve el id del aviso para cerrarlo. Que notifyAction lo devuelva (src/shared/components/notify.ts, zona protegida).",
+        "decide": "ingeniería"
+      }
+    ]
+  },
+  "prompt_base": "Construyes interfaces de frontend con la librería @ubits/flux-ui 0.5.5 (basada en ReUI; cada componente tiene ficha en https://libraries-ui.dev.sandteck.com/flux-ui). El archivo flux-ui-para-ia.json adjunto es la lista completa y oficial de componentes: nombre, import, para qué sirve, variantes permitidas y enlace al Storybook.\n\nTu trabajo es ELEGIR y COMBINAR piezas que ya existen, nunca crear componentes visuales nuevos.\n\nBuscas en un orden: PRIMERO las piezas que el proyecto ya resolvió (clave \"piezas_del_proyecto\": PageShell, BotonIcono, notify, DrawerShell, DialogoConfirmar para preguntar, ActionDialog para toda otra ventana, TablaDatos…), DESPUÉS los componentes del catálogo. Las piezas del proyecto están hechas con esta misma librería: usarlas no es saltarse la regla, es no construir la misma cosa dos veces.\n\nPara cada pieza de la pantalla: 1) descríbela en una frase, 2) mira si el proyecto ya la resolvió, 3) si no, búscala en el archivo y úsala con sus variantes exactas, 4) si no existe, DETENTE y pregunta en vez de dibujarla a mano.\n\nProhibido: otras librerías de UI, componentes copiados de shadcn/ReUI/MUI, componentes propios hechos con div/span y clases, variantes inventadas, colores literales o de la paleta de Tailwind, iconos que no sean Hugeicons, y className que cambie la apariencia de un componente (solo layout).\n\nPermitido: pantallas y bloques que combinan componentes de la librería, contenedores neutros (div, section, header, main) con clases de layout, y funciones locales que solo agrupan componentes de la librería para no repetir código.\n\nAntes de entregar, revisa que cada import de interfaz venga de @ubits/flux-ui, de @hugeicons/* o de una pieza del propio proyecto, y que no quede ninguna pieza visual hecha a mano ni rehecha pudiendo reusarla.",
+  "iconos": {
+    "libreria": "Hugeicons",
+    "paquetes": [
+      "@hugeicons/react",
+      "@hugeicons/core-free-icons"
+    ],
+    "uso": "import { HugeiconsIcon } from '@hugeicons/react'\nimport { Delete02Icon } from '@hugeicons/core-free-icons'\n\n<HugeiconsIcon icon={Delete02Icon} size={20} />",
+    "regla": "El icono es un dato, no un componente: nunca <Delete02Icon />. Comprueba que el nombre exista antes de usarlo."
+  },
+  "tokens_del_tema": {
+    "colores": [
+      "background",
+      "foreground",
+      "card",
+      "card-foreground",
+      "popover",
+      "popover-foreground",
+      "primary",
+      "primary-foreground",
+      "secondary",
+      "secondary-foreground",
+      "muted",
+      "muted-foreground",
+      "accent",
+      "accent-foreground",
+      "destructive",
+      "destructive-foreground",
+      "border",
+      "input",
+      "ring",
+      "sidebar",
+      "sidebar-foreground",
+      "sidebar-primary",
+      "sidebar-primary-foreground",
+      "sidebar-accent",
+      "sidebar-accent-foreground",
+      "sidebar-border",
+      "sidebar-ring",
+      "chart-1",
+      "chart-2",
+      "chart-3",
+      "chart-4",
+      "chart-5",
+      "success",
+      "success-foreground",
+      "info",
+      "info-foreground",
+      "premium",
+      "premium-foreground",
+      "warning",
+      "warning-foreground",
+      "focus",
+      "focus-foreground",
+      "invert",
+      "invert-foreground"
+    ],
+    "uso": "Con prefijo de Tailwind: bg-<token>, text-<token>, border-<token>, ring-<token> (por ejemplo bg-card, text-muted-foreground, border-border). En estilos en línea o SVG: var(--<token>), por ejemplo var(--chart-2).",
+    "prohibido": [
+      "#3b82f6",
+      "rgb(…)",
+      "oklch(…)",
+      "bg-blue-500",
+      "text-slate-700",
+      "border-zinc-200",
+      "tamaños de fuente fijos"
+    ]
+  },
+  "librerias_de_ui_prohibidas": [
+    "@mui/*",
+    "antd",
+    "@chakra-ui/*",
+    "@mantine/*",
+    "react-bootstrap",
+    "bootstrap",
+    "primereact",
+    "semantic-ui-react",
+    "@headlessui/react",
+    "@radix-ui/* (usado directo)",
+    "styled-components",
+    "@emotion/*",
+    "componentes copiados de shadcn/ui",
+    "@reui/* (ReUI ya viene dentro de flux-ui)",
+    "lucide-react",
+    "react-icons",
+    "@heroicons/*",
+    "@fortawesome/*",
+    "SVG pegados a mano"
+  ],
+  "diferencias_con_la_libreria": "Lo que el playground hace distinto de @ubits/flux-ui (y del Storybook), revalidado contra la versión instalada, está en ai-tools/flux-ui/diferencias.json y en la pestaña /design-system/componentes/dev. Antes de forzar un componente con «!», mira ahí si ya está resuelto o pedido.",
+  "trampas_conocidas": [
+    "Checkbox con indeterminate pinta el mismo visto que marcado (la librería siempre dibuja Tick02Icon), así que \"a medias\" se lee como \"todo\". No lo uses para selecciones parciales: di la parte elegida en texto al lado (p. ej. \"3 elegidas a mano\").",
+    "Field estira a lo ancho todos sus hijos directos (*:w-full) y esa regla le gana a una clase de ancho. Para un campo angosto (NumberField, Input corto) el ancho va en un segundo contenedor: <Field><div className=\"flex items-center gap-2\"><div className=\"w-40\">…</div></div></Field>.",
+    "Slider devuelve un número cuando tiene un solo tirador y un arreglo cuando es un rango. Con un solo tirador, (v as number[])[0] deja el valor en NaN al moverlo con el teclado: resuelve el valor con Array.isArray(v) ? v[0] : v.",
+    "CardHeader del tema es una rejilla: className=\"flex-row\" no le gana. Para icono y texto en una fila, mete la fila en un div dentro del CardHeader (lo mismo que PopoverHeader).",
+    "SortableItem reparte los atributos de arrastre sobre la fila entera (role=\"button\", tabIndex), así que la fila sale como botón en el árbol de accesibilidad aunque uses SortableItemHandle. Es como viene de ReUI: no lo parches, y evita meter una etapa \"fija\" dentro de la lista (con disabled sale apagada, como si no sirviera): dibújala aparte.",
+    "DataGridList no ordena, filtra ni pagina por su cuenta: avisa por callbacks (sort, search, onColumnFiltersChange, pagination) y espera recibir \"data\" ya resuelta.",
+    "DataGridList: declara \"columns\" y \"columnFilters\" fuera del componente (o memorizados). Si se crean en cada render, el filtro se cierra al marcar la primera opción y el menú de columnas entra en bucle.",
+    "DataGridList: el asidero para arrastrar columnas lo decide cada columna, no layout.reorderable. Para quitarlo (y ganar ancho) pon enableColumnOrdering: false en cada columna, además de layout: { reorderable: false }. El tipo de las columnas no declara esa opción: guárdala en una constante (const SIN_ARRASTRE = { enableColumnOrdering: false }) y espárcela con ...SIN_ARRASTRE, o la compilación falla.",
+    "DataGridList con actions.item y sin selection deja una franja vacía encima de la tabla (la barra de acciones sobre filas seleccionadas). Con frame, usa frame.toolbar: \"header\" para que no aparezca.",
+    "DataGridList con frame se ve más pesado que los bloques de ReUI si no se le dice: (1) cardVariant: \"borderless\", porque si no la tabla arma otra caja con borde dentro del panel y los dos bordes pegados se leen como un trazo grueso; (2) layout.resizable: false, porque al poder cambiar el ancho añade una columna de relleno al final, después de los «⋯», que queda como un hueco vacío (la columna de acciones no se puede fijar a la derecha); (3) layout.dense: true, que da la cabecera de 32 px y las celdas de ReUI. TablaDatos ya lo trae por defecto; el Storybook tiene los tres problemas en su ejemplo con Frame.",
+    "KanbanBoard trae \"sm:grid-cols-3\" por defecto: para otro número de columnas pon también la clase con \"sm:\" (p. ej. \"grid-cols-5 sm:grid-cols-5\"), o se queda en 3.",
+    "TabsList variant=\"line\" estira cada pestaña (flex-1). Para pestañas alineadas a la izquierda sobre la línea completa, pon className=\"flex-none\" en cada TabsTrigger.",
+    "AvatarGroup está pensado para fotos: con iniciales, el solapamiento tapa la segunda letra. Sin fotos, no lo uses; muestra la lista o el número de personas.",
+    "Gráfico de dona con recharts 2: LabelList con position=\"inside\" no pinta nada en Pie. Pon el total con <Label position=\"center\"> dentro de Pie y la leyenda aparte con TrafficLight.",
+    "DataGridList: los textos de la paginación (\"Rows per page\", \"1 - 8 of 11\") salen en inglés y \"labels\" no los cubre. No le pases pagination: usa TablaDatos (src/modules/design-system/data-grid/tabla-datos.tsx), que es la misma tabla con el pie de paginación del proyecto en español dentro de su marco.",
+    "Progress ya pinta su pista y su indicador: dentro solo van ProgressLabel y ProgressValue.",
+    "Toast: el proveedor se exporta como ToastToaster y los avisos se lanzan con toast.add({ type, title, description }). Sonner se exporta como SonnerToaster. En una pantalla no se usa ninguno de los dos: el aviso es notify(título, detalle, tipo) y el Toaster ya está en el RootLayout.",
+    "Chart (ChartContainer) trae su propia copia de recharts 3 dentro de dist: su ResponsiveContainer pasa la medida por un contexto que el gráfico del proyecto no ve y sale vacío sin error. Dale al gráfico width y height en números (mide el marco con un ResizeObserver si tiene que llenar) y usa Tooltip de \"recharts\" con content={<ChartTooltipContent />}; ChartTooltip de flux-ui no se abre.",
+    "Sidebar: el ancho se fija con style={{ \"--sidebar-width\": \"272px\" }}; una clase no le gana al estilo en línea del componente.",
+    "Select de Base UI: para mostrar la etiqueta elegida usa <SelectValue>{(v) => …}</SelectValue>.",
+    "Badge \"focus-light\" sale con el texto casi blanco sobre su fondo translúcido en tema claro (text-focus-foreground): usa \"focus-outline\". Sobre una foto, ponle una base bg-card del tamaño del badge.",
+    "Un <Input type=\"file\"> escondido con className=\"sr-only\" se estira: el w-full del Input le gana al ancho de 1 px de sr-only y, como queda en posición absoluta, abre scroll horizontal en toda la pantalla. Escóndelo con className=\"hidden\" (el .click() desde un botón sigue abriendo el selector).",
+    "TablaDatos no deja arrancar con columnas ocultas: DataGridList no expone su visibilidad inicial. Todas salen visibles y se ocultan desde «Personalizar columnas» (pedido a la librería en diferencias.json).",
+    "DataGridList: actions.item es el mismo menú para todas las filas (disabled no depende de la fila). Si las acciones cambian según el estado de la fila, arma una columna propia con DropdownMenu y pásale los manejadores por contexto, para que \"columns\" siga fuera del componente. Ejemplo: /design-system/data-grid, pestaña «Evaluaciones 360°».",
+    "DropdownMenuContent toma el ancho del botón que lo abre (w-(--anchor-width)). Con un botón de icono el menú queda angosto y min-w-* no le gana al tema: dale un ancho con w-52 o w-56.",
+    "AlertDialogAction es un Button, no cierra el diálogo. Controla open/onOpenChange y ciérralo en su onClick; AlertDialogCancel sí cierra solo.",
+    "Button con render={<Link to=\"…\" />} necesita nativeButton={false}; si no, Base UI avisa en consola que esperaba un <button> nativo. SidebarMenuButton y BreadcrumbLink no lo necesitan.",
+    "Los estilos del tema no están en capas, así que una clase de relleno o tamaño no les gana (Card con py-0 conserva su relleno, Avatar con size-20 no crece). Para una imagen a sangre en Card, la <img> tiene que ser el primer hijo del Card; si va dentro de otra caja, ponla dentro de CardContent con esquinas redondeadas.",
+    "Calendar sale en inglés y no se puede importar el idioma de react-day-picker (no está permitido). Pasa formatters={CALENDARIO_ES} (de src/modules/design-system/formularios/rango-de-fechas.tsx) y weekStartsOn={1}; para un campo de un día usa CampoFecha del mismo archivo. Para un rango de fechas no hay DualDateRangePicker instalado: Calendar mode=\"range\" dentro de Popover (ver src/modules/design-system/formularios/rango-de-fechas.tsx).",
+    "DropdownMenuItem variant=\"destructive\" pierde el rojo: el modo translúcido de los menús (.cn-menu-translucent) le fuerza text-accent-foreground y se ve como cualquier otra opción. Deja «Cerrar sesión» y similares con la variante por defecto. Está pedido a la librería (/design-system/componentes/dev).",
+    "DropdownMenuRadioItem y DropdownMenuCheckboxItem no cierran el menú al elegir (closeOnClick es false por defecto en Base UI). Para un selector que se cierra al elegir (cambiar de empresa) pon closeOnClick.",
+    "ItemDescription corta el texto a dos líneas. Para textos más largos dentro de un Item (novedades, sugerencias) usa <Text variant=\"muted\" size=\"sm\">.",
+    "Heading solo acepta as=\"h1\"…\"h6\". Para una cifra grande con la tipografía de Heading, hazla el título de su tarjeta (as=\"h3\" level={2}) y agrega el nombre en un <span className=\"sr-only\">.",
+    "PopoverHeader es una columna del tema y className=\"flex-row\" no le gana. Para título y acción en una fila usa un div con flex y PopoverTitle dentro.",
+    "FrameFooter es una columna (flex-col): para texto y botones en una fila pon className=\"flex flex-row items-center justify-between\"; sin flex-row todo queda centrado y apilado.",
+    "Frame dense no quita el relleno del marco en esta versión (el panel queda 2 px adentro y con márgenes negativos). Usa Frame normal.",
+    "AlertDescription es una grilla: cada hijo (texto, <strong>) va en su propia fila. Envuelve la frase en un <p>.",
+    "Dentro de un contenedor con la clase \"dark\" (p. ej. una pantalla oscura dentro de la app clara), el panel de Frame sigue blanco porque usa --color-card de la raíz. Ahí usa Card.",
+    "MessageAvatar va abajo del mensaje (self-end). Para la bolita junto a la primera línea, className=\"self-start\".",
+    "MessageScroller necesita MessageScrollerProvider. Con autoScroll y defaultScrollPosition=\"start\" puede saltar al final al montar si el contenido crece; mejor sin autoScroll y llamar scrollToEnd de useMessageScroller() cuando llega un mensaje.",
+    "DialogContent (y CommandDialog) toma el ancho máximo del tema (unos 512 px): sm:max-w-2xl no le gana."
+  ],
+  "componentes": [
+    {
+      "nombre": "Accordion",
+      "slug": "accordion",
+      "categoria": "Components",
+      "usar_para": "Secciones que se abren y cierran una a una",
+      "buscar": [
+        "acordeón",
+        "desplegable",
+        "faq",
+        "secciones"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Accordion",
+        "AccordionContent",
+        "AccordionItem",
+        "AccordionTrigger"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-accordion--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-accordion--playground"
+      }
+    },
+    {
+      "nombre": "ActionDropdown",
+      "slug": "action-dropdown",
+      "categoria": "Core",
+      "usar_para": "Botón que abre una lista de acciones con icono; se alimenta con la prop data",
+      "buscar": [
+        "acciones",
+        "botón con menú",
+        "más opciones"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "ActionDropdown"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-actiondropdown--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-actiondropdown--playground"
+      }
+    },
+    {
+      "nombre": "Alert",
+      "slug": "alert",
+      "categoria": "Components",
+      "usar_para": "Aviso en línea dentro de una sección (6 tonos: default, info, success, warning, destructive, invert)",
+      "buscar": [
+        "aviso",
+        "alerta",
+        "mensaje",
+        "banner",
+        "error",
+        "advertencia"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Alert",
+        "AlertAction",
+        "AlertDescription",
+        "AlertTitle"
+      ],
+      "variantes": {
+        "Alert": {
+          "variant": [
+            "default",
+            "destructive",
+            "info",
+            "success",
+            "warning",
+            "invert"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-alert--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-alert--playground"
+      }
+    },
+    {
+      "nombre": "AlertDialog",
+      "slug": "alert-dialog",
+      "categoria": "Components",
+      "usar_para": "Diálogo que exige confirmar algo irreversible",
+      "buscar": [
+        "confirmar",
+        "eliminar",
+        "borrar",
+        "modal de confirmación"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "AlertDialog",
+        "AlertDialogAction",
+        "AlertDialogCancel",
+        "AlertDialogContent",
+        "AlertDialogDescription",
+        "AlertDialogFooter",
+        "AlertDialogHeader",
+        "AlertDialogMedia",
+        "AlertDialogOverlay",
+        "AlertDialogPortal",
+        "AlertDialogTitle",
+        "AlertDialogTrigger"
+      ],
+      "variantes": {
+        "AlertDialogContent": {
+          "size": [
+            "default",
+            "sm"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-alertdialog--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-alertdialog--playground"
+      }
+    },
+    {
+      "nombre": "AspectRatio",
+      "slug": "aspect-ratio",
+      "categoria": "Components",
+      "usar_para": "Mantiene una proporción fija (16:9, 1:1) para imágenes o videos",
+      "buscar": [
+        "proporción",
+        "imagen",
+        "video",
+        "miniatura"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "AspectRatio"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-aspectratio--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-aspectratio--playground"
+      }
+    },
+    {
+      "nombre": "Attachment",
+      "slug": "attachment",
+      "categoria": "Components",
+      "usar_para": "Archivo adjunto con estado de subida (idle, uploading, processing, error, done), miniatura y acciones",
+      "buscar": [
+        "adjunto",
+        "archivo",
+        "subir",
+        "documento",
+        "carga de archivos"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Attachment",
+        "AttachmentAction",
+        "AttachmentActions",
+        "AttachmentContent",
+        "AttachmentDescription",
+        "AttachmentGroup",
+        "AttachmentMedia",
+        "AttachmentTitle",
+        "AttachmentTrigger"
+      ],
+      "variantes": {
+        "Attachment": {
+          "size": [
+            "default",
+            "xs",
+            "sm"
+          ],
+          "orientation": [
+            "horizontal",
+            "vertical"
+          ]
+        },
+        "AttachmentMedia": {
+          "variant": [
+            "icon",
+            "image"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-attachment--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-attachment--playground"
+      }
+    },
+    {
+      "nombre": "Autocomplete",
+      "slug": "autocomplete",
+      "categoria": "ReUI",
+      "usar_para": "Campo de texto que sugiere opciones mientras escribes",
+      "buscar": [
+        "autocompletar",
+        "sugerencias",
+        "buscador con opciones"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Autocomplete",
+        "AutocompleteArrow",
+        "AutocompleteBackdrop",
+        "AutocompleteClear",
+        "AutocompleteCollection",
+        "AutocompleteContent",
+        "AutocompleteEmpty",
+        "AutocompleteGroup",
+        "AutocompleteGroupLabel",
+        "AutocompleteInput",
+        "AutocompleteItem",
+        "AutocompleteList",
+        "AutocompletePortal",
+        "AutocompletePositioner",
+        "AutocompleteRow",
+        "AutocompleteSeparator",
+        "AutocompleteStatus",
+        "AutocompleteTrigger",
+        "AutocompleteValue"
+      ],
+      "variantes": {
+        "AutocompleteInput": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-autocomplete--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-autocomplete--playground"
+      }
+    },
+    {
+      "nombre": "Avatar",
+      "slug": "avatar",
+      "categoria": "ReUI",
+      "usar_para": "Foto o inicial de una persona",
+      "buscar": [
+        "avatar",
+        "foto de perfil",
+        "usuario",
+        "iniciales"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Avatar",
+        "AvatarBadge",
+        "AvatarFallback",
+        "AvatarGroup",
+        "AvatarGroupCount",
+        "AvatarImage"
+      ],
+      "variantes": {
+        "Avatar": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-avatar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-avatar--playground"
+      }
+    },
+    {
+      "nombre": "Badge",
+      "slug": "badge",
+      "categoria": "Core",
+      "usar_para": "Etiqueta corta de estado o categoría",
+      "buscar": [
+        "etiqueta",
+        "chip",
+        "estado",
+        "tag",
+        "insignia"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Badge"
+      ],
+      "variantes": {
+        "Badge": {
+          "variant": [
+            "default",
+            "outline",
+            "secondary",
+            "destructive",
+            "info",
+            "success",
+            "warning",
+            "invert",
+            "focus",
+            "primary-light",
+            "warning-light",
+            "success-light",
+            "info-light",
+            "destructive-light",
+            "invert-light",
+            "focus-light",
+            "primary-outline",
+            "warning-outline",
+            "success-outline",
+            "info-outline",
+            "destructive-outline",
+            "invert-outline",
+            "focus-outline"
+          ],
+          "size": [
+            "default",
+            "xs",
+            "sm",
+            "lg",
+            "xl"
+          ],
+          "radius": [
+            "default",
+            "full"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-badge--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-badge--playground"
+      }
+    },
+    {
+      "nombre": "Breadcrumb",
+      "slug": "breadcrumb",
+      "categoria": "Components",
+      "usar_para": "Migas de pan: dónde estás dentro de la navegación",
+      "buscar": [
+        "migas",
+        "ruta",
+        "navegación jerárquica"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Breadcrumb",
+        "BreadcrumbEllipsis",
+        "BreadcrumbItem",
+        "BreadcrumbLink",
+        "BreadcrumbList",
+        "BreadcrumbPage",
+        "BreadcrumbSeparator"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-breadcrumb--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-breadcrumb--playground"
+      }
+    },
+    {
+      "nombre": "Bubble",
+      "slug": "bubble",
+      "categoria": "Components",
+      "usar_para": "Burbuja de mensaje de chat, alineada a un lado, con reacciones",
+      "buscar": [
+        "burbuja",
+        "chat",
+        "mensaje",
+        "conversación"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Bubble",
+        "BubbleContent",
+        "BubbleGroup",
+        "BubbleReactions"
+      ],
+      "variantes": {
+        "Bubble": {
+          "variant": [
+            "default",
+            "outline",
+            "secondary",
+            "ghost",
+            "destructive",
+            "muted",
+            "tinted"
+          ],
+          "align": [
+            "start",
+            "end"
+          ]
+        },
+        "BubbleReactions": {
+          "align": [
+            "start",
+            "end"
+          ],
+          "side": [
+            "top",
+            "bottom"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-bubble--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-bubble--playground"
+      }
+    },
+    {
+      "nombre": "Button",
+      "slug": "button",
+      "categoria": "Core",
+      "usar_para": "Botón de acción (default, outline, secondary, ghost, destructive, link)",
+      "buscar": [
+        "botón",
+        "acción",
+        "cta"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Button"
+      ],
+      "variantes": {
+        "Button": {
+          "variant": [
+            "link",
+            "default",
+            "outline",
+            "secondary",
+            "ghost",
+            "destructive"
+          ],
+          "size": [
+            "icon",
+            "default",
+            "xs",
+            "sm",
+            "lg",
+            "icon-xs",
+            "icon-sm",
+            "icon-lg"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-button--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-button--playground"
+      }
+    },
+    {
+      "nombre": "ButtonGroup",
+      "slug": "button-group",
+      "categoria": "Components",
+      "usar_para": "Varios botones pegados como un solo control",
+      "buscar": [
+        "grupo de botones",
+        "segmentado"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "ButtonGroup",
+        "ButtonGroupSeparator",
+        "ButtonGroupText"
+      ],
+      "variantes": {
+        "ButtonGroup": {
+          "orientation": [
+            "horizontal",
+            "vertical"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-buttongroup--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-buttongroup--playground"
+      }
+    },
+    {
+      "nombre": "Calendar",
+      "slug": "calendar",
+      "categoria": "ReUI",
+      "usar_para": "Calendario para elegir fechas",
+      "buscar": [
+        "calendario",
+        "fecha",
+        "día"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Calendar",
+        "CalendarDayButton"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-calendar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-calendar--playground"
+      }
+    },
+    {
+      "nombre": "Card",
+      "slug": "card",
+      "categoria": "Components",
+      "usar_para": "Tarjeta contenedora con cabecera, contenido y pie",
+      "buscar": [
+        "tarjeta",
+        "card",
+        "panel",
+        "caja",
+        "kpi"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Card",
+        "CardAction",
+        "CardContent",
+        "CardDescription",
+        "CardFooter",
+        "CardHeader",
+        "CardTitle"
+      ],
+      "variantes": {
+        "Card": {
+          "size": [
+            "default",
+            "sm"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-card--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-card--playground"
+      }
+    },
+    {
+      "nombre": "Carousel",
+      "slug": "carousel",
+      "categoria": "Components",
+      "usar_para": "Carrusel de elementos con flechas anterior y siguiente",
+      "buscar": [
+        "carrusel",
+        "slider de imágenes",
+        "galería"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Carousel",
+        "CarouselContent",
+        "CarouselItem",
+        "CarouselNext",
+        "CarouselPrevious",
+        "useCarousel",
+        "useFxCarousel"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-carousel--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-carousel--playground"
+      }
+    },
+    {
+      "nombre": "Cascader",
+      "slug": "cascader",
+      "categoria": "ReUI",
+      "usar_para": "Selector jerárquico por niveles (país → ciudad → sede)",
+      "buscar": [
+        "selector jerárquico",
+        "niveles",
+        "cascada",
+        "árbol de opciones"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Cascader",
+        "CascaderAction",
+        "CascaderActionsContext",
+        "CascaderBack",
+        "CascaderBreadcrumb",
+        "CascaderChip",
+        "CascaderChips",
+        "CascaderColumnPanel",
+        "CascaderColumns",
+        "CascaderContent",
+        "CascaderEmpty",
+        "CascaderFooter",
+        "CascaderGroup",
+        "CascaderHighlightContext",
+        "CascaderInput",
+        "CascaderItem",
+        "CascaderItems",
+        "CascaderLabel",
+        "CascaderList",
+        "CascaderNav",
+        "CascaderPanel",
+        "CascaderRenderContext",
+        "CascaderSeparator",
+        "CascaderStateContext",
+        "CascaderStatus",
+        "CascaderSubmenu",
+        "CascaderSubmenuContent",
+        "CascaderSubmenuTrigger",
+        "CascaderTrigger",
+        "CascaderValue",
+        "CascaderVirtualColumn",
+        "CascaderVirtualItems",
+        "useCascader",
+        "useCascaderActions",
+        "useCascaderAnchor",
+        "useCascaderHasActions",
+        "useCascaderHighlight",
+        "useCascaderLoadState",
+        "useCascaderLoader",
+        "useCascaderRender",
+        "useCascaderSelection",
+        "useCascaderState",
+        "useCascaderSubmenu",
+        "useCascaderVirtualizer"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-cascader--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-cascader--playground"
+      }
+    },
+    {
+      "nombre": "Chart",
+      "slug": "chart",
+      "categoria": "Data",
+      "usar_para": "Marco de gráficos (ChartContainer, ChartTooltipContent, ChartLegendContent). OJO: trae su propia copia de recharts; ver trampasConocidas",
+      "buscar": [
+        "gráfico",
+        "chart",
+        "estadística"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "ChartContainer",
+        "ChartLegend",
+        "ChartLegendContent",
+        "ChartStyle",
+        "ChartTooltip",
+        "ChartTooltipContent"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/data-chart--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/data-chart--playground"
+      }
+    },
+    {
+      "nombre": "Checkbox",
+      "slug": "checkbox",
+      "categoria": "Components",
+      "usar_para": "Casilla de verificación",
+      "buscar": [
+        "casilla",
+        "check",
+        "marcar",
+        "aceptar"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Checkbox"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-checkbox--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-checkbox--playground"
+      }
+    },
+    {
+      "nombre": "CodeBlock",
+      "slug": "code-block",
+      "categoria": "ReUI",
+      "usar_para": "Bloque de código con botones para copiar, descargar y expandir",
+      "buscar": [
+        "código",
+        "snippet",
+        "copiar código"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "CodeBlock",
+        "CodeBlockContent",
+        "CodeBlockCopyButton",
+        "CodeBlockDownloadButton",
+        "CodeBlockExpandButton",
+        "CodeBlockHeader",
+        "CodeBlockLanguage",
+        "CodeBlockLineActions",
+        "CodeBlockTitle",
+        "CodeBlockWrapToggle",
+        "useCodeBlockConfig",
+        "useCodeBlockFolding",
+        "useCodeBlockSelection"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-codeblock--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-codeblock--playground"
+      }
+    },
+    {
+      "nombre": "Collapsible",
+      "slug": "collapsible",
+      "categoria": "Components",
+      "usar_para": "Bloque que se muestra u oculta",
+      "buscar": [
+        "plegable",
+        "mostrar más",
+        "expandir"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Collapsible",
+        "CollapsibleContent",
+        "CollapsibleTrigger"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-collapsible--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-collapsible--playground"
+      }
+    },
+    {
+      "nombre": "Combobox",
+      "slug": "combobox",
+      "categoria": "Components",
+      "usar_para": "Selector con buscador",
+      "buscar": [
+        "combobox",
+        "selector con búsqueda"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Combobox",
+        "ComboboxChip",
+        "ComboboxChips",
+        "ComboboxChipsInput",
+        "ComboboxCollection",
+        "ComboboxContent",
+        "ComboboxEmpty",
+        "ComboboxGroup",
+        "ComboboxInput",
+        "ComboboxItem",
+        "ComboboxLabel",
+        "ComboboxList",
+        "ComboboxSeparator",
+        "ComboboxTrigger",
+        "ComboboxValue",
+        "useComboboxAnchor",
+        "useFxComboboxAnchor"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-combobox--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-combobox--playground"
+      }
+    },
+    {
+      "nombre": "Command",
+      "slug": "command",
+      "categoria": "Components",
+      "usar_para": "Paleta de comandos tipo ⌘K",
+      "buscar": [
+        "buscador global",
+        "paleta de comandos"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Command",
+        "CommandDialog",
+        "CommandEmpty",
+        "CommandGroup",
+        "CommandInput",
+        "CommandItem",
+        "CommandList",
+        "CommandSeparator",
+        "CommandShortcut"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-command--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-command--playground"
+      }
+    },
+    {
+      "nombre": "ContextMenu",
+      "slug": "context-menu",
+      "categoria": "Components",
+      "usar_para": "Menú que aparece con clic derecho",
+      "buscar": [
+        "clic derecho",
+        "menú contextual"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "ContextMenu",
+        "ContextMenuCheckboxItem",
+        "ContextMenuContent",
+        "ContextMenuGroup",
+        "ContextMenuItem",
+        "ContextMenuLabel",
+        "ContextMenuPortal",
+        "ContextMenuRadioGroup",
+        "ContextMenuRadioItem",
+        "ContextMenuSeparator",
+        "ContextMenuShortcut",
+        "ContextMenuSub",
+        "ContextMenuSubContent",
+        "ContextMenuSubTrigger",
+        "ContextMenuTrigger"
+      ],
+      "variantes": {
+        "ContextMenuItem": {
+          "variant": [
+            "default",
+            "destructive"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-contextmenu--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-contextmenu--playground"
+      }
+    },
+    {
+      "nombre": "DataGrid",
+      "slug": "data-grid",
+      "categoria": "Data",
+      "usar_para": "Tabla de bajo nivel (TanStack). Preferir data-grid-list",
+      "buscar": [
+        "tabla avanzada",
+        "grid"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "DataGrid",
+        "useFxDataGrid"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/data-datagrid--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/data-datagrid--playground"
+      }
+    },
+    {
+      "nombre": "DataGridList",
+      "slug": "data-grid-list",
+      "categoria": "Data",
+      "usar_para": "LA tabla del sistema: orden, filtros, búsqueda, paginación, selección, acciones masivas, densidad y estados vacíos",
+      "buscar": [
+        "tabla",
+        "lista",
+        "grid",
+        "listado",
+        "registros",
+        "filas",
+        "columnas"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "CustomizableListEmptyState",
+        "DataGridList",
+        "DataGridListColumnFilter",
+        "DataGridListTable",
+        "useDataGridListLabels"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/data-datagridlist--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/data-datagridlist--playground"
+      }
+    },
+    {
+      "nombre": "DateSelector",
+      "slug": "date-selector",
+      "categoria": "ReUI",
+      "usar_para": "Selector de fecha o rango de fechas",
+      "buscar": [
+        "fecha",
+        "rango de fechas",
+        "date picker"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "DateSelector",
+        "useDateSelector",
+        "useDateSelectorContext"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-dateselector--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-dateselector--playground"
+      }
+    },
+    {
+      "nombre": "Dialog",
+      "slug": "dialog",
+      "categoria": "Components",
+      "usar_para": "Ventana modal",
+      "buscar": [
+        "modal",
+        "diálogo",
+        "ventana emergente"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Dialog",
+        "DialogClose",
+        "DialogContent",
+        "DialogDescription",
+        "DialogFooter",
+        "DialogHeader",
+        "DialogOverlay",
+        "DialogPortal",
+        "DialogTitle",
+        "DialogTrigger"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-dialog--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-dialog--playground"
+      }
+    },
+    {
+      "nombre": "Direction",
+      "slug": "direction",
+      "categoria": "Core",
+      "usar_para": "Proveedor de dirección de lectura (izquierda a derecha o RTL)",
+      "buscar": [
+        "rtl",
+        "dirección"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "DirectionProvider",
+        "useDirection",
+        "useFxDirection"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-directionprovider--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-directionprovider--playground"
+      }
+    },
+    {
+      "nombre": "Drawer",
+      "slug": "drawer",
+      "categoria": "Components",
+      "usar_para": "Panel que sube desde abajo (móvil)",
+      "buscar": [
+        "drawer",
+        "panel inferior"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Drawer",
+        "DrawerClose",
+        "DrawerContent",
+        "DrawerDescription",
+        "DrawerFooter",
+        "DrawerHeader",
+        "DrawerOverlay",
+        "DrawerPortal",
+        "DrawerSwipeHandle",
+        "DrawerTitle",
+        "DrawerTrigger"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-drawer--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-drawer--playground"
+      }
+    },
+    {
+      "nombre": "DropdownMenu",
+      "slug": "dropdown-menu",
+      "categoria": "Components",
+      "usar_para": "Menú desplegable de acciones",
+      "buscar": [
+        "menú",
+        "opciones",
+        "tres puntos",
+        "más acciones"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "DropdownMenu",
+        "DropdownMenuCheckboxItem",
+        "DropdownMenuContent",
+        "DropdownMenuGroup",
+        "DropdownMenuItem",
+        "DropdownMenuLabel",
+        "DropdownMenuPortal",
+        "DropdownMenuRadioGroup",
+        "DropdownMenuRadioItem",
+        "DropdownMenuSeparator",
+        "DropdownMenuShortcut",
+        "DropdownMenuSub",
+        "DropdownMenuSubContent",
+        "DropdownMenuSubTrigger",
+        "DropdownMenuTrigger"
+      ],
+      "variantes": {
+        "DropdownMenuItem": {
+          "variant": [
+            "default",
+            "destructive"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-dropdownmenu--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-dropdownmenu--playground"
+      }
+    },
+    {
+      "nombre": "Empty",
+      "slug": "empty",
+      "categoria": "Components",
+      "usar_para": "Estado vacío: sin datos, sin resultados, error o sin permiso",
+      "buscar": [
+        "vacío",
+        "sin datos",
+        "sin resultados",
+        "empty state"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Empty",
+        "EmptyContent",
+        "EmptyDescription",
+        "EmptyHeader",
+        "EmptyMedia",
+        "EmptyTitle"
+      ],
+      "variantes": {
+        "EmptyMedia": {
+          "variant": [
+            "icon",
+            "default"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-empty--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-empty--playground"
+      }
+    },
+    {
+      "nombre": "EventCalendar",
+      "slug": "event-calendar",
+      "categoria": "ReUI",
+      "usar_para": "Calendario de eventos con vistas de día, semana y mes",
+      "buscar": [
+        "agenda",
+        "eventos",
+        "calendario de citas",
+        "reuniones"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "EventCalendar",
+        "EventCalendarContent",
+        "EventCalendarContext",
+        "EventCalendarDatePicker",
+        "EventCalendarNav",
+        "EventCalendarNavNext",
+        "EventCalendarNavPrev",
+        "EventCalendarNavToday",
+        "EventCalendarTitle",
+        "EventCalendarToolbar",
+        "EventCalendarViewConfigContext",
+        "EventCalendarViewContext",
+        "EventCalendarViewSwitcher",
+        "useEventCalendar",
+        "useEventCalendarDay",
+        "useEventCalendarInteractions",
+        "useEventCalendarNavigation",
+        "useEventCalendarOccurrences",
+        "useEventCalendarSelection",
+        "useEventCalendarSelector",
+        "useEventCalendarSettings",
+        "useEventCalendarSettingsVersion",
+        "useEventCalendarState",
+        "useEventCalendarView",
+        "useEventCalendarViewConfig",
+        "useEventCalendarViewContext",
+        "useEventCalendarViewSettings",
+        "useEventCalendarWeek"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-eventcalendar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-eventcalendar--playground"
+      }
+    },
+    {
+      "nombre": "Field",
+      "slug": "field",
+      "categoria": "Components",
+      "usar_para": "Estructura de un campo de formulario: etiqueta, ayuda y error",
+      "buscar": [
+        "formulario",
+        "campo",
+        "label",
+        "error",
+        "validación"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Field",
+        "FieldContent",
+        "FieldDescription",
+        "FieldError",
+        "FieldGroup",
+        "FieldLabel",
+        "FieldLegend",
+        "FieldSeparator",
+        "FieldSet",
+        "FieldTitle"
+      ],
+      "variantes": {
+        "Field": {
+          "orientation": [
+            "horizontal",
+            "vertical",
+            "responsive"
+          ]
+        },
+        "FieldLegend": {
+          "variant": [
+            "legend",
+            "label"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-field--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-field--playground"
+      }
+    },
+    {
+      "nombre": "Filters",
+      "slug": "filters",
+      "categoria": "ReUI",
+      "usar_para": "Barra de filtros con chips",
+      "buscar": [
+        "filtros",
+        "filtrar",
+        "chips"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "FilterAdvancedRow",
+        "FilterChip",
+        "FilterFieldPicker",
+        "FilterOperatorPopover",
+        "FilterRuleMenuItems",
+        "FilterValuePopover",
+        "Filters",
+        "FiltersAdvanced",
+        "FiltersAdvancedPanel",
+        "FiltersBuilder",
+        "FiltersRow",
+        "useFilterActions",
+        "useFilterChipAutoOpen",
+        "useFilterChipFocused",
+        "useFilterFocus",
+        "useFilterFocusEmpty",
+        "useFilterFocusStore",
+        "useFilterOptions",
+        "useFilterRender",
+        "useFilterRuleDisplay",
+        "useFilterSegmentFocus",
+        "useFilterState",
+        "useFilterValueResolution"
+      ],
+      "variantes": {
+        "Filters": {
+          "variant": [
+            "basic",
+            "advanced"
+          ],
+          "size": [
+            "sm",
+            "default"
+          ]
+        },
+        "FiltersAdvanced": {
+          "align": [
+            "start",
+            "center",
+            "end"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-filters--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-filters--playground"
+      }
+    },
+    {
+      "nombre": "FloatingActionBar",
+      "slug": "floating-action-bar",
+      "categoria": "Components",
+      "usar_para": "Barra flotante de acciones sobre una selección",
+      "buscar": [
+        "barra flotante",
+        "acciones masivas"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "FloatingActionBar"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-floatingactionbar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-floatingactionbar--playground"
+      }
+    },
+    {
+      "nombre": "Frame",
+      "slug": "frame",
+      "categoria": "ReUI",
+      "usar_para": "Marco con cabecera y paneles",
+      "buscar": [
+        "marco",
+        "frame",
+        "contenedor"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Frame",
+        "FrameDescription",
+        "FrameFooter",
+        "FrameHeader",
+        "FramePanel",
+        "FrameTitle"
+      ],
+      "variantes": {
+        "Frame": {
+          "variant": [
+            "default",
+            "ghost",
+            "inverse"
+          ],
+          "spacing": [
+            "default",
+            "xs",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-frame--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-frame--playground"
+      }
+    },
+    {
+      "nombre": "Gantt",
+      "slug": "gantt",
+      "categoria": "ReUI",
+      "usar_para": "Diagrama de Gantt: tareas y dependencias sobre una línea de tiempo",
+      "buscar": [
+        "gantt",
+        "cronograma",
+        "planificación",
+        "proyecto"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Gantt",
+        "GanttBar",
+        "GanttContext",
+        "GanttDatePicker",
+        "GanttNav",
+        "GanttNavNext",
+        "GanttNavPrev",
+        "GanttNavToday",
+        "GanttScaleSwitcher",
+        "GanttTitle",
+        "GanttToolbar",
+        "GanttView",
+        "GanttViewConfigContext",
+        "useGantt",
+        "useGanttBarContext",
+        "useGanttInteractions",
+        "useGanttNavigation",
+        "useGanttNodeSchedules",
+        "useGanttOccurrences",
+        "useGanttScale",
+        "useGanttSelection",
+        "useGanttSelector",
+        "useGanttSettings",
+        "useGanttSettingsVersion",
+        "useGanttState",
+        "useGanttViewConfig"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-gantt--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-gantt--playground"
+      }
+    },
+    {
+      "nombre": "Heading",
+      "slug": "heading",
+      "categoria": "Core",
+      "usar_para": "Títulos (h1–h6) con la tipografía del tema",
+      "buscar": [
+        "título",
+        "encabezado",
+        "heading"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Heading"
+      ],
+      "variantes": {
+        "Heading": {
+          "level": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-heading--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-heading--playground"
+      }
+    },
+    {
+      "nombre": "HoverCard",
+      "slug": "hover-card",
+      "categoria": "Components",
+      "usar_para": "Tarjeta flotante al pasar el cursor, como una vista previa de perfil",
+      "buscar": [
+        "vista previa",
+        "tarjeta flotante",
+        "hover"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "HoverCard",
+        "HoverCardContent",
+        "HoverCardTrigger"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-hovercard--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-hovercard--playground"
+      }
+    },
+    {
+      "nombre": "IconStack",
+      "slug": "icon-stack",
+      "categoria": "ReUI",
+      "usar_para": "Varios iconos superpuestos en una pila",
+      "buscar": [
+        "iconos superpuestos",
+        "pila de iconos"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "IconStack"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-iconstack--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-iconstack--playground"
+      }
+    },
+    {
+      "nombre": "IconTile",
+      "slug": "icon-tile",
+      "categoria": "ReUI",
+      "usar_para": "Icono dentro de una baldosa de color",
+      "buscar": [
+        "icono con fondo",
+        "tile"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "IconTile"
+      ],
+      "variantes": {
+        "IconTile": {
+          "variant": [
+            "outline",
+            "frame",
+            "solid",
+            "elevated",
+            "soft"
+          ],
+          "size": [
+            "default",
+            "xs",
+            "sm",
+            "lg",
+            "xl"
+          ],
+          "radius": [
+            "default",
+            "full"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-icontile--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-icontile--playground"
+      }
+    },
+    {
+      "nombre": "Input",
+      "slug": "input",
+      "categoria": "Core",
+      "usar_para": "Campo de texto de una línea",
+      "buscar": [
+        "input",
+        "campo de texto",
+        "caja de texto"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Input"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-input--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-input--playground"
+      }
+    },
+    {
+      "nombre": "InputGroup",
+      "slug": "input-group",
+      "categoria": "Components",
+      "usar_para": "Campo con icono, prefijo, sufijo o botón pegado",
+      "buscar": [
+        "input con icono",
+        "buscador",
+        "prefijo"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "InputGroup",
+        "InputGroupAddon",
+        "InputGroupButton",
+        "InputGroupInput",
+        "InputGroupText",
+        "InputGroupTextarea"
+      ],
+      "variantes": {
+        "InputGroupAddon": {
+          "align": [
+            "inline-end",
+            "inline-start",
+            "block-end",
+            "block-start"
+          ]
+        },
+        "InputGroupButton": {
+          "variant": [
+            "link",
+            "default",
+            "outline",
+            "secondary",
+            "ghost",
+            "destructive"
+          ],
+          "size": [
+            "icon",
+            "default",
+            "xs",
+            "sm",
+            "lg",
+            "icon-xs",
+            "icon-sm",
+            "icon-lg"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-inputgroup--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-inputgroup--playground"
+      }
+    },
+    {
+      "nombre": "InputOtp",
+      "slug": "input-otp",
+      "categoria": "Components",
+      "usar_para": "Código de un solo uso por dígitos",
+      "buscar": [
+        "otp",
+        "código",
+        "verificación"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "InputOTP",
+        "InputOTPGroup",
+        "InputOTPSeparator",
+        "InputOTPSlot"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-inputotp--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-inputotp--playground"
+      }
+    },
+    {
+      "nombre": "Item",
+      "slug": "item",
+      "categoria": "Components",
+      "usar_para": "Fila de lista con icono, título, descripción y acciones",
+      "buscar": [
+        "fila",
+        "ítem",
+        "elemento de lista",
+        "lista"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Item",
+        "ItemActions",
+        "ItemContent",
+        "ItemDescription",
+        "ItemFooter",
+        "ItemGroup",
+        "ItemHeader",
+        "ItemMedia",
+        "ItemSeparator",
+        "ItemTitle"
+      ],
+      "variantes": {
+        "Item": {
+          "variant": [
+            "default",
+            "outline",
+            "muted"
+          ],
+          "size": [
+            "default",
+            "xs",
+            "sm"
+          ]
+        },
+        "ItemMedia": {
+          "variant": [
+            "icon",
+            "image",
+            "default"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-item--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-item--playground"
+      }
+    },
+    {
+      "nombre": "Kanban",
+      "slug": "kanban",
+      "categoria": "Data",
+      "usar_para": "Tablero de columnas con tarjetas arrastrables",
+      "buscar": [
+        "kanban",
+        "tablero",
+        "columnas"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Kanban",
+        "KanbanBoard",
+        "KanbanColumn",
+        "KanbanColumnContent",
+        "KanbanColumnHandle",
+        "KanbanItem",
+        "KanbanItemHandle",
+        "KanbanOverlay"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/data-kanban--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/data-kanban--playground"
+      }
+    },
+    {
+      "nombre": "Kbd",
+      "slug": "kbd",
+      "categoria": "Components",
+      "usar_para": "Atajo de teclado",
+      "buscar": [
+        "tecla",
+        "atajo",
+        "shortcut"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Kbd",
+        "KbdGroup"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-kbd--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-kbd--playground"
+      }
+    },
+    {
+      "nombre": "Label",
+      "slug": "label",
+      "categoria": "Components",
+      "usar_para": "Etiqueta de un campo",
+      "buscar": [
+        "label",
+        "etiqueta"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Label"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-label--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-label--playground"
+      }
+    },
+    {
+      "nombre": "Marker",
+      "slug": "marker",
+      "categoria": "Components",
+      "usar_para": "Marcador en línea con icono y texto (variantes default, border, separator)",
+      "buscar": [
+        "marcador",
+        "separador con texto",
+        "etiqueta en línea"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Marker",
+        "MarkerContent",
+        "MarkerIcon"
+      ],
+      "variantes": {
+        "Marker": {
+          "variant": [
+            "separator",
+            "default",
+            "border"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-marker--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-marker--playground"
+      }
+    },
+    {
+      "nombre": "Menubar",
+      "slug": "menubar",
+      "categoria": "Components",
+      "usar_para": "Barra de menús tipo aplicación de escritorio (Archivo, Editar…)",
+      "buscar": [
+        "barra de menús",
+        "menubar"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Menubar",
+        "MenubarCheckboxItem",
+        "MenubarContent",
+        "MenubarGroup",
+        "MenubarItem",
+        "MenubarLabel",
+        "MenubarMenu",
+        "MenubarPortal",
+        "MenubarRadioGroup",
+        "MenubarRadioItem",
+        "MenubarSeparator",
+        "MenubarShortcut",
+        "MenubarSub",
+        "MenubarSubContent",
+        "MenubarSubTrigger",
+        "MenubarTrigger"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-menubar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-menubar--playground"
+      }
+    },
+    {
+      "nombre": "Message",
+      "slug": "message",
+      "categoria": "Components",
+      "usar_para": "Mensaje de conversación con avatar, cabecera y pie",
+      "buscar": [
+        "mensaje",
+        "chat",
+        "comentario",
+        "conversación"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Message",
+        "MessageAvatar",
+        "MessageContent",
+        "MessageFooter",
+        "MessageGroup",
+        "MessageHeader"
+      ],
+      "variantes": {
+        "Message": {
+          "align": [
+            "start",
+            "end"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-message--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-message--playground"
+      }
+    },
+    {
+      "nombre": "MessageScroller",
+      "slug": "message-scroller",
+      "categoria": "Components",
+      "usar_para": "Contenedor de conversación con scroll que sigue al último mensaje",
+      "buscar": [
+        "chat",
+        "scroll de mensajes",
+        "conversación"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "MessageScroller",
+        "MessageScrollerButton",
+        "MessageScrollerContent",
+        "MessageScrollerItem",
+        "MessageScrollerProvider",
+        "MessageScrollerViewport",
+        "useFxMessageScroller",
+        "useFxMessageScrollerScrollable",
+        "useFxMessageScrollerVisibility",
+        "useMessageScroller",
+        "useMessageScrollerScrollable",
+        "useMessageScrollerVisibility"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-messagescroller--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-messagescroller--playground"
+      }
+    },
+    {
+      "nombre": "MultiSelect",
+      "slug": "multi-select",
+      "categoria": "Core",
+      "usar_para": "Selector de varias opciones",
+      "buscar": [
+        "selección múltiple",
+        "varias opciones"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "MultiSelect"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-multiselect--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-multiselect--playground"
+      }
+    },
+    {
+      "nombre": "NativeSelect",
+      "slug": "native-select",
+      "categoria": "Components",
+      "usar_para": "Selector nativo del navegador; útil en móvil",
+      "buscar": [
+        "select nativo",
+        "desplegable simple"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "NativeSelect",
+        "NativeSelectOptGroup",
+        "NativeSelectOption"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-nativeselect--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-nativeselect--playground"
+      }
+    },
+    {
+      "nombre": "NavigationMenu",
+      "slug": "navigation-menu",
+      "categoria": "Components",
+      "usar_para": "Menú de navegación horizontal con submenús desplegables",
+      "buscar": [
+        "menú superior",
+        "navegación",
+        "mega menú"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "NavigationMenu",
+        "NavigationMenuContent",
+        "NavigationMenuIndicator",
+        "NavigationMenuItem",
+        "NavigationMenuLink",
+        "NavigationMenuList",
+        "NavigationMenuPositioner",
+        "NavigationMenuTrigger"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-navigationmenu--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-navigationmenu--playground"
+      }
+    },
+    {
+      "nombre": "NumberField",
+      "slug": "number-field",
+      "categoria": "ReUI",
+      "usar_para": "Campo numérico con botones − y +",
+      "buscar": [
+        "número",
+        "cantidad",
+        "contador"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "NumberField",
+        "NumberFieldDecrement",
+        "NumberFieldGroup",
+        "NumberFieldIncrement",
+        "NumberFieldInput",
+        "NumberFieldScrubArea"
+      ],
+      "variantes": {
+        "NumberField": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        },
+        "NumberFieldDecrement": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        },
+        "NumberFieldGroup": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        },
+        "NumberFieldIncrement": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        },
+        "NumberFieldInput": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-numberfield--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-numberfield--playground"
+      }
+    },
+    {
+      "nombre": "Pagination",
+      "slug": "pagination",
+      "categoria": "Components",
+      "usar_para": "Paginación suelta (data-grid-list ya la trae)",
+      "buscar": [
+        "paginación",
+        "páginas"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Pagination",
+        "PaginationContent",
+        "PaginationEllipsis",
+        "PaginationItem",
+        "PaginationLink",
+        "PaginationNext",
+        "PaginationPrevious"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-pagination--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-pagination--playground"
+      }
+    },
+    {
+      "nombre": "PhoneInput",
+      "slug": "phone-input",
+      "categoria": "ReUI",
+      "usar_para": "Campo de teléfono con prefijo de país",
+      "buscar": [
+        "teléfono",
+        "celular"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "PhoneInput"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-phoneinput--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-phoneinput--playground"
+      }
+    },
+    {
+      "nombre": "Popover",
+      "slug": "popover",
+      "categoria": "Components",
+      "usar_para": "Globo flotante con contenido",
+      "buscar": [
+        "popover",
+        "globo"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Popover",
+        "PopoverContent",
+        "PopoverDescription",
+        "PopoverHeader",
+        "PopoverTitle",
+        "PopoverTrigger"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-popover--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-popover--playground"
+      }
+    },
+    {
+      "nombre": "Progress",
+      "slug": "progress",
+      "categoria": "Components",
+      "usar_para": "Barra de avance (renderiza su propia pista: no añadir ProgressTrack)",
+      "buscar": [
+        "progreso",
+        "avance",
+        "barra",
+        "porcentaje",
+        "carga"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Progress",
+        "ProgressIndicator",
+        "ProgressLabel",
+        "ProgressTrack",
+        "ProgressValue"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-progress--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-progress--playground"
+      }
+    },
+    {
+      "nombre": "RadioGroup",
+      "slug": "radio-group",
+      "categoria": "ReUI",
+      "usar_para": "Opción única entre varias",
+      "buscar": [
+        "radio",
+        "opción única"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "RadioGroup",
+        "RadioGroupItem"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-radiogroup--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-radiogroup--playground"
+      }
+    },
+    {
+      "nombre": "Rating",
+      "slug": "rating",
+      "categoria": "ReUI",
+      "usar_para": "Puntuación con estrellas",
+      "buscar": [
+        "estrellas",
+        "valoración",
+        "calificación"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Rating"
+      ],
+      "variantes": {
+        "Rating": {
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-rating--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-rating--playground"
+      }
+    },
+    {
+      "nombre": "Resizable",
+      "slug": "resizable",
+      "categoria": "Components",
+      "usar_para": "Paneles que se redimensionan arrastrando el borde",
+      "buscar": [
+        "paneles",
+        "dividir pantalla",
+        "redimensionar"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "ResizableHandle",
+        "ResizablePanel",
+        "ResizablePanelGroup"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-resizable--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-resizable--playground"
+      }
+    },
+    {
+      "nombre": "ScrollArea",
+      "slug": "scroll-area",
+      "categoria": "Components",
+      "usar_para": "Área con barra de desplazamiento con el estilo del tema",
+      "buscar": [
+        "scroll",
+        "desplazamiento",
+        "barra de scroll"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "ScrollArea",
+        "ScrollBar"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-scrollarea--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-scrollarea--playground"
+      }
+    },
+    {
+      "nombre": "Scrollspy",
+      "slug": "scrollspy",
+      "categoria": "ReUI",
+      "usar_para": "Resalta en un índice la sección visible mientras se hace scroll",
+      "buscar": [
+        "índice",
+        "tabla de contenidos",
+        "scrollspy"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Scrollspy"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-scrollspy--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-scrollspy--playground"
+      }
+    },
+    {
+      "nombre": "Select",
+      "slug": "select",
+      "categoria": "ReUI",
+      "usar_para": "Selector de una opción",
+      "buscar": [
+        "select",
+        "desplegable",
+        "lista de opciones"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Select",
+        "SelectContent",
+        "SelectGroup",
+        "SelectItem",
+        "SelectLabel",
+        "SelectScrollDownButton",
+        "SelectScrollUpButton",
+        "SelectSeparator",
+        "SelectTrigger",
+        "SelectValue"
+      ],
+      "variantes": {
+        "SelectTrigger": {
+          "size": [
+            "sm",
+            "default"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-select--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-select--playground"
+      }
+    },
+    {
+      "nombre": "Separator",
+      "slug": "separator",
+      "categoria": "Components",
+      "usar_para": "Línea divisoria",
+      "buscar": [
+        "separador",
+        "divisor",
+        "línea"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Separator"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-separator--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-separator--playground"
+      }
+    },
+    {
+      "nombre": "Sheet",
+      "slug": "sheet",
+      "categoria": "Components",
+      "usar_para": "Panel lateral deslizante",
+      "buscar": [
+        "panel lateral",
+        "sheet",
+        "cajón"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Sheet",
+        "SheetClose",
+        "SheetContent",
+        "SheetDescription",
+        "SheetFooter",
+        "SheetHeader",
+        "SheetTitle",
+        "SheetTrigger"
+      ],
+      "variantes": {
+        "SheetContent": {
+          "side": [
+            "top",
+            "right",
+            "bottom",
+            "left"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-sheet--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-sheet--playground"
+      }
+    },
+    {
+      "nombre": "Sidebar",
+      "slug": "sidebar",
+      "categoria": "Components",
+      "usar_para": "Barra lateral de navegación",
+      "buscar": [
+        "sidebar",
+        "menú lateral",
+        "navegación"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Sidebar",
+        "SidebarContent",
+        "SidebarFooter",
+        "SidebarGroup",
+        "SidebarGroupAction",
+        "SidebarGroupContent",
+        "SidebarGroupLabel",
+        "SidebarHeader",
+        "SidebarInput",
+        "SidebarInset",
+        "SidebarMenu",
+        "SidebarMenuAction",
+        "SidebarMenuBadge",
+        "SidebarMenuButton",
+        "SidebarMenuItem",
+        "SidebarMenuSkeleton",
+        "SidebarMenuSub",
+        "SidebarMenuSubButton",
+        "SidebarMenuSubItem",
+        "SidebarProvider",
+        "SidebarRail",
+        "SidebarSeparator",
+        "SidebarTrigger",
+        "useFxSidebar",
+        "useSidebar"
+      ],
+      "variantes": {
+        "Sidebar": {
+          "side": [
+            "left",
+            "right"
+          ],
+          "variant": [
+            "sidebar",
+            "floating",
+            "inset"
+          ]
+        },
+        "SidebarMenuButton": {
+          "variant": [
+            "default",
+            "outline"
+          ],
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        },
+        "SidebarMenuSubButton": {
+          "size": [
+            "sm",
+            "md"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-sidebar--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-sidebar--playground"
+      }
+    },
+    {
+      "nombre": "Skeleton",
+      "slug": "skeleton",
+      "categoria": "Components",
+      "usar_para": "Esqueleto de carga con la silueta del contenido",
+      "buscar": [
+        "skeleton",
+        "cargando",
+        "placeholder"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Skeleton"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-skeleton--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-skeleton--playground"
+      }
+    },
+    {
+      "nombre": "Slider",
+      "slug": "slider",
+      "categoria": "Components",
+      "usar_para": "Deslizador de valor",
+      "buscar": [
+        "slider",
+        "rango"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Slider"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-slider--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-slider--playground"
+      }
+    },
+    {
+      "nombre": "Sonner",
+      "slug": "sonner",
+      "categoria": "Components",
+      "usar_para": "Toasts estilo Sonner (el export se llama SonnerToaster)",
+      "buscar": [
+        "toast",
+        "notificación"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "SonnerToaster"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-sonner--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-sonner--playground"
+      }
+    },
+    {
+      "nombre": "Sortable",
+      "slug": "sortable",
+      "categoria": "ReUI",
+      "usar_para": "Lista que se reordena arrastrando sus elementos",
+      "buscar": [
+        "arrastrar",
+        "reordenar",
+        "drag and drop",
+        "ordenar"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Sortable",
+        "SortableItem",
+        "SortableItemHandle",
+        "SortableOverlay"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-sortable--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-sortable--playground"
+      }
+    },
+    {
+      "nombre": "Spinner",
+      "slug": "spinner",
+      "categoria": "Feedback",
+      "usar_para": "Indicador de carga giratorio",
+      "buscar": [
+        "spinner",
+        "cargando",
+        "loader"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Spinner"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/feedback-spinner--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/feedback-spinner--playground"
+      }
+    },
+    {
+      "nombre": "Stepper",
+      "slug": "stepper",
+      "categoria": "Progress",
+      "usar_para": "Formulario o flujo por pasos",
+      "buscar": [
+        "pasos",
+        "stepper",
+        "wizard",
+        "asistente"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Stepper",
+        "StepperContent",
+        "StepperDescription",
+        "StepperIndicator",
+        "StepperItem",
+        "StepperNav",
+        "StepperPanel",
+        "StepperSeparator",
+        "StepperTitle",
+        "StepperTrigger",
+        "useStepItem",
+        "useStepper"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/progress-stepper--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/progress-stepper--playground"
+      }
+    },
+    {
+      "nombre": "Switch",
+      "slug": "switch",
+      "categoria": "ReUI",
+      "usar_para": "Interruptor encendido/apagado",
+      "buscar": [
+        "switch",
+        "interruptor",
+        "toggle"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Switch"
+      ],
+      "variantes": {
+        "Switch": {
+          "size": [
+            "sm",
+            "default"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-switch--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-switch--playground"
+      }
+    },
+    {
+      "nombre": "Table",
+      "slug": "table",
+      "categoria": "ReUI",
+      "usar_para": "Tabla HTML simple sin lógica",
+      "buscar": [
+        "tabla simple"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Table",
+        "TableBody",
+        "TableCaption",
+        "TableCell",
+        "TableFooter",
+        "TableHead",
+        "TableHeader",
+        "TableRow"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/reui-table--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/reui-table--playground"
+      }
+    },
+    {
+      "nombre": "Tabs",
+      "slug": "tabs",
+      "categoria": "Components",
+      "usar_para": "Pestañas (variants: default, line, view, page)",
+      "buscar": [
+        "pestañas",
+        "tabs"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Tabs",
+        "TabsContent",
+        "TabsList",
+        "TabsTrigger"
+      ],
+      "variantes": {
+        "TabsList": {
+          "variant": [
+            "line",
+            "view",
+            "page",
+            "default"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-tabs--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-tabs--playground"
+      }
+    },
+    {
+      "nombre": "Text",
+      "slug": "text",
+      "categoria": "Core",
+      "usar_para": "Texto con variantes del tema (muted, lead, small…)",
+      "buscar": [
+        "texto",
+        "párrafo"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Text"
+      ],
+      "variantes": {
+        "Text": {
+          "variant": [
+            "blockquote",
+            "p",
+            "small",
+            "list",
+            "default",
+            "secondary",
+            "destructive",
+            "muted",
+            "large",
+            "lead",
+            "inlineCode"
+          ],
+          "size": [
+            "base",
+            "xs",
+            "sm",
+            "lg",
+            "xl"
+          ],
+          "weight": [
+            "bold",
+            "normal",
+            "medium",
+            "semibold"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-text--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-text--playground"
+      }
+    },
+    {
+      "nombre": "Textarea",
+      "slug": "textarea",
+      "categoria": "Components",
+      "usar_para": "Campo de texto de varias líneas",
+      "buscar": [
+        "textarea",
+        "comentario",
+        "descripción"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Textarea"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-textarea--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-textarea--playground"
+      }
+    },
+    {
+      "nombre": "ThemeProvider",
+      "slug": "theme-provider",
+      "categoria": "Core",
+      "usar_para": "Proveedor del tema de Ubits y del modo claro u oscuro; va en la raíz de la app",
+      "buscar": [
+        "tema",
+        "modo oscuro",
+        "dark mode",
+        "claro"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "ThemeContext",
+        "ThemeProvider",
+        "useFxTheme",
+        "useTheme"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-themeprovider--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-themeprovider--playground"
+      }
+    },
+    {
+      "nombre": "Timeline",
+      "slug": "timeline",
+      "categoria": "Feedback",
+      "usar_para": "Línea de tiempo de eventos",
+      "buscar": [
+        "timeline",
+        "actividad",
+        "historial"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Timeline",
+        "TimelineContent",
+        "TimelineDate",
+        "TimelineHeader",
+        "TimelineIndicator",
+        "TimelineItem",
+        "TimelineSeparator",
+        "TimelineTitle"
+      ],
+      "variantes": {
+        "Timeline": {
+          "orientation": [
+            "horizontal",
+            "vertical"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/feedback-timeline--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/feedback-timeline--playground"
+      }
+    },
+    {
+      "nombre": "Toast",
+      "slug": "toast",
+      "categoria": "Feedback",
+      "usar_para": "Avisos flotantes: toast.add({ type, title }) dentro de <ToastToaster>",
+      "buscar": [
+        "toast",
+        "notificación",
+        "aviso flotante"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Toast",
+        "ToastAction",
+        "ToastClose",
+        "ToastContent",
+        "ToastDescription",
+        "ToastPortal",
+        "ToastProvider",
+        "ToastTitle",
+        "ToastToaster",
+        "ToastViewport",
+        "toast",
+        "useToastManager"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/feedback-toaster--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/feedback-toaster--playground"
+      }
+    },
+    {
+      "nombre": "Toggle",
+      "slug": "toggle",
+      "categoria": "Components",
+      "usar_para": "Botón que se queda presionado",
+      "buscar": [
+        "toggle"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Toggle"
+      ],
+      "variantes": {
+        "Toggle": {
+          "variant": [
+            "default",
+            "outline"
+          ],
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-toggle--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-toggle--playground"
+      }
+    },
+    {
+      "nombre": "ToggleGroup",
+      "slug": "toggle-group",
+      "categoria": "Components",
+      "usar_para": "Grupo de toggles",
+      "buscar": [
+        "segmentado",
+        "toggle group"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "ToggleGroup",
+        "ToggleGroupItem"
+      ],
+      "variantes": {
+        "ToggleGroup": {
+          "variant": [
+            "default",
+            "outline"
+          ],
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ],
+          "orientation": [
+            "horizontal",
+            "vertical"
+          ]
+        },
+        "ToggleGroupItem": {
+          "variant": [
+            "default",
+            "outline"
+          ],
+          "size": [
+            "default",
+            "sm",
+            "lg"
+          ]
+        }
+      },
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-togglegroup--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-togglegroup--playground"
+      }
+    },
+    {
+      "nombre": "Tooltip",
+      "slug": "tooltip",
+      "categoria": "Components",
+      "usar_para": "Texto de ayuda al pasar el cursor",
+      "buscar": [
+        "tooltip",
+        "ayuda"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Tooltip",
+        "TooltipContent",
+        "TooltipProvider",
+        "TooltipTrigger"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-tooltip--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/components-tooltip--playground"
+      }
+    },
+    {
+      "nombre": "TrafficLight",
+      "slug": "traffic-light",
+      "categoria": "Core",
+      "usar_para": "Semáforo de estados: punto de color con etiqueta y valor; se alimenta con la prop data",
+      "buscar": [
+        "semáforo",
+        "estado",
+        "indicador de color"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "TrafficLight"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/core-trafficlight--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/core-trafficlight--playground"
+      }
+    },
+    {
+      "nombre": "Tree",
+      "slug": "tree",
+      "categoria": "Data",
+      "usar_para": "Árbol jerárquico",
+      "buscar": [
+        "árbol",
+        "jerarquía",
+        "carpetas"
+      ],
+      "importar_desde": "@ubits/flux-ui",
+      "exports": [
+        "Tree",
+        "TreeDragLine",
+        "TreeItem",
+        "TreeItemLabel"
+      ],
+      "variantes": {},
+      "storybook": {
+        "docs": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/data-tree--docs",
+        "historia": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/story/data-tree--playground"
+      }
+    }
+  ],
+  "utilidades": [
+    {
+      "nombre": "cn",
+      "uso": "Une clases de Tailwind sin conflictos: cn(\"flex gap-2\", condicion && \"hidden\"). Solo para layout.",
+      "importar": "import { cn } from '@ubits/flux-ui'"
+    },
+    {
+      "nombre": "useIsMobile",
+      "uso": "Devuelve true en pantallas pequeñas, para adaptar el layout.",
+      "importar": "import { useIsMobile } from '@ubits/flux-ui'"
+    },
+    {
+      "nombre": "useCopyToClipboard",
+      "uso": "Copia texto al portapapeles y avisa si se copió.",
+      "importar": "import { useCopyToClipboard } from '@ubits/flux-ui'"
+    },
+    {
+      "nombre": "useFileUpload",
+      "uso": "Maneja la selección y subida de archivos (el componente FileUpload aún no está publicado).",
+      "importar": "import { useFileUpload } from '@ubits/flux-ui'"
+    },
+    {
+      "nombre": "useTheme",
+      "uso": "Lee y cambia el tema y el modo claro/oscuro.",
+      "importar": "import { useTheme } from '@ubits/flux-ui'"
+    }
+  ],
+  "no_usar_aunque_se_exporten": [
+    "Iconos con nombre de Hugeicons que la librería reexporta para uso interno (Cancel01Icon, ArrowLeft01Icon…): importa siempre los iconos desde @hugeicons/core-free-icons.",
+    "ComponentCard, ComponentDocsPage e IconPlaceholder: son piezas internas de la documentación del Storybook.",
+    "Los alias con prefijo Fx (FxButton, FxCard…): son el mismo componente; usa el nombre sin prefijo."
+  ],
+  "en_storybook_pero_no_publicados": [
+    {
+      "nombre": "FileUpload",
+      "storybook": "https://libraries-ui.dev.sandteck.com/flux-ui/index.html?path=/docs/components-fileupload--docs"
+    },
+    {
+      "nombre": "ActionRail",
+      "storybook": null
+    },
+    {
+      "nombre": "AnimatedIcon",
+      "storybook": null
+    },
+    {
+      "nombre": "DualDateRangePicker",
+      "storybook": null
+    },
+    {
+      "nombre": "Icon",
+      "storybook": null
+    }
+  ],
+  "como_usar": {
+    "resumen": "Adjunta este archivo como conocimiento o contexto del proyecto y pega \"prompt_base\" como instrucciones fijas.",
+    "claude_proyectos": "claude.ai → Proyecto → Conocimiento: sube este archivo. Instrucciones del proyecto: pega \"prompt_base\".",
+    "claude_code": "Guarda el archivo en el repo y añade al CLAUDE.md una línea: \"Toda la UI sigue flux-ui-para-ia.json; léelo antes de escribir interfaz\".",
+    "cursor": "Guarda el archivo en el repo y crea .cursor/rules/flux-ui.mdc con \"alwaysApply: true\" y el texto de \"prompt_base\" apuntando a este archivo.",
+    "chatgpt": "Proyecto o GPT personalizado → Archivos: sube este archivo. Instrucciones: pega \"prompt_base\".",
+    "github_copilot": "Guarda el archivo en el repo y pega \"prompt_base\" en .github/copilot-instructions.md.",
+    "gemini": "Guarda el archivo en el repo y referencia \"prompt_base\" desde GEMINI.md.",
+    "codex": "Guarda el archivo en el repo y referencia \"prompt_base\" desde AGENTS.md."
+  },
+  "totales": {
+    "componentes": 89,
+    "con_ficha_en_storybook": 89,
+    "con_variantes": 33,
+    "en_storybook_pero_no_publicados": 5
+  }
+}

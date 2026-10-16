@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+.input-container {
+  display: inline-grid;
+  align-items: center;
+}
+.input-container::after {
+  content: attr(data-value) " ";
+  visibility: hidden;
+  white-space: pre-wrap;
+  grid-area: 1 / 1;
+  font: inherit;
+  padding: inherit;
+  border: inherit;
+}
+input {
+  grid-area: 1 / 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+</style>
+</head>
+<body>
+  <div class="input-container" data-value="zdxsczxcz">
+    <input type="text" value="zdxsczxcz" />
+  </div>
+</body>
+</html>

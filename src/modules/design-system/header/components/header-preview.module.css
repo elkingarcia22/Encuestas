@@ -1,0 +1,12 @@
+/* Vista previa del header.
+   Con los nombres visibles, el kit baja 22px las partes que no son botones para dejar lugar a su pastilla. En una
+   fila centrada eso las descuadra: se compensa con el mismo margen abajo en las marcadas con data-balance. */
+.preview[data-names] :global([data-balance]) {
+  margin-bottom: 22px;
+}
+
+/* El botón de menú va pegado al borde izquierdo: su nombre se alinea a la izquierda para no salirse del header. */
+.preview.preview.preview :global(button[data-region='Abrir o cerrar menú'])::after {
+  left: -4px;
+  right: auto;
+}

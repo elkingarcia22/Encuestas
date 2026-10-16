@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "ds-ubits": {
+      "command": "node",
+      "args": ["ai-tools/mcp/ds-ubits.mjs"]
+    },
+    "flux-ui": {
+      "command": "npx",
+      "args": ["-y", "@ubits/flux-ui@latest", "flux-mcp"]
+    },
+    "reui": {
+      "type": "http",
+      "url": "https://mcp.reui.io",
+      "env": {
+        "REUI_LICENSE_KEY": "${REUI_LICENSE_KEY}"
+      }
+    }
+  }
+}

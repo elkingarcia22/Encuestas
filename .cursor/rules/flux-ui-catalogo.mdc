@@ -1,0 +1,19 @@
+---
+description: Toda la UI sale de los componentes de flux-ui del Storybook; nunca se crean componentes propios
+alwaysApply: true
+---
+
+# Componentes del Storybook, siempre
+
+Antes de escribir o cambiar cualquier interfaz, lee `ai-tools/flux-ui/flux-ui-para-ia.json`
+y sigue sus `instrucciones_para_la_ia`. El procedimiento completo está en
+`ai-tools/skills/flux-ui-storybook/SKILL.md`.
+
+- Tu trabajo es **combinar** componentes de `@ubits/flux-ui` que ya existen. Nunca crees
+  componentes visuales propios ni dibujes con div/span lo que la librería ya tiene
+  (Avatar, Progress, Empty, Badge, Button…).
+- Usa solo lo que está en `componentes` y solo los valores de `variantes`.
+  Lo de `en_storybook_pero_no_publicados` no existe en la versión instalada.
+- Si ningún componente encaja, detente y pregunta con el formato de `si_no_existe`.
+- El MCP de flux-ui está incompleto (69 de 89): si dice que algo no existe, confírmalo en el archivo.
+- Lee `trampas_conocidas` antes de tocar gráficos, DataGridList, Progress, Toast, Badge, Stepper o Sidebar.

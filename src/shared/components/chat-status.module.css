@@ -1,0 +1,120 @@
+/* Punto de estado de una conversación de Suite AI, a la manera del historial de Claude. Tres estados en una caja de
+   12px para que el título no se mueva al cambiar:
+   - Leída: anillo vacío gris.
+   - Respuesta sin leer: punto azul del tema con un halo suave; aparece con un pequeño rebote.
+   - El agente está pensando: un cometa que gira con el degradado de la IA de UBITS sobre un riel tenue, con un
+     núcleo que respira. Los tonos de la IA no existen como token del tema (ver new-chat.module.css). */
+
+.dot {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+}
+
+.read {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--muted-foreground) 55%, transparent);
+}
+
+.unread {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 16%, transparent);
+  animation: cs-arrive 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.thinking {
+  --ai-blue: #285ee6;
+  --ai-purple: #7e2be0;
+  --ai-pink: #d6306e;
+  --ai-orange: #eb6233;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+}
+
+/* Riel: el círculo completo, apenas insinuado. */
+.thinking::before {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 1.75px color-mix(in oklab, var(--ai-purple) 14%, transparent);
+  content: '';
+}
+
+/* Cometa: el degradado recorre el anillo y se desvanece en la cola; gira la pieza entera. */
+.thinking::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 70deg,
+    var(--ai-blue) 160deg,
+    var(--ai-purple) 235deg,
+    var(--ai-pink) 300deg,
+    var(--ai-orange) 360deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), black calc(100% - 1.75px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), black calc(100% - 1.75px));
+  animation: cs-spin 900ms linear infinite;
+  content: '';
+}
+
+.core {
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--ai-blue), var(--ai-pink));
+  animation: cs-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes cs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cs-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.7);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cs-arrive {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+/* Con movimiento reducido el cometa sigue girando (es la señal de que trabaja) pero despacio, y lo demás queda quieto. */
+@media (prefers-reduced-motion: reduce) {
+  .thinking::after {
+    animation-duration: 2.4s;
+  }
+
+  .core,
+  .unread {
+    animation: none;
+  }
+}

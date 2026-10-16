@@ -1,0 +1,32 @@
+---
+description: Prepara el entorno en la máquina de UX; no les pidas comandos de terminal
+alwaysApply: true
+---
+
+# Entorno: instálalo tú, no UX
+
+Quien usa este repo es diseño. **No les pidas que instalen Node, AWS CLI u otras herramientas.** Si falta algo, detectalo, explicalo en español sencillo y **instálalo tú**.
+
+Si escriben **“Prepara el playground”**, **“Configura mi entorno”** o similar: corre `bash scripts/setup.sh` (instala herramientas si faltan + dependencias; el login de AWS va en el preinstall). Si piden **“Vuelve a conectar la librería interna”**: `npm run aws-login` y que reinicien Cursor.
+
+## Cómo se enciende
+
+- Primera vez: `bash scripts/setup.sh` (instala Node/AWS CLI si faltan y corre `npm install`).
+- El login de AWS va en el **preinstall**: ocurre con `npm install` / `npm run setup`, **no** con `npm start`.
+- Día a día: `npm start` solo abre la app.
+- Token de la librería interna (~12 h) caducado o MCP de flux-ui muerto: `npm run aws-login` y que **reinicien el IDE**.
+
+## Si setup.sh no alcanza
+
+1. Comprueba `node`, `npm`, `aws` y, en Mac, `brew`.
+2. Si falta Homebrew: instálalo. Si pide contraseña de Mac, eso sí lo tiene que escribir la persona.
+3. Si falta Node: `brew install node`.
+4. Si falta AWS CLI: `brew install awscli`.
+
+## Lo único que no puedes hacer tú
+
+La **primera vez en una Mac nueva**, el acceso SSO lo configura ingeniería (`aws configure sso`). Si `aws sso login` falla porque no hay perfil, **para** y diles: “Pídele a ingeniería que configure tu acceso AWS una sola vez.” No improvises cuentas ni URLs.
+
+## Cómo hablarlo
+
+“Falta AWS CLI; lo estoy instalando” — no un bloque de comandos para que copien. No toques `scripts/`, `AGENTS.md` ni el resto del andamiaje.

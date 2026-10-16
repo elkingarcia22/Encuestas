@@ -1,0 +1,11 @@
+/* Rayado del slot: líneas finas en diagonal sobre el fondo, se ven igual en claro y en oscuro. Al 5% (antes 7%): el texto
+   gris que cruza una raya sigue en 4.5:1 en modo claro (al 7% bajaba a 4.3).
+   Vive aquí, y no dentro del design system, porque lo usan las dos cosas: la anatomía de los configuradores y las
+   pantallas que todavía no están maquetadas. Así no se desincronizan. */
+.hatch {
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--foreground) 5%, transparent) 0 1px,
+    transparent 1px 9px
+  );
+}

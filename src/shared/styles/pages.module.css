@@ -1,0 +1,135 @@
+.page {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.hero {
+  display: grid;
+  gap: 1rem;
+  max-width: 42rem;
+}
+
+.kicker {
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.4rem, 6vw, 4.4rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.lead {
+  color: var(--ink-soft);
+  font-size: 1.12rem;
+  line-height: 1.6;
+  max-width: 38rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 0.7rem 1.05rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.primary {
+  background: var(--primary);
+  color: var(--accent-ink);
+}
+
+.secondary {
+  background: var(--bg-elevated);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow), inset 0 0 0 1px var(--line);
+  text-decoration: none;
+  min-height: 10.5rem;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+.cardTitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.cardCopy {
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.cardMeta {
+  margin-top: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  color: var(--primary);
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  margin-bottom: 0.85rem;
+}
+
+.snippet {
+  margin: 0;
+  overflow-x: auto;
+  padding: 1.15rem 1.25rem;
+  border-radius: 1.1rem;
+  background: var(--bg-muted);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 0.84rem;
+  line-height: 1.65;
+  color: var(--ink);
+}
+
+.stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}

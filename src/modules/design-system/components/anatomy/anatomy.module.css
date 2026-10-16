@@ -1,0 +1,143 @@
+/* Anatomía de los configuradores del design system, «como coquito»:
+   - Parte del componente: contorno azul punteado y su nombre en una pastilla azul.
+   - Slot: espacio libre, rayado en gris y con su nombre en gris. Ahí va lo que la pantalla necesite.
+   Las pastillas van por fuera del contorno: arriba en bloques (que ganan aire mientras se ven los nombres) y
+   abajo en botones. `data-hot` resalta la parte que se señala en la lista de partes.
+   Los nombres son solo visuales: el `/ ''` los deja fuera del nombre accesible (si no, un lector de pantalla leería
+   «Guardar Botón primario»). La lista «Partes de este caso» ya los dice en texto. */
+
+/* El rayado del slot vive en src/shared/components/slot.module.css: lo comparten esta anatomía y las
+   pantallas sin maquetar. */
+
+.stage :global([data-region]),
+.stage :global([data-slot-region]) {
+  transition:
+    outline-color 150ms ease,
+    background-color 150ms ease;
+}
+
+/* Partes del componente. Lo que ya tiene posición propia (absolute, fixed, sticky) la conserva: si no, un panel
+   flotante de la vista previa se saldría de su lugar. El margen va con !important porque algunos componentes
+   (el título de la librería) fuerzan margen cero y su nombre quedaba encima de la parte de arriba. */
+.names :global([data-region]) {
+  outline: 1.5px dashed color-mix(in oklab, var(--primary) 70%, transparent);
+  outline-offset: 3px;
+}
+
+.names :global([data-region]:not(.absolute):not(.fixed):not(.sticky)),
+.names :global([data-slot-region]:not(.absolute)) {
+  position: relative;
+}
+
+/* Las partes ganan 22px de aire arriba para que quepa su nombre. Las que van dentro de una fila o pegadas a un borde
+   quedan fuera: no se pueden mover de su sitio y resuelven el nombre de otra forma. */
+.names
+  :global(
+    [data-region]:not(button):not([data-region^='Contenedor']):not([data-chip='inline']):not([data-chip='inside']):not(
+        [data-chip='under']
+      )
+  ),
+.names :global([data-slot-region]) {
+  margin-top: 22px !important;
+}
+
+.names :global([data-region])::after,
+.names :global([data-slot-region])::after {
+  position: absolute;
+  top: -5px;
+  left: -4px;
+  z-index: 20;
+  transform: translateY(-100%);
+  padding: 1px 7px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.names :global([data-region])::after {
+  content: attr(data-region);
+  content: attr(data-region) / '';
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.names :global(button[data-region])::after {
+  top: auto;
+  bottom: -5px;
+  transform: translateY(100%);
+}
+
+.names :global([data-region^='Contenedor'])::after,
+.names :global([data-region='Acciones'])::after {
+  left: auto;
+  right: -4px;
+}
+
+/* Nombre de los botones alineado a su borde derecho: así no se enciman los de botones angostos que van seguidos
+   (secundario y primario). «Volver» queda a la izquierda porque va primero en su fila. */
+.names :global(button[data-region]:not([data-region='Volver']))::after {
+  left: auto;
+  right: -4px;
+}
+
+/* Partes que van dentro de una fila (los «…» entre migas, la flecha de volver junto al título): no se empujan hacia
+   abajo, se quedan alineadas con lo de al lado y su nombre va arriba. */
+.names :global([data-region][data-chip='inline'])::after {
+  top: -5px;
+  bottom: auto;
+  transform: translateY(-100%);
+}
+
+/* Igual que la anterior, pero el nombre cuelga debajo: para las piezas que van dentro de otra parte y arriba ya está
+   el nombre de la parte que las contiene (los «…» dentro de las migas de pan). */
+.names :global([data-region][data-chip='under'])::after {
+  top: auto;
+  bottom: -5px;
+  transform: translateY(100%);
+}
+
+/* Piezas pegadas al borde de arriba de su contenedor (la ilustración de un modal): empujarlas hacia abajo dejaría una
+   franja vacía y las esquinas del panel al aire, así que su nombre va adentro, sobre la propia pieza. */
+.names :global([data-region][data-chip='inside'])::after {
+  top: 7px;
+  bottom: auto;
+  left: 7px;
+  transform: none;
+}
+
+/* Botones chicos pegados a otros (p. ej. «Más acciones»): su nombre va arriba para no encimarse con el de al lado. */
+.names :global(button[data-region][data-chip='top'])::after {
+  top: -5px;
+  bottom: auto;
+  transform: translateY(-100%);
+}
+
+/* Slot: gris, con «Slot ·» delante del nombre. El área de muestra ya trae su borde punteado. */
+.names :global([data-slot-region]:not([data-slot-area])) {
+  outline: 1.5px dashed color-mix(in oklab, var(--muted-foreground) 55%, transparent);
+  outline-offset: 3px;
+}
+
+.names :global([data-slot-region])::after {
+  content: 'Slot · ' attr(data-slot-region);
+  content: 'Slot · ' attr(data-slot-region) / '';
+  background: var(--muted);
+  color: var(--muted-foreground);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* Parte señalada desde la lista (con o sin nombres visibles). */
+.stage :global([data-region][data-hot]) {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  background-color: color-mix(in oklab, var(--primary) 7%, transparent);
+}
+
+.stage :global([data-slot-region][data-hot]) {
+  outline: 2px solid var(--muted-foreground);
+  outline-offset: 3px;
+}

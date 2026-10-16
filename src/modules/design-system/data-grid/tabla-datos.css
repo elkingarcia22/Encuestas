@@ -1,0 +1,20 @@
+/* Arreglos de la tabla de la librería (DataGridList) mientras su dev los corrige. Van en la hoja de TablaDatos y
+   no en src/index.css (zona protegida): se cargan con la tabla del design system. Cada uno está en
+   /design-system/diferencias; cuando la librería lo traiga resuelto, se borra de aquí.
+   Revisión de David (30 sep). */
+
+/* 1. El buscador dentro de un filtro de columna pide espacio para su lupa (`ps-8`), pero el relleno del tema
+      (.cn-input, sin capa) le gana y la lupa quedaba encima del texto «Buscar…». */
+.style-vega .cn-input.ps-8 {
+  padding-inline-start: 2rem;
+}
+
+/* 2. «Personalizar columnas»: el menú tomaba el ancho del botón que lo abre (128 px) y partía «Fecha de inicio»
+      en dos renglones; y ponía Mayúscula En Cada Palabra (`capitalize`), que en español está mal. */
+.style-vega [data-slot='dropdown-menu-content']:has([role='menuitemcheckbox'].capitalize) {
+  width: auto;
+  min-width: 12rem;
+}
+.style-vega [role='menuitemcheckbox'].capitalize {
+  text-transform: none;
+}

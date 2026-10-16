@@ -1,0 +1,1030 @@
+{
+  "$para_que": "Iconos Iconly Glass exportados de Figma para que el equipo de flux-ui los publique. Un PNG transparente por icono en tres tamaños.",
+  "origen": {
+    "archivo": "Iconly Pro (Glass Icons) (Community)",
+    "figma": "https://www.figma.com/design/qXlkANBKUfPDJC7WZuna5M/Iconly-Pro--Glass-Icons--Community-?node-id=1-1046",
+    "exportado": "2026-09-14"
+  },
+  "lienzo": {
+    "1x": "144 × 144 px",
+    "2x": "288 × 288 px",
+    "4x": "576 × 576 px",
+    "nota": "Cada icono va centrado por su área visible (con sombras y desenfoque) y a su tamaño original de Figma, sin estirarlo."
+  },
+  "categorias": [
+    {
+      "id": "acciones",
+      "nombre": "Acciones",
+      "cantidad": 9
+    },
+    {
+      "id": "navegacion",
+      "nombre": "Navegación",
+      "cantidad": 5
+    },
+    {
+      "id": "comunicacion",
+      "nombre": "Comunicación",
+      "cantidad": 4
+    },
+    {
+      "id": "archivos",
+      "nombre": "Archivos",
+      "cantidad": 4
+    },
+    {
+      "id": "multimedia",
+      "nombre": "Multimedia",
+      "cantidad": 6
+    },
+    {
+      "id": "tiempo",
+      "nombre": "Tiempo y agenda",
+      "cantidad": 2
+    },
+    {
+      "id": "datos",
+      "nombre": "Datos",
+      "cantidad": 3
+    },
+    {
+      "id": "comercio",
+      "nombre": "Comercio",
+      "cantidad": 5
+    },
+    {
+      "id": "favoritos",
+      "nombre": "Favoritos",
+      "cantidad": 4
+    },
+    {
+      "id": "cuenta-y-seguridad",
+      "nombre": "Cuenta y seguridad",
+      "cantidad": 5
+    },
+    {
+      "id": "alertas",
+      "nombre": "Alertas",
+      "cantidad": 3
+    }
+  ],
+  "iconos": [
+    {
+      "nombre": "glass-tick",
+      "nombreEs": "Hecho",
+      "categoria": "acciones",
+      "categoriaEs": "Acciones",
+      "nombreFigma": "Iconly/Glass/Tick",
+      "nodoFigma": "1:75",
+      "buscar": [
+        "listo",
+        "completado",
+        "aprobado",
+        "check",
+        "terminado",
+        "finalizado"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/acciones/glass-tick@1x.png",
+        "2x": "/iconos-glass/acciones/glass-tick@2x.png",
+        "4x": "/iconos-glass/acciones/glass-tick@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-bookmark",
+      "nombreEs": "Guardar",
+      "categoria": "favoritos",
+      "categoriaEs": "Favoritos",
+      "nombreFigma": "Iconly/Glass/Bookmark",
+      "nodoFigma": "1:83",
+      "buscar": [
+        "marcador",
+        "guardado",
+        "favorito",
+        "ver después"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/favoritos/glass-bookmark@1x.png",
+        "2x": "/iconos-glass/favoritos/glass-bookmark@2x.png",
+        "4x": "/iconos-glass/favoritos/glass-bookmark@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-heart",
+      "nombreEs": "Me gusta",
+      "categoria": "favoritos",
+      "categoriaEs": "Favoritos",
+      "nombreFigma": "Iconly/Glass/Heart",
+      "nodoFigma": "1:93",
+      "buscar": [
+        "corazón",
+        "favorito",
+        "bienestar",
+        "reconocimiento"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/favoritos/glass-heart@1x.png",
+        "2x": "/iconos-glass/favoritos/glass-heart@2x.png",
+        "4x": "/iconos-glass/favoritos/glass-heart@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-chat",
+      "nombreEs": "Chat",
+      "categoria": "comunicacion",
+      "categoriaEs": "Comunicación",
+      "nombreFigma": "Iconly/Glass/Chat",
+      "nodoFigma": "1:106",
+      "buscar": [
+        "conversación",
+        "mensajes",
+        "suite ai",
+        "agente",
+        "comentarios"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/comunicacion/glass-chat@1x.png",
+        "2x": "/iconos-glass/comunicacion/glass-chat@2x.png",
+        "4x": "/iconos-glass/comunicacion/glass-chat@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-star",
+      "nombreEs": "Estrella",
+      "categoria": "favoritos",
+      "categoriaEs": "Favoritos",
+      "nombreFigma": "Iconly/Glass/Star",
+      "nodoFigma": "1:117",
+      "buscar": [
+        "calificación",
+        "destacado",
+        "valoración",
+        "puntaje"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/favoritos/glass-star@1x.png",
+        "2x": "/iconos-glass/favoritos/glass-star@2x.png",
+        "4x": "/iconos-glass/favoritos/glass-star@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-arrow-right-circle",
+      "nombreEs": "Flecha a la derecha",
+      "categoria": "navegacion",
+      "categoriaEs": "Navegación",
+      "nombreFigma": "Iconly/Glass/Arrow",
+      "nodoFigma": "1:125",
+      "buscar": [
+        "siguiente",
+        "continuar",
+        "avanzar",
+        "ir"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/navegacion/glass-arrow-right-circle@1x.png",
+        "2x": "/iconos-glass/navegacion/glass-arrow-right-circle@2x.png",
+        "4x": "/iconos-glass/navegacion/glass-arrow-right-circle@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-clock",
+      "nombreEs": "Reloj",
+      "categoria": "tiempo",
+      "categoriaEs": "Tiempo y agenda",
+      "nombreFigma": "Iconly/Glass/Clock",
+      "nodoFigma": "1:133",
+      "buscar": [
+        "hora",
+        "duración",
+        "pendiente",
+        "vence",
+        "historial"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/tiempo/glass-clock@1x.png",
+        "2x": "/iconos-glass/tiempo/glass-clock@2x.png",
+        "4x": "/iconos-glass/tiempo/glass-clock@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-discovery",
+      "nombreEs": "Explorar",
+      "categoria": "navegacion",
+      "categoriaEs": "Navegación",
+      "nombreFigma": "Iconly/Glass/Discovery",
+      "nodoFigma": "1:143",
+      "buscar": [
+        "brújula",
+        "catálogo",
+        "descubrir",
+        "navegar"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/navegacion/glass-discovery@1x.png",
+        "2x": "/iconos-glass/navegacion/glass-discovery@2x.png",
+        "4x": "/iconos-glass/navegacion/glass-discovery@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-gallery",
+      "nombreEs": "Galería",
+      "categoria": "multimedia",
+      "categoriaEs": "Multimedia",
+      "nombreFigma": "Iconly/Glass/Gallery",
+      "nodoFigma": "1:151",
+      "buscar": [
+        "imagen",
+        "foto",
+        "portada",
+        "ilustración"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/multimedia/glass-gallery@1x.png",
+        "2x": "/iconos-glass/multimedia/glass-gallery@2x.png",
+        "4x": "/iconos-glass/multimedia/glass-gallery@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-buy",
+      "nombreEs": "Comprar",
+      "categoria": "comercio",
+      "categoriaEs": "Comercio",
+      "nombreFigma": "Iconly/Glass/Buy",
+      "nodoFigma": "1:161",
+      "buscar": [
+        "carrito",
+        "compra",
+        "licencias",
+        "tienda"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/comercio/glass-buy@1x.png",
+        "2x": "/iconos-glass/comercio/glass-buy@2x.png",
+        "4x": "/iconos-glass/comercio/glass-buy@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-play",
+      "nombreEs": "Reproducir",
+      "categoria": "multimedia",
+      "categoriaEs": "Multimedia",
+      "nombreFigma": "Iconly/Glass/Play",
+      "nodoFigma": "1:173",
+      "buscar": [
+        "video",
+        "curso",
+        "empezar",
+        "iniciar",
+        "contenido"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/multimedia/glass-play@1x.png",
+        "2x": "/iconos-glass/multimedia/glass-play@2x.png",
+        "4x": "/iconos-glass/multimedia/glass-play@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-ticket-star",
+      "nombreEs": "Insignia",
+      "categoria": "favoritos",
+      "categoriaEs": "Favoritos",
+      "nombreFigma": "Iconly/Glass/Star",
+      "nodoFigma": "1:181",
+      "buscar": [
+        "logro",
+        "certificado",
+        "premio",
+        "cupón",
+        "reconocimiento"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/favoritos/glass-ticket-star@1x.png",
+        "2x": "/iconos-glass/favoritos/glass-ticket-star@2x.png",
+        "4x": "/iconos-glass/favoritos/glass-ticket-star@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-bag",
+      "nombreEs": "Bolsa",
+      "categoria": "comercio",
+      "categoriaEs": "Comercio",
+      "nombreFigma": "Iconly/Glass/Bag",
+      "nodoFigma": "1:189",
+      "buscar": [
+        "compras",
+        "pedido",
+        "paquete"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/comercio/glass-bag@1x.png",
+        "2x": "/iconos-glass/comercio/glass-bag@2x.png",
+        "4x": "/iconos-glass/comercio/glass-bag@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-discount",
+      "nombreEs": "Descuento",
+      "categoria": "comercio",
+      "categoriaEs": "Comercio",
+      "nombreFigma": "Iconly/Glass/Discount",
+      "nodoFigma": "1:203",
+      "buscar": [
+        "oferta",
+        "promoción",
+        "porcentaje",
+        "cupón"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/comercio/glass-discount@1x.png",
+        "2x": "/iconos-glass/comercio/glass-discount@2x.png",
+        "4x": "/iconos-glass/comercio/glass-discount@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-game",
+      "nombreEs": "Juego",
+      "categoria": "multimedia",
+      "categoriaEs": "Multimedia",
+      "nombreFigma": "Iconly/Glass/Game",
+      "nodoFigma": "1:218",
+      "buscar": [
+        "gamificación",
+        "reto",
+        "ludificación",
+        "control"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/multimedia/glass-game@1x.png",
+        "2x": "/iconos-glass/multimedia/glass-game@2x.png",
+        "4x": "/iconos-glass/multimedia/glass-game@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-notification",
+      "nombreEs": "Notificación",
+      "categoria": "comunicacion",
+      "categoriaEs": "Comunicación",
+      "nombreFigma": "Iconly/Glass/Notification",
+      "nodoFigma": "1:235",
+      "buscar": [
+        "campana",
+        "aviso",
+        "alerta",
+        "recordatorio"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/comunicacion/glass-notification@1x.png",
+        "2x": "/iconos-glass/comunicacion/glass-notification@2x.png",
+        "4x": "/iconos-glass/comunicacion/glass-notification@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-send",
+      "nombreEs": "Enviar",
+      "categoria": "comunicacion",
+      "categoriaEs": "Comunicación",
+      "nombreFigma": "Iconly/Glass/Send",
+      "nodoFigma": "1:245",
+      "buscar": [
+        "avión de papel",
+        "compartir",
+        "publicar",
+        "mandar"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/comunicacion/glass-send@1x.png",
+        "2x": "/iconos-glass/comunicacion/glass-send@2x.png",
+        "4x": "/iconos-glass/comunicacion/glass-send@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-filter",
+      "nombreEs": "Filtrar",
+      "categoria": "acciones",
+      "categoriaEs": "Acciones",
+      "nombreFigma": "Iconly/Glass/Filter",
+      "nodoFigma": "1:253",
+      "buscar": [
+        "embudo",
+        "segmentar",
+        "refinar",
+        "ordenar"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/acciones/glass-filter@1x.png",
+        "2x": "/iconos-glass/acciones/glass-filter@2x.png",
+        "4x": "/iconos-glass/acciones/glass-filter@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-danger",
+      "nombreEs": "Peligro",
+      "categoria": "alertas",
+      "categoriaEs": "Alertas",
+      "nombreFigma": "Iconly/Glass/Danger",
+      "nodoFigma": "1:265",
+      "buscar": [
+        "advertencia",
+        "riesgo",
+        "error",
+        "atención"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/alertas/glass-danger@1x.png",
+        "2x": "/iconos-glass/alertas/glass-danger@2x.png",
+        "4x": "/iconos-glass/alertas/glass-danger@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-video",
+      "nombreEs": "Video",
+      "categoria": "multimedia",
+      "categoriaEs": "Multimedia",
+      "nombreFigma": "Iconly/Glass/Video",
+      "nodoFigma": "1:277",
+      "buscar": [
+        "cámara de video",
+        "grabación",
+        "clase",
+        "sesión"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/multimedia/glass-video@1x.png",
+        "2x": "/iconos-glass/multimedia/glass-video@2x.png",
+        "4x": "/iconos-glass/multimedia/glass-video@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-folder",
+      "nombreEs": "Carpeta",
+      "categoria": "archivos",
+      "categoriaEs": "Archivos",
+      "nombreFigma": "Iconly/Glass/Folder",
+      "nodoFigma": "1:284",
+      "buscar": [
+        "colección",
+        "archivos",
+        "directorio",
+        "repositorio"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/archivos/glass-folder@1x.png",
+        "2x": "/iconos-glass/archivos/glass-folder@2x.png",
+        "4x": "/iconos-glass/archivos/glass-folder@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-lock",
+      "nombreEs": "Candado",
+      "categoria": "cuenta-y-seguridad",
+      "categoriaEs": "Cuenta y seguridad",
+      "nombreFigma": "Iconly/Glass/Lock",
+      "nodoFigma": "1:295",
+      "buscar": [
+        "bloqueado",
+        "privado",
+        "seguridad",
+        "sin acceso"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/cuenta-y-seguridad/glass-lock@1x.png",
+        "2x": "/iconos-glass/cuenta-y-seguridad/glass-lock@2x.png",
+        "4x": "/iconos-glass/cuenta-y-seguridad/glass-lock@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-location",
+      "nombreEs": "Ubicación",
+      "categoria": "navegacion",
+      "categoriaEs": "Navegación",
+      "nombreFigma": "Iconly/Glass/Location",
+      "nodoFigma": "1:309",
+      "buscar": [
+        "mapa",
+        "sede",
+        "lugar",
+        "dirección",
+        "pin"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/navegacion/glass-location@1x.png",
+        "2x": "/iconos-glass/navegacion/glass-location@2x.png",
+        "4x": "/iconos-glass/navegacion/glass-location@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-edit",
+      "nombreEs": "Editar",
+      "categoria": "acciones",
+      "categoriaEs": "Acciones",
+      "nombreFigma": "Iconly/Glass/Edit",
+      "nodoFigma": "1:317",
+      "buscar": [
+        "lápiz",
+        "modificar",
+        "escribir",
+        "cambiar"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/acciones/glass-edit@1x.png",
+        "2x": "/iconos-glass/acciones/glass-edit@2x.png",
+        "4x": "/iconos-glass/acciones/glass-edit@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-more-square",
+      "nombreEs": "Más opciones",
+      "categoria": "acciones",
+      "categoriaEs": "Acciones",
+      "nombreFigma": "Iconly/Glass/Menu",
+      "nodoFigma": "1:325",
+      "buscar": [
+        "menú",
+        "puntos",
+        "acciones",
+        "cuadrado"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/acciones/glass-more-square@1x.png",
+        "2x": "/iconos-glass/acciones/glass-more-square@2x.png",
+        "4x": "/iconos-glass/acciones/glass-more-square@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-graph",
+      "nombreEs": "Gráfico circular",
+      "categoria": "datos",
+      "categoriaEs": "Datos",
+      "nombreFigma": "Iconly/Glass/Graph",
+      "nodoFigma": "1:338",
+      "buscar": [
+        "torta",
+        "dona",
+        "proporción",
+        "métricas",
+        "reporte"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/datos/glass-graph@1x.png",
+        "2x": "/iconos-glass/datos/glass-graph@2x.png",
+        "4x": "/iconos-glass/datos/glass-graph@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-setting",
+      "nombreEs": "Configuración",
+      "categoria": "cuenta-y-seguridad",
+      "categoriaEs": "Cuenta y seguridad",
+      "nombreFigma": "Iconly/Glass/Setting",
+      "nodoFigma": "1:347",
+      "buscar": [
+        "ajustes",
+        "engranaje",
+        "preferencias",
+        "sistema"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/cuenta-y-seguridad/glass-setting@1x.png",
+        "2x": "/iconos-glass/cuenta-y-seguridad/glass-setting@2x.png",
+        "4x": "/iconos-glass/cuenta-y-seguridad/glass-setting@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-message",
+      "nombreEs": "Mensaje",
+      "categoria": "comunicacion",
+      "categoriaEs": "Comunicación",
+      "nombreFigma": "Iconly/Glass/Message",
+      "nodoFigma": "1:355",
+      "buscar": [
+        "correo",
+        "email",
+        "sobre",
+        "bandeja"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/comunicacion/glass-message@1x.png",
+        "2x": "/iconos-glass/comunicacion/glass-message@2x.png",
+        "4x": "/iconos-glass/comunicacion/glass-message@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-search",
+      "nombreEs": "Buscar",
+      "categoria": "acciones",
+      "categoriaEs": "Acciones",
+      "nombreFigma": "Iconly/Glass/Search",
+      "nodoFigma": "1:365",
+      "buscar": [
+        "lupa",
+        "encontrar",
+        "consultar",
+        "buscador"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/acciones/glass-search@1x.png",
+        "2x": "/iconos-glass/acciones/glass-search@2x.png",
+        "4x": "/iconos-glass/acciones/glass-search@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-document",
+      "nombreEs": "Documento",
+      "categoria": "archivos",
+      "categoriaEs": "Archivos",
+      "nombreFigma": "Iconly/Glass/Document",
+      "nodoFigma": "1:376",
+      "buscar": [
+        "archivo",
+        "texto",
+        "reporte",
+        "política",
+        "contrato"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/archivos/glass-document@1x.png",
+        "2x": "/iconos-glass/archivos/glass-document@2x.png",
+        "4x": "/iconos-glass/archivos/glass-document@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-bag-2",
+      "nombreEs": "Bolsa (alternativa)",
+      "categoria": "comercio",
+      "categoriaEs": "Comercio",
+      "nombreFigma": "Iconly/Glass/Bag",
+      "nodoFigma": "1:387",
+      "buscar": [
+        "bolso",
+        "compras",
+        "maletín"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/comercio/glass-bag-2@1x.png",
+        "2x": "/iconos-glass/comercio/glass-bag-2@2x.png",
+        "4x": "/iconos-glass/comercio/glass-bag-2@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-calendar",
+      "nombreEs": "Calendario",
+      "categoria": "tiempo",
+      "categoriaEs": "Tiempo y agenda",
+      "nombreFigma": "Iconly/Glass/Calendar",
+      "nodoFigma": "1:404",
+      "buscar": [
+        "fecha",
+        "agenda",
+        "evento",
+        "periodo",
+        "plazo"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/tiempo/glass-calendar@1x.png",
+        "2x": "/iconos-glass/tiempo/glass-calendar@2x.png",
+        "4x": "/iconos-glass/tiempo/glass-calendar@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-activity",
+      "nombreEs": "Actividad",
+      "categoria": "datos",
+      "categoriaEs": "Datos",
+      "nombreFigma": "Iconly/Glass/Activity",
+      "nodoFigma": "1:434",
+      "buscar": [
+        "tendencia",
+        "progreso",
+        "seguimiento",
+        "pulso"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/datos/glass-activity@1x.png",
+        "2x": "/iconos-glass/datos/glass-activity@2x.png",
+        "4x": "/iconos-glass/datos/glass-activity@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-more-circle",
+      "nombreEs": "Más opciones (círculo)",
+      "categoria": "acciones",
+      "categoriaEs": "Acciones",
+      "nombreFigma": "Iconly/Glass/Menu",
+      "nodoFigma": "1:444",
+      "buscar": [
+        "menú",
+        "puntos",
+        "acciones",
+        "círculo"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/acciones/glass-more-circle@1x.png",
+        "2x": "/iconos-glass/acciones/glass-more-circle@2x.png",
+        "4x": "/iconos-glass/acciones/glass-more-circle@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-info-circle",
+      "nombreEs": "Información",
+      "categoria": "alertas",
+      "categoriaEs": "Alertas",
+      "nombreFigma": "Iconly/Glass/Info",
+      "nodoFigma": "1:455",
+      "buscar": [
+        "aviso",
+        "ayuda",
+        "exclamación",
+        "nota"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/alertas/glass-info-circle@1x.png",
+        "2x": "/iconos-glass/alertas/glass-info-circle@2x.png",
+        "4x": "/iconos-glass/alertas/glass-info-circle@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-shield-done",
+      "nombreEs": "Protegido",
+      "categoria": "cuenta-y-seguridad",
+      "categoriaEs": "Cuenta y seguridad",
+      "nombreFigma": "Iconly/Glass/Shield",
+      "nodoFigma": "1:468",
+      "buscar": [
+        "escudo",
+        "seguridad",
+        "verificado",
+        "cumplimiento"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/cuenta-y-seguridad/glass-shield-done@1x.png",
+        "2x": "/iconos-glass/cuenta-y-seguridad/glass-shield-done@2x.png",
+        "4x": "/iconos-glass/cuenta-y-seguridad/glass-shield-done@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-paper-plus",
+      "nombreEs": "Nuevo documento",
+      "categoria": "archivos",
+      "categoriaEs": "Archivos",
+      "nombreFigma": "Iconly/Glass/Paper Plus",
+      "nodoFigma": "1:476",
+      "buscar": [
+        "crear",
+        "agregar archivo",
+        "plantilla nueva"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/archivos/glass-paper-plus@1x.png",
+        "2x": "/iconos-glass/archivos/glass-paper-plus@2x.png",
+        "4x": "/iconos-glass/archivos/glass-paper-plus@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-close-square",
+      "nombreEs": "Cerrar",
+      "categoria": "acciones",
+      "categoriaEs": "Acciones",
+      "nombreFigma": "Iconly/Glass/Close",
+      "nodoFigma": "1:488",
+      "buscar": [
+        "cancelar",
+        "quitar",
+        "eliminar",
+        "x"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/acciones/glass-close-square@1x.png",
+        "2x": "/iconos-glass/acciones/glass-close-square@2x.png",
+        "4x": "/iconos-glass/acciones/glass-close-square@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-profile",
+      "nombreEs": "Perfil",
+      "categoria": "cuenta-y-seguridad",
+      "categoriaEs": "Cuenta y seguridad",
+      "nombreFigma": "Iconly/Glass/Profile",
+      "nodoFigma": "1:499",
+      "buscar": [
+        "usuario",
+        "persona",
+        "colaborador",
+        "cuenta"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/cuenta-y-seguridad/glass-profile@1x.png",
+        "2x": "/iconos-glass/cuenta-y-seguridad/glass-profile@2x.png",
+        "4x": "/iconos-glass/cuenta-y-seguridad/glass-profile@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-paper",
+      "nombreEs": "Hoja",
+      "categoria": "archivos",
+      "categoriaEs": "Archivos",
+      "nombreFigma": "Iconly/Glass/Paper",
+      "nodoFigma": "1:511",
+      "buscar": [
+        "página",
+        "nota",
+        "documento simple"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/archivos/glass-paper@1x.png",
+        "2x": "/iconos-glass/archivos/glass-paper@2x.png",
+        "4x": "/iconos-glass/archivos/glass-paper@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-password",
+      "nombreEs": "Contraseña",
+      "categoria": "cuenta-y-seguridad",
+      "categoriaEs": "Cuenta y seguridad",
+      "nombreFigma": "Iconly/Glass/Lock",
+      "nodoFigma": "1:526",
+      "buscar": [
+        "llave",
+        "clave",
+        "acceso",
+        "credenciales"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/cuenta-y-seguridad/glass-password@1x.png",
+        "2x": "/iconos-glass/cuenta-y-seguridad/glass-password@2x.png",
+        "4x": "/iconos-glass/cuenta-y-seguridad/glass-password@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-camera",
+      "nombreEs": "Cámara",
+      "categoria": "multimedia",
+      "categoriaEs": "Multimedia",
+      "nombreFigma": "Iconly/Glass/Camera",
+      "nodoFigma": "1:538",
+      "buscar": [
+        "foto",
+        "captura",
+        "fotografía"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/multimedia/glass-camera@1x.png",
+        "2x": "/iconos-glass/multimedia/glass-camera@2x.png",
+        "4x": "/iconos-glass/multimedia/glass-camera@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-wallet",
+      "nombreEs": "Billetera",
+      "categoria": "comercio",
+      "categoriaEs": "Comercio",
+      "nombreFigma": "Iconly/Glass/Wallet",
+      "nodoFigma": "1:551",
+      "buscar": [
+        "pago",
+        "créditos",
+        "nómina",
+        "dinero",
+        "saldo"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/comercio/glass-wallet@1x.png",
+        "2x": "/iconos-glass/comercio/glass-wallet@2x.png",
+        "4x": "/iconos-glass/comercio/glass-wallet@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-chart",
+      "nombreEs": "Gráfico de barras",
+      "categoria": "datos",
+      "categoriaEs": "Datos",
+      "nombreFigma": "Iconly/Glass/Chart",
+      "nodoFigma": "1:561",
+      "buscar": [
+        "barras",
+        "estadísticas",
+        "métricas",
+        "reporte",
+        "dashboard"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/datos/glass-chart@1x.png",
+        "2x": "/iconos-glass/datos/glass-chart@2x.png",
+        "4x": "/iconos-glass/datos/glass-chart@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-volume",
+      "nombreEs": "Volumen",
+      "categoria": "multimedia",
+      "categoriaEs": "Multimedia",
+      "nombreFigma": "Iconly/Glass/Volume",
+      "nodoFigma": "1:572",
+      "buscar": [
+        "sonido",
+        "audio",
+        "altavoz",
+        "anuncio"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/multimedia/glass-volume@1x.png",
+        "2x": "/iconos-glass/multimedia/glass-volume@2x.png",
+        "4x": "/iconos-glass/multimedia/glass-volume@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-home",
+      "nombreEs": "Inicio",
+      "categoria": "navegacion",
+      "categoriaEs": "Navegación",
+      "nombreFigma": "Iconly/Glass/Home",
+      "nodoFigma": "1:584",
+      "buscar": [
+        "casa",
+        "home",
+        "principal",
+        "workspace"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/navegacion/glass-home@1x.png",
+        "2x": "/iconos-glass/navegacion/glass-home@2x.png",
+        "4x": "/iconos-glass/navegacion/glass-home@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-info-square",
+      "nombreEs": "Información (cuadrado)",
+      "categoria": "alertas",
+      "categoriaEs": "Alertas",
+      "nombreFigma": "Iconly/Glass/Info",
+      "nodoFigma": "1:592",
+      "buscar": [
+        "aviso",
+        "ayuda",
+        "i",
+        "detalle"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/alertas/glass-info-square@1x.png",
+        "2x": "/iconos-glass/alertas/glass-info-square@2x.png",
+        "4x": "/iconos-glass/alertas/glass-info-square@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-arrow-up-square",
+      "nombreEs": "Flecha arriba",
+      "categoria": "navegacion",
+      "categoriaEs": "Navegación",
+      "nombreFigma": "Iconly/Glass/Arrow",
+      "nodoFigma": "1:606",
+      "buscar": [
+        "subir",
+        "cargar",
+        "crecimiento",
+        "aumentar"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/navegacion/glass-arrow-up-square@1x.png",
+        "2x": "/iconos-glass/navegacion/glass-arrow-up-square@2x.png",
+        "4x": "/iconos-glass/navegacion/glass-arrow-up-square@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-add",
+      "nombreEs": "Agregar",
+      "categoria": "acciones",
+      "categoriaEs": "Acciones",
+      "nombreFigma": "Iconly/Glass/Add",
+      "nodoFigma": "1:615",
+      "buscar": [
+        "más",
+        "crear",
+        "nuevo",
+        "sumar"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/acciones/glass-add@1x.png",
+        "2x": "/iconos-glass/acciones/glass-add@2x.png",
+        "4x": "/iconos-glass/acciones/glass-add@4x.png"
+      }
+    },
+    {
+      "nombre": "glass-show",
+      "nombreEs": "Ver",
+      "categoria": "acciones",
+      "categoriaEs": "Acciones",
+      "nombreFigma": "Iconly/Glass/Show",
+      "nodoFigma": "1:623",
+      "buscar": [
+        "ojo",
+        "visible",
+        "vista previa",
+        "mostrar"
+      ],
+      "archivos": {
+        "1x": "/iconos-glass/acciones/glass-show@1x.png",
+        "2x": "/iconos-glass/acciones/glass-show@2x.png",
+        "4x": "/iconos-glass/acciones/glass-show@4x.png"
+      }
+    }
+  ]
+}

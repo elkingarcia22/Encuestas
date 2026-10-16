@@ -1,0 +1,46 @@
+/* Saludo de la conversación nueva: cada palabra entra saliendo de un desenfoque y sube a su lugar. Solo entrada: el
+   saludo del día se queda quieto. */
+
+.word {
+  display: inline-block;
+  white-space: pre;
+  animation: greet-word 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes greet-word {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(0.4em);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+/* El orbe late una vez al aparecer: acompaña la entrada sin robarle la atención. */
+.orb {
+  display: inline-flex;
+  animation: greet-orb 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes greet-orb {
+  0% {
+    transform: scale(0.92);
+  }
+  55% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word,
+  .orb {
+    animation: none;
+  }
+}

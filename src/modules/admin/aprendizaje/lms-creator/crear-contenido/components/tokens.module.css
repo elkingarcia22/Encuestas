@@ -1,0 +1,104 @@
+/* La insignia: borde de 1,5 px con el degradado de la IA (los tonos los pone `vars` de tarjeta-ia.module.css) sobre el
+   fondo que tenga debajo, número en el color del texto y moneda en morado. El borde es una capa con máscara y no un
+   fondo doble, para no depender del color de la superficie (modal, cabecera o tarjeta). */
+.insignia {
+  position: relative;
+  border-color: transparent;
+  background: transparent;
+  color: var(--foreground);
+}
+
+.insignia::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  padding: 1.5px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ia-azul), var(--ia-morado) 40%, var(--ia-rosa) 75%, var(--ia-naranja));
+  mask:
+    linear-gradient(black 0 0) content-box,
+    linear-gradient(black 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+
+.insignia .moneda {
+  color: var(--ia-morado);
+}
+
+/* Gasto de tokens (paridad con el badge IA de UBITS): aplastón con rebote, moneda que gira y «−N» que sube. */
+
+.host {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.gastando {
+  animation: aplaston 0.5s cubic-bezier(0.2, 1.4, 0.3, 1);
+}
+
+.gastando .moneda {
+  animation: giro 0.6s ease;
+}
+
+@keyframes aplaston {
+  0% {
+    transform: scale(1, 1);
+  }
+  30% {
+    transform: scale(1.18, 0.78);
+  }
+  55% {
+    transform: scale(0.92, 1.12);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+@keyframes giro {
+  from {
+    transform: rotateY(0);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.menos {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  z-index: 4;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: sube 0.85s ease forwards;
+}
+
+@keyframes sube {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -18px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gastando,
+  .gastando .moneda {
+    animation: none;
+  }
+
+  .menos {
+    animation: none;
+    opacity: 0;
+  }
+}

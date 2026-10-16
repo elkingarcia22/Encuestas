@@ -1,0 +1,52 @@
+- [Catálogo del MCP de flux-ui incompleto](flux-ui-mcp-catalogo-incompleto.md) — lista 69 de 89 componentes; verificar en node_modules antes de decir que algo no existe.
+- [flux-ui vendorea ReUI](flux-ui-vendorea-reui.md) — los ejemplos de reui.io sirven de plantilla casi 1:1.
+- [DataGridList: trampas](datagridlist-columnas-estables.md) — columnas estables, asidero por columna, franja vacía sin selection, paginación en inglés.
+- [Trampas del Sidebar de flux-ui](sidebar-flux-ui-trampas.md) — el ancho solo obedece por style y el badge no se oculta al colapsar.
+- [Dos versiones de recharts](recharts-dos-versiones.md) — ChartContainer (v3) + gráficos del proyecto (v2) no dibuja nada; usar solo la copia del proyecto.
+- [Insignias sin contraste](badge-destructive-light-ilegible.md) — focus-light y contornos verde/amarillo no pasan; destructive-light ya se lee en el playground.
+- [Verificar templates a pantalla completa](templates-overlay-verificacion.md) — el RootLayout sigue debajo; acotar el DOM al overlay y capturar por CDP.
+- [Publicación en Vercel](vercel-deploy-playground.md) — cuenta UBITS; playground.ubits.co = develop (--prod), staging-playground.ubits.co = staging (alias a mano); playground-ux-develop sobra.
+- [El check ya revisa tipos](check-typecheck-no-op.md) — arreglado el 17-sep; sigue sin mirar imágenes, cierra con npm run build al borrar archivos.
+- [Nivel ReUI Solutions en dashboards](reui-solutions-referencia.md) — el usuario rechazó lo básico; estudiar /preview/base/<bloque> y componer con Frame.
+- [Contexto de producto en docs/](contexto-producto-hus.md) — casos de uso salen de las HU de docs/plataforma-ubits; citar sus RN y copy literal.
+- [Preview con autoPort y Vite](preview-autoport-vite.md) — el panel abre un puerto muerto; ir al puerto real de preview_logs y capturar por CDP.
+- [Pantallas, no patrones](pedido-pantallas-no-patrones.md) — «pantallas/templates» = pantallas navegables del producto desde el grafo; hay recorridos pendientes.
+- [Marco único ShellUbits](marco-unico-shellubits.md) — design system y templates comparten marco y cuerpo de 1.140 px; nada de marcos nuevos.
+- [Concepto del jefe: Home operativo](concepto-home-jefe.md) — admin-ubits.netlify.app = HU-INI-001/002/003; template home-operativo y decisiones abiertas.
+- [Login de UBITS](login-ubits.md) — entrar por www.ubitslearning.com; la contraseña la escribe el usuario.
+- [Reglas de Carlos para el concepto](feedback-carlos-concepto.md) — calcar el prototipo, Google, Suite AI, 3 tarjetas con gráfica, entregas por URL.
+- [Concepto de Nicolás](concepto-nicolas.md) — artifact con 7 casos; ya en código como template suite-ai (Meta, sin publicar); qué no se pudo calcar.
+- [Templates de patrones en pantallas reales](templates-patrones-reales.md) — gestión de usuarios, planes y encuestas; marco admin-compartido; piezas exportadas; trampas del Sheet y Combobox.
+- [Recorrido del admin real de UBITS](recorrido-admin-ubits.md) — rutas, columnas, menús y textos literales vistos el 2026-09-13.
+- [Iconos Glass](iconos-glass.md) — 50 PNG en public/iconos-glass, página Design system › Icons, excepción a solo Hugeicons y cómo exportarlos transparentes.
+- [Reunión de cierre del concept (14-sep)](reunion-cierre-concept-2026-09-14.md) — acuerdos de sidebar, top bar, métricas en una tarjeta, quick actions solo icono+título y tareas de merge.
+- [Ancho del cuerpo y tipografía](ancho-y-tipografia.md) — 1.140 px máximo y solo tipografía del tema (Heading/Text, seminegrita), aun en piezas de Nicolás.
+- [Follow up del 15-sep](reunion-follow-up-2026-09-15.md) — métricas de los 3 productos para el CEO, Glass solo en pantallas completas, Bold+ y ajustes al marco.
+- [Estilos de Nicolás se conservan](estilos-nicolas-se-conservan.md) — no quitar sus «!»; documentados en DS › Marco › Medidas; pedir estilo UBITS a la librería.
+- [Fusión con la rama de Nicolás](fusion-rama-nico.md) — rama prueba-fusion (subida a Bitbucket el 16-sep), 2 choques resueltos, dos marcos conviviendo, archivos protegidos.
+- [Tooltip solo abre con hover](tooltip-solo-hover.md) — para iconos de ayuda, controlarlo para que abra con clic/toque.
+- [Follow up del 16-sep](reunion-follow-up-2026-09-16.md) — rama única, escaneo 100% ReUI + lista de forzados, login «Ingresa a tu cuenta», loop de pantallas preliminares, 1140×700.
+- [Ver en acción y pantallas nuevas del admin](pantallas-casos-uso-admin.md) — en-accion.ts, Tareas, Avisos, vacante con agente, Configuración (16-sep).
+- [Arranque del repo para Claude](arranque-repo-claude.md) — CLAUDE.md propio, seis skills en ai-tools/skills y el aviso de acceso caducado.
+- [develop es el tronco](develop-es-el-tronco.md) — la rama cristian está 58 commits atrás; verificar siempre contra develop.
+- [Auditoría de unificación](auditoria-unificacion-2026-09-17.md) — «el documento de incongruencias» es la página DS › Unificación (no un artifact); re-auditada el 28-sep en staging con autor por archivo.
+- [Follow up del 17-sep](reunion-follow-up-2026-09-17.md) — casi todo a Nico; a Cristian: DS sin imágenes, feedback, drawers, botones IA, BD de prueba; plazo vie 18 14:00.
+- [Un solo toaster](un-solo-toaster.md) — Toaster.tsx en RootLayout; ToastToaster en una pantalla duplica avisos.
+- [Un solo drawer](un-solo-drawer.md) — DrawerShell flotante de Nico en todo; nada de Sheet directo.
+- [Botones: una esquina](botones-una-esquina.md) — esquina de la librería en todo; terciario solo icono = BotonIcono redondo (no el riel).
+- [Home del admin: dos versiones](home-admin-dos-versiones.md) — productos.tsx quedó con la de Cristian; la de Nico está en 88cab56, pendiente de decidir.
+- [Identidad de git en el repo](identidad-git-ubits.md) — desde el 24-sep todo commit se firma con herramientasubits@ubits.co (cuenta de Vercel); un gancho lo vigila.
+- [Crear vacante (pedido de Elkin)](crear-vacante-elkin.md) — los 7 puntos entregados en /admin/seleccion/vacantes/crear; decisiones de diseño a respetar y límite del Combobox.
+- [Campos de 40 px](campos-40px.md) — regla global en src/index.css; el check marca ese archivo a propósito, espera visto bueno de ingeniería.
+- [Expediente del candidato (22-sep)](expediente-candidato.md) — pantalla propia con pestañas, vacante comercial, visor de PDF pendiente.
+- [Reglas de IA](icono-ia.md) — orbe (<IconoIA />), nada de estrellas; insignia = <EtiquetaIA />; botón de IA el último; el que abre el agente se llama «Agente IA».
+- [Candidatos es de Nicolás](seleccion-candidatos-nico.md) — en choques de candidatos en Selección gana su versión (PR #8).
+- [Reparto de la war room (21-sep)](reparto-war-room-2026-09-21.md) — quién hace qué: a Cristian le toca expediente en Selección y categorías, LMS IA y planes en Aprendizaje.
+- [Planes y Grupos de Aprendizaje (24-sep, realineado 28-sep)](aprendizaje-planes-grupos.md) — calcado al flujo real de UBITS; IA siempre contextual en panel, nunca otra página; Categorías y Recursos IA esperan referencia.
+- [War room del 28-sep](reunion-war-room-2026-09-28.md) — Planes «rompió la experiencia», «Agente IA» en todo, tablas del DS en español, tab convencional maestra, Selección a Nico.
+- [Auditoría del DS de Cristian (29-sep)](auditoria-ds-cristian-2026-09-29.md) — rama auditoria-design-system sin commit; concepto Suite AI congelado, avisos con tipo = toast.add, piezas en design-system/metricas, pendientes de otros en Unificación.
+- [Duplicados del DS re-medidos (1-oct)](duplicados-ds-analisis-2026-10-01.md) — tablas: diferencia a propósito; ventanas: todas de David; insignias: regla global; legacy LMS: en uso, no borrar.
+- [Diferencias con la librería](diferencias-con-la-libreria.md) — lista única para el dev de flux-ui: diferencias.json, /design-system/diferencias y exportador .md; causas de fondo (sin @layer, tailwind-merge 2).
+- [Calcar estructura, mejorar UI](calcar-estructura-mejorar-ui.md) — mismo flujo y acciones que el producto real, con mejor interfaz; probar cada control del real.
+- [Anatomía de los asistentes de Aprendizaje](anatomia-asistentes-aprendizaje.md) — Frame gris por bloque y «Vista previa» a la derecha, como Crear contenido y Diagnóstico de David.
+- [Revisión de David a Planes (30-sep)](revision-david-planes-2026-09-30.md) — pedidos de tabla/crear/editar por persona y reglas de negocio de planes; Desempeño depende de Planes.

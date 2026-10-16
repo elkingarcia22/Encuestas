@@ -1,0 +1,21 @@
+/* Ajustes de la anatomía propios de la barra lateral. El kit compartido no se toca: estas reglas son más específicas
+   que las suyas y solo valen dentro de la vista previa. */
+
+/* Marco, partes pequeñas dentro de una fila (insignia, punto de estado) y lo que flota (menú, tooltip): sin el margen
+   que el kit agrega arriba de cada parte. Así la fila no se mueve; el aire lo deja la fila que las contiene. */
+.preview [data-region][data-flat]:not(button):not(svg) {
+  margin-top: 0 !important;
+}
+
+/* Lo que flota a la derecha del riel lleva su nombre alineado a su borde derecho, lejos del nombre del icono. */
+.preview [data-region][data-float]::after {
+  left: auto;
+  right: -4px;
+}
+
+/* Botón de menú del header: nombre abajo pero alineado a la izquierda, para no taparle el borde a la barra.
+   El atributo va repetido para ganarle a la regla de botones del kit. */
+.preview button[data-region][data-name-left][data-name-left]::after {
+  left: -4px;
+  right: auto;
+}

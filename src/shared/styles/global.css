@@ -1,0 +1,129 @@
+html,
+html[data-theme] {
+  --font-sans: 'Inter Variable', sans-serif;
+  --font-heading: 'Inter Variable', sans-serif;
+}
+
+:root {
+  --font-sans: 'Inter Variable', sans-serif;
+  --font-heading: 'Inter Variable', sans-serif;
+  --bg: var(--background);
+  --bg-elevated: var(--card);
+  --bg-muted: var(--muted);
+  --ink: var(--foreground);
+  --ink-soft: var(--muted-foreground);
+  --line: var(--border);
+  /* Sin alias `--accent`: pisaba el `--accent` gris del tema (el que usan los menús) con el azul primario en modo claro. */
+  --accent-soft: var(--secondary);
+  --accent-ink: var(--primary-foreground);
+  --shadow: 0 18px 40px -28px color-mix(in srgb, var(--foreground) 45%, transparent);
+  --grain: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark,
+html[data-mode='dark'] {
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.35;
+  background-image: radial-gradient(var(--grain) 0.6px, transparent 0.6px);
+  background-size: 3px 3px;
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+/* Menús de flux-ui (desplegables, submenús, selects y combobox) como en REUI (16 sep).
+   La librería los arma en modo «translúcido»: fondo al 70% y la fila activa con 10% del color del texto (#e6e6e6),
+   mucho más oscuro que el resto de hovers de la interfaz (#f5f5f5 en barra lateral, header y botones).
+   REUI usa fondo sólido, la fila activa en --accent y la línea divisoria en --border. Concesión pedida por diseño:
+   reportar a librería. El `[data-slot]` extra le gana en especificidad a la regla de la librería. */
+.style-vega .cn-menu-translucent[data-slot] {
+  background-color: var(--popover);
+}
+
+.style-vega .cn-menu-translucent[data-slot] [data-slot$='-item']:focus,
+.style-vega .cn-menu-translucent[data-slot] [data-slot$='-item'][data-highlighted],
+.style-vega .cn-menu-translucent[data-slot] [data-slot$='-trigger']:focus,
+.style-vega .cn-menu-translucent-aria[data-slot] [data-slot$='-item'][data-focused] {
+  background-color: var(--accent);
+}
+
+.style-vega .cn-menu-translucent[data-slot] [data-slot$='-trigger'][aria-expanded='true'] {
+  background-color: var(--accent) !important;
+}
+
+.style-vega .cn-menu-translucent[data-slot] [data-slot$='-separator'] {
+  background-color: var(--border);
+}
+
+.style-vega .cn-menu-translucent[data-slot] [data-variant='destructive'],
+.style-vega .cn-menu-translucent[data-slot] [data-variant='destructive'] * {
+  color: var(--destructive) !important;
+}
+
+.style-vega .cn-menu-translucent[data-slot] [data-variant='destructive']:focus {
+  background-color: color-mix(in oklab, var(--destructive) 10%, transparent) !important;
+}
+
+/* Pestañas «line» de flux-ui (22 sep, Nicolás: «mira esos tabs cómo están de mal»). La librería le pone a todas las
+   listas de pestañas 3px de relleno (`.cn-tabs-list { p-[3px] }`), también a la variante «line», que no tiene fondo:
+   la raya de la pestaña activa (que va a -1px del fondo de la pestaña) quedaba 2px por encima de la línea gris en vez
+   de apoyarse sobre ella. Sin ese relleno la raya pisa la línea, como en ReUI. Concesión para reportar a librería. */
+.style-vega .cn-tabs-list[data-variant='line'] {
+  padding: 0;
+}

@@ -1,0 +1,6 @@
+.fallback {
+  min-height: 40vh;
+  display: grid;
+  place-items: center;
+  color: var(--ink-soft);
+}

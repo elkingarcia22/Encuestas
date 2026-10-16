@@ -1,0 +1,11 @@
+---
+description: Reglas obligatorias del Playground UX
+alwaysApply: true
+---
+
+Lee `AGENTS.md` en la raíz del repo y cúmplelo al pie de la letra en cada tarea.
+
+Resumen: toda la UI sale de `@ubits/flux-ui` consultando su MCP antes de escribir código,
+los iconos son Hugeicons por MCP, los colores solo tokens del tema, se trabaja únicamente
+dentro de `src/modules/<modulo>/<pantalla>/`, las pantallas reutilizan lo elegido en
+`src/modules/design-system/` (no se copia ni se inventa un paralelo), y se cierra con `npm run check`.

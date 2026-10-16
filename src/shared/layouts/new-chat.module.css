@@ -1,0 +1,64 @@
+/* «Nueva conversación»: relleno con el degradado de marca de la IA de UBITS (azul → morado → rosa → naranja,
+   entregado por diseño el 14 sep; no existe como token del tema). Sin filo, sombra ni resplandor: diseño no los quiere. */
+
+.wrap {
+  --ai-blue: #285ee6;
+  --ai-purple: #7e2be0;
+  /* Un pelo más oscuro que el #d6306e entregado: con texto blanco encima quedaba en 4.48:1 (AA pide 4.5). */
+  --ai-pink: #d22d6a;
+  --ai-orange: #eb6233;
+  /* Ida y vuelta: al doble de ancho se ven siempre los cuatro tonos, en reposo azul → naranja y con el cursor al revés. */
+  --ai-gradient-loop: linear-gradient(
+    90deg,
+    var(--ai-blue) 0%,
+    var(--ai-purple) 18%,
+    var(--ai-pink) 35%,
+    var(--ai-orange) 50%,
+    var(--ai-pink) 65%,
+    var(--ai-purple) 82%,
+    var(--ai-blue) 100%
+  );
+  position: relative;
+  display: flex;
+  border-radius: 9999px;
+}
+
+/* El relleno mide el doble del botón: al pasar el cursor se desliza y los tonos se mueven. */
+.button {
+  background: var(--ai-gradient-loop);
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  color: white;
+  box-shadow: none;
+  transition: background-position 500ms ease;
+}
+
+.button:hover {
+  background-position: 100% 50%;
+}
+
+/* Texto e icono blancos en los dos modos: el botón de flux-ui pone `--primary-foreground`, que en oscuro es azul
+   marino (para el botón azul) y sobre el degradado no llega a 4.5:1. Más específico que la regla de la librería. */
+:global(.style-vega) .wrap .button {
+  color: white;
+}
+
+/* Línea que separa cuenta + selector del botón: fina, sin tocar los bordes de la barra y desvanecida en las puntas.
+   Es un borde (con border-image) y no un fondo, para que caiga en píxeles enteros y no se vea doble con el zoom. */
+.divider {
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(
+      90deg,
+      transparent,
+      var(--sidebar-border) 22%,
+      var(--sidebar-border) 78%,
+      transparent
+    )
+    1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}

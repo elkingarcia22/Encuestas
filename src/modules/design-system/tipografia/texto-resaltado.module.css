@@ -1,0 +1,11 @@
+/* Resaltado de IA: la paleta de la IA de UBITS (azul → morado → rosa → naranja). No es token del tema; los cuatro tonos
+   los pone la clase `vars` de src/shared/components/tarjeta-ia.module.css, que se aplica junto a esta. */
+.ia {
+  background: linear-gradient(90deg, var(--ia-azul) 0%, var(--ia-morado) 40%, var(--ia-rosa) 75%, var(--ia-naranja) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  /* Que el degradado recorra cada línea si el resaltado se parte en dos. */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}

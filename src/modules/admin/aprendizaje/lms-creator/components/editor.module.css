@@ -1,0 +1,71 @@
+/* Movimientos del editor copiados del prototipo (motion.dev → CSS). */
+
+/* «Aplicar al campo»: la descripción se desvanece y desenfoca un instante mientras cambia. */
+.blurPulse {
+  animation: blur-pulse 0.6s ease-in-out;
+}
+
+@keyframes blur-pulse {
+  50% {
+    opacity: 0.2;
+    filter: blur(4px);
+  }
+}
+
+/* «Otra versión»: la propuesta nueva entra desde abajo y se enfoca. */
+.propIn {
+  animation: prop-in 0.45s ease-out both;
+}
+
+@keyframes prop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(5px);
+  }
+}
+
+/* «Sugerencia lista»: la propuesta late una vez para señalar dónde está. */
+.nudge {
+  animation: nudge 0.5s ease-in-out;
+}
+
+@keyframes nudge {
+  50% {
+    transform: scale(1.015);
+  }
+}
+
+/* Resúmenes y evaluaciones: cada línea entra desde la izquierda, escalonada. */
+.lineIn {
+  animation: line-in 0.35s ease-out both;
+}
+
+@keyframes line-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+/* Mensajes del panel. */
+.msgIn {
+  animation: msg-in 0.35s ease-out both;
+}
+
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blurPulse,
+  .propIn,
+  .nudge,
+  .lineIn,
+  .msgIn {
+    animation: none;
+  }
+}

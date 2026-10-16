@@ -1,0 +1,280 @@
+@import "@ubits/flux-ui/styles";
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@ubits/flux-ui/registry/style-vega.css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+
+@source "../node_modules/@ubits/flux-ui/dist/**/*.js";
+@custom-variant dark (&:is(.dark *));
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', sans-serif;
+  --font-heading: var(--font-sans);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-premium: var(--premium);
+  --color-premium-foreground: var(--premium-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-focus: var(--focus);
+  --color-focus-foreground: var(--focus-foreground);
+  --color-invert: var(--invert);
+  --color-invert-foreground: var(--invert-foreground);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply font-sans bg-background text-foreground;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  /* Contraste AA (16 sep): el azul baja un punto de luminosidad (0.53 → 0.52) para que el texto azul pase 4.5:1 sobre
+     su propio tinte al 15% (iniciales, hover de Novedades, fila activa resaltada en menús). Anillo de foco igual. */
+  --primary: oklch(0.52 0.233 261.971);
+  --primary-foreground: oklch(0.97 0.014 254.604);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.97 0 0);
+  /* Contraste AA (16 sep): gris un poco más oscuro (0.556 → 0.535) para pasar 4.5:1 sobre --muted, --secondary y los
+     tintes suaves del primario; antes daba 4.34 sobre --muted. */
+  --muted-foreground: oklch(0.535 0 0);
+  /* Acento neutro: flux-ui lo usa para la fila marcada de menús; con azul y texto claro no se leía. */
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  /* Contraste AA (16 sep): rojo algo más profundo para que el texto rojo pase 4.5:1 sobre su tinte (botón e insignia
+     destructivos de flux-ui, «Cerrar sesión» resaltado): 10% en reposo y 20% con el cursor. Antes daba 4.0. */
+  --destructive: oklch(0.51 0.21 27.325);
+  /* En flux-ui este token es texto rojo oscuro sobre el tinte rojo (insignias `destructive-light` y `destructive-outline`),
+     no texto sobre rojo sólido. Casi blanco daba 1.1:1 en «−5,8 %» de Inicio; con el rojo 800 de la librería pasa 7:1. */
+  --destructive-foreground: oklch(0.444 0.177 26.899);
+  /* «Info» en azul, no en violeta (17 sep). La librería lo trae en violet-500 (#8e51ff): se veía como un color suelto
+     frente al azul de la marca y en oscuro no llegaba a 4.5:1. Este azul es más profundo y verdoso que el primario, así
+     que se distingue del botón principal y pasa AA como texto sobre fondo, tarjeta y sus tintes al 10-15%. */
+  --info: oklch(0.46 0.15 247);
+  /* Como en `--destructive-foreground`: en flux-ui este token es el texto que va SOBRE el tinte claro (insignias
+     `info-light`), no sobre el azul sólido, así que es un azul profundo (7:1 sobre el tinte al 15%). */
+  --info-foreground: oklch(0.42 0.14 247);
+  /* «Premium» (1 oct, Charlie: «la insignia Pro violeta»): el único violeta del tema, con el tono del morado de marca de
+     la IA (#7e2be0). Solo para el plan Pro. Sigue la forma de «info»: `--premium` es el color del tinte y
+     `--premium-foreground`, el texto que va sobre él. Ni flux-ui ni el tema traían un violeta (el de «info» se quitó el
+     17 sep), por eso vive aquí; documentado en Design system › Marco › Ajustes propios. */
+  --premium: oklch(0.52 0.24 296);
+  --premium-foreground: oklch(0.44 0.21 296);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.52 0.233 261.971);
+  --chart-1: oklch(0.785 0.11 261.971);
+  --chart-2: oklch(0.585 0.223 261.971);
+  --chart-3: oklch(0.511 0.251 261.971);
+  --chart-4: oklch(0.457 0.23 261.971);
+  --chart-5: oklch(0.398 0.187 261.971);
+  --radius: 0.875rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.588 0.235 261.971);
+  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.52 0.233 261.971);
+  --focus: oklch(0.52 0.233 261.971);
+  --focus-foreground: oklch(0.97 0.014 254.604);
+}
+
+/* La librería define el oscuro de «ubits» con `[data-theme="ubits"].dark`, que pesa más que un `.dark` suelto: sin
+   repetir su forma, nuestros tokens no se aplicaban y el modo oscuro salía con el tinte violeta de la librería
+   (fondo #131024, superficies #221e3a, primario lavanda #a08cff). Con la misma forma, y al ir después, mandan estos. */
+.dark,
+[data-theme].dark,
+[data-theme][data-mode='dark'] {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  /* Los neutros oscuros son los de REUI (18 sep): el menú flota sobre las tarjetas, así que su superficie es más
+     clara que la de la tarjeta (#262626 vs #171717), y el resaltado de fila es #404040, que sí se ve. */
+  --popover: #262626;
+  --popover-foreground: oklch(0.985 0 0);
+  /* Contraste AA en oscuro (16 sep). Con el azul de antes (#3865f5) el texto azul daba 3.2–3.8:1 y el texto claro del
+     botón 4.43:1, y ningún azul sirve para las dos cosas a la vez. Se sube el azul (mismo matiz 266, #6c96fe) para que
+     el texto azul pase 4.5:1 sobre fondo, tarjeta, barra lateral y sus tintes al 10–20%, y el texto de lo que va sobre
+     azul (botón, insignia, pestaña activa) pasa a azul marino (#070e21, 6.8:1; 4.6:1 con el hover al 80%). */
+  /* El mismo azul de marca que en claro (18 sep, decisión de Nicolás): en oscuro el botón queda azul con texto casi
+     blanco, igual que en claro. Antes se usaba un azul más claro (#6c96fe) para que el TEXTO azul —enlaces, fila
+     activa de la barra, pestaña seleccionada— pasara 4,5:1 sobre el fondo oscuro; con este azul esos textos quedan
+     en 3,1–3,4:1. El botón sí cumple: blanco sobre azul da 5,8:1. */
+  --primary: oklch(0.52 0.233 261.971);
+  --primary-foreground: oklch(0.97 0.014 254.604);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: #404040;
+  --accent-foreground: oklch(0.985 0 0);
+  /* 0.78: con el cursor el botón rojo pone el tinte al 30% sobre el menú o la ventana; más oscuro no llega a 4.5:1. */
+  --destructive: oklch(0.78 0.15 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  /* El mismo azul de información, aclarado para el fondo oscuro (#61b1f8): 8,6:1 sobre el fondo y 6:1 sobre su tinte al 15%. */
+  --info: oklch(0.74 0.13 247);
+  --info-foreground: oklch(0.2 0.05 247);
+  /* El mismo violeta aclarado para el fondo oscuro: en oscuro la insignia usa `--premium` como texto. */
+  --premium: oklch(0.76 0.14 296);
+  --premium-foreground: oklch(0.2 0.06 296);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.52 0.233 261.971);
+  --chart-1: oklch(0.785 0.128 266.043);
+  --chart-2: oklch(0.585 0.259 266.043);
+  --chart-3: oklch(0.511 0.291 266.043);
+  --chart-4: oklch(0.457 0.267 266.043);
+  --chart-5: oklch(0.398 0.217 266.043);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.763 0.236 266.043);
+  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.69 0.16 266.043);
+  --focus: oklch(0.52 0.233 261.971);
+  --focus-foreground: oklch(0.97 0.014 254.604);
+}
+/* Alto de los campos (22 sep, pedido de UX): 40px en vez de los 36 que trae la librería.
+   Es una de las reglas del proyecto que le cambian la apariencia a un componente de flux-ui (las otras, más abajo), y por eso está
+   documentada en Design system › Marco › Ajustes propios («Campos de 40px»). Afecta a todo el playground:
+   campo de texto, selector y selector con buscador, en las 43 pantallas que los usan.
+   Va sin capa y con la misma especificidad que la librería (.style-vega .cn-*), que es lo único que le gana
+   a su regla; el número vive en --alto-campo para no repetirlo.
+   Si la librería publica un tamaño propio para los campos, esto se borra y se usa el suyo. */
+.style-vega {
+  --alto-campo: 2.5rem;
+}
+
+/* `:not([class~='h-8'])` respeta a quien ya le puso un alto compacto a mano, como el buscador de las tablas,
+   que vive en una fila de botones pequeños y no es un campo de formulario. */
+.style-vega .cn-input:not([class~='h-8']):not([class~='h-7']),
+.style-vega .cn-native-select,
+.style-vega .cn-select-trigger[data-size='default'],
+/* El campo numérico saca el alto de una clase de utilidad, no de una clase del tema: `h-8` es su tamaño
+   normal y `h-9` el grande. Aquí el `h-8` no lo escribió nadie, lo pone el componente, así que los dos suben
+   a 40; el chico (`h-7`) se queda como está, que ese sí se pide a propósito. */
+.style-vega [data-slot='number-field-group'].h-8,
+.style-vega [data-slot='number-field-group'].h-9 {
+  height: var(--alto-campo);
+}
+
+/* El selector con buscador crece con las fichas que lleve dentro: solo se le sube el mínimo. */
+.style-vega .cn-combobox-trigger {
+  min-height: var(--alto-campo);
+}
+
+/* El campo con icono, prefijo o botón pegado (la contraseña del login, los buscadores de lista). Se deja fuera
+   el que lleva algo arriba o abajo del campo, que es el compositor del agente y crece solo: la librería ya le
+   pone alto automático y fijárselo lo rompería. */
+.style-vega .cn-input-group:not([class~='h-8']):not([class~='h-7']):not(:has(> [data-align='block-end'])):not(:has(> [data-align='block-start'])) {
+  height: var(--alto-campo);
+}
+
+/* Hover de los botones sin borde (1 oct, Nicolás: «los hover en estos dos componentes no se ven»). La librería pinta
+   el hover del botón `ghost` —y con él el del terciario de solo icono, `BotonIcono`— con un gris opaco (`--muted`,
+   #f5f5f5): sobre blanco se nota, pero sobre el brillo azul de la cabecera o el gris de un marco queda del mismo tono
+   que el fondo y desaparece. Aquí es un velo del color del texto: sobre blanco da el mismo #f5f5f5 de siempre (en
+   oscuro, el mismo gris) y sobre cualquier otro fondo lo oscurece igual, así que siempre se ve. Vale también con su
+   menú abierto. Quien ya fuerza su propio hover con `!` lo conserva. Documentado en Design system › Marco › Ajustes
+   propios («Hover de los botones sin borde»). Concesión para reportar a librería. */
+.style-vega .cn-button-variant-ghost:hover,
+.style-vega .cn-button-variant-ghost[aria-expanded='true'] {
+  background-color: color-mix(in oklch, var(--foreground) 4%, transparent);
+}
+
+.style-vega.dark .cn-button-variant-ghost:hover,
+.style-vega.dark .cn-button-variant-ghost[aria-expanded='true'] {
+  background-color: color-mix(in oklch, var(--foreground) 6%, transparent);
+}
+
+/* Casillas visibles en cualquier superficie (1 oct, Nicolás: «ese checkbox tampoco se ve»). La librería deja la casilla
+   sin marcar transparente y con el borde de los campos (#e5e5e5): sobre el gris del pie de una ventana o de un marco
+   se pierde. Aquí lleva el fondo de la página y un borde más oscuro (el color del texto al 30 %). La marcada, la que
+   tiene error, la que tiene el foco y la que alguien tiñó a mano (con `!`) no cambian. El radio sin elegir tenía el
+   mismo problema (se vio en el menú de estado de la vacante, sobre el gris del resalte) y lleva lo mismo. Documentado
+   en Design system › Marco › Ajustes propios («Casillas y radios visibles»). Concesión para reportar a librería. */
+.style-vega .cn-checkbox[data-unchecked]:not([aria-invalid='true']):not(:focus-visible),
+.style-vega .cn-radio-group-item[data-unchecked]:not([aria-invalid='true']):not(:focus-visible) {
+  background-color: var(--background);
+  border-color: color-mix(in oklch, var(--foreground) 30%, var(--background));
+}

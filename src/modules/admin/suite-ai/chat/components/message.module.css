@@ -1,0 +1,61 @@
+/* Movimientos de los mensajes del chat. */
+
+/* Cursor que parpadea mientras el agente escribe. */
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: currentColor;
+  animation: caret 1s steps(1) infinite;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Entrada suave desde abajo: tarjeta de comentario y sugerencias. */
+.rise {
+  animation: rise 0.32s ease-out both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Aparición: fuentes, confirmaciones y edición. */
+.fade {
+  animation: fade 0.25s ease-out both;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Icono de lectura en voz alta mientras suena. */
+.speaking {
+  animation: speaking 1.2s ease-in-out infinite;
+}
+
+@keyframes speaking {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret,
+  .rise,
+  .fade,
+  .speaking {
+    animation: none;
+  }
+}
