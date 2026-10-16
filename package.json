@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "preinstall": "bash scripts/aws-login.sh",
     "aws-login": "bash scripts/aws-login.sh",
     "setup": "bash scripts/setup.sh",
     "start": "vite",
