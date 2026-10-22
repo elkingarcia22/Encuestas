@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CheckListIcon, Clock01Icon, UserGroupIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbList,
@@ -18,8 +17,9 @@ import {
   Text,
   Textarea,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { toPreviewQuestion, type PreviewPage } from '../../modelo/previewModel'
-import { supportsFollowUps } from '../../modelo/questionCatalog'
+import { supportsDepthWhy, supportsFollowUps } from '../../modelo/questionCatalog'
 import { MINUTES_PER_QUESTION, depthLabel, type SurveyQuestion } from '../../modelo/surveyBuilderTypes'
 import { textoPlano } from '../../modelo/textoPagina'
 import { CampoRespuesta, type Respuesta } from './campo-respuesta'
@@ -44,6 +44,8 @@ type Props = {
 // Qué pregunta de seguimiento le toca a una valoración. Las bandas del NPS son las del producto
 // (0-6, 7-8, 9-10); las escalas de cinco pasos se parten igual en tres.
 function seguimientoDe(pregunta: SurveyQuestion, valor: Respuesta): string | null {
+  // La pregunta de profundidad de una sola línea sale en cuanto hay una respuesta, sea cual sea.
+  if (pregunta.depthWhyEnabled && supportsDepthWhy(pregunta)) return respondida(valor) ? (pregunta.depthWhyText ?? '').trim() || 'Cuéntanos por qué elegiste esta respuesta' : null
   const { kind, followUpEnabled, followUps } = pregunta.scale
   if (!followUpEnabled || !supportsFollowUps(kind) || typeof valor !== 'string' || valor === '') return null
   const puntos = Number(valor)

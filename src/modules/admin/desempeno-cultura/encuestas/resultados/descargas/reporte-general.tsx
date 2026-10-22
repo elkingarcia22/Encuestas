@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Alert, AlertDescription, Badge, Progress, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { Alert, AlertDescription, Progress, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { FAVORABILITY_BANDS, FAVORABILITY_FLOOR, FAVORABILITY_TARGET, VERDICT_COPY, bandForScore, formatPercent, formatScore, npsBandForScore, verdictForFavorability } from '../../modelo/favorabilityScale'
 import { SCOPE_ALL, analyseSegmentGaps, resolveScope, scopedMetrics } from '../../modelo/summaryModel'
@@ -22,6 +23,7 @@ import {
 } from '../../modelo/surveyResults'
 import { INSIGNIA_POR_LECTURA, INSIGNIA_POR_TONO, conSigno, numero } from '../components/escala'
 import { Ajusta, Bloque, MAX_COLUMNAS, TANDAS, partir, Cifras, Documento, Leyenda, Nota, Pie, Portada, SeccionDocumento, fechaReporte, hoyReporte } from './documento'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // El reporte general de una medición de clima o cultura, impreso: la medición contada para quien
 // decide. Alterna secciones generales (verificación, favorabilidad por secciones, IA), iguales para
@@ -67,7 +69,7 @@ const tramosDeSeccion = (seccion: SectionResult): Tramos => {
   for (const nodo of flattenResultSections([seccion])) for (const pregunta of nodo.questions) pregunta.distribution?.forEach((cuenta, i) => (cajas[i] += cuenta))
   return tramos(cajas)
 }
-const porcentaje = (valor: number, total: number) => (total === 0 ? '—' : `${parte(valor, total)}%`)
+const porcentaje = (valor: number, total: number) => (total === 0 ? '—' : `${parte(valor, total)} %`)
 
 function Puntaje({ valor }: { valor: number | null }) {
   if (valor === null)
@@ -108,9 +110,9 @@ function Nps({ valor }: { valor: number }) {
 
 const LEYENDA_BANDAS = FAVORABILITY_BANDS.map((banda) => ({ etiqueta: banda.label, rango: banda.range, variante: INSIGNIA_POR_TONO[banda.tone] }))
 const LEYENDA_FAVORABILIDAD = [
-  { etiqueta: 'Favorable', rango: `${FAVORABILITY_TARGET}% o más`, variante: 'success-light' as const },
-  { etiqueta: 'Neutral', rango: `${FAVORABILITY_FLOOR}% a ${FAVORABILITY_TARGET - 1}%`, variante: 'warning-light' as const },
-  { etiqueta: 'Desfavorable', rango: `menos de ${FAVORABILITY_FLOOR}%`, variante: 'destructive-outline' as const },
+  { etiqueta: 'Favorable', rango: `${FAVORABILITY_TARGET} % o más`, variante: 'success-light' as const },
+  { etiqueta: 'Neutral', rango: `${FAVORABILITY_FLOOR} % a ${FAVORABILITY_TARGET - 1} %`, variante: 'warning-light' as const },
+  { etiqueta: 'Desfavorable', rango: `menos de ${FAVORABILITY_FLOOR} %`, variante: 'destructive-outline' as const },
 ]
 
 // Sangría por profundidad: el árbol de secciones se lee en el papel igual que en la pantalla.
@@ -137,10 +139,10 @@ function Verificacion({ resultados, secciones, favorabilidad, participacion }: D
   return (
     <Cifras
       cifras={[
-        { etiqueta: 'Favorabilidad', valor: formatPercent(favorabilidad), detalle: `${numero(metricas.scoredQuestions)} preguntas de escala` },
+        { etiqueta: 'Favorabilidad', valor: formatPercent(favorabilidad), detalle: `${numero(metricas.scoredQuestions)} ${plural(metricas.scoredQuestions, 'pregunta', 'preguntas')} de escala` },
         { etiqueta: 'Participación', valor: formatPercent(participacion.rate), detalle: `${numero(participacion.completed)} de ${numero(participacion.invited)} personas` },
         nps
-          ? { etiqueta: 'eNPS', valor: conSigno(nps.score), detalle: `${parte(nps.promoters, nps.n)}% promotores · ${parte(nps.detractors, nps.n)}% detractores` }
+          ? { etiqueta: 'eNPS', valor: conSigno(nps.score), detalle: `${parte(nps.promoters, nps.n)} % promotores · ${parte(nps.detractors, nps.n)} % detractores` }
           : { etiqueta: 'eNPS', valor: '—', detalle: 'Esta encuesta no incluyó pregunta de recomendabilidad' },
         { etiqueta: 'Respuestas registradas', valor: numero(metricas.scaleAnswers), detalle: 'Respuestas sobre preguntas de escala 1 a 5' },
       ]}
@@ -166,9 +168,9 @@ function Participacion(datos: Datos) {
         <Leyenda
           titulo="Escala de la tasa de respuesta"
           tramos={[
-            { etiqueta: 'Alta', rango: '80% o más', variante: 'success-light' },
-            { etiqueta: 'Media', rango: '60% a 79%', variante: 'warning-light' },
-            { etiqueta: 'Baja', rango: 'menos de 60%', variante: 'destructive-outline' },
+            { etiqueta: 'Alta', rango: '80 % o más', variante: 'success-light' },
+            { etiqueta: 'Media', rango: '60 % a 79 %', variante: 'warning-light' },
+            { etiqueta: 'Baja', rango: 'menos de 60 %', variante: 'destructive-outline' },
           ]}
         />
         <Badge variant={INSIGNIA_POR_LECTURA[lectura.tono]}>
@@ -183,7 +185,7 @@ function Participacion(datos: Datos) {
                 {fila.etiqueta}
               </Text>
               <Text as="span" size="sm" variant="muted" className="tabular-nums">
-                {numero(fila.valor)} · {parte(fila.valor, participacion.invited)}%
+                {numero(fila.valor)} · {parte(fila.valor, participacion.invited)} %
               </Text>
             </div>
             <Progress value={parte(fila.valor, participacion.invited)} aria-label={fila.etiqueta} />
@@ -483,9 +485,9 @@ function Enps(datos: Datos) {
           <Numerada numeracion={seccion.numbering} titulo={seccion.title} profundidad={profundidad} fuerte={profundidad === 0} />
         </TableCell>
         <Num>{numero(seccion.n)}</Num>
-        <Num>{parte(seccion.detractors, seccion.n)}%</Num>
-        <Num>{parte(seccion.passives, seccion.n)}%</Num>
-        <Num>{parte(seccion.promoters, seccion.n)}%</Num>
+        <Num>{parte(seccion.detractors, seccion.n)} %</Num>
+        <Num>{parte(seccion.passives, seccion.n)} %</Num>
+        <Num>{parte(seccion.promoters, seccion.n)} %</Num>
         <TableCell className="text-center">
           <Nps valor={seccion.score} />
         </TableCell>
@@ -496,10 +498,10 @@ function Enps(datos: Datos) {
     <>
       <Cifras
         cifras={[
-          { etiqueta: 'eNPS', valor: conSigno(nps.score), detalle: `Sobre ${numero(nps.n)} personas, de −100 a +100` },
-          { etiqueta: 'Detractores', valor: `${parte(nps.detractors, nps.n)}%`, detalle: `${numero(nps.detractors)} personas · 0 a 6` },
-          { etiqueta: 'Neutros', valor: `${parte(nps.passives, nps.n)}%`, detalle: `${numero(nps.passives)} personas · 7 a 8` },
-          { etiqueta: 'Promotores', valor: `${parte(nps.promoters, nps.n)}%`, detalle: `${numero(nps.promoters)} personas · 9 a 10` },
+          { etiqueta: 'eNPS', valor: conSigno(nps.score), detalle: `Sobre ${numero(nps.n)} ${plural(nps.n, 'persona', 'personas')}, de −100 a +100` },
+          { etiqueta: 'Detractores', valor: `${parte(nps.detractors, nps.n)} %`, detalle: `${numero(nps.detractors)} ${plural(nps.detractors, 'persona', 'personas')} · 0 a 6` },
+          { etiqueta: 'Neutros', valor: `${parte(nps.passives, nps.n)} %`, detalle: `${numero(nps.passives)} ${plural(nps.passives, 'persona', 'personas')} · 7 a 8` },
+          { etiqueta: 'Promotores', valor: `${parte(nps.promoters, nps.n)} %`, detalle: `${numero(nps.promoters)} ${plural(nps.promoters, 'persona', 'personas')} · 9 a 10` },
         ]}
       />
       {detalle.length > 0 ? (
@@ -535,9 +537,9 @@ function Enps(datos: Datos) {
                         </TableCell>
                       ) : (
                         <>
-                          <Num>{parte(celda.detractors, celda.n)}%</Num>
-                          <Num>{parte(celda.passives, celda.n)}%</Num>
-                          <Num>{parte(celda.promoters, celda.n)}%</Num>
+                          <Num>{parte(celda.detractors, celda.n)} %</Num>
+                          <Num>{parte(celda.passives, celda.n)} %</Num>
+                          <Num>{parte(celda.promoters, celda.n)} %</Num>
                           <TableCell className="text-center">
                             <Nps valor={celda.score} />
                           </TableCell>
@@ -553,9 +555,9 @@ function Enps(datos: Datos) {
                     </Text>
                   </TableCell>
                   <Num>{numero(total.n)}</Num>
-                  <Num>{parte(total.detractors, total.n)}%</Num>
-                  <Num>{parte(total.passives, total.n)}%</Num>
-                  <Num>{parte(total.promoters, total.n)}%</Num>
+                  <Num>{parte(total.detractors, total.n)} %</Num>
+                  <Num>{parte(total.passives, total.n)} %</Num>
+                  <Num>{parte(total.promoters, total.n)} %</Num>
                   <TableCell className="text-center">
                     <Nps valor={total.score} />
                   </TableCell>

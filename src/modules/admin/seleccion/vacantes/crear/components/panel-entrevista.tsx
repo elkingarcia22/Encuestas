@@ -5,10 +5,8 @@ import {
   Copy01Icon,
   Delete02Icon,
   DragDropVerticalIcon,
-  Message01Icon,
   PencilEdit02Icon,
   PlusSignIcon,
-  Settings02Icon,
   Target02Icon,
   Video01Icon,
 } from '@hugeicons/core-free-icons'
@@ -68,6 +66,7 @@ import {
   type Pregunta,
 } from './etapas'
 import { AvisoPropuestaIa, CampoTexto, DistribucionPuntos, GeneradorIa, SelectorVoz } from './piezas-ia'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 // Plazo máximo para presentar la entrevista, en días.
 const DIAS_MAX = 30
@@ -253,11 +252,9 @@ export function PanelEntrevista({ abierto, onAbiertoChange, ajustes, onGuardar, 
           <div className="border-b px-5">
             <TabsList variant="line" className="w-full justify-start">
               <TabsTrigger value="preguntas" className="flex-none">
-                <HugeiconsIcon icon={Message01Icon} size={18} aria-hidden="true" />
                 Preguntas
               </TabsTrigger>
               <TabsTrigger value="formato" className="flex-none">
-                <HugeiconsIcon icon={Settings02Icon} size={18} aria-hidden="true" />
                 Formato y voz
               </TabsTrigger>
             </TabsList>
@@ -337,8 +334,8 @@ export function PanelEntrevista({ abierto, onAbiertoChange, ajustes, onGuardar, 
             {preguntas.length === 0 && !editando && !generando ? (
               <Empty>
                 <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <HugeiconsIcon icon={Message01Icon} aria-hidden="true" />
+                  <EmptyMedia variant="default">
+                    <ImagenGlass nombre="glass-chat" tamano={56} />
                   </EmptyMedia>
                   <EmptyTitle>Todavía no hay preguntas</EmptyTitle>
                   <EmptyDescription>

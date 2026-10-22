@@ -16,7 +16,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -57,8 +56,9 @@ import {
   Separator,
   Switch,
   Text,
-  toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify } from '@/shared/components/notify'
 
 import { CasoUbits } from '../patrones/piezas'
 import { plural, textoDeRango } from '../patrones/formato'
@@ -245,7 +245,7 @@ export function FormularioPorSecciones() {
       return
     }
     setActivada(true)
-    toast.add({ type: 'success', title: 'Evaluación 360° creada', description: 'Ya aparece en el listado como en progreso.' })
+    notify('Evaluación 360° creada', 'Ya aparece en el listado como en progreso.', 'success')
   }
 
   const empezarDeNuevo = () => {

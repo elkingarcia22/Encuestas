@@ -34,7 +34,7 @@ export function NavDrawer({ open, onOpenChange }: Props) {
 
   const go = (label: string) => {
     setActive(label)
-    notify(`Ir a ${label}`)
+    notify(`Ir a ${label}`, undefined, 'info')
     onOpenChange(false)
   }
 

@@ -82,7 +82,7 @@ export function PasoAjustes({ borrador, items, pesos, pesosVacio, abrirSeleccion
           <FrameHeader className="flex flex-row items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col">
               <FrameTitle>Pesos de evaluación</FrameTitle>
-              <FrameDescription>Cuánto cuenta cada evaluación en la nota final. Deben sumar 100%.</FrameDescription>
+              <FrameDescription>Cuánto cuenta cada evaluación en la nota final. Deben sumar 100 %.</FrameDescription>
             </div>
             {!pesosVacio && visibles.length >= 2 ? (
               <Button variant="outline" size="sm" className="shrink-0" onClick={() => onCambio({ pesos: repartirPesos(items) })}>
@@ -99,9 +99,9 @@ export function PasoAjustes({ borrador, items, pesos, pesosVacio, abrirSeleccion
             />
             {pesosMal ? (
               <Alert variant="warning">
-                <AlertTitle>La suma de los pesos de evaluación debe ser 100%</AlertTitle>
+                <AlertTitle>La suma de los pesos de evaluación debe ser 100 %</AlertTitle>
                 <AlertDescription>
-                  <p>Llevas {suma.toLocaleString('es-CO')}%. Ajusta los porcentajes o usa «Repartir automáticamente».</p>
+                  <p>Llevas {suma.toLocaleString('es-CO')} %. Ajusta los porcentajes o usa «Repartir automáticamente».</p>
                 </AlertDescription>
               </Alert>
             ) : null}

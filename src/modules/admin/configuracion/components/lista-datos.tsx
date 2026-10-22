@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from 'react'
-import { Badge, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Separator, Text } from '@ubits/flux-ui'
+import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Separator, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import type { Dato } from './datos'
 
 // Sección de solo lectura: marco con título y una lista de pares etiqueta/valor (no campos deshabilitados).

@@ -6,13 +6,13 @@ import {
   Briefcase06Icon,
   Building03Icon,
   Calendar03Icon,
+  Cancel01Icon,
   Location01Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
   UserIcon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   ButtonGroup,
   DropdownMenu,
@@ -26,10 +26,12 @@ import {
   TabsList,
   TabsTrigger,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { WS } from '../../drawers/components/drawer-styles'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../components/case-frame'
 import { VACANCIES } from './components/data'
 import { ActivityPanel, CandidatesPanel, RecordAside, SummaryPanel } from './components/record-panels'
@@ -40,6 +42,8 @@ type TabId = 'resumen' | 'candidatos' | 'actividad'
 export function Component() {
   const [index, setIndex] = useState(0)
   const [tab, setTab] = useState<TabId>('resumen')
+  const [cerrando, setCerrando] = useState(false)
+  const [cerradas, setCerradas] = useState<string[]>([])
   const vacancy = VACANCIES[index]
 
   const tabs: { value: TabId; label: string; count?: number }[] = [
@@ -66,7 +70,7 @@ export function Component() {
             </IconTile>
           }
           title={vacancy.name}
-          badge={<Badge variant="secondary">{vacancy.status}</Badge>}
+          badge={<Badge variant="secondary">{cerradas.includes(vacancy.name) ? 'Cerrada' : vacancy.status}</Badge>}
           meta={meta.map((item) => (
             <span key={item.text} className="flex items-center gap-1.5">
               <HugeiconsIcon icon={item.icon} size={15} />
@@ -107,20 +111,21 @@ export function Component() {
                 </DropdownMenuTrigger>
                 {/* El «⋯» va primero de los botones y su menú abre hacia adentro de la fila (decisión 15 de la auditoría). */}
                 <DropdownMenuContent align="start" className="w-52">
-                  <DropdownMenuItem onClick={() => notify('Vacante duplicada')}>Duplicar</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => notify('Enlace copiado')}>Copiar enlace</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => notify('Vacante pausada')}>Pausar publicación</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => notify('Vacante duplicada', undefined, 'success')}>Duplicar</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => notify('Enlace copiado', undefined, 'success')}>Copiar enlace</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => notify('Vacante pausada', undefined, 'success')}>Pausar publicación</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem variant="destructive" onClick={() => notify('Vacante cerrada')}>
+                  {/* Cerrar una vacante le llega a quienes se postularon: pregunta antes (13-oct, regla «preguntar-antes»). */}
+                  <DropdownMenuItem variant="destructive" onClick={() => setCerrando(true)}>
                     Cerrar vacante
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button data-region="Botón secundario" variant="outline" className={WS} onClick={() => notify('Editar vacante')}>
+              <Button data-region="Botón secundario" variant="outline" className={WS} onClick={() => notify('Editar vacante', undefined, 'info')}>
                 <HugeiconsIcon icon={PencilEdit02Icon} size={16} />
                 Editar
               </Button>
-              <Button data-region="Botón primario" className={WS} onClick={() => notify('Agendar entrevista')}>
+              <Button data-region="Botón primario" className={WS} onClick={() => notify('Agendar entrevista', undefined, 'info')}>
                 <HugeiconsIcon icon={Calendar03Icon} size={16} />
                 Agendar entrevista
               </Button>
@@ -155,6 +160,24 @@ export function Component() {
           </div>
         </PageContent>
 
+        {/* Dice qué se toca y a cuántas personas llega, con los números de la vacante. */}
+        <DialogoConfirmar
+          abierto={cerrando}
+          onAbiertoChange={setCerrando}
+          icono={Cancel01Icon}
+          titulo="¿Cerrar la vacante?"
+          descripcion={`Deja de recibir postulaciones y se avisa por correo a quienes siguen en proceso (${vacancy.candidates.length} candidatos). No se puede reabrir desde aquí.`}
+          cancelar="Seguir abierta"
+          accion="Cerrar vacante"
+          destructiva
+          onConfirmar={() => {
+            setCerrando(false)
+            setCerradas((antes) => [...antes, vacancy.name])
+            notify('Vacante cerrada', `Se avisó a ${vacancy.candidates.length} candidatos.`, 'success')
+          }}
+        >
+          <RegistroConfirmar nombre={vacancy.name} detalle={`${vacancy.area} · ${vacancy.location}`} estado={vacancy.status} tono="neutro" icono={Briefcase06Icon} />
+        </DialogoConfirmar>
       </PageShell>
     </CaseFrame>
   )

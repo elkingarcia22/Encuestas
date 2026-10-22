@@ -1,12 +1,13 @@
 import { useState, type ReactNode } from 'react'
-import { Accordion, Badge, Frame, FrameDescription, FrameHeader, FrameTitle, Switch, Text } from '@ubits/flux-ui'
+import { Accordion, Frame, FrameDescription, FrameHeader, FrameTitle, Switch, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { COLLABORATOR_COUNT, type Collaborator } from '../../modelo/collaborators'
 import { formatCount, participantCountForMode, participantsGroupBreakdown, segmentCounts, totalParticipantCount } from '../../modelo/participants'
 import { quitadosConRespuestas } from '../../modelo/respuestas-previas'
-import type { ParticipantsSelection } from '../../modelo/surveyBuilderTypes'
-import { DialogoRespuestas, type DestinoRespuestas } from './participantes/dialogo-respuestas'
-import { ListaDeGrupos, ListaDePersonas } from './participantes/directorio'
+import type { ParticipantsSelection, SegmentKey } from '../../modelo/surveyBuilderTypes'
+import { DialogoRespuestas, type DestinoRespuestas, type ContextoQuitar } from './participantes/dialogo-respuestas'
+import { ListaDeGrupos, ListaDePersonas, type FiltroGrupoEnfocado } from './participantes/directorio'
 import { notify } from '@/shared/components/notify'
 import { COLLABORATORS } from '../../modelo/collaborators'
 import { sumarImportados } from '../../modelo/importarParticipantes'
@@ -56,7 +57,15 @@ function Contenedor({
 }) {
   return (
     <Frame>
-      <FrameHeader className="flex-row! items-center! justify-between! gap-3!">
+      {/* «!»: la cabecera del marco en fila (título a la izquierda, interruptor a la derecha); la clase sola no le gana a la
+          librería (diferencias.json › card-header-en-fila-sin-espacio-propio e instalacion-estilos-sin-capa). */}
+      <FrameHeader
+        className="flex-row! items-center! justify-between! gap-3! cursor-pointer select-none"
+        onClick={(evento) => {
+          if ((evento.target as HTMLElement).closest('[role="switch"], button, input, select, label')) return
+          onActivo(!activo)
+        }}
+      >
         <div className="flex min-w-0 flex-col gap-1">
           <FrameTitle id={`${id}-titulo`}>{titulo}</FrameTitle>
           <FrameDescription>{detalle}</FrameDescription>
@@ -76,7 +85,7 @@ function Contenedor({
   )
 }
 
-export function PasoParticipantes({ seleccion, onCambio, respondieron = null, sugeridos, minimoPorGrupo = null }: { seleccion: ParticipantsSelection; onCambio: (cambio: Partial<ParticipantsSelection>) => void; respondieron?: ReadonlySet<string> | null; sugeridos?: ReadonlySet<"grupos" | "personas">; /** Encuesta anónima: el mínimo de respuestas para que un grupo vea sus resultados (PAR-019). */ minimoPorGrupo?: number | null }) {
+export function PasoParticipantes({ seleccion, onCambio, respondieron = null, sugeridos, minimoPorGrupo = null, contexto = 'encuesta' }: { seleccion: ParticipantsSelection; /** Desde Objetivos, la ventana de quitar habla del ciclo y del avance. */ contexto?: ContextoQuitar; onCambio: (cambio: Partial<ParticipantsSelection>) => void; respondieron?: ReadonlySet<string> | null; sugeridos?: ReadonlySet<"grupos" | "personas">; /** Encuesta anónima: el mínimo de respuestas para que un grupo vea sus resultados (PAR-019). */ minimoPorGrupo?: number | null }) {
   const todaLaEmpresa = seleccion.mode === 'company'
   const total = totalParticipantCount(seleccion)
   const [importando, setImportando] = useState(false)
@@ -116,6 +125,13 @@ export function PasoParticipantes({ seleccion, onCambio, respondieron = null, su
     const conAlgo = [...(seleccion.selectedGroups.length ? ['grupos'] : []), ...(seleccion.selectedIds.length ? ['personas'] : [])]
     return (conAlgo.length ? conAlgo : [...(sugeridos ?? [])]).slice(0, 1)
   })
+  const [filtroGrupoPersona, setFiltroGrupoPersona] = useState<FiltroGrupoEnfocado | null>(null)
+
+  const irAExcluirUsuarios = (grupo: string, segmento: SegmentKey) => {
+    setFiltroGrupoPersona({ grupo, segmento })
+    setAbiertas(['personas'])
+  }
+
   const [guardados, setGuardados] = useState<Partial<Record<Fuente, Partial<ParticipantsSelection>>>>({})
   const encendido = (fuente: Fuente) => !todaLaEmpresa && encendidos.has(fuente)
 
@@ -161,8 +177,12 @@ export function PasoParticipantes({ seleccion, onCambio, respondieron = null, su
     if (guardados.grupos || guardados.personas) setGuardados((previos) => ({ ...previos, grupos: undefined, personas: undefined }))
     return recuperado
   }
-  // Elegir algo en un acordeón con toda la empresa encendida la apaga; lo elegido en la lista manda sobre lo guardado.
-  const cambioDeLista = (cambio: Partial<ParticipantsSelection>) => pedirCambio(todaLaEmpresa ? { mode: 'groups', ...recuperarGuardado(), ...cambio } : cambio)
+  // Con toda la empresa encendida, las listas de «Por grupos» y «Por persona» salen con todo marcado (Elkin, 21-oct): todos los
+  // grupos y, por ellos, todas las personas. Es como se ve, no lo guardado: la selección sigue siendo «toda la empresa».
+  const todaLaEmpresaComoGrupos: Partial<ParticipantsSelection> = { mode: 'groups', selectedGroups: [...segmentCounts(seleccion.groupSegmentBy).keys()], selectedIds: [], excludedIds: [] }
+  const vistaListas: ParticipantsSelection = todaLaEmpresa ? { ...seleccion, ...todaLaEmpresaComoGrupos } : seleccion
+  // Desmarcar algo en una lista con toda la empresa encendida la apaga y deja todo lo demás marcado: parte de «todos».
+  const cambioDeLista = (cambio: Partial<ParticipantsSelection>) => pedirCambio(todaLaEmpresa ? { ...todaLaEmpresaComoGrupos, ...cambio } : cambio)
 
   const alternar = (fuente: Fuente, activo: boolean) => {
     if (!activo) {
@@ -192,6 +212,7 @@ export function PasoParticipantes({ seleccion, onCambio, respondieron = null, su
     notify(
       agregados > 0 ? `Cargamos ${personas(agregados)} de «${lote.archivo}»` : `«${lote.archivo}» no sumó a nadie nuevo`,
       agregados < lote.usuarios.length ? (lote.usuarios.length - agregados === 1 ? '1 persona ya estaba cargada.' : `${personas(lote.usuarios.length - agregados)} ya estaban cargadas.`) : undefined,
+      agregados > 0 ? 'success' : 'info',
     )
   }
 
@@ -260,18 +281,23 @@ export function PasoParticipantes({ seleccion, onCambio, respondieron = null, su
           id="grupos"
           titulo="Por grupos"
           detalle="Áreas, líderes u otros grupos. Un grupo entra completo, salvo a quien dejes fuera."
-          conteo={todaLaEmpresa ? undefined : groups.length ? `${groups.length}/${gruposPosibles} · ${personas(personasDeGrupos)}` : `0/${gruposPosibles} elegidos`}
+          conteo={todaLaEmpresa ? `${gruposPosibles}/${gruposPosibles} · ${personas(COLLABORATOR_COUNT)}` : groups.length ? `${groups.length}/${gruposPosibles} · ${personas(personasDeGrupos)}` : `0/${gruposPosibles} elegidos`}
         >
-          <ListaDeGrupos seleccion={seleccion} onCambio={cambioDeLista} minimo={minimoPorGrupo} />
+          <ListaDeGrupos seleccion={vistaListas} onCambio={cambioDeLista} minimo={minimoPorGrupo} onExcluirUsuarios={irAExcluirUsuarios} />
         </ContenedorDesplegable>
 
         <ContenedorDesplegable
           id="personas"
           titulo="Por persona"
           detalle="Busca y marca a quien quieras, una a una. Quien entró por un grupo ya sale marcado."
-          conteo={todaLaEmpresa ? undefined : outsideCount ? `${personas(outsideCount)} ${outsideCount === 1 ? 'elegida' : 'elegidas'}` : 'Ninguna elegida'}
+          conteo={todaLaEmpresa ? `${personas(COLLABORATOR_COUNT)} · toda la empresa` : outsideCount ? `${personas(outsideCount)} ${outsideCount === 1 ? 'elegida' : 'elegidas'}` : 'Ninguna elegida'}
         >
-          <ListaDePersonas seleccion={seleccion} onCambio={cambioDeLista} />
+          <ListaDePersonas
+            seleccion={vistaListas}
+            onCambio={cambioDeLista}
+            filtroGrupo={filtroGrupoPersona}
+            onLimpiarFiltroGrupo={() => setFiltroGrupoPersona(null)}
+          />
         </ContenedorDesplegable>
       </Accordion>
 
@@ -299,7 +325,7 @@ export function PasoParticipantes({ seleccion, onCambio, respondieron = null, su
       )}
 
       <DrawerImportar open={importando} onOpenChange={setImportando} onCargar={cargarLote} />
-      <DialogoRespuestas key={pendiente?.afectados.map((persona) => persona.id).join(',')} afectados={pendiente?.afectados ?? null} onConfirmar={resolver} onCancelar={() => setPendiente(null)} />
+      <DialogoRespuestas key={pendiente?.afectados.map((persona) => persona.id).join(',')} afectados={pendiente?.afectados ?? null} contexto={contexto} onConfirmar={resolver} onCancelar={() => setPendiente(null)} />
     </div>
   )
 }

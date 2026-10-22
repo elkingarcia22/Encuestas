@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Coins01Icon } from '@hugeicons/core-free-icons'
-import { Badge, cn, Text } from '@ubits/flux-ui'
+import { cn, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { Hint } from '@/shared/components/Hint'
 import paleta from '@/shared/components/tarjeta-ia.module.css'
 import { formatoTokens } from './borrador'
 import styles from './tokens.module.css'
 
 // Los tokens de IA: la insignia con el saldo (cabeceras de las superficies de IA) y el costo dentro de un botón.
-// Borde en el degradado de la IA y moneda en morado, como el badge IA «outlined» del prototipo.
+// Borde en el degradado de la IA, como el badge IA «outlined» del prototipo; número y moneda en el color del texto.
 // Es el badge IA de tokens de UBITS (React y vanilla) con su microinteracción al gastar: la insignia se aplasta y
 // rebota, la moneda gira, el número baja contando y un «−N» en rojo sube y se desvanece. La librería no trae uno.
 

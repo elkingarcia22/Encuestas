@@ -1,43 +1,56 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { FileImportIcon, GitCompareIcon, GridViewIcon, MoreHorizontalIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger, Tabs, TabsContent, TabsList, TabsTrigger, Text } from '@ubits/flux-ui'
-import { BotonIcono } from '@/shared/components/BotonIcono'
+import { FileImportIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { Button, Tabs, TabsContent, TabsList, TabsTrigger, Text } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { ReopenAgentButton } from '@/modules/design-system/agente-contextual/components/agent-kit'
 import { useAgente } from '@/modules/admin/aprendizaje/planes-de-formacion/components/agente-aprendizaje'
 import { formatSurveyDate, startOfToday } from '../encuestas/modelo/surveyListDates'
-import type { Ciclo } from './modelo/ciclos'
+import { saveBlob } from '../encuestas/modelo/descargas/libro'
+import { formatoAvance, type Ciclo } from './modelo/ciclos'
 import { SIN_FILTROS, type FiltrosCiclos } from './modelo/filtros'
 import { USUARIOS_SIN_OBJETIVOS } from './modelo/usuarios'
-import type { PlantillaCiclo } from './modelo/plantillas'
+import type { AlertaCiclo } from './modelo/alertas'
 import { PanelAlertas } from './components/panel-alertas'
 import { PulsoObjetivos } from './components/pulso'
 import { TablaCiclos, type AccionCiclo, type EdicionFecha } from './components/tabla-ciclos'
 import type { ModoFecha } from '../encuestas/components/celda-fecha'
 import { TablaUsuarios } from './components/tabla-usuarios'
-import { CatalogoPlantillas } from './components/plantillas/catalogo-plantillas'
 import { AgenteObjetivos } from './components/agente-objetivos'
 import { DialogoEliminar, DialogoFinalizar } from './components/dialogos'
 import { PanelCargaObjetivos } from './components/carga/panel-carga'
-import { actualizarCiclo, duplicarCiclos, eliminarCiclos, useCiclos } from './components/almacen'
+import type { DatosCargaCiclo } from './modelo/carga/carga-objetivos'
+import { actualizarCiclo, configDe, duplicarCiclos, eliminarCiclos, guardarConfig, useCiclos } from './components/almacen'
+import { DrawerConfiguracion } from './components/configuracion/drawer-configuracion'
 
 // Desempeño y cultura › Objetivos. Trae el home del prototipo de Objetivos con el armado del home de Encuestas: arriba
 // lo que hay que atender, debajo las tres lecturas promedio y luego las pestañas Ciclos de objetivos y Usuarios sin
 // objetivos. Lo que en el prototipo vivía en una barra flotante (comparar ciclos, cargar objetivos, agente, crear ciclo)
-// va en el encabezado, y la fila de plantillas pasa a «Crear con plantilla», con el catálogo completo del prototipo
-// en el mismo panel que el de Encuestas.
+// va en el encabezado. Sin plantillas: en Objetivos los ciclos no se crean desde una (21-oct).
 //
-// Crear, editar, usar una plantilla, editar participantes y añadir objetivos abren el constructor
-// (`objetivos/crear`), con el mismo juego de rutas y de estado de navegación que Encuestas. El detalle de un ciclo
-// todavía no existe en el playground: esa acción avisa, sin fingir que funciona.
+// Crear, editar, editar participantes y agregar objetivos abren el constructor
+// (`objetivos/crear`), con el mismo juego de rutas y de estado de navegación que Encuestas. «Comparar ciclos» no está
+// porque esa pantalla todavía no existe (regla «nada-que-finja», 13-oct); «Exportar» descarga de verdad los marcados.
 
 type Pestana = 'ciclos' | 'usuarios'
 
-const PROXIMAMENTE = 'Lo construimos en la siguiente fase.'
 const RUTA = '/admin/desempeno-cultura/objetivos'
+
+// «Exportar» con ciclos marcados: un CSV con lo que dice la tabla (se abre en Excel), como «Descargar plantilla» de la carga.
+const celdaCsv = (valor: string | number) => {
+  const texto = String(valor)
+  return /[",\n]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto
+}
+function exportarCiclos(lista: readonly Ciclo[]) {
+  const cabecera = ['Ciclo', 'Periodo', 'Inicio', 'Cierre', 'Estado', 'Personas', 'Objetivos', 'Avance', 'Cumplidos', 'Reportando']
+  const filas = lista.map((ciclo) => [ciclo.nombre, ciclo.periodo, ciclo.inicio, ciclo.cierre, ciclo.estado, ciclo.personas, ciclo.objetivos, formatoAvance(ciclo.avance), formatoAvance(ciclo.cumplidos), formatoAvance(ciclo.reportando)])
+  // El BOM le dice a Excel que el archivo va en UTF-8 (tildes y «ñ»).
+  const csv = '\uFEFF' + [cabecera, ...filas].map((fila) => fila.map(celdaCsv).join(',')).join('\n')
+  saveBlob(lista.length === 1 ? `ciclo-${lista[0].id}.csv` : 'ciclos-de-objetivos.csv', 'text/csv;charset=utf-8', csv)
+  notify(lista.length === 1 ? `${lista[0].nombre} exportado` : `${lista.length} ciclos exportados`, 'El archivo CSV quedó en tus descargas.', 'success')
+}
 
 export function Component() {
   const navigate = useNavigate()
@@ -45,13 +58,13 @@ export function Component() {
   const ciclos = useCiclos()
   const [pestana, setPestana] = useState<Pestana>('ciclos')
   const [filtros, setFiltros] = useState<FiltrosCiclos>(SIN_FILTROS)
-  const [catalogo, setCatalogo] = useState(false)
   const [porFinalizar, setPorFinalizar] = useState<Ciclo | null>(null)
   const [porEliminar, setPorEliminar] = useState<{ ciclos: readonly Ciclo[]; limpiar?: () => void }>({ ciclos: [] })
   const [edicion, setEdicion] = useState<EdicionFecha | null>(null)
   const [carga, setCarga] = useState(false)
+  const [configurando, setConfigurando] = useState<Ciclo | null>(null)
 
-  const crearCiclo = (plantilla?: PlantillaCiclo) => navigate(`${RUTA}/crear`, plantilla ? { state: { plantilla: plantilla.id } } : undefined)
+  const crearCiclo = (datosCarga?: DatosCargaCiclo) => navigate(`${RUTA}/crear`, datosCarga ? { state: { datosCarga } } : undefined)
   // Un ciclo en curso o finalizado abre sus resultados; uno por iniciar todavía no tiene: se abre para editarlo.
   const abrirCiclo = (ciclo: Ciclo) => navigate(ciclo.estado === 'En curso' || ciclo.estado === 'Finalizado' ? `${RUTA}/${ciclo.id}/resultados` : `${RUTA}/${ciclo.id}/editar`)
 
@@ -69,9 +82,10 @@ export function Component() {
       return notify(`Enlace de ${ciclo.nombre} copiado al portapapeles`, undefined, 'success')
     }
     if (accion === 'finalizar') return setPorFinalizar(ciclo)
+    if (accion === 'configurar') return setConfigurando(ciclo)
     if (accion === 'eliminar') return setPorEliminar({ ciclos: [ciclo] })
     duplicar([ciclo.id])
-    notify(`${ciclo.nombre} duplicado`, 'La copia quedó justo debajo, como borrador y sin avance.')
+    notify(`${ciclo.nombre} duplicado`, 'La copia quedó justo debajo, como borrador y sin avance.', 'success')
   }
 
   // «Editar fechas»: se guarda en la lista y la fila lo muestra al instante.
@@ -87,7 +101,7 @@ export function Component() {
   const finalizar = (elegido: Ciclo) => {
     actualizarCiclo(elegido.id, { estado: 'Finalizado', cierre: formatSurveyDate(startOfToday()), draft: elegido.draft ? { ...elegido.draft, status: 'closed' } : undefined })
     setPorFinalizar(null)
-    notify(`${elegido.nombre} finalizado`)
+    notify(`${elegido.nombre} finalizado`, undefined, 'success')
   }
 
   const eliminar = (lista: readonly Ciclo[]) => {
@@ -95,15 +109,14 @@ export function Component() {
     eliminarCiclos(ids)
     porEliminar.limpiar?.()
     setPorEliminar({ ciclos: [] })
-    notify(lista.length === 1 ? `${lista[0].nombre} eliminado` : `${lista.length} ciclos eliminados`)
+    notify(lista.length === 1 ? `${lista[0].nombre} eliminado` : `${lista.length} ciclos eliminados`, undefined, 'success')
   }
 
-  const crearObjetivo = (usuarios: { nombre: string }[]) => notify(usuarios.length === 1 ? `Crear objetivo para ${usuarios[0].nombre}` : `Crear objetivo para ${usuarios.length} personas`, PROXIMAMENTE)
-
-  // «Ver en la lista» del panel: la pestaña de ciclos solo con los que tienen algún caso.
-  const verEnLista = (ids: readonly string[]) => {
-    setFiltros({ ...SIN_FILTROS, soloIds: ids })
-    setPestana('ciclos')
+  // La acción de un caso de «Para atender»: recordar avisa, terminar un borrador lo abre y ver resultados abre el ciclo.
+  const atender = (alerta: AlertaCiclo) => {
+    if (alerta.accion === 'editar') return navigate(`${RUTA}/${alerta.ciclo.id}/editar`)
+    if (alerta.accion === 'resultados') return abrirCiclo(alerta.ciclo)
+    notify(`Recordatorio enviado a ${alerta.personas} ${alerta.personas === 1 ? 'persona' : 'personas'}`, alerta.ciclo.nombre, 'success')
   }
 
   return (
@@ -113,26 +126,9 @@ export function Component() {
         description="Aquí creas los ciclos de objetivos de tu empresa y sigues cómo avanzan."
         actions={
           <>
-            <DropdownMenu>
-              <DropdownMenuTrigger render={<BotonIcono size="icon" aria-label="Más acciones" />}>
-                <HugeiconsIcon icon={MoreHorizontalIcon} size={18} aria-hidden="true" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-52">
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => notify('Comparar ciclos', PROXIMAMENTE)}>
-                    <HugeiconsIcon icon={GitCompareIcon} aria-hidden="true" />
-                    Comparar ciclos
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setCarga(true)}>
-                    <HugeiconsIcon icon={FileImportIcon} aria-hidden="true" />
-                    Cargar objetivos
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button variant="outline" onClick={() => setCatalogo(true)}>
-              <HugeiconsIcon icon={GridViewIcon} aria-hidden="true" />
-              Crear con plantilla
+            <Button variant="outline" onClick={() => setCarga(true)}>
+              <HugeiconsIcon icon={FileImportIcon} aria-hidden="true" />
+              Cargar objetivos
             </Button>
             <Button onClick={() => crearCiclo()}>
               <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
@@ -145,7 +141,7 @@ export function Component() {
       />
 
       <PageContent>
-        <PanelAlertas ciclos={ciclos} onRecordar={(alerta) => notify(`Recordatorio enviado a ${alerta.personas} ${alerta.personas === 1 ? 'persona' : 'personas'}`, alerta.ciclo.nombre)} onAbrir={abrirCiclo} onVerEnLista={verEnLista} />
+        <PanelAlertas ciclos={ciclos} onAccion={atender} />
 
         <PulsoObjetivos ciclos={ciclos} />
 
@@ -170,9 +166,9 @@ export function Component() {
               onGuardarFecha={guardarFecha}
               onDuplicarVarios={(ids) => {
                 duplicar(ids)
-                notify(`${ids.length} ciclos duplicados`, 'Cada copia quedó debajo de su original, como borrador.')
+                notify(`${ids.length} ciclos duplicados`, 'Cada copia quedó debajo de su original, como borrador.', 'success')
               }}
-              onExportarVarios={(ids) => notify(`Exportando ${ids.length} ciclos`)}
+              onExportarVarios={(ids) => exportarCiclos(ciclos.filter((ciclo) => ids.includes(ciclo.id)))}
               onEliminarVarios={(ids, limpiar) => setPorEliminar({ ciclos: ciclos.filter((ciclo) => ids.includes(ciclo.id)), limpiar })}
               aviso={
                 filtros.soloIds ? (
@@ -190,20 +186,21 @@ export function Component() {
           </TabsContent>
 
           <TabsContent value="usuarios" className="pt-4">
-            <TablaUsuarios usuarios={USUARIOS_SIN_OBJETIVOS} onCrearObjetivo={crearObjetivo} />
+            <TablaUsuarios usuarios={USUARIOS_SIN_OBJETIVOS} />
           </TabsContent>
         </Tabs>
       </PageContent>
 
-      <CatalogoPlantillas
-        abierto={catalogo}
-        onAbiertoChange={setCatalogo}
-        onUsar={(plantilla) => {
-          setCatalogo(false)
-          crearCiclo(plantilla)
+      <PanelCargaObjetivos abierto={carga} onAbiertoChange={setCarga} ciclos={ciclos} onNuevoCiclo={(datos) => crearCiclo(datos)} />
+      <DrawerConfiguracion
+        ciclo={configurando}
+        config={configurando ? configDe(configurando) : null}
+        onCerrar={() => setConfigurando(null)}
+        onGuardar={(config) => {
+          if (configurando) guardarConfig(configurando, config)
+          setConfigurando(null)
         }}
       />
-      <PanelCargaObjetivos abierto={carga} onAbiertoChange={setCarga} ciclos={ciclos} />
       <DialogoFinalizar ciclo={porFinalizar} onCerrar={() => setPorFinalizar(null)} onConfirmar={finalizar} />
       <DialogoEliminar ciclos={porEliminar.ciclos} onCerrar={() => setPorEliminar({ ciclos: [] })} onConfirmar={eliminar} />
       {agente.portal(<AgenteObjetivos ciclos={ciclos} onCrear={() => crearCiclo()} onClose={agente.cerrar} />)}

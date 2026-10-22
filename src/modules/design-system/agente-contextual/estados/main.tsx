@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Alert02Icon, CircleLock01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, CircleLock01Icon, Megaphone02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import {
   Alert,
   AlertDescription,
@@ -19,6 +19,7 @@ import {
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageSection, PageShell } from '@/shared/components/PageShell'
 import { WS } from '../../drawers/components/drawer-styles'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../../navegacion/components/case-frame'
 import {
   AgentCard,
@@ -85,6 +86,8 @@ export function Component() {
   const [version, setVersion] = useState(0)
   const [applied, setApplied] = useState(false)
   const [lessonsTick, setLessonsTick] = useState(0)
+  const [publicando, setPublicando] = useState(false)
+  const [publicado, setPublicado] = useState(false)
   const thread = useAgentThread()
 
   const panel: PanelState = mode === 'cerrado' ? 'closed' : 'open'
@@ -118,7 +121,7 @@ export function Component() {
   const apply = () => {
     setApplied(true)
     setLessonsTick((t) => t + 1)
-    notify('Plan aplicado al borrador')
+    notify('Plan aplicado al borrador', undefined, 'success')
   }
 
   const undo = () => {
@@ -129,15 +132,16 @@ export function Component() {
   const lessons = applied ? PLANS[version] : CURRENT_LESSONS
 
   const actions = (primary: { label: string; onClick: () => void }, secondary?: { label: string; onClick: () => void }) => (
+    // 13-oct: el orden de una fila es secundario y después primario, con el primario a la derecha.
     <div className="mt-4 flex flex-wrap items-center gap-2.5">
-      <Button data-undo-focus="" className={PILL} onClick={primary.onClick}>
-        {primary.label}
-      </Button>
       {secondary ? (
         <Button variant="outline" className={PILL} onClick={secondary.onClick}>
           {secondary.label}
         </Button>
       ) : null}
+      <Button data-undo-focus="" className={PILL} onClick={primary.onClick}>
+        {primary.label}
+      </Button>
     </div>
   )
 
@@ -235,8 +239,8 @@ export function Component() {
           <AlertTitle>No pude conectar con el catálogo de cursos</AlertTitle>
           <AlertDescription>Lo que llevaba no se perdió. Suele resolverse en unos segundos.</AlertDescription>
         </Alert>
-        {actions({ label: 'Reintentar', onClick: () => go('pensando') }, { label: 'Reportar el problema', onClick: () => notify('Reporte enviado · código CAT-504') })}
-        <div className="mt-3 tabular-nums text-[11px] text-muted-foreground">Código CAT-504 · 14 sep, 10:42</div>
+        {actions({ label: 'Reintentar', onClick: () => go('pensando') }, { label: 'Reportar el problema', onClick: () => notify('Reporte enviado · código CAT-504', undefined, 'success') })}
+        <div className="mt-3 tabular-nums text-[11px] text-muted-foreground">Código CAT-504 · 14 sept, 10:42</div>
       </>
     ),
     creditos: (
@@ -256,7 +260,7 @@ export function Component() {
             Pediste 500 créditos a la administradora
           </UndoRow>
         ) : (
-          actions({ label: 'Pedir más créditos', onClick: () => setRequested(true) }, { label: 'Ver consumo', onClick: () => notify('Consumo de créditos por persona') })
+          actions({ label: 'Pedir más créditos', onClick: () => setRequested(true) }, { label: 'Ver consumo', onClick: () => notify('Consumo de créditos por persona', undefined, 'info') })
         )}
       </>
     ),
@@ -301,7 +305,7 @@ export function Component() {
       hint="Razonando, dudas, límites y errores; abierto y cerrado"
       width="default"
       anatomy={false}
-      back={{ label: 'Casos de Orbit Flow', to: '/design-system/agente-contextual' }}
+      back={{ label: 'Casos de Orbit', to: '/design-system/agente-contextual' }}
     >
       <AgentStage
         state={panel}
@@ -318,7 +322,7 @@ export function Component() {
             placeholder="Pide un cambio sobre el plan"
             onSend={(text) =>
               state === 'creditos'
-                ? notify('Sin créditos hasta el 1 de octubre')
+                ? notify('Sin créditos hasta el 1 de octubre', undefined, 'warning')
                 : thread.ask(text, 'Lo tengo en cuenta: ajusto la propuesta y te la muestro arriba.')
             }
             scrollKey={`${tick}-${thread.scrollKey}`}
@@ -340,11 +344,12 @@ export function Component() {
               description="Plan de tres semanas para quienes entran a Planta Funza."
               actions={
                 <>
-                  <Button variant="outline" className={WS} onClick={() => notify('Vista previa del plan')}>
+                  <Button variant="outline" className={WS} onClick={() => notify('Vista previa del plan', undefined, 'info')}>
                     Previsualizar
                   </Button>
-                  <Button className={WS} onClick={() => notify('Plan publicado')}>
-                    Publicar
+                  {/* Publicar le llega a las personas del plan: pregunta antes (13-oct, regla «preguntar-antes»). */}
+                  <Button className={WS} disabled={publicado} onClick={() => setPublicando(true)}>
+                    {publicado ? 'Publicado' : 'Publicar'}
                   </Button>
                   {panel === 'closed' ? <ReopenAgentButton onClick={() => setMode('abierto')} /> : null}
                 </>
@@ -412,6 +417,23 @@ export function Component() {
           </PageShell>
         </div>
       </AgentStage>
+
+      <DialogoConfirmar
+        abierto={publicando}
+        onAbiertoChange={setPublicando}
+        icono={Megaphone02Icon}
+        titulo="¿Publicar el plan?"
+        descripcion="Lo ven las personas a las que se asigna y deja de ser un borrador."
+        cancelar="Todavía no"
+        accion="Publicar plan"
+        onConfirmar={() => {
+          setPublicando(false)
+          setPublicado(true)
+          notify('Plan publicado', undefined, 'success')
+        }}
+      >
+        <RegistroConfirmar nombre="Inducción de operarios" detalle={`Plan de tres semanas · ${lessons.length} lecciones`} estado="Borrador" tono="neutro" icono={Megaphone02Icon} />
+      </DialogoConfirmar>
     </CaseFrame>
   )
 }

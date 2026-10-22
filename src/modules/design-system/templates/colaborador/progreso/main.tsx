@@ -6,7 +6,6 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-  Badge,
   Button,
   Card,
   CardAction,
@@ -39,8 +38,9 @@ import {
   SelectValue,
   Text,
   Textarea,
-  toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify } from '@/shared/components/notify'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import { AiThinking } from '@/shared/components/AiThinking'
@@ -80,7 +80,7 @@ function Recordatorio({ abierto, onAbierto }: { abierto: boolean; onAbierto: (v:
       note="Ya marcamos a quienes van por debajo del 50 %."
       confirmLabel={`Enviar a ${elegidos.size}`}
       confirmDisabled={elegidos.size === 0}
-      onConfirm={() => toast.add({ type: 'success', title: `Recordatorio enviado a ${elegidos.size} ${elegidos.size === 1 ? 'persona' : 'personas'}` })}
+      onConfirm={() => notify(`Recordatorio enviado a ${elegidos.size} ${elegidos.size === 1 ? 'persona' : 'personas'}`, undefined, 'success')}
     >
         <FieldGroup>
           <FieldSet>
@@ -136,13 +136,15 @@ function PlanConIA({ abierto, onAbierto, foco }: { abierto: boolean; onAbierto: 
       ai
       title="Generar plan con IA"
       description={`Para ${foco.nombre}. La IA propone; tú decides qué se asigna.`}
+      // 13-oct (I-018): con la propuesta generada (o generándose) no se cierra al tocar fuera y pregunta antes de descartarla.
+      conCambios={paso !== 'brief'}
       footer={
         paso === 'propuesta' ? (
             <Button
               onClick={() => {
                 onAbierto(false)
                 setPaso('brief')
-                toast.add({ type: 'success', title: 'Plan asignado', description: `${foco.nombre} lo verá en su Zona de estudio.` })
+                notify('Plan asignado', `${foco.nombre} lo verá en su Zona de estudio.`, 'success')
               }}
             >
               Asignar este plan

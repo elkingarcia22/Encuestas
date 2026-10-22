@@ -112,7 +112,7 @@ export const DIGESTS: Option[] = [
 
 export const CYCLES: Option[] = [
   { value: 'monthly', label: 'Mensual' },
-  { value: 'annual', label: 'Anual', description: 'Ahorras 12% frente al pago mensual.' },
+  { value: 'annual', label: 'Anual', description: 'Ahorras 12 % frente al pago mensual.' },
 ]
 
 export const ROLES = [

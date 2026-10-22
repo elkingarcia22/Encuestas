@@ -57,7 +57,7 @@ export function UserMessage({ text, onEdit, region }: UserMessageProps) {
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1600)
     } catch {
-      notify('No se pudo copiar el mensaje')
+      notify('No se pudo copiar el mensaje', undefined, 'error')
     }
   }
 

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Badge, Card, CardContent, Heading, Separator, Text } from '@ubits/flux-ui'
+import { Card, CardContent, Heading, Separator, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { fechaCorta } from '@/modules/design-system/patrones/formato'
 
 // Las piezas comunes de los reportes impresos: portada, secciones numeradas, cifras y pie. Todo con

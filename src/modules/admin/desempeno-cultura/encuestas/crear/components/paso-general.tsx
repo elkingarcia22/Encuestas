@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Globe02Icon, InformationCircleIcon, ViewOffSlashIcon } from '@hugeicons/core-free-icons'
+import { Globe02Icon, ViewOffSlashIcon } from '@hugeicons/core-free-icons'
 import {
   Field,
   FieldContent,
@@ -16,10 +16,6 @@ import {
   FrameTitle,
   IconTile,
   Input,
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverTrigger,
   RadioGroup,
   RadioGroupItem,
   Select,
@@ -32,8 +28,8 @@ import {
   Text,
   Textarea,
 } from '@ubits/flux-ui'
-import { BotonIcono } from '@/shared/components/BotonIcono'
-import { RangoDeFechas, type Rango } from '@/modules/design-system/formularios/rango-de-fechas'
+import { BotonAyuda } from '@/shared/components/BotonAyuda'
+import { CampoFecha, RangoDeFechas, type Rango } from '@/modules/design-system/formularios/rango-de-fechas'
 import { inicioVencidoEnBorrador } from '../../modelo/inicio-vencido'
 import { KIND_VISUAL } from '../../modelo/kindVisual'
 import { AvisoEnCurso, EnCurso } from './aviso-en-curso'
@@ -158,6 +154,8 @@ export function PasoGeneral({
               {nombreCorto ? <FieldError>{mensajeMinimo(LIMITE_NOMBRE_ENCUESTA.min)}</FieldError> : null}
               {nombreDuplicado && !nombreCorto ? <FieldError>{NOMBRE_ENCUESTA_REPETIDO}</FieldError> : null}
             </Field>
+            {/* «!»: la fila del interruptor a su ancho, no al de la columna; la clase sola no le gana a la librería
+                (diferencias.json › instalacion-estilos-sin-capa). */}
             <Field orientation="horizontal" className="w-auto!">
               <Switch
                 id="encuesta-con-descripcion"
@@ -167,7 +165,7 @@ export function PasoGeneral({
                   if (!activa) onCambio({ description: '' })
                 }}
               />
-              <FieldLabel htmlFor="encuesta-con-descripcion">Añadir descripción</FieldLabel>
+              <FieldLabel htmlFor="encuesta-con-descripcion">Agregar descripción</FieldLabel>
             </Field>
           </div>
 
@@ -214,6 +212,24 @@ export function PasoGeneral({
               {faltaTipo ? <FieldError>{OBLIGATORIO}</FieldError> : null}
             </Field>
 
+            {enCurso ? (
+              // En curso solo se mueve el cierre (Elkin, 21-oct): el inicio ya pasó y se ve apagado; el cierre, desde hoy.
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="encuesta-inicio">Fecha de inicio</FieldLabel>
+                  <EnCurso bloqueado className="flex">
+                    <div className="flex-1">
+                      <CampoFecha id="encuesta-inicio" valor={aFecha(borrador.startDate)} onCambio={() => undefined} deshabilitado />
+                    </div>
+                  </EnCurso>
+                </Field>
+                <Field data-invalid={!borrador.endDate || undefined}>
+                  <FieldLabel htmlFor="encuesta-cierre">Fecha de cierre</FieldLabel>
+                  <CampoFecha id="encuesta-cierre" valor={aFecha(borrador.endDate)} desde={hoy()} invalido={!borrador.endDate} onCambio={(fecha) => onCambio({ endDate: aTexto(fecha) })} />
+                  {borrador.endDate ? null : <FieldError>Elige la fecha de cierre.</FieldError>}
+                </Field>
+              </div>
+            ) : (
             <Field data-invalid={faltanFechas || undefined}>
               <FieldLabel htmlFor="encuesta-fechas">Fecha de inicio y de cierre</FieldLabel>
               {/* En curso ya empezó: su inicio puede ser pasado. Si no, desde hoy. */}
@@ -224,6 +240,7 @@ export function PasoGeneral({
               {inicioVencido ? <FieldError>La fecha de inicio ya pasó. Elige fechas desde hoy para programarla.</FieldError> : null}
               {!faltanFechas && borrador.startDate !== '' && borrador.startDate === borrador.endDate ? <FieldDescription>Encuesta de un solo día: abre y cierra el mismo día.</FieldDescription> : null}
             </Field>
+            )}
           </div>
 
           {enCurso ? <AvisoEnCurso que="El tipo de visibilidad y su mínimo de respuestas" /> : null}
@@ -233,6 +250,8 @@ export function PasoGeneral({
               {VISIBILIDADES.map(([visibilidad, etiqueta]) => (
                 <EnCurso key={visibilidad} bloqueado={enCurso} className="flex">
                 <FieldLabel htmlFor={`encuesta-visibilidad-${visibilidad}`}>
+                  {/* «!»: radio, icono y título centrados en la fila; la clase sola no le gana a la librería (diferencias.json ›
+                      instalacion-estilos-sin-capa). Lo mismo con la fila del título y su ayuda (flex-row!). */}
                   <Field orientation="horizontal" className="items-center!">
                     <RadioGroupItem value={visibilidad} id={`encuesta-visibilidad-${visibilidad}`} />
                     <IconTile variant="soft" size="sm" className="shrink-0 text-primary">
@@ -241,19 +260,9 @@ export function PasoGeneral({
                     {/* Sin descripción en la tarjeta: lo que promete cada opción va en la ayuda (i), que abre con clic. */}
                     <FieldContent className="flex-row! items-center gap-1">
                       <FieldTitle>{etiqueta}</FieldTitle>
-                      <Popover>
-                        <PopoverTrigger render={<BotonIcono size="icon-xs" aria-label={`Qué significa ${etiqueta.toLowerCase()}`} />}>
-                          <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
-                        </PopoverTrigger>
-                        <PopoverContent align="start" className="w-72">
-                          <PopoverDescription render={<div />}>
-                            <Text as="span" size="sm" weight="medium">
-                              {SURVEY_VISIBILITY_HEADLINES[visibilidad]}
-                            </Text>{' '}
-                            {SURVEY_VISIBILITY_NOTES[visibilidad]}
-                          </PopoverDescription>
-                        </PopoverContent>
-                      </Popover>
+                      <BotonAyuda etiqueta={`Qué significa ${etiqueta.toLowerCase()}`}>
+                        <span className="font-medium">{SURVEY_VISIBILITY_HEADLINES[visibilidad]}</span> {SURVEY_VISIBILITY_NOTES[visibilidad]}
+                      </BotonAyuda>
                     </FieldContent>
                   </Field>
                 </FieldLabel>

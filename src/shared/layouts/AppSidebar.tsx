@@ -16,6 +16,7 @@ import { FeedbackDialog } from '@/shared/components/FeedbackDialog'
 import { TourDialog } from '@/shared/components/TourDialog'
 import type { EstadoTour } from '@/shared/components/tour-pendiente'
 import { InviteCard } from '@/shared/components/InviteCard'
+import { useCabeTarjeta } from './use-cabe-tarjeta'
 import { Orb } from '@/shared/components/Orb'
 import { ICONO_IA, getSectionId, isPathActive, sidebarNavs, type NavChild, type NavItem, type NavLeaf } from '@/shared/layouts/nav-config'
 import { ChatStatusDot } from '@/shared/components/ChatStatusDot'
@@ -328,6 +329,9 @@ export function AppSidebar() {
   const navigate = useNavigate()
   const { open, isMobile } = useSidebar()
   const [invite, setInvite] = useState(true)
+  // Si el menú no cabe con la tarjeta del tour, la tarjeta se oculta sola hasta que haya sitio (20-oct).
+  const menuRef = useRef<HTMLDivElement>(null)
+  const tarjetaRef = useRef<HTMLDivElement>(null)
   const feedbackRef = useRef<HTMLButtonElement>(null)
   const [feedback, setFeedback] = useState(false)
   // Tour del nuevo UBITS (1 oct): siempre desde «Hacer el tour» de la tarjeta y, la primera vez que se entra desde el
@@ -341,6 +345,7 @@ export function AppSidebar() {
   // En el design system, la pestaña Suite AI abre el design system de la IA (su propio menú, con la misma forma
   // que el de Workspace); en el producto abre el chat. `chat` distingue el historial de conversaciones.
   const chat = section === 'suite-ai'
+  const cabeTarjeta = useCabeTarjeta(menuRef, tarjetaRef, !chat && invite)
   const enDesignSystem = section === 'design-system' || section === 'design-system-ai'
   const suite = chat || section === 'design-system-ai' ? 'ai' : 'workspace'
   const nav = sidebarNavs[section]
@@ -405,7 +410,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       {/* Región de navegación con nombre: la barra de la librería es un `div` y el menú no se anunciaba como navegación. */}
-      <SidebarContent role="navigation" aria-label="Menú principal" className="gap-1 overflow-x-hidden overflow-y-auto px-1.5">
+      <SidebarContent ref={menuRef} role="navigation" aria-label="Menú principal" className="gap-1 overflow-x-hidden overflow-y-auto px-1.5">
         {drill ? (
           <DrillPanel
             key={drill.section.path}
@@ -474,14 +479,16 @@ export function AppSidebar() {
       <SidebarFooter className="gap-0! px-3.5! pt-1.5! pb-3.5!">
         {/* En Suite AI la barra queda solo con el historial: sin invitación ni feedback. */}
         {/* Al cerrar la invitación su X desaparece: el foco pasa a «Enviar feedback» para no perderse (AA 2.4.3). */}
-        {!chat && invite ? (
-          <InviteCard
-            onTour={() => setTour(true)}
-            onClose={() => {
-              setInvite(false)
-              feedbackRef.current?.focus()
-            }}
-          />
+        {!chat && invite && cabeTarjeta ? (
+          <div ref={tarjetaRef}>
+            <InviteCard
+              onTour={() => setTour(true)}
+              onClose={() => {
+                setInvite(false)
+                feedbackRef.current?.focus()
+              }}
+            />
+          </div>
         ) : null}
         {!chat ? (
           <Button

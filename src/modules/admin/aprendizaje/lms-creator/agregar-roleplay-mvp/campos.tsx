@@ -17,7 +17,6 @@ import {
   FieldContent,
   FieldDescription,
   FieldError,
-  Badge,
   FieldLabel,
   FieldTitle,
   Input,
@@ -34,6 +33,7 @@ import {
   Tooltip,
   TooltipTrigger,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { useFileUpload } from '@ubits/flux-ui/hooks'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint, HintContent } from '@/shared/components/Hint'

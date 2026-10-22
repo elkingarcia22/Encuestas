@@ -13,8 +13,8 @@ import { duracionAviso } from '@/shared/components/notify'
 // - `?simular=sin-creditos`: la bolsa de créditos de IA está en cero (en Créditos, en mover a una etapa con IA y en crear).
 // - `?simular=otra-reclutadora`: otra persona del equipo trabaja la vacante a la vez; la primera persona que muevas ya la
 //   había movido ella un momento antes (VA-23).
-// - `?simular=agente-error`: Orbit Flow no puede responder la primera vez que se le pide algo; el reintento sí (OF-35).
-// - `?simular=agente-lento`: Orbit Flow tarda ~9 s en cada respuesta y a los 4 s dice que está tardando (OF-35).
+// - `?simular=agente-error`: Orbit no puede responder la primera vez que se le pide algo; el reintento sí (OF-35).
+// - `?simular=agente-lento`: Orbit tarda ~9 s en cada respuesta y a los 4 s dice que está tardando (OF-35).
 // Se combinan con comas: `?simular=lento,error`.
 // - `?como=duena|puede-editar|solo-ver`: ver una vacante con ese permiso, aunque la persona que mira tenga otro.
 //
@@ -50,8 +50,6 @@ export function noSeGuardo(clave: string, titulo: string, reintentar: () => void
 
 // El aviso de un error con su salida: rojo, una línea de detalle y el botón que lo vuelve a intentar. Al tocarlo, el aviso
 // se va (si el reintento también falla, sale uno nuevo); antes se quedaba encima del que decía que sí se pudo.
-// Va con el gestor de avisos directo y no con `notifyAction`: para cerrarlo al tocar «Reintentar» hace falta el id del aviso,
-// y `notifyAction` (zona protegida) no lo devuelve; sin id, cerrar cierra todos los avisos.
 export function avisoDeError(titulo: string, detalle: string | undefined, reintentar: () => void, etiqueta = 'Reintentar') {
   const id = toast.add({
     type: 'error',

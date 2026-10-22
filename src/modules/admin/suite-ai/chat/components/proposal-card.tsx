@@ -25,6 +25,7 @@ import { ActionDialog } from '@/shared/components/ActionDialog'
 import { Orb } from '@/shared/components/Orb'
 import { notify } from '@/shared/components/notify'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 type ProposalCardProps = {
   onOpenProcesses: () => void
@@ -72,7 +73,7 @@ export function ProposalCard({ onOpenProcesses, onAssigned }: ProposalCardProps)
     const [moved] = next.splice(from, 1)
     next.splice(to, 0, moved)
     setRows(next)
-    notify(`${moved.title} quedó en la posición ${to + 1} de ${next.length}`)
+    notify(`${moved.title} quedó en la posición ${to + 1} de ${next.length}`, undefined, 'success')
   }
 
   const assign = () => {
@@ -80,12 +81,12 @@ export function ProposalCard({ onOpenProcesses, onAssigned }: ProposalCardProps)
     window.setTimeout(() => {
       setAssigning(false)
       setAssigned(true)
-      notify(`Plan asignado a ${audience}`)
+      notify(`Plan asignado a ${audience}`, undefined, 'success')
       onAssigned?.()
     }, 1400)
   }
 
-  const status = assigned ? `Asignado · ${peopleCount} personas` : assigning ? 'Asignando…' : 'Borrador, no asignado'
+  const status = assigned ? `Asignado · ${peopleCount} ${plural(Number(peopleCount), 'persona', 'personas')}` : assigning ? 'Asignando…' : 'Borrador, no asignado'
 
   return (
     <div className="flex w-full gap-3.5">
@@ -163,7 +164,7 @@ export function ProposalCard({ onOpenProcesses, onAssigned }: ProposalCardProps)
                   disabled={assigned}
                   onClick={() => {
                     setRows((current) => current.filter((r) => r.id !== row.id))
-                    notify('Contenido quitado del plan')
+                    notify('Contenido quitado del plan', undefined, 'success')
                   }}
                 >
                   <HugeiconsIcon icon={Cancel01Icon} size={13} />
@@ -189,7 +190,7 @@ export function ProposalCard({ onOpenProcesses, onAssigned }: ProposalCardProps)
                 {audience}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-72">
-                <DropdownMenuRadioGroup value={audience} onValueChange={(v) => { setAudience(v); notify(`Audiencia: ${v}`) }}>
+                <DropdownMenuRadioGroup value={audience} onValueChange={(v) => { setAudience(v); notify(`Audiencia: ${v}`, undefined, 'info') }}>
                   {AUDIENCES.map((option) => (
                     <DropdownMenuRadioItem key={option} value={option}>{option}</DropdownMenuRadioItem>
                   ))}
@@ -212,7 +213,7 @@ export function ProposalCard({ onOpenProcesses, onAssigned }: ProposalCardProps)
                 {dates}
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuRadioGroup value={dates} onValueChange={(v) => { setDates(v); notify(`Fechas: ${v}`) }}>
+                <DropdownMenuRadioGroup value={dates} onValueChange={(v) => { setDates(v); notify(`Fechas: ${v}`, undefined, 'info') }}>
                   {DATE_RANGES.map((option) => (
                     <DropdownMenuRadioItem key={option} value={option}>{option}</DropdownMenuRadioItem>
                   ))}
@@ -226,8 +227,8 @@ export function ProposalCard({ onOpenProcesses, onAssigned }: ProposalCardProps)
           <HugeiconsIcon icon={InformationCircleIcon} size={16} className="shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1 text-[13px] text-foreground/70">
             {assigned
-              ? 'Asignado el 10 sep 9:58. El correo ya salió; puedes retirar el plan sin borrar el historial.'
-              : `Asignar notifica por correo a ${peopleCount} personas. Revisa la audiencia antes de continuar.`}
+              ? 'Asignado el 10 sept 9:58. El correo ya salió; puedes retirar el plan sin eliminar el historial.'
+              : `Asignar notifica por correo a ${peopleCount} ${plural(Number(peopleCount), 'persona', 'personas')}. Revisa la audiencia antes de continuar.`}
           </span>
           {!assigned ? (
             <Button variant="outline" size="sm" className="h-8.5!" onClick={() => setReviewAudience(true)}>

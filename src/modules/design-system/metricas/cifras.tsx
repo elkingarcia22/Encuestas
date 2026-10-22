@@ -1,4 +1,5 @@
-import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle, Frame, FramePanel, Text } from '@ubits/flux-ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Frame, FramePanel, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 
 import { Sparkline } from './graficos'
 
@@ -10,6 +11,7 @@ import { Sparkline } from './graficos'
 // Documentadas en /design-system/metricas.
 
 // Tarjeta de indicador con minigráfico: valor, tendencia y contra qué se compara.
+// Retirada el 13-oct (reglas.json): solo la usa el Archivo congelado. En pantallas nuevas, las cifras van en una fila.
 export function TarjetaIndicador({
   titulo,
   detalle,

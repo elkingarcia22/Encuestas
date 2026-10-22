@@ -4,13 +4,19 @@ import { notify } from '@/shared/components/notify'
 import { Ayuda, Cambio, Cifra as CifraConCambio, Pie } from '@/modules/admin/seleccion/propuestas/components/cifras'
 import { bolsaDe, useHistorial } from '@/modules/admin/seleccion/propuestas/creditos'
 import { TableroCreditos } from '@/modules/admin/seleccion/creditos/uno/components/tablero'
-import { ColumnaIndicador, FilaIndicadores } from '../graficos/fila-indicadores'
+import { ColumnaIndicador, DetalleIndicador, FilaIndicadores } from '../graficos/fila-indicadores'
+import { AnilloAvance, BarrasMini, DonaReparto, Tendencia as TendenciaConMeta, type SegmentoReparto } from '../graficos/piezas'
 import { Demo, EncabezadoPatron, Reglas, SectionIntro, VerEnAccion, type Regla } from '../patrones/piezas'
-import { Indicadores, TarjetaIndicador, type Cifra } from './cifras'
-import { Anillo, BarraSegmentada, Dona, GraficoArea, Sparkline, Tendencia } from './graficos'
+import { Indicadores, type Cifra } from './cifras'
+import { BarraSegmentada, GraficoArea, Tendencia } from './graficos'
 
-// Patrones › Métricas: las cifras y gráficos de los tableros. Hasta el 29-sep vivían en el Dashboard del Archivo y en el
+// Componentes › Métricas: las cifras y gráficos de los tableros. Hasta el 29-sep vivían en el Dashboard del Archivo y en el
 // Inicio; se mudaron a design-system/metricas y aquí se documentan con las mismas piezas que usan las pantallas.
+//
+// 13-oct (Cristian: «si no se usa hay que eliminarlo»): salieron la tarjeta con minigráfico (TarjetaIndicador), Sparkline,
+// Anillo y Dona, que solo usaban las carpetas congeladas del Archivo. En su lugar se muestran las piezas que sí usan
+// Vacantes, Encuestas y Objetivos: la fila con un gráfico chico por cifra (DonaReparto, BarrasMini, AnilloAvance) y la
+// tendencia con meta.
 //
 // 6-oct (Cristian: «dejemos lo de Nico», «sí o sí debe estar sincronizado con Nicolás»): la fila con comparación y ayuda
 // de Selección y el tablero «Lo que necesita tu atención» se muestran aquí con las piezas reales de Nicolás, importadas
@@ -37,10 +43,29 @@ const SERIES: { clave: 'iniciaron' | 'completaron'; nombre: string; color: strin
   { clave: 'completaron', nombre: 'Completaron', color: 'var(--success)' },
 ]
 
-const REPARTO = [
-  { area: 'Completadas', respuestas: 124, color: 'var(--primary)' },
-  { area: 'En curso', respuestas: 58, color: 'var(--chart-2)' },
-  { area: 'Sin empezar', respuestas: 31, color: 'var(--muted-foreground)' },
+// Los datos de la fila con gráfico, como en el home de Vacantes.
+const ESTADOS: SegmentoReparto[] = [
+  { id: 'publicadas', etiqueta: 'Publicadas', valor: 12, color: 'var(--success)' },
+  { id: 'pausadas', etiqueta: 'Pausadas', valor: 3, color: 'var(--warning)' },
+  { id: 'borradores', etiqueta: 'Borradores', valor: 2, color: 'var(--info)' },
+  { id: 'cerradas', etiqueta: 'Cerradas', valor: 5, color: 'var(--muted-foreground)' },
+]
+
+const NUEVOS = [
+  { id: 'analista', nombre: 'Analista de datos', valor: 18 },
+  { id: 'disenadora', nombre: 'Diseñadora de producto', valor: 11 },
+  { id: 'comercial', nombre: 'Ejecutivo(a) comercial', valor: 7 },
+  { id: 'turno', nombre: 'Coordinador de turno', valor: 4 },
+]
+
+// La favorabilidad de las últimas mediciones, como en el home de Encuestas.
+const MEDICIONES = [
+  { id: 'm1', name: 'Clima Q4 2025', value: 66 },
+  { id: 'm2', name: 'Pulso enero', value: 68 },
+  { id: 'm3', name: 'Clima Q1', value: 67 },
+  { id: 'm4', name: 'Pulso abril', value: 71 },
+  { id: 'm5', name: 'Clima Q2', value: 73 },
+  { id: 'm6', name: 'Pulso agosto', value: 76 },
 ]
 
 const SEGMENTOS = [
@@ -49,27 +74,27 @@ const SEGMENTOS = [
   { id: 'libres', etiqueta: 'Libres', valor: 248, color: 'var(--muted)' },
 ]
 
-const SERIE = [42, 45, 44, 48, 51, 50, 55, 58]
-
 const REGLAS: Regla[] = [
-  { titulo: 'Las cifras van en una sola tarjeta', detalle: 'Una tarjeta partida con divisores (acuerdo del 14-sep), no tarjetas sueltas por cifra.' },
+  { titulo: 'Las cifras van en una sola tarjeta', detalle: 'Una tarjeta partida con divisores (acuerdo del 14-sep), no tarjetas sueltas por cifra. La tarjeta con minigráfico (TarjetaIndicador) no la usa ninguna pantalla del producto: queda como referencia hasta decidir si se retira.' },
   { titulo: 'La cifra en seminegrita del tema', detalle: 'Text xl seminegrita; el nombre arriba en gris y el detalle debajo en gris pequeño.' },
+  { titulo: 'Si la cifra cuenta personas o cosas, se toca para verlas', detalle: 'ColumnaIndicador (y MetricasDestacadas) con onVer: toda la columna se toca, se marca al pasar el cursor y lleva una flecha junto al nombre; abre un panel con quienes cuenta la cifra. La ayuda sigue abriendo su globo. 15-oct, Planes › Avance. En el ejemplo, «Esperan algo de ti».' },
   { titulo: 'La comparación, junto a la cifra', detalle: 'Cambio (6-oct, vuelve con la forma de Nicolás): la insignia verde si mejoró, roja si empeoró —con menosEsMejor cuando bajar es bueno— e «Igual que…» si no se movió. Debajo, la línea gris dice contra qué se compara («Frente a 364 el mes pasado»).' },
   { titulo: 'Una sola insignia de comparación', detalle: 'Cambio es la de todo el producto, también en tablas: decimales para los puntos porcentuales («+2,3 pp»), sinColor cuando subir no es bueno ni malo, enCelda para el «0 pp» gris de una celda y ayuda para la nota en el globo. Si le falta algo, se amplía; no se arma otra Variacion.' },
   { titulo: 'La ayuda abre con clic', detalle: 'La «i» junto al nombre de la cifra es BotonAyuda, la ayuda única del sistema: abre al lado el globo oscuro con qué mide. Con clic, con teclado y en pantalla táctil, no solo al pasar el cursor.' },
-  { titulo: 'Lo que necesita tu atención, lo primero', detalle: 'El tablero va arriba de la pantalla, con una columna por grupo (Críticas, Necesitan atención, Acción manual, Sugerencias de la IA). Entra recogido con lo más urgente de cada una; «Expandir» muestra más. Cada asunto se resuelve en su panel y lo resuelto sale del tablero.' },
+  { titulo: 'Lo que necesita tu atención, en la home y en cada producto', detalle: 'El tablero va arriba de la Super Home (/admin) y también del inicio de cada producto, porque no todos entran por la home ni tienen todos los productos (war room del 8-oct). Es un solo patrón: caja gris con título y descripción, tres columnas con su asunto y su llamado a la acción, sin prioridades. Entra recogido con lo más urgente; «Expandir» muestra más. Cada asunto se resuelve en su panel y lo resuelto sale del tablero.' },
   { titulo: 'Colores solo del tema', detalle: 'Los gráficos se pintan con var(--primary), var(--chart-N) y los grises del tema; nunca colores escritos a mano.' },
-  { titulo: 'Leyenda con TrafficLight', detalle: 'Las donas y barras llevan su leyenda con TrafficLight debajo, no una lista armada a mano.' },
+  { titulo: 'El gráfico chico, junto a su cifra', detalle: 'En una fila de cifras, cada una lleva el gráfico que pide su lectura en la esquina: dona si es parte de un total, barras si compara elementos, anillo si es un avance contra un límite. Sin leyenda: el nombre de cada tramo sale al pasar el cursor.' },
+  { titulo: 'Leyenda con TrafficLight', detalle: 'Los gráficos grandes (área) llevan su leyenda con TrafficLight debajo, no una lista armada a mano.' },
 ]
 
 export function Component() {
   return (
     <div className="flex flex-col gap-10">
-      <EncabezadoPatron titulo="Métricas" acciones={<VerEnAccion pagina="metricas" />}>
+      <EncabezadoPatron titulo="Métricas" antetitulo="Design system · Componentes" acciones={<VerEnAccion pagina="metricas" />}>
         Las cifras y gráficos de los tableros: la fila de cifras del Inicio, la fila con comparación y ayuda de Selección,
-        el tablero «Lo que necesita tu atención», la tarjeta con minigráfico y los gráficos de área, dona, anillo y barra.
-        Son las mismas piezas que usan el Inicio del admin, Tareas, Avisos internos, Selección, Créditos de IA y Home
-        operativo.
+        la fila con un gráfico chico por cifra, el tablero «Lo que necesita tu atención» y los gráficos de área, tendencia y
+        barra. Son las mismas piezas que usan el Inicio del admin, Tareas, Avisos internos, Selección, Créditos de IA,
+        Encuestas, Objetivos y Home operativo.
       </EncabezadoPatron>
 
       <section className="flex flex-col gap-4">
@@ -92,59 +117,41 @@ export function Component() {
       <section className="flex flex-col gap-4">
         <SectionIntro
           title="Lo que necesita tu atención"
-          description="El tablero de Nicolás, el mismo de Créditos de IA y del inicio de Vacantes: una columna por grupo, recogido con lo más urgente y «Expandir» para ver más. Abre un asunto para ver su panel."
+          description="El tablero de Nicolás: una columna por grupo, recogido con lo más urgente y «Expandir» para ver más. Abre un asunto para ver su panel. Vive en la Super Home (/admin) y en el inicio de cada producto, como Vacantes o Créditos de IA, con el mismo patrón (war room del 8-oct: reemplaza la regla del 5-oct, «solo en la Super Home»)."
         />
         <TableroDeEjemplo />
       </section>
 
       <section className="flex flex-col gap-4">
-        <SectionIntro title="Tarjeta con minigráfico" description="La cifra con su tendencia, para un tablero de tarjetas." />
-        <div className="grid gap-4 lg:grid-cols-2">
-          <TarjetaIndicador
-            titulo="Satisfacción del equipo"
-            detalle="Encuesta de pulso"
-            valor="4,3 / 5"
-            comparacion="3 décimas más que la encuesta anterior"
-            serie={SERIE}
-          />
-        </div>
+        <SectionIntro
+          title="Fila con un gráfico por cifra"
+          description="La del home de Vacantes y de Encuestas: cada cifra con el gráfico chico que pide su lectura en la esquina. Pasa el cursor por cada gráfico para ver su detalle."
+        />
+        <FilaConGrafico />
       </section>
 
       <section className="flex flex-col gap-4">
         <SectionIntro title="Gráficos" description="Recharts pintado con los colores del tema. Cada uno con los datos de un tablero real." />
         <div className="grid gap-4 lg:grid-cols-2">
-          <Demo title="Área" description="Series en el tiempo, con su leyenda y el detalle al pasar el cursor.">
+          <Demo title="Área" description="Series en el tiempo, con su leyenda y el detalle al pasar el cursor. Créditos de IA y el tablero de Selección.">
             <GraficoArea datos={MESES} eje="mes" alto={220} series={SERIES} />
             <TrafficLight
               className="justify-center"
               data={{ label: 'Septiembre', items: SERIES.map((serie) => ({ label: serie.nombre, value: String(MESES[MESES.length - 1][serie.clave]), color: serie.color })) }}
             />
           </Demo>
-          <Demo title="Dona" description="Partes de un todo, con el total en el centro y su leyenda.">
-            <Dona datos={REPARTO} total="58 %" alto={170} />
-            <TrafficLight
-              className="justify-center"
-              data={{
-                label: 'Estado de las evaluaciones',
-                items: REPARTO.map((parte) => ({ label: parte.area, value: String(parte.respuestas), color: parte.color })),
-              }}
-            />
-          </Demo>
-          <Demo title="Tendencia y minigráfico" description="La tendencia va junto a una cifra; el minigráfico, dentro de una tarjeta chica.">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="h-16">
-                <Tendencia datos={SERIE} color="var(--primary)" />
-              </div>
-              <div className="h-16">
-                <Sparkline datos={SERIE} />
-              </div>
+          <Demo title="Tendencia con meta" description="Las últimas mediciones y la meta punteada; al pasar el cursor, el nombre de cada medición. Encuestas y Objetivos.">
+            <div className="h-40">
+              <TendenciaConMeta puntos={MEDICIONES} meta={70} color="var(--primary)" formato={(valor) => `${Math.round(valor)} %`} etiqueta="Favorabilidad" conEje />
             </div>
           </Demo>
-          <Demo title="Anillo y barra segmentada" description="Avance de una sola cifra, y el reparto de un total en una barra.">
-            <div className="flex flex-col gap-4">
-              <Anillo valor={68} color="var(--primary)" />
-              <BarraSegmentada segmentos={SEGMENTOS} />
+          <Demo title="Tendencia junto a la cifra" description="Solo la línea, al lado de una cifra que ya dice el valor. Tablero de Selección y Home operativo.">
+            <div className="h-16">
+              <Tendencia datos={[42, 45, 44, 48, 51, 50, 55, 58]} color="var(--primary)" />
             </div>
+          </Demo>
+          <Demo title="Barra segmentada" description="El reparto de un total en una barra. Créditos de IA y el comparativo de Encuestas.">
+            <BarraSegmentada segmentos={SEGMENTOS} />
           </Demo>
         </div>
       </section>
@@ -180,15 +187,47 @@ function FilaConComparacion() {
           ayuda={<Ayuda titulo="Esperan algo de ti">Personas en un proceso que esperan una acción tuya para seguir. Menos es mejor. Se compara con la semana pasada.</Ayuda>}
           cifra={<CifraConCambio valor="24" cambio={<Cambio valor={4} sufijo="" menosEsMejor frente="la semana pasada" />} />}
           pie={<Pie frente="Frente a 20 la semana pasada" significa="La que más: 12 días" />}
+          onVer={() => notify('Aquí se abre el panel con las 24 personas', 'En una pantalla real, la lista de quienes cuenta la cifra.', 'info')}
+          etiquetaVer="Ver las 24 personas que esperan algo de ti"
         />
         <ColumnaIndicador
           titulo="Libres para postular"
           ayuda={<Ayuda titulo="Libres para postular">Personas que nunca han estado en un proceso: las puedes postular a una vacante. Se compara con las que había hace un mes.</Ayuda>}
           cifra={<CifraConCambio valor="330" cambio={<Cambio valor={0} sufijo="" frente="el mes pasado" />} />}
-          pie={<Pie frente="Igual que el mes pasado" significa="Nunca han pasado por un proceso" />}
+          pie={<Pie frente="Frente a 330 el mes pasado" significa="Nunca han pasado por un proceso" />}
         />
       </FilaIndicadores>
     </Frame>
+  )
+}
+
+// La fila del home de Vacantes, con las mismas piezas: dona para un total, barras para comparar, anillo para un avance.
+function FilaConGrafico() {
+  return (
+    <FilaIndicadores etiqueta="Indicadores de ejemplo">
+      <ColumnaIndicador
+        titulo="Vacantes publicadas"
+        cifra="12"
+        grafico={<DonaReparto segmentos={ESTADOS} etiqueta="Vacantes por estado" />}
+        pie={<DetalleIndicador>3 pausadas · 2 en borrador</DetalleIndicador>}
+      />
+      <ColumnaIndicador
+        titulo="Candidatos nuevos"
+        cifra="40"
+        grafico={
+          <div className="h-10 w-28">
+            <BarrasMini barras={NUEVOS} etiqueta="Candidatos nuevos" color="var(--primary)" />
+          </div>
+        }
+        pie={<DetalleIndicador>Últimos 7 días · repartidos en 4 vacantes</DetalleIndicador>}
+      />
+      <ColumnaIndicador
+        titulo="Días abiertas en promedio"
+        cifra="18 días"
+        grafico={<AnilloAvance valor={60} color="var(--primary)" etiqueta="Promedio de las publicadas" texto="18 de 30 días" tamano={44} />}
+        pie={<DetalleIndicador>Ninguna pasa de 30 días, el límite de estancada</DetalleIndicador>}
+      />
+    </FilaIndicadores>
   )
 }
 

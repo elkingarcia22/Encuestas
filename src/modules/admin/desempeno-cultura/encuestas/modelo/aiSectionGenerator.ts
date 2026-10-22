@@ -265,7 +265,7 @@ function resolveFocuses(brief: AiSectionsBrief, needed: number, seed: number): A
     return {
       id,
       label: id,
-      hint: "Tema personalizado añadido por ti",
+      hint: "Tema personalizado agregado por ti",
       sectionDescription: `Aspectos relacionados con ${id.toLowerCase()}.`,
       themes: [
         {

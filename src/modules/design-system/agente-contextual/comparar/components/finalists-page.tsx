@@ -45,7 +45,7 @@ export function FinalistsPage({ selected, onToggle, offer, flash, agentClosed, o
         description="Analista de datos · 3 de 42 candidatos llegaron a la entrevista final."
         actions={
           <>
-            <Button variant="outline" className={WS} onClick={() => notify('Los 42 candidatos de la vacante')}>
+            <Button variant="outline" className={WS} onClick={() => notify('Los 42 candidatos de la vacante', undefined, 'info')}>
               Ver los 42 candidatos
             </Button>
             {agentClosed ? <ReopenAgentButton onClick={onOpenAgent} /> : null}

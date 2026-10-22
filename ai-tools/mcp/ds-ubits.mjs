@@ -117,7 +117,7 @@ const SINONIMOS = {
   empty: ['vacio'],
   cargando: ['esqueleto', 'carga', 'skeleton'],
   ia: ['orbe', 'agente', 'inteligencia artificial'],
-  agente: ['orbit flow', 'ia'],
+  agente: ['orbit', 'ia'],
   boton: ['button'],
   icono: ['boton de solo icono'],
   ayuda: ['hint', 'tooltip'],
@@ -170,6 +170,24 @@ function ejemploReal(nombre) {
   return us.find((r) => /\/main\.tsx$/.test(r)) ?? us[0] ?? null
 }
 const dueno = (ruta) => datos().indice.get(ruta)?.dueno ?? null
+// Las rutas registradas, sacadas del índice del grafo (cada archivo trae las rutas que lo montan).
+let rutasCache = null
+function rutaExiste(dir) {
+  if (!rutasCache) {
+    const todas = new Set()
+    // «/*» es la página de no encontrada: no cuenta como ruta registrada.
+    for (const a of datos().indice.values()) for (const r of a.rutas ?? []) if (r !== '/*') todas.add(r)
+    const aRegex = (r, ancla) => new RegExp(`${ancla}${r.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/(^|\/):[^/]+/g, '$1[^/]+').replace(/\/\*$/, '(/.*)?')}/?$`)
+    rutasCache = [...todas].map((r) => aRegex(r, '^'))
+    // Las rutas que solo redirigen (loader) no montan archivo y no salen en el índice: se toman de los routes.ts.
+    for (const f of archivosSrc().filter((x) => /routes\.tsx?$/.test(x))) {
+      for (const m of (leerArchivo(f) ?? '').matchAll(/path:\s*['"`]([^'"`*]+)['"`]/g)) if (m[1].includes('/')) rutasCache.push(aRegex(m[1].replace(/^\//, ''), '/'))
+    }
+  }
+  if (!rutasCache.length) return true
+  const limpia = dir.replace(/\/$/, '')
+  return rutasCache.some((re) => re.test(limpia))
+}
 const ZONA_PROTEGIDA = ['src/shared/', 'src/app/', 'src/index.css', 'scripts/', 'AGENTS.md', 'package.json']
 const protegida = (ruta) => ZONA_PROTEGIDA.some((z) => ruta.startsWith(z)) && ruta !== 'src/shared/layouts/nav-config.ts'
 
@@ -252,7 +270,8 @@ const HERRAMIENTAS = {
       const { reglas, indice } = datos()
       ruta = ruta.replace(/^\.?\//, '')
       const texto = leerArchivo(ruta) ?? ''
-      const ids = new Set(['orden', 'medidas-del-tema', 'archivos-ajenos'])
+      const ids = new Set(['orden', 'medidas-del-tema', 'archivos-ajenos', 'nada-que-finja', 'un-arreglo-se-barre'])
+      if (/routes\.tsx?$|nav-config/.test(ruta)) ['pantallas-pendientes', 'una-pantalla-por-cosa'].forEach((i) => ids.add(i))
       const entrada = indice.get(ruta)
       for (const id of entrada?.reglas ?? []) ids.add(id)
       if (/(crear|editar|nuevo|nueva|agregar|alta)/.test(ruta) || /PageActionBar/.test(texto)) ['crear-en-pagina', 'salir-con-cambios', 'guardado-honesto'].forEach((i) => ids.add(i))
@@ -274,7 +293,7 @@ const HERRAMIENTAS = {
     },
   },
   revisar: {
-    descripcion: 'Después de escribir: revisa un archivo contra las reglas del equipo y devuelve, por línea, lo que rompe y con qué pieza se arregla (retiradas, confirmaciones que faltan, ventana equivocada, salida de creación, avisos sin tipo, letra chica, anchos a mano, colores literales, «!» sin explicar). No reemplaza a npm run check.',
+    descripcion: 'Después de escribir: revisa un archivo contra las reglas del equipo y devuelve, por línea, lo que rompe y con qué pieza se arregla (retiradas, confirmaciones que faltan, ventana equivocada, salida de creación, avisos sin tipo aunque ocupen varias líneas, avisos de maqueta, envíos sin preguntar, enlaces a rutas que no existen, insignias, tablas y vacíos de la librería, letra chica, anchos a mano, colores literales, «!» sin explicar). No reemplaza a npm run check.',
     parametros: { ruta: { type: 'string', description: 'Ruta desde la raíz del repo' } },
     requeridos: ['ruta'],
     ejecutar({ ruta }) {
@@ -298,10 +317,30 @@ const HERRAMIENTAS = {
           if (/title=\{?["'`]¿(Eliminar|Borrar|Salir|Desactivar|Descartar|Enviar|Quitar|Archivar|Publicar)/.test(tramo)) marca(i, 'dos-ventanas', 'ActionDialog usado para preguntar', 'DialogoConfirmar con RegistroConfirmar')
         }
         if (/notify(Action)?\(\s*['"`][^'"`]*(enviad|recordatorio|eliminad|borrad|desactivad|descartad|movid)/i.test(l) && !tieneConfirmar) marca(i, 'preguntar-antes', 'avisa de una acción hecha sin haber preguntado (no hay DialogoConfirmar en el archivo)', 'preguntar antes con DialogoConfirmar, o notifyAction con «Deshacer» si es simple y se puede deshacer')
-        if (/\bnotify\(/.test(l)) {
-          const llamada = lineas.slice(i, i + 4).join(' ')
-          const args = llamada.slice(llamada.indexOf('notify(')).split(')')[0]
-          if (!/['"](success|info|warning|error)['"]/.test(args)) marca(i, 'avisos-con-tipo', 'notify sin tipo', "notify(título, detalle, 'success' | 'info' | 'warning' | 'error')")
+        if (/\bnotify\(/.test(l) && !/function notify|import /.test(l)) {
+          // La llamada entera, aunque ocupe varias líneas: hasta cerrar el paréntesis de notify(.
+          const tramo = lineas.slice(i, i + 12).join('\n')
+          const ini = tramo.indexOf('notify(') + 'notify('.length
+          let prof = 1
+          let fin = ini
+          while (fin < tramo.length && prof > 0) {
+            if (tramo[fin] === '(') prof++
+            else if (tramo[fin] === ')') prof--
+            fin++
+          }
+          const args = tramo.slice(ini, fin - 1)
+          if (!/['"](success|info|warning|error)['"]/.test(args) && !/\btipo\b|\.tipo\b/.test(args)) marca(i, 'avisos-con-tipo', 'notify sin tipo', "notify(título, detalle, 'success' | 'info' | 'warning' | 'error')")
+        }
+        if (/(notify|notifyAction|toast\.add)\(/.test(l) || /title:\s*['"`]/.test(l)) {
+          const tramo = lineas.slice(i, i + 4).join(' ')
+          if (/Aqu[ií] se abrir[ií]a|se abrir[ií]a|Lo construimos en la siguiente fase|no est[aá] en el playground|en el playground/i.test(tramo)) marca(i, 'nada-que-finja', 'aviso que cuenta lo que haría la pantalla en vez de hacerlo', 'hacerlo de verdad, quitar la acción o dejarla apagada con el motivo')
+        }
+        if (/\b(Recordar a|Enviar recordatorio|Recordar a todas)\b/.test(l) && !tieneConfirmar && /onClick|onSelect|label/.test(lineas.slice(Math.max(0, i - 3), i + 3).join(' '))) marca(i, 'preguntar-antes', 'un envío a varias personas sin ventana de confirmar en el archivo', 'DialogoConfirmar con RegistroConfirmar (qué y a cuántas personas)')
+        if (/<Badge\b[^>]*\bsize=["'](xs|sm)["']/.test(l) && /import\s*\{[^}]*\bBadge\b[^}]*\}\s*from\s*['"]@ubits\/flux-ui['"]/.test(texto)) marca(i, 'medidas-del-tema', 'insignia de la librería en xs o sm (9,6 o 10 px)', 'Badge de @/shared/components/Badge')
+        // Un Empty de la librería con su ilustración glass (ImagenGlass) cumple la regla: solo se marca el de icono de línea.
+        if (/<(Table|Empty)\b/.test(l) && !(l.includes('<Empty') && /ImagenGlass/.test(lineas.slice(i, i + 8).join(' '))) && new RegExp(`import\\s*\\{[^}]*\\b${l.match(/<(Table|Empty)\b/)[1]}\\b[^}]*\\}\\s*from\\s*['"]@ubits/flux-ui['"]`).test(texto) && !/design-system\/(data-grid|estados)\//.test(ruta)) marca(i, l.includes('<Table') ? 'tabla-cabe' : 'vacios-con-glass', l.includes('<Table') ? 'tabla suelta de la librería' : 'vacío de la librería sin ilustración glass', l.includes('<Table') ? 'TablaDatos' : 'PrimeraVez o SinResultados')
+        for (const m of l.matchAll(/(?:navigate\(|to=\{?|href=\{?|ruta:\s*|to:\s*)['"`](\/(?:admin|portal-colaborador|design-system)[^'"`?#$]*)['"`]/g)) {
+          if (!rutaExiste(m[1])) marca(i, 'nada-que-finja', `enlace a ${m[1]}, que no está registrada`, 'apuntar a una ruta que exista (mira el routes.ts del módulo)')
         }
         if (esCreacion && />\s*Cancelar\s*</.test(l)) marca(i, 'crear-en-pagina', '«Cancelar» en una creación', 'BotonSalirCreacion en las acciones de PageHeader y nada de «Cancelar» en la barra')
         if (esCreacion && /ArrowLeft\d*Icon/.test(l) && /PageHeader|volver|onBack/i.test(lineas.slice(Math.max(0, i - 5), i + 5).join(' '))) marca(i, 'crear-en-pagina', 'flecha para volver junto al título de una creación', 'BotonSalirCreacion')
@@ -314,7 +353,7 @@ const HERRAMIENTAS = {
         }
         if (/<DrawerShell\b/.test(l)) {
           const tramo = lineas.slice(i, i + 15).join(' ')
-          if (/onOpenChange=\{?\s*set\w+\s*\}?/.test(tramo) && /(Input|Textarea|Field|Select)/.test(texto)) marca(i, 'panel-con-datos', 'el panel se cierra directo aunque tenga campos', 'si hay cambios, preguntar antes de cerrar y no cerrar al tocar fuera')
+          if (/onOpenChange=\{?\s*set\w+\s*\}?/.test(tramo) && !/conCambios/.test(tramo) && /(Input|Textarea|Field|Select)/.test(texto)) marca(i, 'panel-con-datos', 'el panel se cierra directo aunque tenga campos', 'si hay cambios, preguntar antes de cerrar y no cerrar al tocar fuera')
         }
       })
       const d = dueno(ruta)

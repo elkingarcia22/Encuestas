@@ -1,33 +1,28 @@
 import { useCallback, useMemo, useState } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
-import {  Cancel01Icon, Search01Icon } from '@hugeicons/core-free-icons'
 import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Frame,
+  FrameDescription,
+  FrameHeader,
   FramePanel,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-  Text,
-  ToggleGroup,
-  ToggleGroupItem,
+  FrameTitle,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { notify } from '@/shared/components/notify'
 import { EncabezadoPaso } from '../../../../encuestas/components/pasos-drawer'
 import { ALIGNMENT_LEVEL_HINTS, ALIGNMENT_LEVEL_LABELS, buildAlignmentGraph, MAX_PERSON_NODES, type AlignmentLevel, type AlignmentNode, type ObjectiveRef } from '../../../modelo/constructor/alignmentGraph'
 import type { CicloDraft, ObjectiveSet } from '../../../modelo/constructor/cicloBuilderTypes'
-import { alignmentCounts, alignObjectives } from '../../../modelo/constructor/objectiveSets'
+import { alignmentCounts, alignObjectives, unalignObjectives } from '../../../modelo/constructor/objectiveSets'
 import { AyudasMapa } from './ayudas-mapa'
 import { CrearAlineacion } from './crear-alineacion'
 import { Lienzo } from './lienzo/lienzo'
 import type { Posiciones } from './lienzo/geometria'
 import type { OpcionEmpresa } from './opciones-empresa'
-import { ICONO_NIVEL } from './visual'
+import { SelectorVista } from '../../../../encuestas/resultados/components/controles'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { BotonAmpliar, PantallaCompleta } from '@/modules/design-system/marco/pantalla-completa'
 
 // Último paso del ciclo: el mapa de alineación. Los pasos anteriores reparten metas; este contesta la pregunta que
 // ninguno contesta —¿hacia dónde empuja cada una?— y deja arreglarla en el sitio, arrastrando una flecha hasta el
@@ -38,6 +33,11 @@ import { PrimeraVez } from '@/shared/components/PrimeraVez'
 // elegida y dónde dejó el autor cada tarjeta viven aquí, en el estado del paso: son preferencias de lectura, no ciclo.
 //
 // Lo único que este paso escribe en el borrador es `Objective.alignedTo`, siempre a través de `onSets`.
+//
+// «Ver en pantalla completa» (20-oct, Elkin): como el mapa de calor de Encuestas, el mapa se abre en la plantilla
+// PantallaCompleta con sus mismos controles (nivel y «Crear alineación») junto a la X. Es el mismo estado del
+// paso: lo que se mueve o alinea ahí queda al cerrar. Mientras está abierta, el lienzo de la página no se pinta, y al
+// cerrar vuelve a armarse con las posiciones que dejó el autor.
 
 const NIVELES: readonly AlignmentLevel[] = ['objetivos', 'agrupacion', 'colaboradores']
 /** Alto del marco del lienzo: cabe en la columna de trabajo sin empujar el resto del paso fuera de la pantalla. */
@@ -63,11 +63,11 @@ export function PasoAlineacion({
   conErrores: boolean
 }) {
   const [nivel, setNivel] = useState<AlignmentLevel>('objetivos')
-  const [busqueda, setBusqueda] = useState('')
   const [seleccionada, setSeleccionada] = useState<string | null>(null)
   const [posiciones, setPosiciones] = useState<Posiciones>({})
+  const [ampliado, setAmpliado] = useState(false)
 
-  const grafo = useMemo(() => buildAlignmentGraph(borrador, { level: nivel, search: busqueda }), [borrador, nivel, busqueda])
+  const grafo = useMemo(() => buildAlignmentGraph(borrador, { level: nivel }), [borrador, nivel])
 
   const opciones = useMemo<OpcionEmpresa[]>(
     () => (borrador.useCompanyObjectives ? borrador.companyObjectives.map((objetivo) => ({ id: objetivo.id, titulo: objetivo.title.trim() || 'Objetivo sin título' })) : []),
@@ -84,7 +84,7 @@ export function PasoAlineacion({
   const alineado = useMemo(() => {
     const vivos = new Set(opciones.map((opcion) => opcion.id))
     const mapa = new Map<string, boolean>()
-    borrador.objectiveSets.forEach((set) => set.objectives.forEach((o) => mapa.set(`${set.id}:${o.id}`, o.alignedTo !== null && vivos.has(o.alignedTo))))
+    borrador.objectiveSets.forEach((set) => set.objectives.forEach((o) => mapa.set(`${set.id}:${o.id}`, o.alignedTo.some((destino) => vivos.has(destino)))))
     return mapa
   }, [borrador.objectiveSets, opciones])
 
@@ -107,14 +107,22 @@ export function PasoAlineacion({
   const alinear = (refs: readonly ObjectiveRef[], companyObjectiveId: string | null) => {
     const unicos = sinRepetir(refs)
     if (unicos.length === 0) return
-    onSets(alignObjectives(borrador.objectiveSets, unicos, companyObjectiveId))
     const n = unicos.length
+    // Un objetivo puede contribuir a varios (22-oct): elegir uno que ya tienen todos lo quita de ese destino solamente.
+    const objetivoDe = (ref: ObjectiveRef) => borrador.objectiveSets.find((set) => set.id === ref.setId)?.objectives.find((o) => o.id === ref.objectiveId)
+    if (companyObjectiveId !== null && unicos.every((ref) => objetivoDe(ref)?.alignedTo.includes(companyObjectiveId))) {
+      onSets(unalignObjectives(borrador.objectiveSets, unicos, companyObjectiveId))
+      const titulo = opciones.find((opcion) => opcion.id === companyObjectiveId)?.titulo ?? 'Objetivo sin título'
+      notify(`${objetivos(n)} ya no ${n === 1 ? 'contribuye' : 'contribuyen'} a «${titulo}»`, 'Los demás objetivos a los que contribuye siguen igual.', 'success')
+      return
+    }
+    onSets(alignObjectives(borrador.objectiveSets, unicos, companyObjectiveId))
     if (companyObjectiveId === null) {
-      notify(`${objetivos(n)} sin alineación`)
+      notify(`${objetivos(n)} sin alineación`, undefined, 'success')
       return
     }
     const titulo = opciones.find((opcion) => opcion.id === companyObjectiveId)?.titulo ?? 'Objetivo sin título'
-    notify(`${objetivos(n)} ${n === 1 ? 'alineado' : 'alineados'}`, `Ahora contribuye${n === 1 ? '' : 'n'} a "${titulo}".`)
+    notify(`${objetivos(n)} ${n === 1 ? 'alineado' : 'alineados'}`, `Ahora contribuye${n === 1 ? '' : 'n'} a «${titulo}».`, 'success')
   }
 
   const cambiarNivel = (siguiente: AlignmentLevel) => {
@@ -129,6 +137,47 @@ export function PasoAlineacion({
         {cuentas.aligned} de {total} alineados · {cobertura} %
       </Badge>
     ) : null
+
+  // El nivel es una vista del mismo mapa: la pastilla de Encuestas (Secciones / Mapa de calor), solo texto (20-oct).
+  const controlesNivel = <SelectorVista valor={nivel} onCambio={cambiarNivel} etiqueta="Nivel del mapa" opciones={NIVELES.map((opcion) => ({ value: opcion, label: ALIGNMENT_LEVEL_LABELS[opcion] }))} />
+  // Sin buscador (20-oct, Elkin): la cabecera lleva el nivel, «Crear alineación» y ampliar.
+  const crear = (
+    <>
+      <CrearAlineacion borrador={borrador} opciones={opciones} nodoSeleccionado={grafo.nodes.find((nodo) => nodo.id === seleccionada)} onAlinear={alinear} />
+    </>
+  )
+  const avisos = (
+    <>
+      {marcarErrores ? (
+        <Alert variant="destructive">
+          <AlertTitle>{`Alinea ${objetivos(sueltos)} a los de la empresa`}</AlertTitle>
+          <AlertDescription>Este modelo pide que cada objetivo asignado cuelgue de uno de la empresa. Las tarjetas en rojo todavía no contribuyen a ninguno.</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {grafo.hiddenCount > 0 ? (
+        <Alert>
+          <AlertDescription>
+            {`El mapa dibuja hasta ${MAX_PERSON_NODES} personas: primero quienes reciben metas de más de un frente o tienen asignación propia. Otras ${grafo.hiddenCount} quedan representadas por la tarjeta de su grupo.`}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+    </>
+  )
+  const lienzo = (
+    <Lienzo
+      key={nivel}
+      grafo={grafo}
+      opciones={opciones}
+      posicionesIniciales={posiciones}
+      onPosiciones={setPosiciones}
+      seleccionada={seleccionada}
+      onSeleccionar={setSeleccionada}
+      onAlinear={alinear}
+      errorDe={errorDe}
+      claveEncuadre={`${nivel}:${grafo.nodes.length}`}
+    />
+  )
 
   return (
     <section className="flex flex-col gap-4" aria-label="Alineación">
@@ -151,77 +200,38 @@ export function PasoAlineacion({
           onAccion={onCrearAsignacion}
         />
       ) : (
-        <Frame>
+        // Como las tablas y el «Detalle por secciones» de Encuestas (20-oct, Elkin): el título y su bajada en lo gris del
+        // marco, y en la misma línea la pastilla del nivel, «Crear alineación» y ampliar.
+        <Frame spacing="sm">
+          {/* Cabecera del marco en fila: con el tema sin capa solo obedece con «!» (diferencias.json › instalacion-estilos-sin-capa). */}
+          <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
+            <div className="min-w-0">
+              <FrameTitle>Mapa de alineación</FrameTitle>
+              <FrameDescription>{grafo.nodes.length === 1 ? '1 tarjeta' : `${grafo.nodes.length} tarjetas`}</FrameDescription>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {controlesNivel}
+              {crear}
+              <BotonAmpliar onClick={() => setAmpliado(true)} />
+            </div>
+          </FrameHeader>
           <FramePanel className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex min-w-0 flex-col gap-1">
-                <ToggleGroup variant="outline" size="sm" value={[nivel]} onValueChange={(valor) => valor[0] && cambiarNivel(valor[0] as AlignmentLevel)} aria-label="Nivel del mapa">
-                  {NIVELES.map((opcion) => (
-                    <ToggleGroupItem key={opcion} value={opcion}>
-                      <HugeiconsIcon icon={ICONO_NIVEL[opcion]} aria-hidden="true" />
-                      {ALIGNMENT_LEVEL_LABELS[opcion]}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-                <Text size="xs" variant="muted">
-                  {ALIGNMENT_LEVEL_HINTS[nivel]}
-                </Text>
-              </div>
-              <div className="flex items-center gap-2">
-                <InputGroup className="w-52">
-                  <InputGroupAddon>
-                    <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
-                  </InputGroupAddon>
-                  <InputGroupInput value={busqueda} onChange={(evento) => setBusqueda(evento.target.value)} placeholder="Buscar en el mapa…" aria-label="Buscar tarjetas del mapa" />
-                  {busqueda !== '' ? (
-                    <InputGroupAddon align="inline-end">
-                      <InputGroupButton size="icon-xs" aria-label="Limpiar búsqueda" onClick={() => setBusqueda('')}>
-                        <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
-                      </InputGroupButton>
-                    </InputGroupAddon>
-                  ) : null}
-                </InputGroup>
-                <CrearAlineacion borrador={borrador} opciones={opciones} nodoSeleccionado={grafo.nodes.find((nodo) => nodo.id === seleccionada)} onAlinear={alinear} />
-              </div>
-            </div>
+            {avisos}
 
-            {marcarErrores ? (
-              <Alert variant="destructive">
-                <AlertTitle>{`Alinea ${objetivos(sueltos)} a los de la empresa`}</AlertTitle>
-                <AlertDescription>Este modelo pide que cada objetivo asignado cuelgue de uno de la empresa. Las tarjetas en rojo todavía no contribuyen a ninguno.</AlertDescription>
-              </Alert>
-            ) : null}
-
-            {grafo.hiddenCount > 0 || (busqueda !== '' && grafo.filteredCount > 0) ? (
-              <Alert>
-                <AlertDescription>
-                  {grafo.hiddenCount > 0
-                    ? `El mapa dibuja hasta ${MAX_PERSON_NODES} personas: primero quienes reciben metas de más de un frente o tienen asignación propia. Otras ${grafo.hiddenCount} quedan representadas por la tarjeta de su grupo — búscalas por nombre para traerlas al mapa. `
-                    : ''}
-                  {busqueda !== '' && grafo.filteredCount > 0 ? `${grafo.filteredCount} ${grafo.filteredCount === 1 ? 'tarjeta oculta' : 'tarjetas ocultas'} por la búsqueda.` : ''}
-                </AlertDescription>
-              </Alert>
-            ) : null}
-
-            <div className={ALTO_LIENZO}>
-              <Lienzo
-                key={nivel}
-                grafo={grafo}
-                opciones={opciones}
-                posicionesIniciales={posiciones}
-                onPosiciones={setPosiciones}
-                seleccionada={seleccionada}
-                onSeleccionar={setSeleccionada}
-                onAlinear={alinear}
-                errorDe={errorDe}
-                claveEncuadre={`${nivel}:${grafo.nodes.length}`}
-              />
-            </div>
+            <div className={ALTO_LIENZO}>{ampliado ? null : lienzo}</div>
 
             <AyudasMapa nivel={nivel} />
           </FramePanel>
         </Frame>
       )}
+
+      <PantallaCompleta abierta={ampliado} onCerrar={() => setAmpliado(false)} titulo="Mapa de alineación" descripcion={hayNorte && hayAsignaciones ? `${cuentas.aligned} de ${total} alineados · ${cobertura} % · ${ALIGNMENT_LEVEL_HINTS[nivel]}` : undefined} acciones={<>{controlesNivel}{crear}</>}>
+        <div className="flex h-full min-h-[480px] flex-col gap-3">
+          {avisos}
+          <div className="min-h-0 flex-1">{lienzo}</div>
+          <AyudasMapa nivel={nivel} />
+        </div>
+      </PantallaCompleta>
     </section>
   )
 }

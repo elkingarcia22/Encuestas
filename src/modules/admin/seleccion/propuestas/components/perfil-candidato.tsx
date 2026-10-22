@@ -12,7 +12,6 @@ import {
   ArrowDown01Icon,
   ArrowUpRight01Icon,
   BirthdayCakeIcon,
-  Briefcase01Icon,
   BubbleChatIcon,
   Calendar03Icon,
   Cancel01Icon,
@@ -25,11 +24,9 @@ import {
   File01Icon,
   FileSyncIcon,
   Flag02Icon,
-  Globe02Icon,
   Home01Icon,
   IdentityCardIcon,
   Linkedin01Icon,
-  Location01Icon,
   Logout03Icon,
   Mail01Icon,
   MinusSignCircleIcon,
@@ -44,10 +41,8 @@ import {
   SmartPhone01Icon,
   Tick02Icon,
   Undo02Icon,
-  UserIcon,
   ViewIcon,
   ViewOffIcon,
-  Wallet01Icon,
 } from '@hugeicons/core-free-icons'
 import {
   Accordion,
@@ -149,9 +144,9 @@ import { CeldaCifra } from '@/modules/admin/inicio/components/bloques'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { fechaCorta, fechaSinAnio, plural } from '@/modules/design-system/patrones/formato'
 import { ListaNotas } from '../../vacantes/detalle/candidato/components/notas'
-import { Marco, Rotulo } from '../../vacantes/detalle/candidato/components/piezas'
+import { Marco, Rotulo } from '@/modules/design-system/patrones/ficha'
 import { pesos, type Nota } from '../../vacantes/detalle/components/data'
-import { ErrorDeCarga, Esqueleto, LineaEsqueleto, useCargaConError } from './carga'
+import { ErrorDeCarga, Esqueleto, LineaEsqueleto, useCargaConError } from '@/modules/design-system/estados/carga'
 import { QUIEN_MUEVE, type CambioEtapa, type MarcaCambio } from '../movimientos'
 import { claveDeComentario, expedienteDeSesion, useExpedienteDeSesion, type Canal } from '../expediente-sesion'
 import { baseDeCandidatos } from '../base'
@@ -162,6 +157,9 @@ import { PERSONAS_EMPRESA, PLAZO_ENTREVISTA, VEREDICTO_TEXTO, type Candidatura }
 import { CampoNumero } from '../../vacantes/crear/components/piezas'
 import { VisorPdf } from '@/modules/admin/aprendizaje/lms-creator/crear-contenido/components/visor-pdf'
 import { InvitarATerminar, useInvitacionATerminar } from './invitar-a-terminar'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
+import { motion } from 'motion/react'
+import { SUAVE, apareceContenido } from './animacion'
 import {
   contenidoDe,
   esHojaDeVida,
@@ -207,7 +205,8 @@ type Pestana = Exclude<PestanaFicha, 'etapas'>
 // «3:40 p. m.»: la hora de lo que pasó hoy.
 const horaCorta = (ms: number) => new Date(ms).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })
 
-const NavegarFicha = createContext<(destino: PestanaInicial, etapa?: string) => void>(() => {})
+// Con `postulacion`, una etapa de otra de sus vacantes (desde «Postulaciones»): se abre igual, en la misma ficha.
+const NavegarFicha = createContext<(destino: PestanaInicial, etapa?: string, postulacion?: string) => void>(() => {})
 // Quien mira con «Solo ver» (CA-43): no comenta ni ve las notas privadas.
 const SoloVerFicha = createContext(false)
 // Se reemplazó su hoja de vida en la sesión: la evaluación que se ve es de la versión anterior (CA-16).
@@ -230,9 +229,6 @@ const copiar = (texto: string, aviso: string) => {
 }
 
 const millonesAPesos = (millones: number) => `$${Math.round(millones * 1_000_000).toLocaleString('es-CO')}`
-
-// «Bogotá, D.C.» ya dice la ciudad; «Medellín, Antioquia» necesita las dos.
-const lugarDe = (perfil: PerfilCompleto) => (perfil.region.startsWith(perfil.ciudad) ? perfil.region : `${perfil.ciudad}, ${perfil.region}`)
 
 // Las fechas de este año se dicen sin el año («3 sept»); las de antes, completas.
 const cuando = (iso: string) => (iso.startsWith('2026') ? fechaSinAnio(iso) : fechaCorta(iso))
@@ -436,78 +432,12 @@ function PestanaInformacion({ perfil, rango, soloVer = false }: { perfil: Perfil
       )
     ) : undefined
 
+  // 13 oct (reunión con la PM y el TL): primero los datos personales (ocultos hasta que se piden), después las
+  // habilidades. La ciudad y el país van arriba, junto al nombre. Lo que pide la persona (salario, cuándo puede empezar,
+  // si se reubica) es de su postulación a una vacante, no de la persona: sale solo dentro de una vacante, frente a lo que
+  // ofrece (antes iba en «Resumen»); en Mis candidatos no se muestra.
   return (
     <div className="flex flex-col gap-4">
-      <Marco titulo="Habilidades" descripcion={plural(perfil.habilidades.length, '1 habilidad', `${perfil.habilidades.length} habilidades`)}>
-        <FramePanel className="flex flex-wrap gap-1.5">
-          {perfil.habilidades.length ? (
-            perfil.habilidades.map((habilidad) => (
-              <Badge key={habilidad} variant="secondary">
-                {habilidad}
-              </Badge>
-            ))
-          ) : (
-            <Text as="span" variant="muted" size="sm">
-              No registró habilidades.
-            </Text>
-          )}
-        </FramePanel>
-      </Marco>
-
-      <Marco titulo="Información de contacto">
-        <FramePanel className="grid gap-4 @md:grid-cols-2">
-          <Dato icono={UserIcon} rotulo="Nombre">
-            {perfil.nombre}
-          </Dato>
-          <Dato icono={UserIcon} rotulo="Apellido">
-            {perfil.apellido}
-          </Dato>
-          <Dato icono={Mail01Icon} rotulo="Correo electrónico">
-            {perfil.correo}
-          </Dato>
-          <Dato icono={SmartPhone01Icon} rotulo="Teléfono">
-            {perfil.celular}
-          </Dato>
-        </FramePanel>
-      </Marco>
-
-      <Marco titulo="Ubicación">
-        <FramePanel className="grid gap-4 @md:grid-cols-2">
-          <Dato icono={Location01Icon} rotulo="Ciudad">
-            {lugarDe(perfil)}
-          </Dato>
-          <Dato icono={Globe02Icon} rotulo="País">
-            {perfil.pais}
-          </Dato>
-          <Dato icono={Home01Icon} rotulo="Disponible para reubicarse">
-            {perfil.reubicacion === undefined ? undefined : perfil.reubicacion ? 'Sí' : 'No'}
-          </Dato>
-        </FramePanel>
-      </Marco>
-
-      <Marco titulo="Información adicional">
-        <FramePanel className="grid gap-4 @md:grid-cols-2">
-          <Dato icono={Briefcase01Icon} rotulo="Años de experiencia">
-            {plural(perfil.anios, '1 año', `${perfil.anios} años`)}
-          </Dato>
-          <Dato icono={Clock01Icon} rotulo="Disponibilidad">
-            {perfil.disponibilidad}
-          </Dato>
-          <Dato icono={Calendar03Icon} rotulo="Preaviso">
-            {perfil.preaviso}
-          </Dato>
-          <Dato icono={Money03Icon} rotulo="Salario esperado al mes" extra={comparacion}>
-            {salario !== undefined ? millonesAPesos(salario) : undefined}
-          </Dato>
-          <Dato icono={Wallet01Icon} rotulo="Moneda">
-            {perfil.moneda}
-          </Dato>
-          <Dato icono={Globe02Icon} rotulo="Cómo llegó">
-            {perfil.origen}
-          </Dato>
-        </FramePanel>
-      </Marco>
-
       <Marco
         titulo="Datos personales"
         descripcion="Para la contratación. No se usan para evaluar: la IA no los ve."
@@ -547,6 +477,37 @@ function PestanaInformacion({ perfil, rango, soloVer = false }: { perfil: Perfil
           )}
         </FramePanel>
       </Marco>
+      <Marco titulo="Habilidades" descripcion={plural(perfil.habilidades.length, '1 habilidad', `${perfil.habilidades.length} habilidades`)}>
+        <FramePanel className="flex flex-wrap gap-1.5">
+          {perfil.habilidades.length ? (
+            perfil.habilidades.map((habilidad) => (
+              <Badge key={habilidad} variant="secondary">
+                {habilidad}
+              </Badge>
+            ))
+          ) : (
+            <Text as="span" variant="muted" size="sm">
+              No registró habilidades.
+            </Text>
+          )}
+        </FramePanel>
+      </Marco>
+
+      {rango ? (
+        <Marco titulo="Lo que pide" descripcion="Para esta vacante, frente a lo que ofrece.">
+          <FramePanel className="grid gap-4 @md:grid-cols-2">
+            <Dato icono={Money03Icon} rotulo="Salario esperado al mes" extra={comparacion}>
+              {salario !== undefined ? `${millonesAPesos(salario)}${perfil.moneda ? ` · ${perfil.moneda.split(' ')[0]}` : ''}` : undefined}
+            </Dato>
+            <Dato icono={Clock01Icon} rotulo="Puede empezar">
+              {perfil.disponibilidad}
+            </Dato>
+            <Dato icono={Home01Icon} rotulo="Disponible para reubicarse">
+              {perfil.reubicacion === undefined ? undefined : perfil.reubicacion ? 'Sí' : 'No'}
+            </Dato>
+          </FramePanel>
+        </Marco>
+      ) : null}
     </div>
   )
 }
@@ -588,8 +549,8 @@ function ExperienciaLaboral({ perfil }: { perfil: PerfilCompleto }) {
         ) : (
           <Empty>
             <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <HugeiconsIcon icon={Briefcase01Icon} />
+              <EmptyMedia variant="default">
+                <ImagenGlass nombre="glass-bag-2" tamano={56} />
               </EmptyMedia>
               <EmptyTitle>No registró experiencia</EmptyTitle>
               <EmptyDescription>Su CV no trae puestos anteriores.</EmptyDescription>
@@ -625,8 +586,8 @@ function Estudios({ perfil }: { perfil: PerfilCompleto }) {
         ) : (
           <Empty>
             <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <HugeiconsIcon icon={Mortarboard02Icon} />
+              <EmptyMedia variant="default">
+                <ImagenGlass nombre="glass-ticket-star" tamano={56} />
               </EmptyMedia>
               <EmptyTitle>No registró estudios</EmptyTitle>
               <EmptyDescription>Se le puede pedir el diploma o el acta de grado en «Documentos».</EmptyDescription>
@@ -751,8 +712,8 @@ function PestanaDocumentos({
           ) : (
             <Empty>
               <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <HugeiconsIcon icon={File01Icon} />
+                <EmptyMedia variant="default">
+                  <ImagenGlass nombre="glass-folder" tamano={56} />
                 </EmptyMedia>
                 <EmptyTitle>Sin documentos</EmptyTitle>
                 <EmptyDescription>El CV y los certificados que suba el equipo quedan aquí.</EmptyDescription>
@@ -842,8 +803,8 @@ function VistaPrevia({ perfil, documento, onCerrar }: { perfil: PerfilCompleto; 
       ) : documento?.archivo ? (
         <Empty>
           <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <HugeiconsIcon icon={File01Icon} />
+            <EmptyMedia variant="default">
+              <ImagenGlass nombre="glass-document" tamano={56} />
             </EmptyMedia>
             <EmptyTitle>Lo subiste en esta sesión</EmptyTitle>
             <EmptyDescription>No es un PDF: ábrelo en otra pestaña para verlo con el visor del navegador, o descárgalo.</EmptyDescription>
@@ -1623,7 +1584,7 @@ function SerenaDetalle({ evaluacion, nombre }: { evaluacion: Extract<EvaluacionE
           </ScrollArea>
         </div>
 
-        <TabsContent value="puntajes" className="flex flex-col gap-5">
+        <TabsContent value="puntajes" className="flex flex-col gap-5" render={<motion.div {...apareceContenido} />}>
           <Cifras>
             <CeldaCifra cifra={{ etiqueta: 'Puntaje', valor: `${serena.puntaje}/100`, detalle: `aprueba con ${serena.minimo}` }} />
             <CeldaCifra cifra={{ etiqueta: 'Preguntas', valor: String(preguntas.length), detalle: 'respondidas' }} />
@@ -1661,7 +1622,7 @@ function SerenaDetalle({ evaluacion, nombre }: { evaluacion: Extract<EvaluacionE
           </div>
         </TabsContent>
 
-        <TabsContent value="feedback" className="flex flex-col gap-4">
+        <TabsContent value="feedback" className="flex flex-col gap-4" render={<motion.div {...apareceContenido} />}>
           <Lectura>{serena.feedback.resumen}</Lectura>
           <div className="grid gap-5 @lg:grid-cols-2">
             <div className="flex flex-col gap-2">
@@ -1675,7 +1636,7 @@ function SerenaDetalle({ evaluacion, nombre }: { evaluacion: Extract<EvaluacionE
           </div>
         </TabsContent>
 
-        <TabsContent value="transcripcion" className="flex flex-col gap-4">
+        <TabsContent value="transcripcion" className="flex flex-col gap-4" render={<motion.div {...apareceContenido} />}>
           {/* Se escucha mientras se lee (CA-39). Para el comité, la transcripción se descarga o se imprime tal cual, con
               las alertas en su frase (CA-40). */}
           <div className="flex flex-col gap-3">
@@ -1875,7 +1836,7 @@ export function LineaDeEtapas({ postulacion, abrir = false }: { postulacion: Pos
   const donde = etapas.findIndex((etapa) => etapa.estado === 'actual' || etapa.estado === 'rechazada' || etapa.estado === 'retiro')
   const valor = donde >= 0 ? donde + 1 : etapas.length
   return (
-    <Stepper value={valor} onValueChange={abrir ? (paso) => navegar('etapas', etapas[paso - 1]?.id) : undefined}>
+    <Stepper value={valor} onValueChange={abrir ? (paso) => navegar('etapas', etapas[paso - 1]?.id, postulacion.id) : undefined}>
       {/* Nombre debajo de cada paso, como el ejemplo «titles below» de ReUI: el punto y su línea se colocan a mano (solo
           posición) y la línea de lo ya recorrido se pinta como el paso hecho. */}
       <StepperNav className="items-start">
@@ -2021,7 +1982,7 @@ function EtapaDetalle({
     <div className="flex flex-col gap-4">
       <Button variant="ghost" size="sm" className="-ms-2 w-fit" onClick={onVolver}>
         <HugeiconsIcon icon={ArrowLeft01Icon} size={16} aria-hidden="true" />
-        Volver al resumen
+        {postulacion.actual ? 'Volver al resumen' : 'Volver a sus postulaciones'}
       </Button>
       <Marco
         titulo={`${indice + 1}. ${etapa.titulo}`}
@@ -2100,12 +2061,14 @@ function PestanaVacantes({
   onVerEtapas?: () => void
 }) {
   const actuales = perfil.historial.filter((postulacion) => postulacion.estado === 'En curso').length
+  // Dentro de una vacante, la de esta ficha va en su propio renglón y sin la línea de etapas, que está en «Resumen» (13
+  // oct, información repetida): se llega a ella con «Ver el resumen». Fuera de una vacante, todas se abren igual.
+  const estaFicha = onVerEtapas ? perfil.historial.find((postulacion) => postulacion.actual) : undefined
+  const otras = estaFicha ? perfil.historial.filter((postulacion) => postulacion !== estaFicha) : perfil.historial
   // Abierta de entrada: la de esta ficha, o la primera en curso, o la primera.
   const [abiertas, setAbiertas] = useState<string[]>(() => {
     const inicial =
-      perfil.historial.find((postulacion) => postulacion.actual) ??
-      perfil.historial.find((postulacion) => postulacion.estado === 'En curso') ??
-      perfil.historial[0]
+      otras.find((postulacion) => postulacion.actual) ?? otras.find((postulacion) => postulacion.estado === 'En curso') ?? otras[0]
     return inicial ? [inicial.id] : []
   })
 
@@ -2113,15 +2076,43 @@ function PestanaVacantes({
     <Marco titulo="Postulaciones" descripcion="Las vacantes de la empresa en las que ha estado y hasta dónde llegó.">
       <FramePanel>
         <div className="grid grid-cols-2 gap-4">
-          <CeldaCifra cifra={{ etiqueta: 'Vacantes actuales', valor: String(actuales), detalle: 'en las que sigue en proceso' }} />
+          <CeldaCifra cifra={{ etiqueta: 'Vacantes en proceso', valor: String(actuales), detalle: 'en las que sigue hoy' }} />
           <CeldaCifra cifra={{ etiqueta: 'En total', valor: String(perfil.historial.length), detalle: 'vacantes en las que ha estado' }} />
         </div>
       </FramePanel>
+      {estaFicha ? (
+        <FramePanel className="flex flex-wrap items-center justify-between gap-3">
+          <span className="flex min-w-0 flex-col gap-1">
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <Text as="span" size="sm" weight="medium">
+                {estaFicha.vacante}
+              </Text>
+              <Badge variant={BADGE_POSTULACION[estaFicha.estado]}>
+                {estaFicha.estado}
+              </Badge>
+              <Badge variant="secondary">
+                Esta vacante
+              </Badge>
+            </span>
+            <Text as="span" variant="muted" size="xs">
+              Se postuló el {cuando(estaFicha.fecha)} · {resumenProgreso(estaFicha)}
+            </Text>
+          </span>
+          <span className="flex flex-wrap items-center gap-2">
+            {acciones?.(estaFicha)}
+            <Button variant="outline" size="sm" onClick={onVerEtapas}>
+              Ver el resumen
+              <HugeiconsIcon icon={ArrowRight01Icon} />
+            </Button>
+          </span>
+        </FramePanel>
+      ) : null}
       {/* Sin relleno propio arriba y abajo: el de cada fila (16 px) ya iguala al de los lados (8 oct, Nicolás). */}
-      <FramePanel className={perfil.historial.length ? 'py-0!' : undefined} onKeyDown={retenerFlechas}>
-        {perfil.historial.length ? (
+      {estaFicha && !otras.length ? null : (
+      <FramePanel className={otras.length ? 'py-0!' : undefined} onKeyDown={retenerFlechas}>
+        {otras.length ? (
           <Accordion multiple value={abiertas} onValueChange={(valor) => setAbiertas(valor as string[])}>
-            {perfil.historial.map((postulacion) => {
+            {otras.map((postulacion) => {
               const extra = acciones?.(postulacion)
               const verEtapas = postulacion.actual && onVerEtapas
               return (
@@ -2153,7 +2144,8 @@ function PestanaVacantes({
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="flex flex-col gap-4">
-                      <LineaDeEtapas postulacion={postulacion} abrir={Boolean(verEtapas)} />
+                      {/* Cada etapa se abre para ver qué pasó en ella (resultado, motivo, comentarios), en esta misma ficha. */}
+                      <LineaDeEtapas postulacion={postulacion} abrir />
                       {extra || verEtapas ? (
                         <div className="flex flex-wrap items-center gap-2">
                           {extra}
@@ -2174,8 +2166,8 @@ function PestanaVacantes({
         ) : (
           <Empty>
             <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <HugeiconsIcon icon={Briefcase01Icon} />
+              <EmptyMedia variant="default">
+                <ImagenGlass nombre="glass-bag-2" tamano={56} />
               </EmptyMedia>
               <EmptyTitle>No ha estado en ninguna vacante</EmptyTitle>
               <EmptyDescription>Cuando se postule o la postules, aquí queda su recorrido.</EmptyDescription>
@@ -2183,6 +2175,7 @@ function PestanaVacantes({
           </Empty>
         )}
       </FramePanel>
+      )}
     </Marco>
   )
 }
@@ -2199,7 +2192,7 @@ const SECCIONES_CARGANDO: Record<Pestana, { titulo?: string; forma: 'lineas' | '
   ],
   informacion: [
     { titulo: 'Habilidades', forma: 'chips', cuantas: 6 },
-    { titulo: 'Información de contacto', forma: 'filas', cuantas: 3 },
+    { titulo: 'Ubicación', forma: 'filas', cuantas: 2 },
   ],
   experiencia: [{ titulo: 'Experiencia laboral', forma: 'filas', cuantas: 3 }],
   educacion: [{ titulo: 'Educación', forma: 'filas', cuantas: 2 }],
@@ -2277,8 +2270,17 @@ export function PerfilCandidato({
   })
   // La hoja de vida que se abre sola al llegar a «Documentos» (desde una etapa de revisarla o desde la alerta).
   const [hojaPorAbrir, setHojaPorAbrir] = useState(pestanaInicial === 'hoja-de-vida')
-  // La etapa abierta por dentro, en la misma ficha y con «Volver» (8 oct).
-  const [detalle, setDetalle] = useState<string | null>(null)
+  // La etapa abierta por dentro, en la misma ficha y con «Volver» (8 oct). Desde el 13 oct también la de cualquiera de sus
+  // postulaciones (PM: «si llegó hasta antecedentes judiciales, quiero poder ver desde allá qué pasó ahí»), sin salir.
+  const [detalle, setDetalle] = useState<{ postulacion: string; etapa: string } | null>(null)
+  // Al volver del detalle de una etapa, la ficha entra desde la izquierda (se ajusta durante el render).
+  const [volvioDelDetalle, setVolvioDelDetalle] = useState(false)
+  const [detallePrevio, setDetallePrevio] = useState(detalle)
+  if (detallePrevio !== detalle) {
+    setDetallePrevio(detalle)
+    setVolvioDelDetalle(detallePrevio !== null && detalle === null)
+  }
+  const postulacionDetalle = detalle ? perfil.historial.find((postulacion) => postulacion.id === detalle.postulacion) : undefined
   // Carga al abrir a la persona, no al cambiar de pestaña: en el celular se veía cargando a cada rato (CA-33). Si no
   // carga (`?simular=error`), lo dice en el lugar de la pestaña y se reintenta.
   const carga = useCargaConError(perfil.id)
@@ -2366,14 +2368,16 @@ export function PerfilCandidato({
     const tope = ancla.current?.offsetTop ?? 0
     if (caja.current && caja.current.scrollTop > tope) caja.current.scrollTop = tope
   }
-  const navegar = (destino: PestanaInicial, etapa?: string) => {
+  const navegar = (destino: PestanaInicial, etapa?: string, postulacionId?: string) => {
     // A una etapa: su detalle, arriba de la ficha. Sin etapa (o una que no es de esta vacante), al «Resumen».
     if (destino === 'etapas') {
-      if (etapa && actual?.etapas.some((una) => una.id === etapa)) {
-        setPestana('vacante')
-        setDetalle(etapa)
+      const postulacion = postulacionId ? perfil.historial.find((una) => una.id === postulacionId) : actual
+      if (etapa && postulacion?.etapas.some((una) => una.id === etapa)) {
+        // La de esta vacante vuelve a «Resumen»; la de otra, a «Postulaciones», de donde se abrió.
+        if (postulacion === actual && candidatura) setPestana('vacante')
+        setDetalle({ postulacion: postulacion.id, etapa })
         caja.current?.scrollTo({ top: 0 })
-      } else cambiarA('vacante')
+      } else if (candidatura) cambiarA('vacante')
       return
     }
     if (destino === 'hoja-de-vida') setHojaPorAbrir(true)
@@ -2405,22 +2409,23 @@ export function PerfilCandidato({
       {/* `[&>*]:shrink-0`: con poco alto los bloques se encogían en vez de hacer scroll. */}
       <div ref={caja} className="relative flex min-h-0 flex-1 flex-col overflow-auto px-5 pb-8 [&>*]:shrink-0">
         {cabecera ? <div className="pt-5">{cabecera}</div> : null}
-        {detalle && actual ? (
-          <div className="pt-4">
+        {/* Entrar al detalle de una etapa se desliza desde la derecha, como avanzar; volver, desde la izquierda. */}
+        {detalle && postulacionDetalle ? (
+          <motion.div key="detalle" className="pt-4" initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }} transition={SUAVE}>
             <EtapaDetalle
-              postulacion={actual}
-              etapaId={detalle}
+              postulacion={postulacionDetalle}
+              etapaId={detalle.etapa}
               nombre={perfil.nombre}
               comentariosDe={comentariosDe}
               onComentar={comentar}
               onVolver={() => setDetalle(null)}
             />
-          </div>
+          </motion.div>
         ) : (
           <>
-            <div className="pt-4">
+            <motion.div key="contacto" className="pt-4" initial={volvioDelDetalle ? { opacity: 0, x: -28 } : false} animate={{ opacity: 1, x: 0 }} transition={SUAVE}>
               <Contacto perfil={perfil} />
-            </div>
+            </motion.div>
             <div ref={ancla} />
             <Tabs value={pestana} onValueChange={(valor) => cambiarA(valor as Pestana)} className="gap-0">
               {/* Pegadas arriba al bajar. El fondo es el de donde vive la ficha: la tarjeta, o el panel lateral, que en
@@ -2441,60 +2446,66 @@ export function PerfilCandidato({
 
               {candidatura ? (
                 <TabsContent value="vacante" className="pt-5">
-                  {cargando ? (
-                    <PestanaCargando pestana="vacante" falla={carga.falla} onReintentar={carga.reintentar} />
-                  ) : (
-                    <div className="flex flex-col gap-4">
-                      {children}
-                      {/* Lo que el equipo anotó de la persona, no de una etapa: queda fijo aunque se la mueva (CA-24). */}
-                      {actual?.generales?.length ? (
-                        <Marco titulo="Notas generales" descripcion="Sobre la persona, no sobre una etapa: no cambian de lugar cuando se la mueve.">
-                          <FramePanel>
-                            <ListaNotas notas={actual.generales} vacia="Sin notas generales." />
-                          </FramePanel>
-                        </Marco>
-                      ) : null}
-                      {/* La bitácora de la persona en esta vacante, al final: quién hizo qué y cuándo. */}
-                      {actual?.cambios?.length ? <CambiosDeEtapa cambios={actual.cambios} postulacionId={actual.id} /> : null}
-                    </div>
-                  )}
+                  <motion.div {...apareceContenido}>
+                    {cargando ? (
+                      <PestanaCargando pestana="vacante" falla={carga.falla} onReintentar={carga.reintentar} />
+                    ) : (
+                      <div className="flex flex-col gap-4">
+                        {children}
+                        {/* Lo que el equipo anotó de la persona, no de una etapa (CA-24), va en «Notas del equipo», junto a la
+                            más reciente de sus etapas: antes salía también aquí, repetido (13 oct). */}
+                        {/* La bitácora de la persona en esta vacante, al final: quién hizo qué y cuándo. */}
+                        {actual?.cambios?.length ? <CambiosDeEtapa cambios={actual.cambios} postulacionId={actual.id} /> : null}
+                      </div>
+                    )}
+                  </motion.div>
                 </TabsContent>
               ) : null}
               <TabsContent value="informacion" className="@container pt-5">
-                {cargando ? <PestanaCargando pestana="informacion" falla={carga.falla} onReintentar={carga.reintentar} /> : <PestanaInformacion perfil={perfil} rango={candidatura?.vacante.rango} soloVer={soloVer} />}
+                <motion.div {...apareceContenido}>
+                  {cargando ? <PestanaCargando pestana="informacion" falla={carga.falla} onReintentar={carga.reintentar} /> : <PestanaInformacion perfil={perfil} rango={candidatura?.vacante.rango} soloVer={soloVer} />}
+                </motion.div>
               </TabsContent>
               <TabsContent value="experiencia" className="@container pt-5">
-                {cargando ? <PestanaCargando pestana="experiencia" falla={carga.falla} onReintentar={carga.reintentar} /> : <ExperienciaLaboral perfil={perfil} />}
+                <motion.div {...apareceContenido}>
+                  {cargando ? <PestanaCargando pestana="experiencia" falla={carga.falla} onReintentar={carga.reintentar} /> : <ExperienciaLaboral perfil={perfil} />}
+                </motion.div>
               </TabsContent>
               <TabsContent value="educacion" className="@container pt-5">
-                {cargando ? <PestanaCargando pestana="educacion" falla={carga.falla} onReintentar={carga.reintentar} /> : <Estudios perfil={perfil} />}
+                <motion.div {...apareceContenido}>
+                  {cargando ? <PestanaCargando pestana="educacion" falla={carga.falla} onReintentar={carga.reintentar} /> : <Estudios perfil={perfil} />}
+                </motion.div>
               </TabsContent>
               <TabsContent value="documentos" className="@container pt-5">
-                {cargando ? (
-                  <PestanaCargando pestana="documentos" falla={carga.falla} onReintentar={carga.reintentar} />
-                ) : (
-                  <PestanaDocumentos
-                    perfil={perfil}
-                    documentos={documentos}
-                    yo={yo}
-                    abrirHojaDeVida={hojaPorAbrir}
-                    onHojaAbierta={() => setHojaPorAbrir(false)}
-                    onAgregar={(documento) => expedienteDeSesion.agregar(perfil.id, documento)}
-                    onReemplazar={reemplazarDocumento}
-                    onEliminar={eliminarDocumento}
-                  />
-                )}
+                <motion.div {...apareceContenido}>
+                  {cargando ? (
+                    <PestanaCargando pestana="documentos" falla={carga.falla} onReintentar={carga.reintentar} />
+                  ) : (
+                    <PestanaDocumentos
+                      perfil={perfil}
+                      documentos={documentos}
+                      yo={yo}
+                      abrirHojaDeVida={hojaPorAbrir}
+                      onHojaAbierta={() => setHojaPorAbrir(false)}
+                      onAgregar={(documento) => expedienteDeSesion.agregar(perfil.id, documento)}
+                      onReemplazar={reemplazarDocumento}
+                      onEliminar={eliminarDocumento}
+                    />
+                  )}
+                </motion.div>
               </TabsContent>
               <TabsContent value="vacantes" className="@container pt-5">
-                {cargando ? (
-                  <PestanaCargando pestana="vacantes" falla={carga.falla} onReintentar={carga.reintentar} />
-                ) : (
-                  <PestanaVacantes
-                    perfil={perfil}
-                    acciones={accionesPostulacion}
-                    onVerEtapas={candidatura && actual ? () => cambiarA('vacante') : undefined}
-                  />
-                )}
+                <motion.div {...apareceContenido}>
+                  {cargando ? (
+                    <PestanaCargando pestana="vacantes" falla={carga.falla} onReintentar={carga.reintentar} />
+                  ) : (
+                    <PestanaVacantes
+                      perfil={perfil}
+                      acciones={accionesPostulacion}
+                      onVerEtapas={candidatura && actual ? () => cambiarA('vacante') : undefined}
+                    />
+                  )}
+                </motion.div>
               </TabsContent>
             </Tabs>
           </>

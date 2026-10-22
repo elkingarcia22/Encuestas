@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Delete02Icon, Download01Icon, TextAlignLeftIcon } from '@hugeicons/core-free-icons'
-import { Badge, Button, Frame, FramePanel, IconTile, Item, ItemContent, ItemMedia, Text } from '@ubits/flux-ui'
+import { Button, Frame, FramePanel, IconTile, Item, ItemContent, ItemMedia, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { actualizarPagina, type Complementarios, type Pagina } from './borrador'
 import { EditorTexto } from './editor-texto'
 import { FileUpload, type ArchivoCargado } from './file-upload'
@@ -74,7 +75,7 @@ export function RecursosComplementarios({ pagina }: { pagina: Pagina }) {
       {invitaciones.length ? (
         <section aria-label="Recursos complementarios opcionales" className="flex flex-col gap-3">
           <Text variant="muted" size="sm" className="flex items-center gap-2">
-            Añade un recurso complementario
+            Agrega un recurso complementario
             <Badge variant="secondary" size="xs">
               Opcional
             </Badge>

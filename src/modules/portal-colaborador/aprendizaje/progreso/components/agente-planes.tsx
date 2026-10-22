@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { BookOpen01Icon, Target02Icon, UserGroupIcon } from '@hugeicons/core-free-icons'
-import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle, Text, toast } from '@ubits/flux-ui'
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle, Text } from '@ubits/flux-ui'
+import { notify } from '@/shared/components/notify'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { AgentThread, ContextPanel } from '@/modules/design-system/agente-contextual/components/agent-kit'
 import { useAgentThread } from '@/modules/design-system/agente-contextual/components/use-agent-thread'
@@ -26,11 +27,12 @@ import {
   type Borrador,
   type TipoPlanIA,
 } from './agente-logica'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // El agente de planes de Progreso (HU-progreso, RN-05): la conversación guiada con que la líder arma un plan de formación
 // para su equipo. Tipo de plan → título → personas → fechas → contenidos, o competencias y horas → resumen y «Generar
 // plan», que gasta 80 tokens y guarda el plan. También acepta todo en un solo mensaje (un «brief»). Cada vez que se
-// abre empieza de cero. Desde la auditoría del 5-oct (decisión 9) va en el panel contextual Orbit Flow del agent-kit,
+// abre empieza de cero. Desde la auditoría del 5-oct (decisión 9) va en el panel contextual Orbit del agent-kit,
 // acoplado a la derecha como en Planes de formación del admin, y no en un panel propio.
 
 export const COSTO_PLAN = 80
@@ -157,13 +159,13 @@ export function AgentePlanes({ onClose, sesion, equipo, tokens, gastar, onGenera
   const generar = () => {
     if (paso.current !== 'confirmar') return false
     if (!props.current.gastar(COSTO_PLAN)) {
-      toast.add({ type: 'warning', title: `No tienes suficientes tokens (${COSTO_PLAN} requeridos).` })
+      notify(`No tienes suficientes tokens (${COSTO_PLAN} requeridos).`, undefined, 'warning')
       return false
     }
     const b = borrador.current
     const plan = guardar(b)
     if (!plan) {
-      toast.add({ type: 'error', title: 'No se pudo guardar el plan. Intenta de nuevo.' })
+      notify('No se pudo guardar el plan. Intenta de nuevo.', undefined, 'error')
       return false
     }
     paso.current = 'listo'
@@ -171,7 +173,7 @@ export function AgentePlanes({ onClose, sesion, equipo, tokens, gastar, onGenera
     luego(() => {
       props.current.onClose()
       props.current.onGenerado(b.personas.map((p) => p.id))
-      toast.add({ type: 'success', title: avisoGenerado(b), timeout: 10000 })
+      notify(avisoGenerado(b), undefined, 'success')
     }, 900)
     return true
   }
@@ -240,7 +242,7 @@ export function AgentePlanes({ onClose, sesion, equipo, tokens, gastar, onGenera
       b.personas = r.personas
       b.todos = r.todos
       const confirmacion = r.todos
-        ? `Perfecto. Crearé el plan para todo tu equipo (${r.personas.length} personas).`
+        ? `Perfecto. Crearé el plan para todo tu equipo (${r.personas.length} ${plural(r.personas.length, 'persona', 'personas')}).`
         : `Listo. El plan será para ${quienes(r)}.`
       return conPensando(() => {
         decir(confirmacion)
@@ -321,7 +323,7 @@ export function AgentePlanes({ onClose, sesion, equipo, tokens, gastar, onGenera
   }, [sesion])
 
   return (
-    // El panel Orbit Flow del agent-kit: cabecera con el orbe y la X, franja de contexto, hilo y su caja de escribir.
+    // El panel Orbit del agent-kit: cabecera con el orbe y la X, franja de contexto, hilo y su caja de escribir.
     // El panel ya es el registro de la conversación y baja solo con cada mensaje nuevo.
     <ContextPanel
       context={

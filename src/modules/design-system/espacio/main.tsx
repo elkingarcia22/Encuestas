@@ -29,6 +29,8 @@ const ANCHOS = [
   { nombre: 'Angosto', medida: '720 px', clase: 'w-[45%]', uso: 'Formularios y asistentes por pasos.' },
   { nombre: 'Normal', medida: '1.140 px', clase: 'w-[71%]', uso: 'La mayoría de las pantallas. Es el ancho por defecto.' },
   { nombre: 'Ancho', medida: '1.600 px', clase: 'w-full', uso: 'Tableros densos con muchas columnas.' },
+  // 13-oct: PageShell también ofrece «full» y no estaba explicado; lo usa Maestro-detalle.
+  { nombre: 'Completo', medida: 'ancho de la pantalla', clase: 'w-full', uso: 'Maestro-detalle y vistas que ocupan todo el ancho disponible (PageShell width="full").' },
   // La columna del login y sus pasos (7-oct): no es un ancho de página, las pantallas de acceso no llevan PageShell.
   { nombre: 'Acceso', medida: '360 px', clase: 'w-[22.5%]', uso: 'La columna del login y sus pasos. Solo en las pantallas de acceso (ANCHO_ACCESO).' },
 ]
@@ -78,8 +80,8 @@ export function Component() {
       </EncabezadoPatron>
 
       <section className="flex flex-col gap-4">
-        <SectionIntro title="Ancho del contenido" description="Tres anchos de página y uno para el acceso, siempre centrados. Las barras se dibujan en proporción a 1.600 px." />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <SectionIntro title="Ancho del contenido" description="Cuatro anchos de página y uno para el acceso, siempre centrados. Las barras se dibujan en proporción a 1.600 px." />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {ANCHOS.map((ancho) => (
             <Demo key={ancho.nombre} title={`${ancho.nombre} · ${ancho.medida}`} description={ancho.uso}>
               {/* Barra proporcional al ancho: una caja con color del tema, solo para ilustrar. */}
@@ -193,7 +195,7 @@ export function Component() {
           <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
           <AlertTitle>El marco usa esquinas propias</AlertTitle>
           <AlertDescription>
-            <p>La barra lateral, la barra superior y sus menús tienen su propia escala (ver Fundamentos › Marco › Medidas).</p>
+            <p>La barra lateral, la barra superior y sus menús tienen su propia escala (ver Patrones › Marco › Medidas).</p>
           </AlertDescription>
         </Alert>
       </section>

@@ -30,7 +30,8 @@ export function CreaAlgoNuevo({ onPlantilla, onEstante }: { onPlantilla: (planti
           <li key={atajo.titulo}>
             {/* La tarjeta es el botón de la librería en contorno, con la diagramación del Inicio: ilustración centrada y el
                 nombre debajo. Mismo hover: sube 2px, borde azul suave, sombra y la ilustración crece un poco. Los «!» ya
-                estaban en este bloque (antes, como en LMS Creator › Contenidos): el tema va sin capa. */}
+                estaban en este bloque (antes, como en LMS Creator › Contenidos): el tema va sin capa (ficha
+                instalacion-estilos-sin-capa en ai-tools/flux-ui/diferencias.json). */}
             <Button
               variant="outline"
               onClick={() => ('plantilla' in atajo ? onPlantilla(atajo.plantilla) : onEstante(atajo.estante))}

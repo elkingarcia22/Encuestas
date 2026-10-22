@@ -67,6 +67,8 @@ export function PestanaSecciones({ comparativo }: { comparativo: Comparativo }) 
       </Alert>
     ) : null}
     <Frame spacing="sm" className="[--frame-gap:0px]">
+      {/* Los «!» ponen la cabecera en fila (título a la izquierda, controles a la derecha): la del marco es una columna y las
+          clases normales no le ganan al tema (ficha instalacion-estilos-sin-capa en ai-tools/flux-ui/diferencias.json). */}
       <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
         <div>
           <FrameTitle>{vista === 'tabla' ? 'Detalle por sección y pregunta' : sinDemograficos ? 'Mapa de calor' : `Mapa de calor por ${nombreSegmento.toLowerCase()}`}</FrameTitle>

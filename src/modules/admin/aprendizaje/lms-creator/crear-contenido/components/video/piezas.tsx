@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Loading03Icon, PauseIcon, PlayIcon } from '@hugeicons/core-free-icons'
-import { Text, cn, toast } from '@ubits/flux-ui'
+import { Text, cn } from '@ubits/flux-ui'
+import { notify } from '@/shared/components/notify'
 import { AiThinking } from '@/shared/components/AiThinking'
 import { InstruccionGrande } from '../marco-inmersivo'
 import { TokenCost } from '../tokens'
@@ -40,9 +41,9 @@ export function PestanaVideo({
   )
 }
 
-/** Avisos con tono (el `notify` del proyecto no lleva tipo): advertencia, información, éxito. */
+/** Avisos con tono: advertencia, información, éxito o error. */
 export function aviso(tipo: 'warning' | 'info' | 'success' | 'error', titulo: string, descripcion?: string) {
-  toast.add({ type: tipo, title: titulo, description: descripcion })
+  notify(titulo, descripcion, tipo)
 }
 
 // ── Tokens ───────────────────────────────────────────────────────────────────────────────────────────────────────

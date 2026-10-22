@@ -1,8 +1,9 @@
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Download04Icon, InformationCircleIcon } from '@hugeicons/core-free-icons'
-import { Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent, Heading, Separator, Text } from '@ubits/flux-ui'
-import { notify } from '@/shared/components/notify'
+import { Alert, AlertDescription, AlertTitle, Button, Card, CardContent, Heading, Separator, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { descargarCsv } from '@/modules/admin/desempeno-cultura/encuestas/modelo/descargas/csv'
 import { PageShell } from '@/shared/components/PageShell'
 import { FullscreenTemplate } from '@/modules/design-system/templates/fullscreen-template'
 import { esModo } from '../descarga/components/correo'
@@ -79,7 +80,7 @@ export function Component() {
                   </Text>
                   <Text variant="muted">Puedes descargarlos en el siguiente enlace:</Text>
                 </div>
-                <Button size="lg" className="w-full" onClick={() => notify('Descarga simulada', 'En el producto se descarga el archivo .zip con los certificados.')}>
+                <Button size="lg" className="w-full" onClick={() => descargarCsv('certificados-solicitados', [['Solicitud', 'Detalle'], ['Qué se generó', QUE_SE_GENERO[modo](nombre)], ['Desde', desde], ['Hasta', hasta], ['Para', para]])}>
                   <HugeiconsIcon icon={Download04Icon} data-icon="inline-start" aria-hidden="true" />
                   Descargar certificados
                 </Button>

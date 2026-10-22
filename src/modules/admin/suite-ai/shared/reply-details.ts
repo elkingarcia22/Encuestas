@@ -19,16 +19,16 @@ export type ReplyDetails = {
 }
 
 const SRC = {
-  pulso: { label: 'Encuesta de pulso Q3', detail: 'Cerró el 5 sep · 1.240 respuestas', icon: ChartAverageIcon },
+  pulso: { label: 'Encuesta de pulso Q3', detail: 'Cerró el 5 sept · 1.240 respuestas', icon: ChartAverageIcon },
   eval360: { label: 'Evaluaciones 360', detail: 'Ciclo 2026-1 · 312 evaluados', icon: File01Icon },
   nomina: { label: 'Novedades de nómina', detail: 'Actualizado hoy 8:00 · solo tu alcance', icon: Database01Icon },
-  clima: { label: 'Encuesta de clima 2026', detail: 'Cerró el 30 ago · 76% de participación', icon: ChartAverageIcon },
-  estructura: { label: 'Estructura organizacional', detail: 'Actualizada el 1 sep · 1.630 colaboradores', icon: UserGroupIcon },
+  clima: { label: 'Encuesta de clima 2026', detail: 'Cerró el 30 ago · 76 % de participación', icon: ChartAverageIcon },
+  estructura: { label: 'Estructura organizacional', detail: 'Actualizada el 1 sept · 1.630 colaboradores', icon: UserGroupIcon },
   satisfaccion: { label: 'Encuestas de satisfacción', detail: 'Últimos 90 días · 1.860 respuestas', icon: ChartAverageIcon },
-  catalogo: { label: 'Catálogo de cursos', detail: 'Actualizado el 10 sep · 214 cursos', icon: File01Icon },
+  catalogo: { label: 'Catálogo de cursos', detail: 'Actualizado el 10 sept · 214 cursos', icon: File01Icon },
   matriz: { label: 'Matriz de talento 2026', detail: 'Calibrada el 22 ago · 32 líderes', icon: UserGroupIcon },
   vacantes: { label: 'Selección · Vacantes', detail: '12 vacantes abiertas · hace 5 min', icon: Briefcase06Icon },
-  politica: { label: 'Política de vacaciones v3', detail: 'Borrador del 12 sep', icon: File01Icon },
+  politica: { label: 'Política de vacaciones v3', detail: 'Borrador del 12 sept', icon: File01Icon },
 } satisfies Record<string, ReplySource>
 
 const GENERIC: ReplyDetails = {
@@ -50,7 +50,7 @@ export function detailsFor(text: string): ReplyDetails {
       followups: ['Prepara el plan de retención', 'Muéstrame las 18 personas', 'Compara con el Q2'],
       alternates: [
         'Ventas Bogotá concentra el riesgo de rotación del Q3: 18 personas acumulan dos señales o más, como baja en el pulso y ningún ascenso en 18 meses. Te sugiero empezar por los 6 líderes de ese equipo.',
-        'Si miras el Q3 por sede, Bogotá pesa el 61% del riesgo, y dentro de ella Ventas: 18 personas con dos señales o más. Operaciones Medellín sigue con 7. ¿Armo un plan de retención por líder?',
+        'Si miras el Q3 por sede, Bogotá pesa el 61 % del riesgo, y dentro de ella Ventas: 18 personas con dos señales o más. Operaciones Medellín sigue con 7. ¿Armo un plan de retención por líder?',
       ],
     }
   }
@@ -60,7 +60,7 @@ export function detailsFor(text: string): ReplyDetails {
       sources: [SRC.clima, SRC.estructura],
       followups: ['¿Qué dijeron en reconocimiento?', 'Arma un plan para Operaciones', 'Compara con el año pasado'],
       alternates: [
-        'Clima 2026 cerró con 76% de participación. El punto más débil es «reconocimiento», con 3,1 de 5 en Operaciones; el más fuerte, «trabajo en equipo», con 4,3.',
+        'Clima 2026 cerró con 76 % de participación. El punto más débil es «reconocimiento», con 3,1 de 5 en Operaciones; el más fuerte, «trabajo en equipo», con 4,3.',
       ],
     }
   }
@@ -69,7 +69,7 @@ export function detailsFor(text: string): ReplyDetails {
       sources: [SRC.clima, SRC.estructura],
       followups: ['Prepara el aviso para el turno tarde', '¿Qué dijeron en reconocimiento?'],
       alternates: [
-        'La participación de Ventas Bogotá quedó en 58%, nueve puntos bajo el promedio. El turno de la tarde explica casi toda la diferencia: 46% frente a 71% en la mañana.',
+        'La participación de Ventas Bogotá quedó en 58 %, nueve puntos bajo el promedio. El turno de la tarde explica casi toda la diferencia: 46 % frente a 71 % en la mañana.',
       ],
     }
   }

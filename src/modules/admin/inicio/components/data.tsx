@@ -25,7 +25,7 @@ export const KPIS: Kpi[] = [
   { title: 'Personas activas', sub: 'De 5.000 licencias', value: '646', delta: '+4,2 %', up: true, deltaNote: 'vs. mes pasado', spark: [4, 6, 11, 17, 23, 25, 26], to: '/admin/tareas' },
   { title: 'Vacantes abiertas', sub: '3 con entrevistas esta semana', value: '8', delta: '+2', up: true, deltaNote: 'nuevas este mes', spark: [8, 8, 9, 10, 17, 21, 22], to: '/admin/seleccion/exploraciones/uno' },
   { title: 'Formación al día', sub: 'Objetivo del trimestre: 85 %', value: '74 %', delta: '+6 pts', up: true, deltaNote: 'vs. trimestre pasado', spark: [5, 7, 15, 18, 21, 22, 24], to: '/admin/aprendizaje/lms-creator' },
-  { title: 'Evaluaciones 360', sub: 'El ciclo cierra el 30 sep', value: '117/140', delta: '+9 pts', up: true, deltaNote: 'vs. ciclo anterior', spark: [3, 4, 8, 14, 20, 24, 27], to: '/suite-ai/chat/evaluaciones' },
+  { title: 'Evaluaciones 360', sub: 'El ciclo cierra el 30 sept', value: '117/140', delta: '+9 pts', up: true, deltaNote: 'vs. ciclo anterior', spark: [3, 4, 8, 14, 20, 24, 27], to: '/suite-ai/chat/evaluaciones' },
 ]
 
 export type DayTask = {
@@ -47,8 +47,8 @@ export const DAY_TASKS: DayTask[] = [
 ]
 
 export const TRAINING_STATS = [
-  { label: 'Iniciaron en sep', value: '274', delta: '−5,8 %', up: false },
-  { label: 'Completaron en sep', value: '249', delta: '+4,6 %', up: true },
+  { label: 'Iniciaron en sept', value: '274', delta: '−5,8 %', up: false },
+  { label: 'Completaron en sept', value: '249', delta: '+4,6 %', up: true },
   { label: 'Tasa de finalización', value: '91 %', delta: '+9 pts', up: true },
 ]
 
@@ -57,7 +57,7 @@ export const TRAINING_SERIES = [
   { month: 'jun', iniciaron: 238, completaron: 190 },
   { month: 'jul', iniciaron: 261, completaron: 214 },
   { month: 'ago', iniciaron: 291, completaron: 238 },
-  { month: 'sep', iniciaron: 274, completaron: 249 },
+  { month: 'sept', iniciaron: 274, completaron: 249 },
 ]
 
 export type Program = {
@@ -70,9 +70,9 @@ export type Program = {
 export const PROGRAMS: Program[] = [
   { icon: TaskDaily01Icon, title: 'Onboarding 2026', meta: '50 personas · cierra el 15 dic', pct: 72 },
   { icon: ChartAverageIcon, title: 'Liderazgo', meta: '60 personas · cierra el 30 nov', pct: 45 },
-  { icon: Megaphone02Icon, title: 'Cultura Ubits', meta: '646 personas · cierra el 30 sep', pct: 90 },
+  { icon: Megaphone02Icon, title: 'Cultura Ubits', meta: '646 personas · cierra el 30 sept', pct: 90 },
   { icon: Briefcase01Icon, title: 'Ventas B2B', meta: '42 personas · cierra el 31 oct', pct: 33 },
-  { icon: LockPasswordIcon, title: 'Seguridad de la información', meta: '646 personas · cierra el 16 sep', pct: 58 },
+  { icon: LockPasswordIcon, title: 'Seguridad de la información', meta: '646 personas · cierra el 16 sept', pct: 58 },
 ]
 
 export type Vacancy = {

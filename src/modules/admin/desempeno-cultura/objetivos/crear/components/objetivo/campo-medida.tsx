@@ -52,6 +52,7 @@ function Resultado({ cumple }: { cumple: boolean }) {
   return (
     <Item variant="outline" size="sm" className="flex-1 bg-card">
       <ItemMedia>
+        {/* Icono en el color de su tono: la baldosa «soft» lo pinta en gris y la clase sola no le gana (diferencias.json › instalacion-estilos-sin-capa). */}
         <IconTile variant="soft" size="sm" className={cumple ? 'text-success! **:text-inherit!' : 'text-muted-foreground! **:text-inherit!'}>
           <HugeiconsIcon icon={cumple ? Tick02Icon : Cancel01Icon} aria-hidden="true" />
         </IconTile>
@@ -100,11 +101,12 @@ export function CampoMedida({ objetivo, onCambio, conErrores }: { objetivo: Obje
               {MEASURE_ORDER.map((medida) => (
                 <SelectItem key={medida} value={medida}>
                   <div className="flex items-center gap-3 py-0.5">
+                    {/* Icono en el color de su tono: la baldosa «soft» lo pinta en gris y la clase sola no le gana (diferencias.json › instalacion-estilos-sin-capa). */}
                     <IconTile variant="soft" size="sm" className={`shrink-0 ${TEXTO_FIJO_POR_TONO[MEASURE_VISUAL[medida].tone ?? 'neutral']} **:text-inherit!`}>
                       <HugeiconsIcon icon={MEASURE_VISUAL[medida].icon} aria-hidden="true" />
                     </IconTile>
                     <div className="flex flex-col whitespace-normal">
-                      <span className="font-medium">{MEASURE_META[medida].label}</span>
+                      <Text as="span" size="sm" weight="medium">{MEASURE_META[medida].label}</Text>
                       <Text as="span" size="xs" variant="muted">
                         {MEASURE_META[medida].tagline}
                       </Text>
@@ -143,11 +145,12 @@ export function CampoMedida({ objetivo, onCambio, conErrores }: { objetivo: Obje
               {DIRECCIONES.map((sentido) => (
                 <SelectItem key={sentido} value={sentido}>
                   <div className="flex items-center gap-3 py-0.5">
+                    {/* Icono en el color de su tono: la baldosa «soft» lo pinta en gris y la clase sola no le gana (diferencias.json › instalacion-estilos-sin-capa). */}
                     <IconTile variant="soft" size="sm" className="shrink-0 text-primary! **:text-inherit!">
                       <HugeiconsIcon icon={DIRECTION_VISUAL[sentido].icon} aria-hidden="true" />
                     </IconTile>
                     <div className="flex flex-col whitespace-normal">
-                      <span className="font-medium">{DIRECTION_META[sentido].label}</span>
+                      <Text as="span" size="sm" weight="medium">{DIRECTION_META[sentido].label}</Text>
                       <Text as="span" size="xs" variant="muted">
                         {DIRECTION_META[sentido].headline}
                       </Text>

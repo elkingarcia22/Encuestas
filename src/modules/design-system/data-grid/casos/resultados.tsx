@@ -18,7 +18,6 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -47,15 +46,16 @@ import {
   TabsList,
   TabsTrigger,
   Text,
-  toast,
   Tooltip,
   TooltipTrigger,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ActionDialog } from '@/shared/components/ActionDialog'
+import { notify } from '@/shared/components/notify'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
 import { HintContent } from '@/shared/components/Hint'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
@@ -360,7 +360,8 @@ const COLUMNAS_BLOQUEADOS: DataGridListConfig<Bloqueado>['columns'] = [
   },
   {
     id: 'desbloquear',
-    header: '',
+    // 13-oct: la última columna lleva su encabezado «Acciones», como pide la regla de la columna de acciones.
+    header: 'Acciones',
     size: 140,
     enableSorting: false,
     enableResizing: false,
@@ -376,12 +377,10 @@ const csv = (pestana: string) => ({
   label: 'Descargar CSV',
   variant: 'outline' as const,
   icon: <HugeiconsIcon icon={Csv01Icon} aria-hidden="true" />,
-  onClick: () =>
-    toast.promise(new Promise((resolver) => setTimeout(resolver, 1200)), {
-      loading: `Preparando el CSV de ${pestana}…`,
-      success: 'CSV descargado con el periodo actual',
-      error: 'No pudimos generar el CSV',
-    }),
+  onClick: () => {
+    notify(`Preparando el CSV de ${pestana}…`, undefined, 'info')
+    window.setTimeout(() => notify('CSV descargado con el periodo actual', undefined, 'success'), 1200)
+  },
 })
 
 const VACIO_RESULTADOS = {
@@ -500,13 +499,10 @@ function PestanaDescargas({ reportes }: { reportes: Reporte[] }) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                toast.promise(new Promise((resolver) => setTimeout(resolver, 1400)), {
-                  loading: `Generando el reporte de ${reporte.nombre}…`,
-                  success: 'Reporte descargado',
-                  error: 'No pudimos generar el reporte',
-                })
-              }
+              onClick={() => {
+                notify(`Generando el reporte de ${reporte.nombre}…`, undefined, 'info')
+                window.setTimeout(() => notify('Reporte descargado', undefined, 'success'), 1400)
+              }}
             >
               <HugeiconsIcon icon={Download01Icon} aria-hidden="true" />
               Descargar
@@ -625,10 +621,7 @@ export function CasoResultados() {
     setBloqueados((actuales) => actuales.filter((b) => !ids.has(b.id)))
     setLimpiarSeleccion({})
     // RN-12: copy exacto del aviso.
-    toast.add({
-      type: 'success',
-      title: porDesbloquear.length === 1 ? 'Usuario desbloqueado exitosamente' : 'Usuarios desbloqueados exitosamente',
-    })
+    notify(porDesbloquear.length === 1 ? 'Usuario desbloqueado exitosamente' : 'Usuarios desbloqueados exitosamente', undefined, 'success')
     setConfirmando(false)
   }
 
@@ -676,7 +669,7 @@ export function CasoResultados() {
           <div className="grid gap-3 sm:grid-cols-3">
             <Card size="sm">
               <CardHeader>
-                <CardTitle>Colaboradors inscritos</CardTitle>
+                <CardTitle>Colaboradores inscritos</CardTitle>
                 <CardDescription>Empezaron en el periodo</CardDescription>
               </CardHeader>
               <CardContent>
@@ -835,7 +828,15 @@ export function CasoResultados() {
         }
         accion="Desbloquear"
         onConfirmar={confirmarDesbloqueo}
-      />
+      >
+        {/* 13-oct: qué se toca y a cuántas personas, con la tarjeta del sistema (regla dos-ventanas). */}
+        <RegistroConfirmar
+          nombre={varios ? `${porDesbloquear.length} personas` : (porDesbloquear[0]?.nombre ?? 'La persona')}
+          detalle={varios ? '1 intento más para cada una' : `${porDesbloquear[0]?.evaluacion ?? 'Evaluación'} · 1 intento más`}
+          estado="Bloqueado"
+          icono={SquareUnlock02Icon}
+        />
+      </DialogoConfirmar>
 
       <DrawerShell
         open={panelAbierto}

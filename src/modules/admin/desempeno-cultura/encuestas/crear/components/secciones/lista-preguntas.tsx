@@ -1,10 +1,11 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Alert02Icon, Cancel01Icon, Copy01Icon, DragDropVerticalIcon, Edit02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
-import { Badge, Button, Item, ItemActions, ItemContent, ItemGroup, ItemSeparator, ItemTitle, KanbanColumn, KanbanColumnContent, KanbanItem, KanbanItemHandle, Separator, Text } from '@ubits/flux-ui'
+import { Button, Item, ItemActions, ItemContent, ItemGroup, ItemSeparator, ItemTitle, KanbanColumn, KanbanColumnContent, KanbanItem, KanbanItemHandle, Separator, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { EtiquetaIA } from '@/modules/design-system/ia/etiqueta-ia'
-import { notify } from '@/shared/components/notify'
+import { notifyAction } from '@/shared/components/notify'
 import { duplicateQuestion, isQuestionComplete, questionTypeLabel, scaleTypeLabel } from '../../../modelo/questionCatalog'
 import { moveDestinationsForQuestion, moveQuestionTo, patchSection, type SectionTreeEntry } from '../../../modelo/sectionTree'
 import type { SurveyQuestion } from '../../../modelo/surveyBuilderTypes'
@@ -45,7 +46,7 @@ const tipoDe = (pregunta: SurveyQuestion) =>
 export const AL_PASAR = 'hidden group-hover/item:flex group-focus-within/item:flex has-[[aria-expanded=true]]:flex pointer-coarse:flex'
 
 export function ListaPreguntas({ entrada }: { entrada: SectionTreeEntry }) {
-  const { secciones, cambiar, editando, setEditando, esNueva, terminarEdicion, editandoSeccion, marcadas, intento, seleccionar, conIa, pedirBorrado, bloqueado } = useArbol()
+  const { secciones, cambiar, editando, setEditando, esNueva, terminarEdicion, marcadas, intento, seleccionar, conIa, pedirBorrado, bloqueado } = useArbol()
   const motivo = useMotivoBloqueo()
   const preguntas = entrada.section.questions
 
@@ -57,8 +58,8 @@ export function ListaPreguntas({ entrada }: { entrada: SectionTreeEntry }) {
   // Los destinos de una pregunta: cualquier sección o subsección.
   const destinos = bloqueado ? [] : moveDestinationsForQuestion(secciones, entrada.section.id)
 
-  // Con una pregunta o un título en edición, las demás filas quedan apagadas.
-  const ocupado = editando !== null || editandoSeccion !== null
+  // Con una pregunta en edición, las demás filas quedan apagadas.
+  const ocupado = editando !== null
 
   // Vacía sigue siendo un sitio donde soltar preguntas de otra sección.
   if (preguntas.length === 0) {
@@ -77,6 +78,7 @@ export function ListaPreguntas({ entrada }: { entrada: SectionTreeEntry }) {
     <>
       <KanbanColumn value={preguntasDe(entrada.section.id)}>
        <KanbanColumnContent value={preguntasDe(entrada.section.id)} className="gap-0">
+        {/* «!»: sin el espacio entre filas de la librería; las separa la línea (diferencias.json › instalacion-estilos-sin-capa). */}
         <ItemGroup className="gap-0!">
           {preguntas.map((pregunta, indice) => {
             const conErrores = marcadas.has(pregunta.id)
@@ -86,7 +88,8 @@ export function ListaPreguntas({ entrada }: { entrada: SectionTreeEntry }) {
               return (
                 <KanbanItem key={pregunta.id} value={pregunta.id}>
                   {indice > 0 ? <ItemSeparator /> : null}
-                  {/* Abierta, la pregunta se edita en su mismo lugar; mientras tanto, lo demás del paso queda apagado. */}
+                  {/* Abierta, la pregunta se edita en su mismo lugar; mientras tanto, lo demás del paso queda apagado.
+                      «!»: la fila en columna estirada; la clase sola no le gana a la de la librería (diferencias.json › instalacion-estilos-sin-capa). */}
                   <Item variant="outline" id={`pregunta-${pregunta.id}`} className="my-2 flex-col items-stretch! gap-4">
                     <Text as="p" size="sm" weight="medium" className="tabular-nums">
                       Pregunta {entrada.numbering}.{indice + 1}
@@ -113,7 +116,7 @@ export function ListaPreguntas({ entrada }: { entrada: SectionTreeEntry }) {
                       </Button>
                       <Button variant="outline" onClick={() => terminarEdicion(true)}>
                         <HugeiconsIcon icon={Tick02Icon} aria-hidden="true" />
-                        {esNueva ? 'Agregar' : 'Guardar'}
+                        {esNueva ? 'Agregar' : 'Guardar cambios'}
                       </Button>
                     </div>
                   </Item>
@@ -123,6 +126,8 @@ export function ListaPreguntas({ entrada }: { entrada: SectionTreeEntry }) {
             return (
               <KanbanItem key={pregunta.id} value={pregunta.id}>
                 {indice > 0 ? <ItemSeparator /> : null}
+                {/* «!»: alineada arriba y con el gris al pasar, que la clase sola no le gana a la fila (diferencias.json ›
+                    instalacion-estilos-sin-capa). En el asa, el gris del icono: el ghost no trae tono gris (diferencias.json › button-ghost-tonos). */}
                 <Item inert={ocupado} size="sm" id={`pregunta-${pregunta.id}`} className={`items-start! hover:bg-muted! ${ocupado ? APAGADO : ''}`}>
                   {/* En curso, el asa, duplicar, editar, mover y eliminar se ven apagados y dicen por qué; tocar la fila no la abre. */}
                   {bloqueado ? (
@@ -132,6 +137,7 @@ export function ListaPreguntas({ entrada }: { entrada: SectionTreeEntry }) {
                       </BotonIcono>
                     </EnCurso>
                   ) : (
+                    // «!»: gris del asa; el ghost no trae tono gris (diferencias.json › button-ghost-tonos).
                     <KanbanItemHandle render={<BotonIcono size="icon-xs" aria-label={`Mover ${titulo}`} className="text-muted-foreground!" />}>
                       <HugeiconsIcon icon={DragDropVerticalIcon} size={16} aria-hidden="true" />
                     </KanbanItemHandle>
@@ -203,7 +209,13 @@ export function ListaPreguntas({ entrada }: { entrada: SectionTreeEntry }) {
                           setEditando(null)
                           cambiar(moveQuestionTo(secciones, pregunta.id, destino.section.id))
                           seleccionar(destino.section.id)
-                          notify('Pregunta movida', `Ahora está en ${destino.numbering} ${destino.section.title.trim() || NIVEL[destino.depth].toLowerCase() + ' sin título'}.`)
+                          // Mover se deshace: «Deshacer» devuelve el árbol a como estaba antes de moverla.
+                          notifyAction(
+                            'Pregunta movida',
+                            `Ahora está en ${destino.numbering} ${destino.section.title.trim() || NIVEL[destino.depth].toLowerCase() + ' sin título'}.`,
+                            { label: 'Deshacer', onClick: () => cambiar([...secciones]) },
+                            'success',
+                          )
                         }}
                       />
                       <BotonBorrar que={titulo} bloqueo={bloqueado ? motivo : null} onBorrar={() => pedirBorradoDe(pregunta.id)} />

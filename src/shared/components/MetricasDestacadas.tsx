@@ -41,6 +41,9 @@ export type Metrica = {
   avance?: number
   /** El color del anillo. Por defecto, el primario del tema. */
   color?: string
+  /** Si la cifra tiene detalle (las personas detrás de ella), tocar la columna lo abre. */
+  onVer?: () => void
+  etiquetaVer?: string
 }
 
 /**
@@ -90,6 +93,8 @@ export function MetricasDestacadas({ metricas, etiqueta }: { metricas: Metrica[]
           }
           grafico={figura(metrica)}
           pie={metrica.detalle ? <DetalleIndicador>{metrica.detalle}</DetalleIndicador> : undefined}
+          onVer={metrica.onVer}
+          etiquetaVer={metrica.etiquetaVer}
         />
       ))}
     </FilaIndicadores>

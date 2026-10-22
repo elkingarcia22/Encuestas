@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Call02Icon, Link02Icon, Mail02Icon, UserSearch01Icon } from '@hugeicons/core-free-icons'
+import { ArrowRight01Icon, Call02Icon, Link02Icon, Mail02Icon, UserRemove01Icon, UserSearch01Icon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarFallback,
@@ -29,6 +29,7 @@ import {
   TimelineTitle,
 } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { DrawerShell } from './drawer-shell'
 import { KICKER, WS } from './drawer-styles'
 
@@ -41,15 +42,15 @@ const CONTACT = [
 ]
 
 const JOURNEY = [
-  { date: '2 sep', title: 'Postulación', text: 'Llegó desde LinkedIn con referido interno.' },
-  { date: '4 sep', title: 'Filtro inicial aprobado', text: 'Cumple 5 de 5 requisitos.' },
-  { date: '6 sep', title: 'Prueba técnica', text: '82 de 100 en SQL y visualización.' },
+  { date: '2 sept', title: 'Postulación', text: 'Llegó desde LinkedIn con referido interno.' },
+  { date: '4 sept', title: 'Filtro inicial aprobado', text: 'Cumple 5 de 5 requisitos.' },
+  { date: '6 sept', title: 'Prueba técnica', text: '82 de 100 en SQL y visualización.' },
   { date: 'Hoy 3:00 p. m.', title: 'Entrevista con líder', text: 'Con Juan Rincón, jefe de analítica.' },
 ]
 
 const INTERVIEWS = [
   { title: 'Entrevista con líder', meta: 'Juan Rincón · hoy 3:00 p. m.' },
-  { title: 'Prueba técnica', meta: '82 de 100 · 6 sep' },
+  { title: 'Prueba técnica', meta: '82 de 100 · 6 sept' },
 ]
 
 const SCORES = [
@@ -63,6 +64,7 @@ const SCORES = [
 // la evaluación de la entrevista como vista del mismo drawer (con «←» para volver al detalle).
 export function CandidateDrawer({ open, onOpenChange }: Props) {
   const [interview, setInterview] = useState(false)
+  const [pregunta, setPregunta] = useState<'rechazar' | 'oferta' | null>(null)
   const [notes, setNotes] = useState(['Muy clara explicando su proyecto de rotación de clientes. Pedir referencia laboral.'])
   const [draft, setDraft] = useState('')
 
@@ -82,31 +84,53 @@ export function CandidateDrawer({ open, onOpenChange }: Props) {
       description="Analista de datos · postuló hace 12 días"
       footer={
         <>
-          <Button
-            variant="outline"
-            className={WS}
-            onClick={() => {
-              notify('Laura Méndez quedó descartada · se le avisará por correo')
-              close()
-            }}
-          >
+          <Button variant="outline" className={WS} onClick={() => setPregunta('rechazar')}>
             Rechazar
           </Button>
-          <Button
-            className={WS}
-            onClick={() => {
-              notify('Laura Méndez pasó a Oferta')
-              close()
-            }}
-          >
+          <Button className={WS} onClick={() => setPregunta('oferta')}>
             Mover a Oferta
           </Button>
+          {/* 13-oct: rechazar y mover avisan a otras personas, así que preguntan antes (regla «preguntar-antes»). Dentro del
+              panel, la pregunta se abre en el mismo panel con «← Laura Méndez» para volver. */}
+          <DialogoConfirmar
+            abierto={pregunta === 'rechazar'}
+            onAbiertoChange={(abrir) => setPregunta(abrir ? 'rechazar' : null)}
+            icono={UserRemove01Icon}
+            titulo="¿Rechazar al candidato?"
+            descripcion="Sale del proceso de la vacante y se le avisa por correo."
+            cancelar="Seguir en el proceso"
+            accion="Rechazar"
+            destructiva
+            onConfirmar={() => {
+              setPregunta(null)
+              close()
+              notify('Laura Méndez quedó rechazada', 'Se le avisó por correo.', 'success')
+            }}
+          >
+            <RegistroConfirmar nombre="Laura Méndez" detalle="Analista de datos · Entrevistas" estado="Se le avisa por correo" />
+          </DialogoConfirmar>
+          <DialogoConfirmar
+            abierto={pregunta === 'oferta'}
+            onAbiertoChange={(abrir) => setPregunta(abrir ? 'oferta' : null)}
+            icono={ArrowRight01Icon}
+            titulo="¿Mover a Oferta?"
+            descripcion="Pasa de Entrevistas a Oferta. Quien lleva la vacante lo ve en su tablero."
+            cancelar="Todavía no"
+            accion="Mover a Oferta"
+            onConfirmar={() => {
+              setPregunta(null)
+              close()
+              notify('Laura Méndez pasó a Oferta', undefined, 'success')
+            }}
+          >
+            <RegistroConfirmar nombre="Laura Méndez" detalle="Analista de datos · Entrevistas" estado="Pasa a Oferta" tono="neutro" />
+          </DialogoConfirmar>
         </>
       }
     >
       <div className="flex flex-wrap gap-1.5">
         <Badge variant="secondary">Entrevistas</Badge>
-        <Badge variant="outline">Match 86%</Badge>
+        <Badge variant="outline">Match 86 %</Badge>
         <Badge variant="outline">Bogotá · híbrido</Badge>
       </div>
 
@@ -192,7 +216,7 @@ export function CandidateDrawer({ open, onOpenChange }: Props) {
             onClick={() => {
               setNotes((all) => [...all, draft.trim()])
               setDraft('')
-              notify('Nota agregada')
+              notify('Nota agregada', undefined, 'success')
             }}
           >
             Agregar nota
@@ -210,13 +234,11 @@ export function CandidateDrawer({ open, onOpenChange }: Props) {
         description="Juan Rincón · hoy 3:00 p. m."
         footer={
           <>
-            <Button variant="outline" className={WS} onClick={() => setInterview(false)}>
-              Volver
-            </Button>
+
             <Button
               className={WS}
               onClick={() => {
-                notify('Evaluación registrada')
+                notify('Evaluación registrada', undefined, 'success')
                 setInterview(false)
               }}
             >

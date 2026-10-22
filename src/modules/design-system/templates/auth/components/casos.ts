@@ -11,6 +11,8 @@ export type AuthCaso =
   | 'revisa-correo'
   | 'bloqueado'
   | 'sigue-aprendiendo'
+  | 'licencia-inactiva'
+  | 'vigencia-terminada'
 
 export const AUTH18_CASOS: { value: AuthCaso; label: string }[] = [
   { value: 'login', label: 'Inicio de sesión' },
@@ -18,8 +20,10 @@ export const AUTH18_CASOS: { value: AuthCaso; label: string }[] = [
   { value: 'organizacion', label: 'Ingresa con tu organización' },
   { value: 'olvide-password', label: '¿Olvidaste tu contraseña?' },
   { value: 'revisa-correo', label: '¡Revisa tu correo!' },
-  { value: 'bloqueado', label: 'Cuenta bloqueada' },
+  { value: 'bloqueado', label: 'Ingreso bloqueado' },
   { value: 'sigue-aprendiendo', label: 'Sigue aprendiendo' },
+  { value: 'licencia-inactiva', label: 'Licencia inactiva' },
+  { value: 'vigencia-terminada', label: 'Vigencia terminada' },
 ]
 
 function esCaso(valor: string | null): valor is AuthCaso {

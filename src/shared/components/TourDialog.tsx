@@ -17,13 +17,19 @@ import {
   TabsList,
   TabsTrigger,
   Text,
+  useTheme,
 } from '@ubits/flux-ui'
 import { CloseButton } from '@/shared/components/CloseButton'
+import paleta from '@/shared/components/tarjeta-ia.module.css'
 import ambienteAzul from '@/shared/assets/ambiente-azul.png'
 import capturaInicio from '@/shared/assets/tour/inicio.webp'
-import capturaBuscar from '@/shared/assets/tour/buscar.webp'
+import capturaInicioOscura from '@/shared/assets/tour/inicio-oscuro.webp'
 import capturaOrbit from '@/shared/assets/tour/orbit.webp'
-import capturaOrbitFlow from '@/shared/assets/tour/orbit-flow.webp'
+import capturaOrbitOscura from '@/shared/assets/tour/orbit-oscuro.webp'
+import capturaContenido from '@/shared/assets/tour/contenido.webp'
+import capturaContenidoOscura from '@/shared/assets/tour/contenido-oscuro.webp'
+import capturaCuenta from '@/shared/assets/tour/licencias.webp'
+import capturaCuentaOscura from '@/shared/assets/tour/licencias-oscuro.webp'
 
 type TourDialogProps = {
   open: boolean
@@ -36,45 +42,60 @@ type Paso = {
   titulo: string
   descripcion: string
   captura: string
+  // La misma captura en modo oscuro: el tour muestra la del modo que ve la persona (15 oct, Carlos).
+  capturaOscura: string
   // Lo que se ve en la captura, para el lector de pantalla.
   alt: string
+  // Fondo detrás de la captura: el halo azul de la interfaz o, en los pasos de IA, el halo de la IA (15 oct, Carlos).
+  fondo: 'azul' | 'ia'
 }
 
-// Los cuatro cambios que más cambian el día a día en el nuevo UBITS, en el orden en que se viven: el Inicio al entrar,
-// el buscador para moverse, Orbit para pedir y Orbit Flow para trabajar sobre lo abierto. Las capturas son de las
-// pantallas reales del playground (1 oct).
+// Los cuatro cambios del nuevo UBITS (15 oct, Carlos; antes: Inicio, buscador, Orbit y Orbit Flow): la navegación
+// renovada, Orbit, la creación de contenido con IA y la gestión de la cuenta. Las capturas son de las pantallas reales
+// del playground y tienen la proporción del recuadro (1,28), para que no se corten: el Inicio y el menú de la empresa,
+// completos a 1280 × 1000; el chat nuevo de Orbit y «Añadir página» del creador, recortados (15 oct). Cada una existe en
+// claro y en oscuro. El saludo «¡Hola, soy Orbit! Estoy aquí para ayudarte» es solo de la captura: el chat real saluda
+// por el nombre. Cada bajada cabe en dos líneas.
 const PASOS: Paso[] = [
   {
-    valor: 'inicio',
+    valor: 'arquitectura',
     numero: '1',
-    titulo: 'Tu Inicio te dice qué atender',
-    descripcion: 'Crea en un clic con las acciones rápidas, mira cómo va tu gente y resuelve lo pendiente sin ir a buscarlo.',
+    titulo: 'Arquitectura de información renovada',
+    descripcion: 'Navegación más intuitiva y consistente. Llega a cualquier lugar o acción en pocos pasos.',
     captura: capturaInicio,
-    alt: 'El Inicio con las acciones rápidas, las métricas de aprendizaje y lo que necesita tu atención.',
-  },
-  {
-    valor: 'buscar',
-    numero: '2',
-    titulo: 'Encuentra o ve a cualquier parte',
-    descripcion: 'Con «Buscar o ir a» (⌘K) llegas a cualquier pantalla, vacante o contenido con solo escribir lo que necesitas.',
-    captura: capturaBuscar,
-    alt: 'El buscador abierto con «vacantes» escrito: la pregunta a Orbit y el resultado Vacantes.',
+    capturaOscura: capturaInicioOscura,
+    alt: 'El Inicio con la barra lateral, las acciones rápidas, las métricas de aprendizaje y lo que hay para atender.',
+    fondo: 'azul',
   },
   {
     valor: 'orbit',
-    numero: '3',
-    titulo: 'Orbit, tu agente para todo',
-    descripcion: 'Pídele lo que necesites con tus palabras: responde con tus datos, prepara planes y ejecuta acciones con tu aprobación.',
+    numero: '2',
+    titulo: 'Orbit, tu superagente',
+    descripcion: 'Pídele lo que necesites en lenguaje natural y lo resuelve en segundos, con tus datos.',
     captura: capturaOrbit,
-    alt: 'El chat de Orbit con el saludo, las sugerencias y el historial de conversaciones.',
+    capturaOscura: capturaOrbitOscura,
+    alt: 'El chat nuevo de Orbit: el orbe, «¡Hola, soy Orbit! Estoy aquí para ayudarte», la caja para escribir y cuatro sugerencias.',
+    fondo: 'ia',
   },
   {
-    valor: 'orbit-flow',
+    valor: 'contenido',
+    numero: '3',
+    titulo: 'Creación de contenido con AI',
+    descripcion: 'Crea cursos más rápido que nunca y con la mejor calidad.',
+    captura: capturaContenido,
+    capturaOscura: capturaContenidoOscura,
+    alt: 'La ventana «Añadir página» del creador de contenido con los tipos de recurso; video, presentación, roleplay y evaluación con IA.',
+    fondo: 'ia',
+  },
+  {
+    valor: 'cuenta',
     numero: '4',
-    titulo: 'Orbit Flow, contigo en cada pantalla',
-    descripcion: 'Abre el agente sobre lo que estás editando: propone cambios y tú decides cuáles aplicar.',
-    captura: capturaOrbitFlow,
-    alt: 'El editor de un contenido con Orbit Flow abierto a la derecha proponiendo una nueva descripción.',
+    titulo: 'Licencias, créditos y usuarios',
+    descripcion: 'Panel de configuración efectiva para cambios en tu cuenta de manera más rápida y segura.',
+    captura: capturaCuenta,
+    capturaOscura: capturaCuentaOscura,
+    alt: 'El menú de la empresa abierto con las licencias, los créditos de IA, la gestión de usuarios y la configuración.',
+    fondo: 'azul',
   },
 ]
 
@@ -90,6 +111,8 @@ const TICK_MS = 100
 // ventana dice en qué paso va y deja pausar, saltar o seguir.
 export function TourDialog({ open, onOpenChange }: TourDialogProps) {
   const [paso, setPaso] = useState(PASOS[0].valor)
+  // El modo que ve la persona (también cuando eligió «sistema»): decide si las capturas van en claro o en oscuro.
+  const oscuro = useTheme().resolvedMode === 'dark'
   // Cuánto lleva el paso actual (ms): llena su barra y, al llegar a 6 s, pasa al siguiente.
   const [transcurrido, setTranscurrido] = useState(0)
   // Dos pausas: la de leer (cursor o foco sobre los pasos) y la del botón, que se queda hasta que se reanuda.
@@ -184,14 +207,14 @@ export function TourDialog({ open, onOpenChange }: TourDialogProps) {
                       <span className="text-[15px] leading-5 font-medium text-foreground">{item.titulo}</span>
                     </span>
                     <span className="text-sm leading-5 font-normal text-pretty text-muted-foreground">{item.descripcion}</span>
-                    {/* El avance del paso (1 oct): una línea de 2px al pie del paso activo que se llena en negro durante sus
-                        6 s, sin pista debajo, encima del divisor del paso. Decorativa para el lector: «Paso n de 4»
-                        ya lo dice. */}
+                    {/* El avance del paso (1 oct): una línea de 2px al pie del paso activo que se llena en azul (15 oct,
+                        Carlos; antes en negro) durante sus 6 s, sin pista debajo, encima del divisor del paso. Decorativa
+                        para el lector: «Paso n de 4» ya lo dice. */}
                     {i === indice ? (
                       <span aria-hidden="true" className={`absolute inset-x-0 ${i < PASOS.length - 1 ? '-bottom-px' : 'bottom-0'}`}>
                         <Progress
                           value={sinMovimiento ? 100 : Math.min(100, (transcurrido / PERMANENCIA_MS) * 100)}
-                          className="h-0.5! rounded-none! bg-transparent! [&_[data-slot=progress-indicator]]:bg-foreground! [&_[data-slot=progress-indicator]]:rounded-none! [&_[data-slot=progress-track]]:h-0.5! [&_[data-slot=progress-track]]:rounded-none! [&_[data-slot=progress-track]]:bg-transparent!"
+                          className="h-0.5! rounded-none! bg-transparent! [&_[data-slot=progress-indicator]]:bg-primary! [&_[data-slot=progress-indicator]]:rounded-none! [&_[data-slot=progress-track]]:h-0.5! [&_[data-slot=progress-track]]:rounded-none! [&_[data-slot=progress-track]]:bg-transparent!"
                         />
                       </span>
                     ) : null}
@@ -199,11 +222,21 @@ export function TourDialog({ open, onOpenChange }: TourDialogProps) {
                 ))}
               </TabsList>
 
-              {/* La captura del paso sobre el halo azul de la interfaz (en lugar de la foto del bloque), en 4:3 y con un
-                  bisel claro, como una ventana apoyada en el fondo. */}
+              {/* La captura del paso sobre el halo azul de la interfaz (en lugar de la foto del bloque) o, en los pasos de IA,
+                  sobre el halo de la IA; los dos fondos se cruzan con un fundido al cambiar de paso. En 4:3 y con un bisel
+                  claro, como una ventana apoyada en el fondo. */}
               {/* En escritorio la fila mide 480px y la captura ocupa ese alto: así la ventana entra completa en pantalla. */}
               <div className="relative aspect-[4/3] min-w-0 overflow-hidden bg-muted lg:aspect-auto lg:h-full lg:flex-1">
-                <img src={ambienteAzul} alt="" aria-hidden="true" className="pointer-events-none absolute inset-0 size-full object-cover opacity-70 select-none" />
+                <img
+                  src={ambienteAzul}
+                  alt=""
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute inset-0 size-full object-cover select-none transition-opacity duration-500 motion-reduce:transition-none ${PASOS[indice].fondo === 'azul' ? 'opacity-70' : 'opacity-0'}`}
+                />
+                <div
+                  aria-hidden="true"
+                  className={`${paleta.vars} ${paleta.halo} pointer-events-none absolute inset-0 transition-opacity duration-500 motion-reduce:transition-none ${PASOS[indice].fondo === 'ia' ? 'opacity-100' : 'opacity-0'}`}
+                />
                 <div className="absolute inset-[5%]">
                   <div className="size-full rounded-xl bg-background/50 p-[1.5%] shadow-lg ring-1 ring-border/60">
                     {PASOS.filter((item) => item.valor === paso).map((item) => (
@@ -213,7 +246,12 @@ export function TourDialog({ open, onOpenChange }: TourDialogProps) {
                         tabIndex={-1}
                         className="size-full overflow-hidden rounded-lg animate-in fade-in duration-300 motion-reduce:animate-none"
                       >
-                        <img src={item.captura} alt={item.alt} className="size-full object-cover object-left-top" draggable={false} />
+                        <img
+                          src={oscuro ? item.capturaOscura : item.captura}
+                          alt={item.alt}
+                          className="size-full object-cover object-left-top"
+                          draggable={false}
+                        />
                       </TabsContent>
                     ))}
                   </div>

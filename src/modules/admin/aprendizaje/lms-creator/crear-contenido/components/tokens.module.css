@@ -1,6 +1,16 @@
 /* La insignia: borde de 1,5 px con el degradado de la IA (los tonos los pone `vars` de tarjeta-ia.module.css) sobre el
-   fondo que tenga debajo, número en el color del texto y moneda en morado. El borde es una capa con máscara y no un
-   fondo doble, para no depender del color de la superficie (modal, cabecera o tarjeta). */
+   fondo que tenga debajo, número y moneda en el color del texto (la moneda iba en morado hasta el 15 oct, Carlos). El
+   borde es una capa con máscara y no un fondo doble, para no depender del color de la superficie (modal, cabecera o
+   tarjeta).
+   Con más aire (15 oct, Carlos): 4 × 12px en vez de los 2 × 5px del Badge. Va con `.style-vega` delante y alto
+   automático porque el tema del Badge (20px de alto fijo) le gana a una clase sola; la pastilla se mantiene redonda.
+   Se probó un fondo pastel con anillo y número en degradado (referencia «Pro») y se volvió a este. */
+:global(.style-vega) .insignia {
+  height: auto;
+  padding: 4px 12px;
+  border-radius: 9999px;
+}
+
 .insignia {
   position: relative;
   border-color: transparent;
@@ -24,7 +34,7 @@
 }
 
 .insignia .moneda {
-  color: var(--ia-morado);
+  color: currentColor;
 }
 
 /* Gasto de tokens (paridad con el badge IA de UBITS): aplastón con rebote, moneda que gira y «−N» que sube. */

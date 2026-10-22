@@ -44,7 +44,7 @@ export const ROLEPLAYS_EJEMPLO: RoleplayGuardado[] = [
     id: 'rp-ej-feedback',
     titulo: 'Feedback difícil a un colaborador',
     estado: 'listo',
-    actualizado: '28 sep 2026',
+    actualizado: '28 sept 2026',
     personaje: 'Andrea Guzmán · Directora de tu área',
     cfg: construir({
       titulo: 'Feedback difícil a un colaborador',
@@ -67,7 +67,7 @@ export const ROLEPLAYS_EJEMPLO: RoleplayGuardado[] = [
     id: 'rp-ej-cliente',
     titulo: 'Cliente molesto por un incumplimiento',
     estado: 'listo',
-    actualizado: '22 sep 2026',
+    actualizado: '22 sept 2026',
     personaje: 'Marcelo Ruiz · Cliente desde hace tres años',
     cfg: construir({
       titulo: 'Cliente molesto por un incumplimiento',
@@ -90,7 +90,7 @@ export const ROLEPLAYS_EJEMPLO: RoleplayGuardado[] = [
     id: 'rp-ej-direccion',
     titulo: 'Presentar avances a dirección',
     estado: 'listo',
-    actualizado: '15 sep 2026',
+    actualizado: '15 sept 2026',
     personaje: 'Lucía Fernández · Directora general',
     cfg: construir({
       titulo: 'Presentar avances a dirección',

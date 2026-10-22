@@ -8,14 +8,15 @@ import {
   FolderAddIcon,
   Link02Icon,
   PlusSignIcon,
+  StopIcon,
 } from '@hugeicons/core-free-icons'
-import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, IconTile, Switch, Textarea, cn } from '@ubits/flux-ui'
+import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, IconTile, Separator, Switch, Textarea, cn } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
-import { notify } from '@/shared/components/notify'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import styles from './composer.module.css'
+import paleta from '@/shared/components/tarjeta-ia.module.css'
 import { CONNECTORS } from './data'
-import { CloseButton } from '@/shared/components/CloseButton'
 
 type ComposerProps = {
   value: string
@@ -48,6 +49,9 @@ type ComposerProps = {
   footerStart?: ReactNode
   // Reemplaza el botón de enviar (p. ej. «Generar portada · 50 tokens»); con null no va ninguno.
   action?: ReactNode | null
+  // Mientras el agente responde, el botón de enviar se vuelve «Detener», en el mismo lugar y con el mismo anillo (16 oct,
+  // Nicolás: «mejor que el botón de enviar se convierta en detener cuando se envía»).
+  onStop?: () => void
   // Habilita enviar aunque no haya texto (p. ej. con un archivo adjunto). Por defecto, solo con texto.
   canSend?: boolean
   // Fuera del chat no hay conectores: con onAttach, el «+» abre directo el selector de archivos, sin el menú.
@@ -112,9 +116,11 @@ function AttachMenu({ region }: { region?: string }) {
               </div>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="w-64 bg-popover!">
-              <DropdownMenuItem onClick={() => notify('Catálogo de conectores')}>
+              {/* 13-oct (nada-que-finja): el catálogo de conectores no existe; la opción queda apagada y lo dice. */}
+              <DropdownMenuItem disabled>
                 <HugeiconsIcon icon={PlusSignIcon} size={16} />
-                Agregar conectores
+                <span className="flex-1">Agregar conectores</span>
+                <span className="text-[13px] text-muted-foreground">Próximamente</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
@@ -142,11 +148,12 @@ function AttachMenu({ region }: { region?: string }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => notify('Agregar archivos · PDF, Excel o CSV')}>
+          {/* 13-oct (nada-que-finja): adjuntar archivos todavía no existe; la opción queda apagada y lo dice. */}
+          <DropdownMenuItem disabled>
             <MenuIcon icon={Attachment01Icon} />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <span>Agregar archivos</span>
-              <span className="text-[13px] text-muted-foreground">PDF, Excel o CSV de tu equipo</span>
+              <span className="text-[13px] text-muted-foreground">Próximamente: PDF, Excel o CSV de tu equipo</span>
             </div>
             <DropdownMenuShortcut>⌘U</DropdownMenuShortcut>
           </DropdownMenuItem>
@@ -187,6 +194,7 @@ export function Composer({
   invalid,
   footerStart,
   action,
+  onStop,
   canSend: canSendProp,
   onAttach,
   attachLabel = 'Adjuntar archivos',
@@ -226,33 +234,35 @@ export function Composer({
     <div
       data-focused={focused}
       className={cn(
+        paleta.vars,
         styles.composer,
         'relative isolate flex w-full flex-col overflow-hidden rounded-[1.25rem] border bg-card text-card-foreground shadow-xs',
       )}
     >
-      {/* Aura al enfocar, como en el prototipo: manchas que derivan y un haz que gira por el borde. */}
-      <div aria-hidden="true" className={styles.wash}>
-        <span className={styles.blob} />
-        <span className={styles.blob} />
-        <span className={styles.blob} />
-        <span className={styles.blob} />
-      </div>
+      {/* Aura al enfocar (15 oct, Carlos): el halo de la IA arriba y un haz que da una vuelta por el borde. */}
+      <div aria-hidden="true" className={styles.wash} />
       <div aria-hidden="true" className={styles.glow}>
         <span className={styles.beam} />
       </div>
 
       {news ? (
         <div data-region={regions?.news} className="relative z-1 flex items-center gap-2 border-b px-4 py-2 text-sm">
-          {/* La marca de IA es el orbe, no la varita (auditoría, 5-oct). */}
-          <IconoIA className="shrink-0" />
-          <Badge>Nuevo</Badge>
-          <span className="min-w-0 flex-1 truncate text-muted-foreground">
-            Ya ejecuta acciones en <span className="font-medium text-foreground">Selección</span>.
+          {/* Sin el orbe y con «Nuevo» en azul claro (15 oct, Carlos): la franja ya vive dentro de la caja de Orbit. */}
+          <Badge variant="primary-light">Nuevo</Badge>
+          {/* Todo el texto en el mismo gris y, al lado, separado por una línea, «Ver qué cambió» (15 oct, Carlos). */}
+          <span className="min-w-0 truncate text-muted-foreground">Ya ejecuta acciones en Selección.</span>
+          {/* La línea vertical de la librería se estira a todo el alto de la fila y quedaba arriba del texto: va dentro de
+              una caja de 16px que la fila centra, así queda a la altura del texto sin forzar la librería. */}
+          <span aria-hidden="true" className="flex h-4 shrink-0">
+            <Separator orientation="vertical" />
           </span>
-          <Button variant="link" size="sm" className="h-auto p-0" onClick={onOpenNews}>
+          <Button variant="link" size="sm" className="mr-auto h-auto p-0" onClick={onOpenNews}>
             Ver qué cambió
           </Button>
-          <CloseButton label="Cerrar novedad" onClick={onDismissNews} />
+          {/* Terciario de solo icono (15 oct, Carlos), no el círculo con filo de CloseButton. */}
+          <BotonIcono aria-label="Cerrar novedad" onClick={onDismissNews}>
+            <HugeiconsIcon icon={Cancel01Icon} size={14} />
+          </BotonIcono>
         </div>
       ) : null}
 
@@ -315,23 +325,36 @@ export function Composer({
           ) : null}
           {action !== undefined ? action : (
           /* Anillo metálico del prototipo: gira siempre, tenue sin texto y encendido cuando hay algo que enviar. */
-          <span className={styles.metal} style={{ '--on': canSend ? 1 : 0.34 } as CSSProperties}>
+          <span className={styles.metal} style={{ '--on': canSend || onStop ? 1 : 0.34 } as CSSProperties}>
             <span aria-hidden="true" className={styles.halo} />
             <span aria-hidden="true" className={styles.ring} />
             <span aria-hidden="true" className={styles.spec} />
             {/* Sin texto va deshabilitado, con el mismo primary apagado que usa la librería en todo el sistema. En
                 círculo, como el anillo que lo rodea: es un botón de IA y la pastilla es su marca. */}
-            <Button
-              data-region={regions?.send}
-              data-chip={buttonChip(regions?.send)}
-              size="icon"
-              className="relative z-1 [--radius:calc(infinity*1px)]"
-              aria-label="Enviar"
-              disabled={!canSend}
-              onClick={onSend}
-            >
-              <HugeiconsIcon icon={ArrowUp02Icon} size={18} />
-            </Button>
+            {onStop ? (
+              <Button
+                data-region={regions?.send}
+                data-chip={buttonChip(regions?.send)}
+                size="icon"
+                className="relative z-1 [--radius:calc(infinity*1px)]"
+                aria-label="Detener la respuesta"
+                onClick={onStop}
+              >
+                <HugeiconsIcon icon={StopIcon} size={16} />
+              </Button>
+            ) : (
+              <Button
+                data-region={regions?.send}
+                data-chip={buttonChip(regions?.send)}
+                size="icon"
+                className="relative z-1 [--radius:calc(infinity*1px)]"
+                aria-label="Enviar"
+                disabled={!canSend}
+                onClick={onSend}
+              >
+                <HugeiconsIcon icon={ArrowUp02Icon} size={18} />
+              </Button>
+            )}
           </span>
           )}
         </div>

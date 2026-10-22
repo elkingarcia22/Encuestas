@@ -1,27 +1,25 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { MoreHorizontalIcon, Copy01Icon, Delete02Icon, Edit02Icon, MoreVerticalIcon } from '@hugeicons/core-free-icons'
+import { MoreHorizontalIcon, ChartIncreaseIcon, Copy01Icon, Edit02Icon, MoreVerticalIcon } from '@hugeicons/core-free-icons'
 import {
   Badge,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
   Text,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
-import { notify } from '@/shared/components/notify'
 import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
 import { TablaDatos, type PaginacionTabla } from '@/modules/design-system/data-grid/tabla-datos'
-import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
 import { MarcoCuadricula } from './controles-lista'
 import { BADGE, duracion, fechaCorta, iconoTipo, type Fila } from './vista'
+import { avisarFlujoPendiente } from '../../compartido/avisos'
 
 type Props = {
   /** Solo las de esta página: el recorte ya viene hecho. */
@@ -35,51 +33,47 @@ type Props = {
   paginacion: PaginacionTabla
 }
 
-// Las opciones de un contenido: editar, duplicar y eliminar. El disparador lo pone cada vista,
-// porque en la tabla cabe el botón de los tres puntos horizontales y en la tarjeta el de los verticales, más chico.
+/**
+ * Las opciones de un contenido: editar y duplicar. El disparador lo pone cada vista, porque en la tabla cabe el botón
+ * de los tres puntos horizontales y en la tarjeta el de los verticales, más chico.
+ *
+ * **Sin «Eliminar».** En LMS Creator un contenido no se borra: se archiva o se oculta, porque lo que la gente ya
+ * avanzó cuelga de él (Dave, 15-oct).
+ *
+ * **«Editar» solo abre algo en un borrador.** Ahí el asistente de creación es el sitio correcto: está a medias y lo
+ * que toca es terminarlo. En cualquier otro estado la edición todavía no existe en el playground y se dice, en vez
+ * de abrir el asistente de creación con la ficha cargada, que es lo que venía confundiendo a todo el mundo.
+ *
+ * **«Ver resultados» abre el menú de todo lo que no es un borrador, y es lo primero.** Es lo que de verdad se viene
+ * a hacer con un contenido que ya está publicado: mirar cómo le va. Un borrador no lo lleva porque todavía no le ha
+ * pasado nada a nadie (Dave, 15-oct).
+ */
 function Acciones({ contenido, onAbrir, children }: { contenido: Fila; onAbrir: (c: Fila) => void; children: ReactNode }) {
-  const [eliminando, setEliminando] = useState(false)
+  const borrador = contenido.visibilidad === 'Borrador'
   return (
     // El clic no debe abrir también la fila o la tarjeta que hay debajo.
     <div onClick={(event) => event.stopPropagation()}>
       <DropdownMenu>
         {children}
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => onAbrir(contenido)}>
+            {borrador ? null : (
+              <DropdownMenuItem onClick={() => onAbrir(contenido)}>
+                <HugeiconsIcon icon={ChartIncreaseIcon} size={16} />
+                Ver resultados
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => (borrador ? onAbrir(contenido) : avisarFlujoPendiente('edición'))}>
               <HugeiconsIcon icon={Edit02Icon} size={16} />
               Editar
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => notify(`Duplicando ${contenido.titulo}`, undefined, 'info')}>
+            <DropdownMenuItem onClick={() => avisarFlujoPendiente('duplicado')}>
               <HugeiconsIcon icon={Copy01Icon} size={16} />
               Duplicar
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onClick={() => setEliminando(true)}>
-            <HugeiconsIcon icon={Delete02Icon} size={16} />
-            Eliminar
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      {/* Eliminar se pregunta antes (H-667; regla de ventanas del 5 al 7-oct): título fijo, el contenido y lo que se
-          conserva en el cuerpo. Es la misma ventana en la tabla y en la cuadrícula: vive aquí, con el menú. */}
-      <DialogoConfirmar
-        abierto={eliminando}
-        onAbiertoChange={setEliminando}
-        size="sm"
-        icono={Delete02Icon}
-        titulo="¿Eliminar el contenido?"
-        descripcion={`«${contenido.titulo}» deja de estar en el catálogo. Lo que las personas ya avanzaron se conserva, pero el contenido no se puede recuperar.`}
-        accion="Eliminar contenido"
-        destructiva
-        onConfirmar={() => {
-          setEliminando(false)
-          notify('Contenido eliminado', `«${contenido.titulo}» ya no aparece en el catálogo.`, 'success')
-        }}
-      >
-        <RegistroConfirmar nombre={contenido.titulo} detalle={contenido.tipo} estado={contenido.visibilidad} tono="neutro" icono={iconoTipo(contenido.tipo)} />
-      </DialogoConfirmar>
     </div>
   )
 }

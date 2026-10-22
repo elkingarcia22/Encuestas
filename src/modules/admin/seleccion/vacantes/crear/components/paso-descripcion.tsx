@@ -171,7 +171,7 @@ function TarjetaSeccion({
             </div>
           </div>
           <div className="ms-auto flex shrink-0 items-center">
-            <BotonIcono aria-label={`Borrar ${seccion.titulo}`} className="text-destructive!" onClick={onQuitar}>
+            <BotonIcono aria-label={`Eliminar ${seccion.titulo}`} className="text-destructive!" onClick={onQuitar}>
               <HugeiconsIcon icon={Delete02Icon} size={18} />
             </BotonIcono>
           </div>

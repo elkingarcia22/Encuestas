@@ -19,7 +19,6 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   DrawerClose,
   DropdownMenu,
@@ -37,6 +36,9 @@ import {
   toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify, notifyAction } from '@/shared/components/notify'
+import { SinResultados } from '@/shared/components/SinResultados'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 
@@ -164,7 +166,7 @@ export function Component() {
   const cambiarEstado = (afectados: Usuario[], estado: EstadoUsuario) => {
     const ids = new Set(afectados.filter((u) => u.estado !== estado).map((u) => u.id))
     if (!ids.size) {
-      toast.add({ type: 'info', title: estado === 'Suspendido' ? 'Ya estaban suspendidos' : 'Ya estaban activos' })
+      notify(estado === 'Suspendido' ? 'Ya estaban suspendidos' : 'Ya estaban activos', undefined, 'info')
       return
     }
     const anterior: EstadoUsuario = estado === 'Suspendido' ? 'Activo' : 'Suspendido'
@@ -172,21 +174,19 @@ export function Component() {
     setLimpiarSeleccion({})
     const uno = afectados.find((u) => ids.has(u.id))
     const n = ids.size
-    toast.add({
-      type: 'success',
-      title:
-        estado === 'Suspendido'
-          ? n === 1 ? 'Usuario suspendido' : `${n} usuarios suspendidos`
-          : n === 1 ? 'Usuario activado' : `${n} usuarios activados`,
-      description:
-        estado === 'Suspendido'
-          ? `${n === 1 && uno ? nombreCompleto(uno) : `${n} personas`} ya no ${plural(n, 'puede', 'pueden')} entrar a UBITS y ${plural(n, 'su licencia quedó libre', 'sus licencias quedaron libres')}.`
-          : `${n === 1 && uno ? nombreCompleto(uno) : `${n} personas`} ya ${plural(n, 'puede', 'pueden')} entrar de nuevo.`,
-      actionProps: {
-        children: 'Deshacer',
+    notifyAction(
+      estado === 'Suspendido'
+        ? n === 1 ? 'Usuario suspendido' : `${n} usuarios suspendidos`
+        : n === 1 ? 'Usuario activado' : `${n} usuarios activados`,
+      estado === 'Suspendido'
+        ? `${n === 1 && uno ? nombreCompleto(uno) : `${n} personas`} ya no ${plural(n, 'puede', 'pueden')} entrar a UBITS y ${plural(n, 'su licencia quedó libre', 'sus licencias quedaron libres')}.`
+        : `${n === 1 && uno ? nombreCompleto(uno) : `${n} personas`} ya ${plural(n, 'puede', 'pueden')} entrar de nuevo.`,
+      {
+        label: 'Deshacer',
         onClick: () => setUsuarios((todos) => todos.map((u) => (ids.has(u.id) ? { ...u, estado: anterior } : u))),
       },
-    })
+      'success',
+    )
   }
 
   const ejecutar = (accion: AccionFila, usuario: Usuario) => {
@@ -230,19 +230,19 @@ export function Component() {
         },
       ],
     },
+    // Sin resultados con la ilustración glass del sistema, lo buscado entre comillas y «Limpiar» (13-oct, I-182).
     emptyState: {
       type: 'no-results',
-      title: 'Nada por aquí',
-      description: 'No hay resultados para tu búsqueda. Revisa la ortografía, o prueba con una nueva consulta.',
-      action: {
-        id: 'limpiar',
-        label: 'Limpiar filtros',
-        variant: 'outline',
-        onClick: () => {
-          setBusqueda('')
-          setFiltros([])
-        },
-      },
+      customComponent: (
+        <SinResultados
+          busqueda={busqueda}
+          filtrosActivos={filtros.filter((f) => Array.isArray(f.value) && f.value.length > 0).length}
+          onLimpiar={() => {
+            setBusqueda('')
+            setFiltros([])
+          }}
+        />
+      ),
     },
     // La cabecera es la de la tabla del sistema: el conteo a la izquierda, sin título dentro del marco (el título es el
     // de la página) y encabezados de 40 px con asidero.
@@ -381,7 +381,7 @@ export function Component() {
         onConfirmar={() => {
           setRecordatorioEnviado(sinSesion)
           setRecordando(false)
-          toast.add({ type: 'success', title: 'Recordatorios enviados', description: `Van en camino a ${sinSesion.toLocaleString('es-CO')} personas.` })
+          notify('Recordatorios enviados', `Van en camino a ${sinSesion.toLocaleString('es-CO')} personas.`, 'success')
         }}
       />
 
@@ -397,7 +397,7 @@ export function Component() {
         }
         accion="Enviar enlace"
         onConfirmar={() => {
-          toast.add({ type: 'success', title: 'Enlace enviado', description: `${contrasena?.correo} tiene 24 horas para usarlo.` })
+          notify('Enlace enviado', `${contrasena?.correo} tiene 24 horas para usarlo.`, 'success')
           setContrasena(null)
         }}
       />

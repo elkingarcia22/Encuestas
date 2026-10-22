@@ -214,7 +214,7 @@ export function Component() {
         <AlertDescription>
           <p>
             La barra lateral, el pie y los menús flotantes usan 13, 11 y 15 px, que no están en esta escala. Están
-            documentados en Fundamentos › Marco › Medidas. En las pantallas se usa esta escala.
+            documentados en Patrones › Marco › Medidas. En las pantallas se usa esta escala.
           </p>
         </AlertDescription>
       </Alert>

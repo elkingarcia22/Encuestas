@@ -11,6 +11,7 @@ import {
   AgentNote,
   AgentSuggestions,
   AgentThread,
+  AgentDock,
   ContextPanel,
   ProposalCard,
   UndoRow,
@@ -19,11 +20,11 @@ import { PILL_SOFT } from '@/modules/design-system/agente-contextual/components/
 import { useAgentThread } from '@/modules/design-system/agente-contextual/components/use-agent-thread'
 import { fechaCorta, fechaSinAnio, plural } from '@/modules/design-system/patrones/formato'
 import type { Grupo } from './grupos-datos'
-import { TIPOS, momentoDe, personasDelPlan, porTiempoSinEntrar, progresoDe, totalPersonas, type Asignacion, type Participante, type Plan } from './planes-datos'
+import { NOMBRE_ESTADO, TIPOS, momentoDe, personasDelPlan, porTiempoSinEntrar, progresoDe, totalPersonas, type Asignacion, type Participante, type Plan } from './planes-datos'
 
 // La IA de Planes y Grupos es el agente contextual, no otra página (Cristian, 28 sep: «debe ser contextual, no otra
 // pagina»). En UBITS los botones «Asistente IA para planes» y «Asistente IA para grupos» abren el chat de agentes en otra
-// pestaña; aquí el botón es «Orbit Flow» (Cristian, 28 sep: todos los que abren el agente contextual se llaman igual; el nombre es «Orbit Flow» desde la auditoría del 5-oct) y abre el panel del agente sobre la pantalla que se está mirando, como en el expediente del candidato, y lo
+// pestaña; aquí el botón es «Orbit» (Cristian, 28 sep: todos los que abren el agente contextual se llaman igual; el nombre es «Orbit» desde la auditoría del 5-oct) y abre el panel del agente sobre la pantalla que se está mirando, como en el expediente del candidato, y lo
 // que propone se aplica ahí mismo.
 
 // El panel se acopla en el hueco derecho del marco (debajo del header, y la página se acorta). Solo en pantallas
@@ -43,7 +44,9 @@ export function useAgente() {
     disponible: grande,
     abrir: () => setAbierto(true),
     cerrar: () => setAbierto(false),
-    portal: (panel: ReactNode) => (hueco && acoplado ? createPortal(<div className="flex h-full shrink-0">{panel}</div>, hueco) : null),
+    // El hueco de Orbit del sistema (AgentDock, regla «orbit-un-solo-panel», 13-oct): entra y sale igual en todas las
+    // pantallas, con el contenido encogiéndose, y trae el asidero para cambiarle el ancho.
+    portal: (panel: ReactNode) => (hueco ? createPortal(<AgentDock open={acoplado}>{panel}</AgentDock>, hueco) : null),
   }
 }
 
@@ -191,7 +194,7 @@ export function AgentePlanes({ onClose, ...props }: PantallaPlanes & { onClose: 
       </>
     ) : (
       <>
-        <span className="text-foreground">{props.plan.nombre}</span> · {props.plan.estado.toLowerCase()}
+        <span className="text-foreground">{props.plan.nombre}</span> · {NOMBRE_ESTADO[props.plan.estado].toLowerCase()}
       </>
     )
 
@@ -316,7 +319,7 @@ export function AgentePlanes({ onClose, ...props }: PantallaPlanes & { onClose: 
           proposalLabel="Borrador del recordatorio"
           proposal={`Hola: tu plan «${props.plan.nombre}» cierra el ${fechaCorta(props.plan.fin)}. Te faltan algunos ${TIPOS[props.plan.tipo].items}; con 20 minutos al día alcanzas a terminar. Entra desde tu Zona de estudio.`}
         />
-        <Button variant="outline" className="self-start" onClick={() => notify('Texto copiado', 'Pégalo al enviar el recordatorio.')}>
+        <Button variant="outline" className="self-start" onClick={() => notify('Texto copiado', 'Pégalo al enviar el recordatorio.', 'success')}>
           Copiar texto
         </Button>
       </div>

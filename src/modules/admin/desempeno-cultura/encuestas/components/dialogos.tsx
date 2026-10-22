@@ -23,7 +23,7 @@ export function DialogoFinalizar({
       onAbiertoChange={(abierto) => (abierto ? undefined : onCerrar())}
       icono={CheckmarkCircle02Icon}
       titulo="¿Finalizar esta encuesta?"
-      descripcion={`«${encuesta?.name ?? ''}» dejará de admitir respuestas de inmediato. Podrás consultar sus resultados, pero quienes aún no hayan respondido ya no podrán hacerlo.`}
+      descripcion={<><strong className="font-semibold">{encuesta?.name ?? ''}</strong> dejará de admitir respuestas de inmediato. Podrás consultar sus resultados, pero quienes aún no hayan respondido ya no podrán hacerlo.</>}
       accion="Finalizar encuesta"
       onConfirmar={() => encuesta && onConfirmar(encuesta)}
     />
@@ -55,7 +55,7 @@ export function DialogoEliminar({
       titulo={una ? '¿Eliminar esta encuesta?' : `¿Eliminar ${encuestas.length} encuestas?`}
       descripcion={
         una
-          ? `«${una.name}» y sus respuestas se eliminarán definitivamente. Esta acción no se puede deshacer.`
+          ? <><strong className="font-semibold">{una.name}</strong> y sus respuestas se eliminarán definitivamente. Esta acción no se puede deshacer.</>
           : 'Las encuestas seleccionadas y sus respuestas se eliminarán definitivamente. Esta acción no se puede deshacer.'
       }
       accion="Eliminar"
@@ -68,9 +68,14 @@ export function DialogoEliminar({
     >
       {una ? (
         <Field>
-          <FieldLabel htmlFor="confirmar-eliminar-encuesta">Escribe «{una.name}» para confirmar</FieldLabel>
+          {/* El rótulo es un flex: sin el span cada trozo de texto sería una columna aparte. */}
+          <FieldLabel htmlFor="confirmar-eliminar-encuesta">
+            <span className="block">
+              Escribe <strong className="font-semibold">«{una.name}»</strong> para confirmar
+            </span>
+          </FieldLabel>
           <Input id="confirmar-eliminar-encuesta" value={texto} autoComplete="off" onChange={(evento) => setTexto(evento.target.value)} />
-          <FieldDescription>Así nadie borra una encuesta con respuestas por un clic de más.</FieldDescription>
+          <FieldDescription>Así nadie elimina una encuesta con respuestas por un clic de más.</FieldDescription>
         </Field>
       ) : null}
     </DialogoConfirmar>

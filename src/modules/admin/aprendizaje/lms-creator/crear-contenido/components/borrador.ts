@@ -237,7 +237,7 @@ export type Borrador = {
   configEvaluacion: ConfigEvaluacion
   /** A qué sección va (o qué página llena) el recurso que se está creando en otra pantalla. */
   intencion: Intencion | null
-  /** Al volver de un flujo con «Volver», el asistente reabre «Añadir página». */
+  /** Al volver de un flujo con «Volver», el asistente reabre «Agregar página». */
   reabrirAnadir: boolean
   /** Generaciones en segundo plano (panel «Generando recursos») y avisos «Ver página». */
   trabajos: Trabajo[]
@@ -495,7 +495,7 @@ export type ErrorRecursos = { mensaje: string; paginas: string[]; secciones: str
 export function validarRecursos(b: Borrador): ErrorRecursos {
   const secciones = seccionesVisibles(b)
   const paginas = secciones.flatMap((s) => s.paginas)
-  if (!paginas.length) return { mensaje: 'Añade al menos una página para continuar.', paginas: [], secciones: [] }
+  if (!paginas.length) return { mensaje: 'Agrega al menos una página para continuar.', paginas: [], secciones: [] }
   const sinTitulo = paginas.filter((p) => !tituloValido(p.titulo)).map((p) => p.id)
   if (sinTitulo.length)
     return { mensaje: 'Todas las páginas deben tener un título. Revisa las marcadas en rojo.', paginas: sinTitulo, secciones: [] }
@@ -562,7 +562,7 @@ export function sumaPesos(items: ItemPeso[], pesos: Record<string, number>) {
 
 // ── Flujos de recurso ────────────────────────────────────────────────────────────────────────────────────────────
 //
-// Cada recurso se crea en su propia pantalla o modal y, al confirmarse, entrega su resultado aquí: si venía de «Añadir
+// Cada recurso se crea en su propia pantalla o modal y, al confirmarse, entrega su resultado aquí: si venía de «Agregar
 // página» nace una página al final de su sección; si venía de «Reemplazar» o «Editar», se llena la página que ya
 // existía. Si se abandona sin confirmar no nace nada (HU-LMS-001, RN-02).
 
@@ -629,7 +629,7 @@ export function confirmarRecurso(recurso: Recurso, tituloSugerido?: string): str
   return id
 }
 
-/** «Volver» desde un recurso: de regreso al asistente con «Añadir página» abierto, sin crear nada. */
+/** «Volver» desde un recurso: de regreso al asistente con «Agregar página» abierto, sin crear nada. */
 export function volverAAnadirPagina() {
   setBorrador({ reabrirAnadir: true })
   return `${rutaAsistente()}#recursos`

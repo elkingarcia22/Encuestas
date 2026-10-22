@@ -26,6 +26,7 @@ import {
   ItemTitle,
   Skeleton,
   Text,
+  cn,
 } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
@@ -80,6 +81,8 @@ export function TableroAtencion<A extends AsuntoTablero>({
   onVerGrupo,
   vacio,
   error,
+  grupos = GRUPOS.map(({ grupo }) => grupo),
+  nombres,
 }: {
   // Los asuntos sin resolver, ya en orden de urgencia.
   pendientes: A[]
@@ -93,10 +96,14 @@ export function TableroAtencion<A extends AsuntoTablero>({
   vacio?: { titulo: string; descripcion: string; contenido: ReactNode }
   // Si no cargó: el error con «Reintentar» va en el lugar de las columnas (IN-26).
   error?: ReactNode
+  // Las columnas que lleva, si no son las cuatro, y otro nombre para alguna. Vacantes junta «Necesitan atención» y
+  // «Acción manual» en una sola, «Esperando acción» (13 oct, reunión con la PM y el TL).
+  grupos?: Grupo[]
+  nombres?: Partial<Record<Grupo, string>>
 }) {
   const delGrupo = (grupo: Grupo) => pendientes.filter((asunto) => asunto.grupo === grupo)
   // Solo hay algo que expandir si alguna columna tiene más de lo que se ve recogido.
-  const hayMas = GRUPOS.some(({ grupo }) => delGrupo(grupo).length > RECOGIDO)
+  const hayMas = grupos.some((grupo) => delGrupo(grupo).length > RECOGIDO)
 
   return (
     // Compacto, como el marco de las tablas: así los títulos de la pantalla arrancan en la misma línea.
@@ -151,11 +158,15 @@ export function TableroAtencion<A extends AsuntoTablero>({
             </EmptyHeader>
           </Empty>
         ) : (
-          <div id="atencion-columnas" className="divide-border grid gap-5 @2xl:grid-cols-2 @4xl:grid-cols-4 @4xl:gap-0 @4xl:divide-x">
-            {GRUPOS.map(({ grupo }) => (
+          <div
+            id="atencion-columnas"
+            className={cn('divide-border grid gap-5 @4xl:gap-0 @4xl:divide-x', grupos.length === 3 ? '@4xl:grid-cols-3' : '@2xl:grid-cols-2 @4xl:grid-cols-4')}
+          >
+            {grupos.map((grupo) => (
               <Columna
                 key={grupo}
                 grupo={grupo}
+                nombre={nombres?.[grupo]}
                 asuntos={delGrupo(grupo)}
                 cargando={cargando}
                 expandido={expandido}
@@ -172,6 +183,7 @@ export function TableroAtencion<A extends AsuntoTablero>({
 
 function Columna<A extends AsuntoTablero>({
   grupo,
+  nombre,
   asuntos,
   cargando,
   expandido,
@@ -179,6 +191,7 @@ function Columna<A extends AsuntoTablero>({
   onVerTodos,
 }: {
   grupo: Grupo
+  nombre?: string
   asuntos: A[]
   cargando: boolean
   expandido: boolean
@@ -193,7 +206,7 @@ function Columna<A extends AsuntoTablero>({
       <div className="flex min-w-0 items-center gap-2">
         <MediaGrupo grupo={grupo} size="xs" />
         <Text as="span" id={`grupo-${grupo}`} size="sm" weight="medium" className="min-w-0 flex-1 truncate">
-          {info.titulo}
+          {nombre ?? info.titulo}
         </Text>
         {cargando ? (
           <Skeleton aria-hidden="true" className="h-4.5 w-6 shrink-0 rounded-full" />

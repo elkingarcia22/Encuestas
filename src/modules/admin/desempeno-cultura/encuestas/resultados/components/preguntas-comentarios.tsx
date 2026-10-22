@@ -4,7 +4,6 @@ import { ArrowDown01Icon, Cancel01Icon } from '@hugeicons/core-free-icons'
 import {
   Alert,
   AlertDescription,
-  Badge,
   Button,
   cn,
   Item,
@@ -20,6 +19,7 @@ import {
   TableRow,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
@@ -32,6 +32,7 @@ import { TotalOculto } from './controles'
 import { numero } from './escala'
 import { nivelDe, type Nivel } from './filtros'
 import { InsigniaSentimiento, SelectorSentimiento } from './sentimiento'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Preguntas › Comentarios: todas las respuestas abiertas, cada una con la pregunta de la que viene,
 // el sentimiento que le puso la IA, su confianza y su tema. El sentimiento se corrige a mano, y la
@@ -71,9 +72,9 @@ function Reparto({ cuentas, total }: { cuentas: Record<Sentiment, number>; total
   return (
     <div className="flex items-center justify-end gap-4">
       {COLUMNAS.map((columna) => (
-        <Hint key={columna.id} label={`${columna.corto} · ${numero(cuentas[columna.id])} comentarios`}>
+        <Hint key={columna.id} label={`${columna.corto} · ${numero(cuentas[columna.id])} ${plural(cuentas[columna.id], 'comentario', 'comentarios')}`}>
           <Text as="span" size="xs" weight="semibold" className={cn('w-16 text-right tabular-nums', columna.texto)} tabIndex={0}>
-            {porcentaje(cuentas[columna.id], total)}%
+            {porcentaje(cuentas[columna.id], total)} %
           </Text>
         </Hint>
       ))}
@@ -95,7 +96,7 @@ function TotalSeccion({ comentarios, correcciones }: { comentarios: readonly Ope
           Negativos
         </Text>
         <Badge variant={negativos > 0 ? 'destructive-outline' : 'secondary'} size="sm" className="tabular-nums">
-          {negativos}%
+          {negativos} %
         </Badge>
       </div>
     </div>
@@ -106,7 +107,11 @@ function Comentario({ comentario, correcciones, onCorregir, onDeshacer }: { come
   const actual = effectiveSentiment(comentario, correcciones)
   const corregido = correcciones.has(comentario.id)
   return (
-    <Item size="sm" className="items-start!">
+    <Item
+      // Con un comentario largo, el contenido arriba: con el tema sin capa la clase solo gana con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa.
+      size="sm"
+      className="items-start!"
+    >
       <ItemContent className="min-w-0 gap-1.5">
         <Text as="p" size="sm">
           «{comentario.text}»
@@ -202,6 +207,7 @@ function TablaComentarios({ preguntas, porPregunta, correcciones, oculto, onCorr
                     {indice + 1}
                   </Text>
                 </TableCell>
+                {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                 <TableCell className="whitespace-normal!">
                   <Text as="span" size="sm" weight="medium">
                     {pregunta.statement || 'Pregunta sin enunciado'}
@@ -234,6 +240,7 @@ function TablaComentarios({ preguntas, porPregunta, correcciones, oculto, onCorr
               </TableRow>
               {abierta ? (
                 <TableRow className="hover:bg-transparent">
+                  {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                   <TableCell colSpan={5} className="whitespace-normal!">
                     <ListaComentarios comentarios={comentarios} correcciones={correcciones} onCorregir={onCorregir} onDeshacer={onDeshacer} />
                   </TableCell>

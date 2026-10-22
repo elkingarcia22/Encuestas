@@ -1,6 +1,8 @@
-import { Alert02Icon } from '@hugeicons/core-free-icons'
+import { useState } from 'react'
+import { Alert02Icon, Megaphone02Icon } from '@hugeicons/core-free-icons'
 import { Button, Progress } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { DrawerShell } from './drawer-shell'
 import { KICKER, WS } from './drawer-styles'
 
@@ -14,6 +16,7 @@ const BEHIND = [
 
 // Caso: aviso del sistema que baja desde arriba; importante pero no bloquea el trabajo.
 export function NoticeDrawer({ open, onOpenChange }: Props) {
+  const [pregunta, setPregunta] = useState(false)
   return (
     <DrawerShell
       open={open}
@@ -28,21 +31,32 @@ export function NoticeDrawer({ open, onOpenChange }: Props) {
             variant="ghost"
             className={WS}
             onClick={() => {
-              notify('Te lo recordamos mañana a las 8:00')
+              notify('Te lo recordamos mañana a las 8:00', undefined, 'info')
               onOpenChange(false)
             }}
           >
             Recordármelo mañana
           </Button>
-          <Button
-            className={WS}
-            onClick={() => {
-              notify('Recordatorio enviado a los líderes de los 3 equipos')
-              onOpenChange(false)
-            }}
-          >
+          <Button className={WS} onClick={() => setPregunta(true)}>
             Enviar recordatorio
           </Button>
+          {/* 13-oct: enviar un recordatorio le llega a otras personas, así que pregunta antes con RegistroConfirmar. */}
+          <DialogoConfirmar
+            abierto={pregunta}
+            onAbiertoChange={setPregunta}
+            icono={Megaphone02Icon}
+            titulo="¿Enviar el recordatorio?"
+            descripcion="Les llega por correo a los líderes de los 3 equipos más atrasados. Un correo enviado no se puede recoger."
+            cancelar="Todavía no"
+            accion="Enviar a 3 líderes"
+            onConfirmar={() => {
+              setPregunta(false)
+              onOpenChange(false)
+              notify('Recordatorio enviado', 'Les llegó a los líderes de los 3 equipos.', 'success')
+            }}
+          >
+            <RegistroConfirmar nombre="Ciclo de evaluaciones 360" detalle="238 de 312 completadas · cierra el viernes 18" estado="Correo a 3 líderes" />
+          </DialogoConfirmar>
         </>
       }
     >

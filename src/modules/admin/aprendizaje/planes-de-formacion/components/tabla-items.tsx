@@ -14,6 +14,7 @@ import {
   Text,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
 import { SinResultados } from '@/shared/components/SinResultados'
@@ -188,7 +189,7 @@ export function TablaItems({
             />
           ),
         }
-      : { type: 'empty', title: `Sin ${textos.items} todavía`, description: `Agrega una asignación para sumar ${textos.items} al plan.` },
+      : { type: 'empty', customComponent: <PrimeraVez icono="glass-paper-plus" titulo={`Sin ${textos.items} todavía`} descripcion={`Agrega una asignación para sumar ${textos.items} al plan.`} /> },
     // RN-01b: título y conteo legible («N contenidos»), no «N/N».
     frame: { title: textos.items.charAt(0).toUpperCase() + textos.items.slice(1), toolbar: 'header' },
     labels: { resultCount: (_visibles, total) => `${total} ${plural(total, textos.item, textos.items)}` },

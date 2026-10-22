@@ -38,6 +38,7 @@ import { notify } from '@/shared/components/notify'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { LluviaConfeti } from '@/shared/components/Confeti'
 import { ImagenGlass } from '@/shared/components/ImagenGlass'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
 import { CONTENIDOS } from '@/shared/bd'
 import { CajaCarrusel } from '@/modules/portal-colaborador/aprendizaje/zona-de-estudio/components/carrusel'
@@ -83,6 +84,7 @@ import {
   type Pagina,
   type Pregunta,
 } from '../crear-contenido/components/borrador'
+import { PortadaConTrailer } from '../compartido/portada-trailer'
 import { IndiceColaborador, type Vista } from './indice'
 import { AsistenciaColaborador } from './components/asistencia-colaborador'
 import { asistenciaCompletada, asistenciaEnVivo, useAhora, type Confirmaciones } from './components/asistencia-estado'
@@ -121,7 +123,7 @@ function sembrarEjemplo(modo: string | null): boolean {
 
 export function Component() {
   const navigate = useNavigate()
-  const [parametros] = useSearchParams()
+  const [parametros, setParametros] = useSearchParams()
   const borrador = useBorrador()
   // De dónde se entró, para devolver al mismo paso. Sin esto el asistente reabría en el paso 1 y parecía que se
   // había perdido el trabajo, igual que pasaba al salir de «Agregar asistencia» (Dave, 2-oct).
@@ -178,6 +180,13 @@ export function Component() {
    * una o dos llamadas. El veredicto se fabrica aquí mismo, como lo fabrica el propio recurso al terminar.
    */
   useEffect(() => {
+    // `?vista=cierre` abre el final del contenido, que es lo que se enseña para hablar del certificado.
+    if (parametros.get('vista') === 'cierre' && paginaId === null) {
+      setEmpezado(true)
+      setVisitadas(orden.map((p) => p.id))
+      setVista('cierre')
+      return
+    }
     const pedida = parametros.get('pagina')
     if (!pedida || paginaId !== null) return
     const destino = orden.find((p) => p.id === pedida)
@@ -185,6 +194,14 @@ export function Component() {
     setEmpezado(true)
     setPaginaId(pedida)
     setVista('pagina')
+
+    // **En lineal, se llega como se habría llegado**: con las páginas anteriores ya recorridas. Si no, el índice las
+    // enseña bloqueadas y la pantalla miente sobre dónde está quien la mira. En navegación libre no hace falta, porque
+    // ahí se puede entrar a cualquier página sin haber hecho nada, que es justo lo que se quiere enseñar (Dave, 14-oct).
+    if (borrador.navegacion === 'lineal') {
+      const hasta = orden.findIndex((p) => p.id === pedida)
+      if (hasta > 0) setVisitadas(orden.slice(0, hasta).map((p) => p.id))
+    }
 
     const pedido = parametros.get('estado')
     if (pedido !== 'aprobado' && pedido !== 'reprobado') return
@@ -291,21 +308,75 @@ export function Component() {
   const asistenciasSinConfirmar = orden.filter((p) => !paginaCompletada(p)).length
   const cierreAccesible = !asistenciasSinConfirmar && (borrador.navegacion !== 'lineal' || !pendientes)
 
-  const irAPagina = (id: string) => {
-    setEmpezado(true)
-    setPaginaId(id)
-    setVista('pagina')
+  /**
+   * Lleva a una vista y **lo deja escrito en la dirección**.
+   *
+   * Cada pantalla de la vista previa tiene su enlace: la portada, cada página y el cierre. Es un playground, y
+   * enseñar algo aquí es mandar una dirección —«mírate solo la portada», «mírate la evaluación aprobada»—; sin esto
+   * había que explicar por dónde pasar para llegar (Dave, 14-oct).
+   *
+   * Reemplaza la entrada del historial en vez de apilar una nueva: recorrer diez páginas no puede dejar diez «atrás»
+   * entre quien mira y la pantalla de la que vino.
+   */
+  const mostrar = (siguiente: Vista, id?: string) => {
+    if (siguiente === 'pagina' && id) {
+      setEmpezado(true)
+      setPaginaId(id)
+    }
+    setVista(siguiente)
+    setParametros(
+      (previos) => {
+        const copia = new URLSearchParams(previos)
+        // `ejemplo`, `volver` y `destino` son de quien abrió la vista previa: se conservan tal cual.
+        copia.delete('pagina')
+        copia.delete('vista')
+        // El veredicto fabricado es de la página que se pidió por enlace; al moverse dejaría de corresponder.
+        copia.delete('estado')
+        if (siguiente === 'pagina' && id) copia.set('pagina', id)
+        else if (siguiente === 'cierre') copia.set('vista', 'cierre')
+        return copia
+      },
+      { replace: true },
+    )
   }
+
+  const irAPagina = (id: string) => mostrar('pagina', id)
 
   /** Al salir de una página queda vista; es lo que mueve el progreso y abre la siguiente. */
   const marcarVista = (id: string) => setVisitadas((v) => (v.includes(id) ? v : [...v, id]))
+
+  /**
+   * **En navegación libre, abrir una página de recurso la completa** (HU-navegación-libre, RN-06).
+   *
+   * Antes solo se completaba al pulsar «Continuar», así que saltando por el índice —que es justo lo que la navegación
+   * libre permite— no se finalizaba nunca nada: el índice se quedaba con todo en gris y el cierre, inalcanzable
+   * (Dave, 15-oct). En lineal no cambia: ahí se avanza en orden y «Continuar» es el gesto que completa.
+   *
+   * Quedan fuera las evaluaciones, que solo se completan al aprobarlas (RN-07), y la asistencia, que pide su
+   * confirmación. Saltar a la página 3 **no** completa la 1 ni la 2 (RN-05).
+   */
+  useEffect(() => {
+    if (vista !== 'pagina' || !pagina || borrador.navegacion === 'lineal') return
+    if (pagina.recurso?.tipo === 'evaluacion-final') return
+    if (!paginaCompletada(pagina)) return
+    marcarVista(pagina.id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagina?.id, vista, borrador.navegacion, confirmaciones])
+
+  /** Una evaluación queda completada **al aprobarla**, en los dos modos (RN-07). */
+  useEffect(() => {
+    const aprobadas = orden.filter((p) => p.recurso?.tipo === 'evaluacion-final' && resultados[p.id]?.aprobado).map((p) => p.id)
+    if (!aprobadas.length) return
+    setVisitadas((v) => (aprobadas.every((id) => v.includes(id)) ? v : [...v, ...aprobadas.filter((id) => !v.includes(id))]))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultados])
 
   const continuar = () => {
     if (!pagina) return
     marcarVista(pagina.id)
     const siguiente = orden[indice + 1]
     if (siguiente) irAPagina(siguiente.id)
-    else setVista('cierre')
+    else mostrar('cierre')
   }
 
   const salir = () => navigate(destino || `${rutaAsistente()}${volver}`)
@@ -336,7 +407,7 @@ export function Component() {
 
     if (vista === 'cierre') {
       return {
-        onRegresar: () => (orden.length ? irAPagina(orden[orden.length - 1].id) : setVista('portada')),
+        onRegresar: () => (orden.length ? irAPagina(orden[orden.length - 1].id) : mostrar('portada')),
         mensaje: pendientes ? 'Aún no has completado todas las páginas de este contenido.' : undefined,
         principal: pendientes
           ? { texto: 'Ir a lo pendiente', onClick: () => irAPagina((orden.find((p) => !visitadas.includes(p.id)) ?? orden[0]).id) }
@@ -344,9 +415,9 @@ export function Component() {
       }
     }
 
-    if (!pagina) return { principal: { texto: 'Continuar', onClick: () => setVista('portada') } }
+    if (!pagina) return { principal: { texto: 'Continuar', onClick: () => mostrar('portada') } }
 
-    const atras = () => (indice > 0 ? irAPagina(orden[indice - 1].id) : setVista('portada'))
+    const atras = () => (indice > 0 ? irAPagina(orden[indice - 1].id) : mostrar('portada'))
     const r = pagina.recurso
 
     // Una evaluación se responde y se envía antes de poder seguir; si no se aprueba, se reintenta.
@@ -416,7 +487,7 @@ export function Component() {
         return {
           onRegresar: atras,
           mensaje: `No alcanzaste el ${cfg.aprobacion} % para aprobar.`,
-          secundario: { texto: 'Ir al inicio', onClick: () => setVista('portada') },
+          secundario: { texto: 'Ir al inicio', onClick: () => mostrar('portada') },
           principal: {
             texto: 'Reintentar',
             onClick: () => {
@@ -563,8 +634,8 @@ export function Component() {
       }}
       progreso={progreso}
       empezado={empezado}
-      onPortada={() => setVista('portada')}
-      onCierre={() => setVista('cierre')}
+      onPortada={() => mostrar('portada')}
+      onCierre={() => mostrar('cierre')}
       onPagina={irAPagina}
     />
   )
@@ -668,22 +739,23 @@ function Portada({ borrador }: { borrador: Borrador }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="overflow-hidden rounded-xl border bg-card">
-        <div className="aspect-video w-full">
-          {p.imagen ? (
-            <img src={p.imagen} alt="Portada del contenido" className="size-full object-cover" />
-          ) : (
-            // Sin portada queda el espacio con su icono: así se ve qué le falta.
-            <Empty className="size-full bg-muted">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <HugeiconsIcon icon={Image01Icon} />
-                </EmptyMedia>
-              </EmptyHeader>
-            </Empty>
-          )}
-        </div>
-      </div>
+      {/* Con tráiler, la portada lleva su play: lo reproduce en el mismo hueco y, al acabar, vuelve la imagen. Es lo
+          que ve el colaborador en el catálogo (Dave, 15-oct). */}
+      <PortadaConTrailer
+        className="rounded-xl border"
+        imagen={p.imagen}
+        trailer={p.trailer}
+        sinImagen={
+          // Sin portada queda el espacio con su icono: así se ve qué le falta.
+          <Empty className="size-full bg-muted">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <HugeiconsIcon icon={Image01Icon} />
+              </EmptyMedia>
+            </EmptyHeader>
+          </Empty>
+        }
+      />
 
       {nombreCategoria(p.categoria) ? (
         <Frame>
@@ -726,15 +798,20 @@ function FichaPortada({ borrador, className }: { borrador: Borrador; className?:
     borrador.certificado.habilitado ? { icono: Certificate01Icon, valor: 'Con certificado' } : null,
   ].filter((d): d is { icono: typeof Clock01Icon; valor: string } => Boolean(d?.valor))
 
+  const etiquetaTipo = borrador.ruta ? 'Ruta de aprendizaje' : borrador.evento ? 'Evento' : nombreTipo(p.tipo)
+
   return (
     <Frame className={className}>
       <FramePanel className="flex flex-col gap-3">
-        {nombreTipo(p.tipo) ? (
+        {/* Un evento y una ruta no están en el catálogo de tipos —ahí solo hay curso, libro, pódcast…—, así que su
+            nombre sale de la clase del borrador. Sin esto, la vista previa de un evento se anunciaba como «Curso»,
+            igual que ya lo resuelve el resumen del asistente (Dave, 14-oct). */}
+        {etiquetaTipo ? (
           // El tipo de contenido va en **azul** y la categoría en **verde**, como en la app de UBITS, que es de
           // donde salió todo este rediseño. Se usan las variantes suaves del design system, no los colores de la
           // app a ojo (Dave, 7-oct).
           <Badge variant="primary-light" className="self-start">
-            {nombreTipo(p.tipo)}
+            {etiquetaTipo}
           </Badge>
         ) : null}
         <Heading as="h1" level={4}>
@@ -1005,32 +1082,32 @@ function Cierre({ borrador, pendientes }: { borrador: Borrador; pendientes: numb
           />
         ) : null}
         <FramePanel className="relative flex flex-col items-center gap-6 py-8 text-center">
-          <div className="flex flex-col items-center gap-4">
-            {listo ? (
+          {listo ? (
+            <div className="flex flex-col items-center gap-4">
               <ImagenGlass nombre="glass-tick" tamano={96} />
-            ) : (
-              <HugeiconsIcon icon={Clock01Icon} size={48} className="text-muted-foreground" aria-hidden="true" />
-            )}
-            <div className="flex flex-col gap-1.5">
-              <Heading as="h1" level={2}>
-                {listo ? '¡Felicidades!' : 'Todavía te falta algo'}
-              </Heading>
-              {listo ? (
-                <>
-                  <Text as="p" variant="muted">
-                    Has culminado con éxito el contenido
-                  </Text>
-                  <Text as="p" size="lg" weight="medium" className="text-balance">
-                    {titulo}
-                  </Text>
-                </>
-              ) : (
+              <div className="flex flex-col gap-1.5">
+                <Heading as="h1" level={2}>
+                  ¡Felicidades!
+                </Heading>
                 <Text as="p" variant="muted">
-                  Te {pendientes === 1 ? 'queda 1 página' : `quedan ${pendientes} páginas`} por completar de «{titulo}».
+                  Has culminado con éxito el contenido
                 </Text>
-              )}
+                <Text as="p" size="lg" weight="medium" className="text-balance">
+                  {titulo}
+                </Text>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* **Con páginas sin completar, el estado vacío del design system**, no una composición propia: icono
+               glass en su recuadro, título y una línea de qué falta. Antes era un reloj de FontAwesome a 48 px con
+               su propio título, que no se parecía a ningún otro vacío de la plataforma (Dave, 15-oct). */
+            <PrimeraVez
+              className="py-4"
+              icono="glass-clock"
+              titulo="Todavía te falta algo"
+              descripcion={`Te ${pendientes === 1 ? 'queda 1 página' : `quedan ${pendientes} páginas`} por completar de «${titulo}». Vuelve al índice y termínalas para cerrar el contenido.`}
+            />
+          )}
 
           {/* El certificado, como algo que ya está listo: su archivo, lo que pesa y el botón que lo baja. La descarga
               vive **aquí** y no en la barra de navegación, que es donde se avanza por el contenido: lo que se baja es

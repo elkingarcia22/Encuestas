@@ -1,5 +1,5 @@
 /**
- * Qué pregunta Orbit Flow: depende de para quién escribe y con qué modelo.
+ * Qué pregunta Orbit: depende de para quién escribe y con qué modelo.
  *
  * Antes el chat hacía las mismas cuatro preguntas siempre. Pero escribir el
  * norte de la empresa y escribir lo que carga un colaborador no son la misma

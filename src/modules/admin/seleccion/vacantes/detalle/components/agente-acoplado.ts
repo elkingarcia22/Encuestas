@@ -18,7 +18,7 @@ export function usePantallaGrande() {
   )
 }
 
-// Hueco del marco general para Orbit Flow: debajo del header, a la derecha del contenido (ver RootLayout; desde el 8 oct
+// Hueco del marco general para Orbit: debajo del header, a la derecha del contenido (ver RootLayout; desde el 8 oct
 // el header no se acorta al abrirlo). React vuelve a leerlo tras montar, así que aparece aunque el marco y la pantalla
 // se monten a la vez.
 const sinSuscripcion = () => () => {}

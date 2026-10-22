@@ -1,6 +1,17 @@
 import { useLayoutEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { createPortal } from 'react-dom'
-import { DataGridList, FrameFooter, type DataGridListConfig, type DataGridListProps } from '@ubits/flux-ui'
+import {
+  DataGridList,
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  FrameFooter,
+  type DataGridListConfig,
+  type DataGridListProps,
+} from '@ubits/flux-ui'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 import { PiePaginacion } from '@/modules/admin/seleccion/propuestas/components/paginacion'
 import { SIN_ARRASTRE } from './casos/sin-arrastre'
@@ -19,8 +30,8 @@ import './tabla-datos.css'
 // Es la única tabla del sistema (decisión 1 de la auditoría, 5-oct: MarcoTabla se retiró). Su cabecera es la de
 // Vacantes (Selección), que Cristian eligió como la buena:
 // - Arriba, en lo gris, solo el conteo a la izquierda («13 vacantes») y a la derecha el buscador y «Personalizar
-//   columnas». Sin título dentro del marco: el título lo da la página. Si una pantalla tiene varias tablas, cada una va
-//   en su `PageSection` con su título.
+//   columnas». Con `titulo`, el título va en lo gris sobre el conteo (16-oct, Nicolás: «no me les quites los títulos a
+//   las tablas»); sin él, el título lo da la página.
 // - Encabezados de columna de 40 px, con el asidero para mover cada columna y el borde para cambiarle el ancho.
 // - Las filas que nombran algo llevan título y, debajo, una línea gris (Vacante + Área). Es la misma fila cuando hay
 //   imagen: la miniatura a la izquierda y el título con su línea gris al lado (ver /design-system/data-grid).
@@ -38,6 +49,21 @@ import './tabla-datos.css'
 // (textos-libreria.ts) y la lupa encima del texto en el buscador de los filtros y el menú de columnas angosto
 // (tabla-datos.css).
 
+// El vacío por defecto de TablaDatos: la ilustración de buscar y una línea, sin botón (la tabla no sabe cómo limpiar).
+function VacioTabla({ nombre }: { nombre: string }) {
+  return (
+    <Empty className="py-14">
+      <EmptyHeader>
+        <EmptyMedia variant="default">
+          <ImagenGlass nombre="glass-search" />
+        </EmptyMedia>
+        <EmptyTitle>No hay {nombre} para mostrar</EmptyTitle>
+        <EmptyDescription>Prueba con otras palabras o quita los filtros.</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  )
+}
+
 export type PaginacionTabla = {
   pagina: number
   setPagina: Dispatch<SetStateAction<number>>
@@ -52,12 +78,15 @@ export function TablaDatos<T extends object>({
   paginacion,
   nombre,
   singular,
+  titulo,
   id,
   pieSoloSiHaceFalta = false,
   ...props
 }: DataGridListProps<T> & {
   config: Omit<DataGridListConfig<T>, 'pagination'>
   paginacion: PaginacionTabla
+  // El título de la tabla, en lo gris encima del conteo («Tus vacantes» / «19 vacantes»).
+  titulo?: string
   // Lo que se pagina, en plural: «planes», «personas».
   nombre: string
   // Y en singular, para el conteo de arriba cuando hay una sola fila: «1 plan», no «1 planes».
@@ -101,18 +130,28 @@ export function TablaDatos<T extends object>({
         : config.columns.map((columna) => ({ ...columna, ...SIN_ARRASTRE })),
     [config.columns, reordenable],
   )
+  // Regla «tabla-cabe» (8-oct): con la barra lateral abierta el marco mide 1.104 px. Mientras se maqueta, la tabla avisa
+  // en la consola si sus columnas suman más (auditoría del 13-oct: Avisos internos y Diagnóstico se salían sin que nadie
+  // lo viera).
+  if (import.meta.env.DEV) {
+    const ancho = columnas.reduce((suma, columna) => suma + (typeof columna.size === 'number' ? columna.size : 0), 0)
+    if (ancho > 1104) console.warn(`TablaDatos «${nombre}»: las columnas suman ${ancho} px y el marco mide 1.104 px. Reparte los anchos (regla tabla-cabe).`)
+  }
   const conteo = `${paginacion.total.toLocaleString('es-CO')} ${paginacion.total === 1 && singular ? singular : nombre}`
   const configuracion = {
     ...config,
     columns: columnas,
     cardVariant: config.cardVariant ?? 'borderless',
-    // Como Vacantes: siempre en su marco, con el conteo a la izquierda y sin título (el título es el de la página).
-    frame: { toolbar: 'header' as const, ...config.frame, title: undefined, description: config.frame?.description ?? conteo },
+    // Como Vacantes: siempre en su marco, con su título (si lo trae) y el conteo a la izquierda.
+    frame: { toolbar: 'header' as const, ...config.frame, title: titulo, description: config.frame?.description ?? conteo },
     layout: { dense: false, reorderable: true, resizable: true, pinnable: false, ...config.layout },
     // «Buscar asignación», no «Buscar Asignación...»: el nombre del filtro va en minúscula dentro de la frase.
     labels: { filterSearchPlaceholder: (filtro: string) => `Buscar ${filtro.toLowerCase()}`, ...config.labels },
     // `globalTotal`: el conteo de arriba es el total y no las filas de esta página.
     globalTotal: config.globalTotal ?? paginacion.total,
+    // Sin vacío propio, el del sistema con su ilustración glass (regla «vacios-con-glass»), no la lupa de línea de la
+    // librería. Lo mejor sigue siendo pasar SinResultados con la búsqueda y «Limpiar», como Diagnóstico.
+    emptyState: config.emptyState ?? { type: 'no-results' as const, customComponent: <VacioTabla nombre={nombre} /> },
   }
 
   const paginas = Math.max(1, Math.ceil(paginacion.total / paginacion.porPagina))

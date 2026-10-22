@@ -175,7 +175,7 @@ function questionResponsesSheet(name: string, position: number, question: FlatQu
     breakdown?.formatLabel ?? 'Pregunta',
     `${answered.length} respuestas`,
     ...(question.score !== null ? [`Puntaje ${question.score}`] : []),
-    ...(question.favorability !== null ? [`Favorabilidad ${question.favorability}%`] : []),
+    ...(question.favorability !== null ? [`Favorabilidad ${question.favorability} %`] : []),
   ].join('  ·  ')
 
   return {

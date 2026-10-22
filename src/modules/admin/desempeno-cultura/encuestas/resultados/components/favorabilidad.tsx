@@ -70,7 +70,7 @@ export function Favorabilidad({ resultados, segmento, onSegmento }: Props) {
         ayuda="Es el porcentaje de respuestas favorables en la escala de 1 a 5, considerando favorables el 4 y el 5: respuestas favorables ÷ total de respuestas. Los NS/NR se cuentan aparte."
         cifra={formatPercent(resultados.favorability)}
         lectura={LECTURA[tono]}
-        pie={`meta ${FAVORABILITY_TARGET}%`}
+        pie={`meta ${FAVORABILITY_TARGET} %`}
         tituloAnillos="Distribución de respuestas"
         totalAnillos={`${numero(total)} en total`}
         anillos={[

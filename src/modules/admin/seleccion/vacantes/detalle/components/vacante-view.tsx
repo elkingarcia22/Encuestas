@@ -16,7 +16,6 @@ import {
 import {
   Avatar,
   AvatarFallback,
-  Badge,
   Button,
   FloatingActionBar,
   Frame,
@@ -26,6 +25,7 @@ import {
   TabsTrigger,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { setRightPanelOpen } from '@/shared/components/right-panel-store'
@@ -117,7 +117,7 @@ export function VacanteView({ vacante }: { vacante: Vacante }) {
     cambiarCandidato(id, (c) => ({ ...c, etapa, dias: 0 }))
     notify(
       `${candidato.nombre} pasó a ${NOMBRE_ETAPA[etapa]}`,
-      etapa === 'seleccionado' ? 'Al enviar la oferta se cierra el proceso de la vacante.' : undefined,
+      etapa === 'seleccionado' ? 'Al enviar la oferta se cierra el proceso de la vacante.' : undefined, 'success',
     )
   }
 
@@ -139,13 +139,13 @@ export function VacanteView({ vacante }: { vacante: Vacante }) {
     setConfirmarDescarte(false)
     setAbiertoId(null)
     if (tarea.tipo === 'resumen' && tarea.candidatoId === abierto.id) setTarea({ tipo: 'inicio' })
-    notify(`${abierto.nombre} quedó descartado`, 'Recibirá el correo automático de rechazo configurado en la vacante.')
+    notify(`${abierto.nombre} quedó descartado`, 'Recibirá el correo automático de rechazo configurado en la vacante.', 'success')
   }
 
   const agregarNota = (texto: string) => {
     if (!abierto) return
     cambiarCandidato(abierto.id, (c) => ({ ...c, notas: [...c.notas, { id: Date.now(), autor: vacante.reclutador.nombre, fecha: hoy(), texto }] }))
-    notify('Nota agregada')
+    notify('Nota agregada', undefined, 'success')
   }
 
   // ── Agente ──
@@ -174,7 +174,7 @@ export function VacanteView({ vacante }: { vacante: Vacante }) {
     if (!notaResumen) return
     cambiarCandidato(notaResumen.candidatoId, (c) => ({ ...c, notas: c.notas.filter((n) => n.id !== notaResumen.notaId) }))
     setNotaResumen(null)
-    notify('Nota eliminada de la ficha')
+    notify('Nota eliminada de la ficha', undefined, 'success')
   }
 
   const confirmarMovimiento = () => {
@@ -185,14 +185,14 @@ export function VacanteView({ vacante }: { vacante: Vacante }) {
     setCandidatos((lista) => lista.map((c) => (confirmarMover.includes(c.id) ? { ...c, etapa: 'revision', dias: 0 } : c)))
     setMovidos({ ids: confirmarMover, previos })
     setConfirmarMover(null)
-    notify(`${confirmarMover.length} ${plural(confirmarMover.length, 'candidato pasó', 'candidatos pasaron')} a Para revisión`)
+    notify(`${confirmarMover.length} ${plural(confirmarMover.length, 'candidato pasó', 'candidatos pasaron')} a Para revisión`, undefined, 'success')
   }
 
   const deshacerMovimiento = () => {
     if (!movidos) return
     setCandidatos((lista) => lista.map((c) => (movidos.previos[c.id] ? { ...c, ...movidos.previos[c.id] } : c)))
     setMovidos(null)
-    notify('Los candidatos volvieron a su etapa anterior')
+    notify('Los candidatos volvieron a su etapa anterior', undefined, 'success')
   }
 
   const marco = {
@@ -275,7 +275,7 @@ export function VacanteView({ vacante }: { vacante: Vacante }) {
             </span>
             <span className="flex items-center gap-1.5">
               <HugeiconsIcon icon={Calendar03Icon} size={16} />
-              {vacante.diasAbierta} días abierta
+              {vacante.diasAbierta} {plural(vacante.diasAbierta, 'día', 'días')} abierta
             </span>
             <span className="flex items-center gap-1.5">
               <Avatar size="sm">
@@ -293,7 +293,7 @@ export function VacanteView({ vacante }: { vacante: Vacante }) {
               onClick={() => {
                 const siguiente = estado === 'Pausada' ? 'Publicada' : 'Pausada'
                 setEstado(siguiente)
-                notify(siguiente === 'Pausada' ? 'Vacante pausada' : 'Vacante publicada de nuevo', siguiente === 'Pausada' ? 'Deja de recibir postulaciones.' : 'Vuelve a recibir postulaciones.')
+                notify(siguiente === 'Pausada' ? 'Vacante pausada' : 'Vacante publicada de nuevo', siguiente === 'Pausada' ? 'Deja de recibir postulaciones.' : 'Vuelve a recibir postulaciones.', 'success')
               }}
             >
               <HugeiconsIcon icon={estado === 'Pausada' ? PlayIcon : PauseIcon} />
@@ -352,7 +352,7 @@ export function VacanteView({ vacante }: { vacante: Vacante }) {
               onMover={moverDesdeTablero}
               onSoltar={(id, etapa) => {
                 const candidato = candidatos.find((c) => c.id === id)
-                if (candidato) notify(`${candidato.nombre} pasó a ${NOMBRE_ETAPA[etapa]}`)
+                if (candidato) notify(`${candidato.nombre} pasó a ${NOMBRE_ETAPA[etapa]}`, undefined, 'success')
               }}
             />
           </section>

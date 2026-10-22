@@ -54,7 +54,7 @@ const GUIDE = [
     text: 'preguntas abiertas, que cruzan varios módulos o cuando todavía no se sabe en qué pantalla está la respuesta.',
   },
   {
-    title: 'Mejor Orbit Flow cuando',
+    title: 'Mejor Orbit cuando',
     text: 'el trabajo es sobre lo que ya está abierto: un registro, un campo o una selección. Ahí no conviene sacar a nadie de su pantalla.',
   },
   {

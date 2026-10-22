@@ -12,8 +12,11 @@ const TAREAS = '/admin/tareas'
 const AVISOS = '/admin/avisos-internos'
 const AVISO_BORRADOR = '/admin/avisos-internos/av-107/editar'
 const VACANTE = '/admin/seleccion/vacantes/analista-de-datos'
-// «Vacantes» del menú todavía es un slot: la lista maquetada es la de la exploración 1 de Selección.
-const VACANTES = '/admin/seleccion/exploraciones/uno'
+// 13-oct: Vacantes ya es una pantalla real (la del menú) y crear es una página, no una ventana por pasos.
+const VACANTES = '/admin/seleccion/vacantes'
+const VACANTES_CREAR = '/admin/seleccion/vacantes/crear'
+// La tarjeta de IA «Crear un curso» ya no está en el Inicio del admin: se ve en la plantilla Home operativo.
+const HOME_OPERATIVO = '/design-system/templates/home-operativo'
 const EXPEDIENTE = '/admin/seleccion/vacantes/ejecutivo-comercial/candidatos/sebastian-vargas'
 const DATOS_EMPRESA = '/admin/configuracion/datos-empresa'
 const PERSONALIZACION = '/admin/configuracion/personalizacion'
@@ -36,23 +39,23 @@ export const EN_ACCION: Record<string, PantallaReal[]> = {
     { titulo: 'Gestión de usuarios', detalle: 'Cuerpo de 1.140 px con migas y tabla.', ruta: GESTION_USUARIOS },
   ],
   icons: [
-    { titulo: 'Accesos rápidos', detalle: 'Iconos Glass en «Quick actions» del Inicio.', ruta: '/admin' },
+    { titulo: 'Accesos rápidos', detalle: 'Iconos Glass en las «Acciones rápidas» del Inicio.', ruta: '/admin' },
     { titulo: 'Gestión de usuarios', detalle: 'Hugeicons en el menú de cada fila y en «Acciones masivas».', ruta: GESTION_USUARIOS },
     { titulo: 'Editor de contenidos', detalle: 'Hugeicons en la barra del editor.', ruta: LMS },
   ],
   marco: [
-    { titulo: 'Inicio del admin', detalle: 'Barra lateral, barra superior y pie completos.', ruta: '/admin' },
+    { titulo: 'Inicio del admin', detalle: 'Barra lateral y barra superior; el pie solo sale en las páginas de inicio.', ruta: '/admin' },
     { titulo: 'Orbit', detalle: 'El mismo marco en modo Orbit, con historial.', ruta: SUITE_AI },
     { titulo: 'Gestión de usuarios', detalle: 'Marco con migas de pan.', ruta: GESTION_USUARIOS },
     { titulo: 'Portal del colaborador', detalle: 'El marco con el menú del colaborador.', ruta: COLABORADOR },
-    { titulo: 'Menús del encabezado', detalle: 'Notificaciones, perfil y buscador ⌘K.', ruta: TAREAS },
-    { titulo: 'Ventana de edición', detalle: 'Selección › «Crear vacante»: el editor por pasos en ventana.', ruta: VACANTES },
+    { titulo: 'Menús del encabezado', detalle: 'Notificaciones y perfil.', ruta: TAREAS },
+    { titulo: 'Crear vacante', detalle: 'Crear en una página: una sola salida junto al título y la barra de guardado abajo.', ruta: VACANTES_CREAR },
   ],
   botones: [
     { titulo: 'Gestión de usuarios', detalle: 'Primario, secundario y «Acciones masivas» en la cabecera.', ruta: GESTION_USUARIOS },
-    { titulo: 'Crear usuario', detalle: 'Guardar y cancelar al pie del formulario.', ruta: `${GESTION_USUARIOS}/crear` },
-    { titulo: 'Crear un curso', detalle: 'Botón de IA con orbe en el Inicio.', ruta: '/admin' },
-    { titulo: 'Editor de contenidos', detalle: 'Cierra el agente y aparece «Orbit Flow».', ruta: LMS },
+    { titulo: 'Crear usuario', detalle: 'Una sola salida junto al título; «Atrás» y seguir al pie del formulario, sin «Cancelar».', ruta: `${GESTION_USUARIOS}/crear` },
+    { titulo: 'Crear un curso', detalle: 'Botón de IA con orbe en la plantilla Home operativo.', ruta: HOME_OPERATIVO },
+    { titulo: 'Editor de contenidos', detalle: 'Cierra el agente y aparece «Orbit».', ruta: LMS },
     { titulo: 'Aprobar un plan', detalle: 'Aprobar y publicar en una conversación de Orbit.', ruta: `${SUITE_AI}/chat/vacaciones` },
   ],
   storybook: [
@@ -78,14 +81,13 @@ export const EN_ACCION: Record<string, PantallaReal[]> = {
     { titulo: 'Menú del colaborador', detalle: 'Las secciones del portal del colaborador.', ruta: COLABORADOR },
   ],
   header: [
-    { titulo: 'Header del Workspace', detalle: '⌘K, novedades, notificaciones y perfil (ayuda va en el menú de perfil).', ruta: '/admin' },
-    { titulo: 'Header de un editor', detalle: 'Nombre, estado del borrador y «Orbit Flow».', ruta: LMS },
+    { titulo: 'Header del Workspace', detalle: 'Novedades, notificaciones y perfil (ayuda va en el menú de perfil).', ruta: '/admin' },
+    { titulo: 'Header de un editor', detalle: 'Nombre, estado del borrador y «Orbit».', ruta: LMS },
     { titulo: 'Header en Orbit', detalle: 'El mismo header; el centro de procesos se abre desde notificaciones.', ruta: SUITE_AI },
   ],
   drawers: [
     { titulo: 'Ficha de usuario', detalle: 'Menú de una fila › «Ver».', ruta: GESTION_USUARIOS },
     { titulo: 'Vista previa de encuesta', detalle: 'Acción «Vista previa de la encuesta» en una fila.', ruta: ENCUESTAS },
-    { titulo: 'Agregar asignación', detalle: 'Botón «Agregar asignación»: drawer por pasos.', ruta: `${PLANES_FORMACION}/nuevo?tipo=contenidos` },
     { titulo: 'Plan con IA', detalle: 'Botón «Generar plan con IA».', ruta: `${COLABORADOR}/progreso` },
     { titulo: 'Ficha de candidato', detalle: 'Toca un candidato en el tablero de la vacante.', ruta: VACANTE },
     { titulo: 'Historial de un aviso', detalle: 'Menú de una fila › «Ver historial».', ruta: AVISOS },
@@ -93,7 +95,6 @@ export const EN_ACCION: Record<string, PantallaReal[]> = {
   modales: [
     { titulo: 'Confirmar eliminar', detalle: 'Acción «Eliminar» en una encuesta.', ruta: ENCUESTAS },
     { titulo: 'Comparar encuestas', detalle: 'Botón «Comparar encuestas».', ruta: ENCUESTAS },
-    { titulo: 'Crear vacante', detalle: 'Ventana por pasos desde la lista de vacantes.', ruta: VACANTES },
     { titulo: 'Publicar contenido', detalle: 'Botón «Publicar» del editor.', ruta: LMS },
     { titulo: 'Enviar recordatorio', detalle: 'Botón «Enviar recordatorio» del progreso.', ruta: `${COLABORADOR}/progreso` },
     { titulo: 'Archivar un aviso', detalle: 'Menú de una fila › «Archivar».', ruta: AVISOS },
@@ -117,7 +118,8 @@ export const EN_ACCION: Record<string, PantallaReal[]> = {
     { titulo: 'Encuestas', detalle: 'Carga al abrir y eliminar varias a la vez.', ruta: ENCUESTAS },
     { titulo: 'Participantes de un plan', detalle: 'Tabla dentro del detalle de un registro.', ruta: `${PLANES_FORMACION}/p-01` },
     { titulo: 'Avisos internos', detalle: 'Miniatura, estado y métricas por aviso.', ruta: AVISOS },
-    { titulo: 'Tabla de vacantes', detalle: 'Estado, embudo en miniatura y quién espera respuesta.', ruta: VACANTES },
+    { titulo: 'Tabla de vacantes', detalle: 'Filtros con chips, carpetas, elegir todas y la barra de abajo.', ruta: VACANTES },
+    { titulo: 'Mis candidatos', detalle: 'Orden que se invierte, por qué salió y el panel con anterior y siguiente.', ruta: '/admin/seleccion/candidatos/dos' },
   ],
   metricas: [
     { titulo: 'Inicio del admin', detalle: 'Fila de cifras con variación y gráficos de área y dona.', ruta: '/admin' },
@@ -131,7 +133,7 @@ export const EN_ACCION: Record<string, PantallaReal[]> = {
     { titulo: 'Crear plan de formación', detalle: 'Fechas y campos que dependen de otros.', ruta: `${PLANES_FORMACION}/nuevo?tipo=contenidos` },
     { titulo: 'Carga masiva por pasos', detalle: 'Stepper con archivo, revisión y confirmación.', ruta: `${GESTION_USUARIOS}/carga-masiva/crear` },
     { titulo: 'Inicio de sesión', detalle: 'Campos con icono y pestañas.', ruta: '/design-system/templates/auth' },
-    { titulo: 'Editor de un aviso', detalle: 'Contadores, link y carga de imagen con validación.', ruta: '/admin/avisos-internos/nuevo' },
+    { titulo: 'Editor de un aviso', detalle: 'Contadores, link y carga de imagen con validación.', ruta: `${AVISOS}/crear` },
     { titulo: 'Personalización', detalle: 'Carga de logos con vista previa y guardar cambios.', ruta: PERSONALIZACION },
   ],
   ia: [
@@ -139,16 +141,16 @@ export const EN_ACCION: Record<string, PantallaReal[]> = {
     { titulo: 'Aprobación encadenada', detalle: 'Plan por aprobar y panel de actividad.', ruta: `${SUITE_AI}/chat/vacaciones` },
     { titulo: 'Propuesta con métricas', detalle: 'Tarjeta de propuesta e indicador de escritura.', ruta: `${SUITE_AI}/chat/evaluaciones` },
     { titulo: 'Modo voz', detalle: 'El orbe a pantalla completa.', ruta: `${SUITE_AI}/voz` },
-    { titulo: 'Crear un curso', detalle: 'Tarjeta con degradado de IA en el Inicio.', ruta: '/admin' },
+    { titulo: 'Crear un curso', detalle: 'Tarjeta con degradado de IA en la plantilla Home operativo.', ruta: HOME_OPERATIVO },
     { titulo: 'Agente en una vacante', detalle: 'Resumen con fuentes y comparación de finalistas.', ruta: VACANTE },
     { titulo: 'Expediente del candidato', detalle: 'El icono de IA en las pestañas y tarjetas de evaluación; Roleplay con alerta de trampa.', ruta: `${EXPEDIENTE}?pestana=roleplay` },
   ],
   'agente-contextual': [
-    { titulo: 'Editor de contenidos', detalle: 'El agente abierto a la derecha; se cierra y vuelve con «Orbit Flow».', ruta: LMS },
+    { titulo: 'Editor de contenidos', detalle: 'El agente abierto a la derecha; se cierra y vuelve con «Orbit».', ruta: LMS },
     { titulo: 'Actividad del agente', detalle: 'Panel de actividad en una conversación.', ruta: `${SUITE_AI}/chat/vacaciones` },
     { titulo: 'Plan con IA', detalle: 'El agente completa un plan del colaborador.', ruta: `${COLABORADOR}/progreso` },
-    { titulo: 'Resumir y comparar candidatos', detalle: 'Vacante › «Orbit Flow»; marca 2 candidatos y compara.', ruta: VACANTE },
-    { titulo: 'Resumir en el expediente', detalle: '«Orbit Flow» › Resumir y toca una fuente: cambia de pestaña y la resalta.', ruta: '/admin/seleccion/vacantes/analista-de-datos/candidatos/laura-mendez' },
+    { titulo: 'Resumir y comparar candidatos', detalle: 'Vacante › «Orbit»; marca 2 candidatos y compara.', ruta: VACANTE },
+    { titulo: 'Resumir en el expediente', detalle: '«Orbit» › Resumir y toca una fuente: cambia de pestaña y la resalta.', ruta: '/admin/seleccion/vacantes/analista-de-datos/candidatos/laura-mendez' },
     { titulo: 'Reescribir y revisar un aviso', detalle: 'Borrador de aviso › «Publicar» o «Hazlo más corto».', ruta: AVISO_BORRADOR },
   ],
 }

@@ -13,7 +13,7 @@ const METRICS: Cifra[] = [
   { valor: '24', etiqueta: 'Vencidas' },
   { valor: '80', etiqueta: 'Asignadas' },
   { valor: '70 %', etiqueta: 'Terminación' },
-  { valor: '18 sep', etiqueta: 'Cierre del ciclo' },
+  { valor: '18 sept', etiqueta: 'Cierre del ciclo' },
 ]
 
 // Primeras 10 personas con evaluación vencida, como en el prototipo.
@@ -39,7 +39,7 @@ export function MetricsCard({ reminderSent, onSendReminder }: MetricsCardProps) 
         <span className="min-w-0 flex-1 text-[13px] text-foreground/70">
           {reminderSent
             ? 'Fuente: Evaluaciones 360 · Recordatorio enviado 9:52 · 24 personas notificadas'
-            : 'Fuente: Evaluaciones 360 · Periodo 1–10 sep · Actualizado hace 12 min'}
+            : 'Fuente: Evaluaciones 360 · Periodo 1–10 sept · Actualizado hace 12 min'}
         </span>
         <Button variant="outline" size="sm" onClick={() => setParticipants(true)}>
           Ver 24 participantes
@@ -53,7 +53,7 @@ export function MetricsCard({ reminderSent, onSendReminder }: MetricsCardProps) 
         open={participants}
         onOpenChange={setParticipants}
         title="24 evaluaciones vencidas"
-        sub="Ventas · periodo 1–10 sep"
+        sub="Ventas · periodo 1–10 sept"
         items={OVERDUE}
         note="Se muestran 10 de 24"
         cancelLabel="Cerrar"

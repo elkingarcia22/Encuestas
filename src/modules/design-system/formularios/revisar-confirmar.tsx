@@ -3,7 +3,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import {
   Alert02Icon,
   Building03Icon,
-  Certificate01Icon,
   CheckmarkCircle02Icon,
   Mail01Icon,
   Mortarboard01Icon,
@@ -35,14 +34,12 @@ import {
   FieldLegend,
   FieldSet,
   FieldTitle,
-  IconTile,
   Input,
   Item,
   ItemActions,
   ItemContent,
   ItemDescription,
   ItemGroup,
-  ItemMedia,
   ItemTitle,
   RadioGroup,
   RadioGroupItem,
@@ -53,12 +50,12 @@ import {
   SelectValue,
   Separator,
   Text,
-  toast,
 } from '@ubits/flux-ui'
-import { ActionDialog } from '@/shared/components/ActionDialog'
 import { BotonIcono } from '@/shared/components/BotonIcono'
+import { notify } from '@/shared/components/notify'
 
 import { COLABORADORES } from '../data-grid/data'
+import { DialogoConfirmar, RegistroConfirmar } from '../estados/confirmaciones'
 import { textoDeRango } from '../patrones/formato'
 import { CasoUbits } from '../patrones/piezas'
 import { RangoDeFechas, type Rango } from './rango-de-fechas'
@@ -132,7 +129,7 @@ export function FormularioRevisarConfirmar() {
       ...previas,
     ])
     setResultado('registrada')
-    toast.add({ type: 'success', title: 'Solicitud registrada', description: `Te llegará un correo a ${CORREO}.` })
+    notify('Solicitud registrada', `Te llegará un correo a ${CORREO}.`, 'success')
   }
 
   const repetir = (solicitud: Solicitud) => {
@@ -155,7 +152,7 @@ export function FormularioRevisarConfirmar() {
       historia="la historia «Descarga masiva de certificados»"
       reglas={[
         { titulo: 'Tres modos', detalle: 'Global, por contenido o por colaborador.' },
-        { titulo: 'Revisar antes de generar', detalle: 'Toda solicitud pasa por el resumen «Revisa y confirma tu solicitud».' },
+        { titulo: 'Revisar antes de generar', detalle: 'Toda solicitud pasa por la ventana «¿Pedir la descarga de certificados?», con el resumen de lo que se pide.' },
         { titulo: 'Sin duplicados en 48 horas', detalle: 'Si es igual a una reciente, no se genera y se dice cómo seguir.' },
         { titulo: 'Llega por correo', detalle: 'El enlace se envía a quien la pidió y dura 2 días.' },
         { titulo: 'No se envía incompleta', detalle: 'Por colaborador sin elegir a la persona muestra el error en el campo.' },
@@ -321,54 +318,26 @@ export function FormularioRevisarConfirmar() {
       </div>
 
       {/* RN-02: resumen y confirmación explícita antes de generar. */}
-      <ActionDialog
-        open={revisando}
-        onOpenChange={setRevisando}
-        title="Revisa y confirma tu solicitud"
-        sub="Se generará un archivo con todos los certificados que cumplan esto."
-        cancelLabel="Volver a editar"
-        confirmLabel="Confirmar solicitud"
-        onConfirm={confirmar}
+      {/* 13-oct (regla dos-ventanas): confirmar con lo que se toca va en DialogoConfirmar con RegistroConfirmar, no en
+          ActionDialog. El título es fijo; qué se pide y para cuándo va en la tarjeta. */}
+      <DialogoConfirmar
+        abierto={revisando}
+        onAbiertoChange={setRevisando}
+        icono={Mail01Icon}
+        titulo="¿Pedir la descarga de certificados?"
+        descripcion={`Se generará un solo archivo comprimido con los certificados que cumplan esto. Llega a ${CORREO} y el enlace estará disponible 2 días.`}
+        cancelar="Volver a editar"
+        accion="Pedir descarga"
+        onConfirmar={confirmar}
       >
-        <ItemGroup className="flex flex-col gap-2">
-          <Item variant="muted" size="sm">
-            <ItemMedia>
-              <IconTile variant="soft" size="sm">
-                <HugeiconsIcon icon={modoActual.icono} aria-hidden="true" />
-              </IconTile>
-            </ItemMedia>
-            <ItemContent>
-              <ItemTitle>
-                {modoActual.titulo}
-                {filtro ? ` · ${filtro}` : ''}
-              </ItemTitle>
-              <ItemDescription>Emitidos entre {textoDeRango(rango)?.toLowerCase()}</ItemDescription>
-            </ItemContent>
-          </Item>
-          <Item variant="muted" size="sm">
-            <ItemMedia>
-              <IconTile variant="soft" size="sm">
-                <HugeiconsIcon icon={Certificate01Icon} aria-hidden="true" />
-              </IconTile>
-            </ItemMedia>
-            <ItemContent>
-              <ItemTitle>Unos {certificados} certificados</ItemTitle>
-              <ItemDescription>En un solo archivo comprimido</ItemDescription>
-            </ItemContent>
-          </Item>
-          <Item variant="muted" size="sm">
-            <ItemMedia>
-              <IconTile variant="soft" size="sm">
-                <HugeiconsIcon icon={Mail01Icon} aria-hidden="true" />
-              </IconTile>
-            </ItemMedia>
-            <ItemContent>
-              <ItemTitle>Llega a {CORREO}</ItemTitle>
-              <ItemDescription>El enlace estará disponible 2 días</ItemDescription>
-            </ItemContent>
-          </Item>
-        </ItemGroup>
-      </ActionDialog>
+        <RegistroConfirmar
+          nombre={`${modoActual.titulo}${filtro ? ` · ${filtro}` : ''}`}
+          detalle={`Emitidos entre ${textoDeRango(rango)?.toLowerCase()} · unos ${certificados} certificados`}
+          estado="Por generar"
+          tono="neutro"
+          icono={modoActual.icono}
+        />
+      </DialogoConfirmar>
     </CasoUbits>
   )
 }

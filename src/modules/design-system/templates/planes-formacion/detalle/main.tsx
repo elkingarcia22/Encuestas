@@ -15,11 +15,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
   Progress,
   ProgressLabel,
   ProgressValue,
@@ -27,10 +22,12 @@ import {
   toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { notify, notifyAction } from '@/shared/components/notify'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { BotonIcono } from '@/shared/components/BotonIcono'
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import { PageSection } from '@/shared/components/PageShell'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
 
 import { ConfirmarEliminar, Indicadores, Persona } from '../../../data-grid/casos/seguimiento'
 import { SIN_ARRASTRE } from '../../../data-grid/casos/sin-arrastre'
@@ -153,12 +150,12 @@ export function Component() {
     const copia = { ...plan, id: `p-${Date.now()}`, nombre: `Copia de ${plan.nombre}`, estado: 'Planeado' as const, procesando: undefined, tocado: Date.now() }
     setPlanes((todos) => [copia, ...todos])
     // Se deshace con un clic: se duplica sin preguntar y el aviso trae «Deshacer».
-    toast.add({
-      type: 'success',
-      title: 'Plan duplicado',
-      description: `«${copia.nombre}» quedó en Planeado para que le cambies las fechas.`,
-      actionProps: { children: 'Deshacer', onClick: () => setPlanes((todos) => todos.filter((p) => p.id !== copia.id)) },
-    })
+    notifyAction(
+      'Plan duplicado',
+      `«${copia.nombre}» quedó en Planeado para que le cambies las fechas.`,
+      { label: 'Deshacer', onClick: () => setPlanes((todos) => todos.filter((p) => p.id !== copia.id)) },
+      'success',
+    )
   }
 
   const config: DataGridListConfig<Fila> = {
@@ -186,24 +183,24 @@ export function Component() {
           onClick: (seleccion) => {
             const pendientes = seleccion.filter((f) => f.progreso < 100)
             if (pendientes.length) setRecordando(pendientes)
-            else toast.add({ type: 'info', title: 'No hay a quién recordarle', description: 'Las personas elegidas ya terminaron el plan.' })
+            else notify('No hay a quién recordarle', 'Las personas elegidas ya terminaron el plan.', 'info')
           },
         },
       ],
     },
+    // Sin resultados con la ilustración glass del sistema y «Limpiar» (13-oct, I-182).
     emptyState: {
       type: 'no-results',
-      title: 'No se encontraron resultados',
-      description: 'Prueba con otro nombre o quita el filtro de avance.',
-      action: {
-        id: 'limpiar',
-        label: 'Limpiar filtros',
-        variant: 'outline',
-        onClick: () => {
-          setBusqueda('')
-          setFiltros([])
-        },
-      },
+      customComponent: (
+        <SinResultados
+          busqueda={busqueda}
+          filtrosActivos={filtros.filter((f) => Array.isArray(f.value) && f.value.length > 0).length}
+          onLimpiar={() => {
+            setBusqueda('')
+            setFiltros([])
+          }}
+        />
+      ),
     },
     // Sin `layout`: la tabla sale como todas (5-oct), con encabezados de 40 px y el asidero de cada columna.
     frame: { toolbar: 'header' },
@@ -214,7 +211,7 @@ export function Component() {
     <div className="flex flex-1 flex-col gap-6 pt-2">
       <EncabezadoPantalla
         titulo={`Detalle del ${textos.singular.toLowerCase()}`}
-        volver={{ ruta: ruta(), etiqueta: 'Volver a Planes de formación' }}
+        volver={{ ruta: ruta(), etiqueta: 'Planes de formación' }}
         acciones={
           // Más acciones en el «⋯» del sistema (BotonIcono), el primero de la fila, con su menú alineado al inicio
           // (decisión 15 de la auditoría).
@@ -300,17 +297,11 @@ export function Component() {
         // sistema en vez del icono de línea (decisión 14 de la auditoría).
         <Card>
           <CardContent>
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="default">
-                  <ImagenGlass nombre="glass-calendar" />
-                </EmptyMedia>
-                <EmptyTitle>Este plan empieza el {fechaCorta(plan.inicio)}</EmptyTitle>
-                <EmptyDescription>
-                  Cuando arranque verás aquí quién avanza y quién no. {totalPersonas(plan).toLocaleString('es-CO')} personas ya lo tienen asignado.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+            <PrimeraVez
+              icono="glass-calendar"
+              titulo={`Este plan empieza el ${fechaCorta(plan.inicio)}`}
+              descripcion={`Cuando arranque verás aquí quién avanza y quién no. ${totalPersonas(plan).toLocaleString('es-CO')} personas ya lo tienen asignado.`}
+            />
           </CardContent>
         </Card>
       )}
@@ -326,7 +317,7 @@ export function Component() {
         onConfirmar={() => {
           setEliminando(false)
           setPlanes((todos) => todos.filter((p) => p.id !== plan.id))
-          toast.add({ type: 'success', title: 'Plan eliminado', description: `«${plan.nombre}» ya no aparece en la Zona de estudio de nadie.` })
+          notify('Plan eliminado', `«${plan.nombre}» ya no aparece en la Zona de estudio de nadie.`, 'success')
           navigate(ruta())
         }}
       />
@@ -340,7 +331,7 @@ export function Component() {
         descripcion={`Le llegará un correo a ${recordando.length} ${plural(recordando.length, 'persona', 'personas')} que ${plural(recordando.length, 'no ha', 'no han')} terminado «${plan.nombre}», con lo que le falta y la fecha de cierre (${fechaCorta(plan.fin)}).`}
         accion={`Enviar a ${recordando.length} ${plural(recordando.length, 'persona', 'personas')}`}
         onConfirmar={() => {
-          toast.add({ type: 'success', title: 'Recordatorio enviado', description: `Va en camino a ${recordando.length} ${plural(recordando.length, 'persona', 'personas')}.` })
+          notify('Recordatorio enviado', `Va en camino a ${recordando.length} ${plural(recordando.length, 'persona', 'personas')}.`, 'success')
           setRecordando([])
           setLimpiarSeleccion({})
         }}

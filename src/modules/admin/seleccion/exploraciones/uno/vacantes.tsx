@@ -51,7 +51,7 @@ import { DialogoCompartirVacante } from '../../propuestas/components/acciones-va
 import { CatalogoPlantillas } from '../../vacantes/components/catalogo-plantillas'
 import { esPropia } from '../../vacantes/components/plantillas-propias'
 import type { PlantillaCatalogo } from '../../vacantes/components/datos'
-import { useCarga } from '../../propuestas/components/carga'
+import { useCarga } from '@/modules/design-system/estados/carga'
 
 // Exploración 1 · «La bandeja» — pantalla 1 de 2: las vacantes.
 //
@@ -283,18 +283,14 @@ export function ListaVacantes({ ruta: RUTA }: { ruta: string }) {
   useEffect(() => {
     if (!llegada || avisada.current) return
     avisada.current = true
-    if (llegada.publicada && compartiendo) notify(`Publicamos «${compartiendo.titulo}»`, 'Ya recibe candidatos. Comparte el enlace para empezar.')
+    if (llegada.publicada && compartiendo) notify(`Publicamos «${compartiendo.titulo}»`, 'Ya recibe candidatos. Comparte el enlace para empezar.', 'success')
     navigate(location.pathname, { replace: true, state: null })
   }, [llegada, compartiendo, navigate, location.pathname])
   const usarPlantilla = (plantilla: PlantillaCatalogo) => {
-    // Una propia guarda la vacante completa: se abre la creación con todo lleno. Las del catálogo, como en Vacantes,
-    // todavía solo avisan.
-    if (esPropia(plantilla)) {
-      navigate(`${RUTA}/crear`, { state: { desdePlantilla: plantilla.id } })
-      return
-    }
-    notify(`Usarías «${plantilla.nombre}»`, `Punto de partida con el perfil y las ${plantilla.etapas} etapas del proceso ya armadas.`)
+    // Una propia guarda la vacante completa: se abre la creación con todo lleno. Las del catálogo abren la creación con su
+    // perfil y sus etapas (13-oct, nada-que-finja: antes solo avisaban lo que harían), como en el inicio de esta exploración.
     setCatalogoAbierto(false)
+    navigate(`${RUTA}/crear`, { state: esPropia(plantilla) ? { desdePlantilla: plantilla.id } : { plantillaSistema: plantilla.id } })
   }
 
   // Lo que hay dentro de cada vacante. Sin useMemo: la lista tiene que reflejar la vacante que se acaba de crear.
@@ -440,7 +436,6 @@ export function ListaVacantes({ ruta: RUTA }: { ruta: string }) {
         <DialogoCompartirVacante
           abierto
           onAbiertoChange={(abierto) => !abierto && setCompartiendo(null)}
-          id={compartiendo.id}
           titulo={compartiendo.titulo}
           conEnlace={compartiendo.estado === 'Publicada'}
           oculta={compartiendo.oculta}

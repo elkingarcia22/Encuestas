@@ -112,6 +112,24 @@ Para cambiar un contenido publicado está el botón **«Editar»** de la cabecer
 consciente y no el efecto de un clic en la lista. Eso también deja **todos los títulos de la lista en
 azul**: antes solo el borrador llevaba a algún lado.
 
+> **El flujo de edición todavía no existe.** «Editar» llevaba al asistente de creación, y eso no es editar: se
+> entraba por el paso 1 de «Crear contenido» con la ficha cargada, sin saber si al guardar se reemplazaba el
+> contenido o se creaba otro. Estaba confundiendo a quien prueba el playground, así que hasta que el flujo exista
+> **el botón lo dice y no lleva a ninguna parte** (Dave, 15-oct). Vale para todas las puertas: el botón de la
+> cabecera y los asuntos de la franja que ofrecen «Editar recurso», «Editar roleplay» o «Revisar la visibilidad».
+
+**«Editar» va a la vista, como secundario** entre el «⋯» y «Descargar» (Dave, 15-oct). Estuvo un tiempo dentro del
+menú de tres puntos —la idea era que entrar a mirar no invitara a tocar—, pero mirar cómo va un contenido y arreglar
+lo que se ve son el mismo rato de trabajo: el análisis de arriba termina casi siempre en «Editar recurso», y tener
+que ir a buscar la edición en un menú rompe ese camino.
+
+La fila de la cabecera queda así: **«⋯» · Editar · Descargar**. En el menú se queda lo que se abre de vez en cuando:
+
+| En el menú | Qué hace |
+| --- | --- |
+| **Vista de colaborador** | La vista previa (RN-47). Se llama igual que el botón del asistente: es la misma pantalla, y decirle «Vista previa» aquí y «Vista del colaborador» allá hacía pensar en dos cosas |
+| **Historial de cambios** | El hilo de quién tocó qué (RN-42). No aparece en un borrador |
+
 ### RN-17: cada pestaña se lee igual
 
 Todas las pestañas tienen la misma anatomía, que es lo que las vuelve una sola pantalla y no seis:
@@ -139,19 +157,23 @@ quien no la ha hecho mezcla «no pudo» con «no quiso», y son dos problemas di
 
 Hoy conviven una pestaña Descargas y un botón «✉ Solicitar» que manda un correo, y a partir de ahí
 nadie sabe si el archivo salió, falló o ya llegó. En el rediseño es **un solo panel**, que abre el
-botón «Descargar» de la cabecera, con dos pestañas:
+botón «Descargar» de la cabecera. Dentro, **«Tipo de reporte»** —«Elige qué archivo quieres descargar»— con una fila
+por archivo, cada una con su icono, su nombre y su formato; solo se ofrece lo que el contenido tiene, así que sin
+roleplay no aparece el reporte de roleplay. Debajo, a quiénes incluir y, al final, lo que se está preparando con su
+barra y su botón de descarga. El panel lleva **su icono en la cabecera**, como el de Resultados de encuestas.
 
-- **Reportes** — configuración: qué archivo quieres. Un informe en PDF para compartir (con
-  interruptor por cada parte que lleva) y los archivos de datos en XLSX. Solo se ofrece lo que el
-  contenido tiene: sin roleplay no aparece el reporte de roleplay.
-- **Descargas** — estado: lo ya pedido, con su barra de preparación y su botón de descarga.
+Los archivos se llaman por lo que traen: «Progreso por persona», «Resultados de evaluaciones», «Respuestas de las
+evaluaciones», «Respuestas de las encuestas» e «Intentos de roleplay».
 
-Al pedir un archivo el panel salta solo a «Descargas», para que se vea que el pedido se registró. Y
-**cerrar el panel no cancela nada**: lo que se está preparando sigue, y avisa al terminar. El botón
+**Cerrar el panel no cancela nada**: lo que se está preparando sigue, y avisa al terminar. El botón
 de la cabecera cambia a «Preparando archivo» mientras haya algo en curso, así el estado se ve sin
 abrir el panel.
 
 ### RN-20: una pestaña nueva, «Análisis con IA»
+
+> **Reescrita por RN-46**, que es la que manda: **dejó de ser una pestaña** y es la franja de «lo que necesita tu
+> atención», encima del filtro de fechas. De las dos reglas de abajo, el **nivel de confianza** ya no se enseña en
+> pantalla —sigue en el Excel del informe— y **«Ver los datos»** desapareció: cada asunto tiene una sola salida.
 
 Las demás pestañas dicen **qué pasó**; esta dice **dónde mirar y por qué**: dónde se cae la gente,
 qué evaluación traba, qué objetivo del roleplay no se está enseñando. Dos reglas la hacen utilizable
@@ -167,10 +189,20 @@ para defender una decisión:
 Las que el contenido **puede** tener, aunque estén vacías, y entonces el vacío dice qué hacer para
 llenarlas. Una pestaña que aparece y desaparece entre contenidos hace que nadie sepa dónde buscar.
 
-- Con evaluaciones: **Evaluaciones** y **Gestión de intentos**.
+- Siempre: **Progreso**, que va primera.
 - Si es un evento: **Asistencias**.
 - Si tiene roleplay: **Roleplay**.
-- Siempre: **Progreso** y **Análisis con IA**.
+- Con evaluaciones: **Evaluaciones** y **Gestión de intentos**.
+- Si pregunta algo: **Encuestas** (RN-45).
+
+Lo que había que hacer con el contenido **ya no es una pestaña**: vive arriba, en su franja (RN-46).
+
+**El orden sigue el recorrido del contenido** (Dave, 15-oct): primero cuánto se avanzó, después lo que se practicó y
+al final lo que se midió. Por eso **Roleplay va antes que Evaluaciones**, y Gestión de intentos pegada a Evaluaciones,
+que es de lo que habla.
+
+**En un evento, Asistencias sube justo detrás de Progreso.** La asistencia es de lo que trata un evento, no un detalle
+al final de la fila. En un contenido que no es evento —si alguna vez trae asistencias— se queda al final.
 
 ### RN-22: el detalle del intento de roleplay trae la conversación
 
@@ -192,7 +224,7 @@ el avance solo puede ir de 12,5 en 12,5, y la tabla y el panel enseñan siempre 
 ### RN-24: la asistencia se mide en personas, no en filas
 
 Una fila de Asistencias es **una persona en una sesión**: quien fue a dos sesiones tiene dos filas. La cobertura cuenta
-personas distintas, y el detalle dice las dos cosas: «9 de 10 inscritos · 10 asistencias». Contando filas, un evento al
+personas distintas, y el detalle dice las dos cosas: «9 de 10 personas · 10 asistencias». Contando filas, un evento al
 que una persona fue dos veces y otra ninguna salía al 100 %.
 
 ### RN-25: el panel de progreso se deriva de la persona
@@ -314,8 +346,8 @@ La encuesta de satisfacción es **una página más** del contenido, así que no 
 respuestas son tantas como personas lo completaron. Si fueran menos, la cifra no cuadraría con la de finalización y la
 pestaña se contradiría consigo misma.
 
-Su gráfico es **la misma dona** que «Estado de los inscritos», con un tramo por nota de 1 a 5 y el color según lo que
-значит la nota. Así las tres lecturas de la fila se leen igual.
+Su gráfico es **la misma dona** que «Lo han iniciado», con un tramo por nota de 1 a 5 y el color según lo que
+significa la nota. Así las tres lecturas de la fila se leen igual.
 
 ### RN-39: las cifras no se califican
 
@@ -331,10 +363,18 @@ leían como uno solo.
 
 | Pestaña | Cifra | Reparto | Tercera |
 | --- | --- | --- | --- |
-| Progreso | Finalización | Estado de los inscritos | **Satisfacción** |
+| Progreso | Finalización | **Lo han iniciado** (RN-43) | **Satisfacción** |
 | Evaluaciones | Aprobación | Resultado de las evaluaciones | **Intentos por persona** |
-| Roleplay | **Personas que aprobaron** | Resultado de los intentos | **Intentos por persona** |
+| Roleplay | **Personas que aprobaron** | — | **Intentos por persona** |
+| Encuestas | — | — | — |
 | Asistencias | Asistencia | Cómo se confirmó | Sesión más concurrida |
+
+**Roleplay se queda sin su reparto** (Dave, 15-oct): repartir los intentos en aprobados y no aprobados decía lo mismo
+que la cifra de al lado, que ya cuenta por persona.
+
+**Encuestas se queda sin fila de métricas, entera.** La satisfacción ya se lee en Progreso y repetirla encima de la
+tabla no añadía nada: esa pestaña es para leer **lo que contestó cada quien**, y lo que de verdad hace falta hacer con
+una encuesta lo dice el análisis con IA, que ofrece bajarse el reporte con los comentarios.
 
 En Roleplay la cifra se cuenta **por persona y no por intento**: lo que se quiere saber es si acabaron lográndolo, no
 cuántas veces fallaron por el camino. Quien aprueba al tercer intento aprobó.
@@ -364,3 +404,222 @@ que contar.
 
 Lleva **buscador** por persona y por cambio: el historial de un contenido vivo pasa de treinta líneas en nada, y
 entonces la pregunta deja de ser «¿qué ha pasado?» para ser «¿quién tocó las evaluaciones?».
+
+
+### RN-43: «Lo han iniciado», no «Estado de los inscritos»
+
+Dos cambios en la segunda lectura de Progreso, los dos de Cristian Niño (14-oct).
+
+**El término.** Se deja de decir «inscritos». A un contenido educativo **nadie se inscribe**: se entra y se empieza.
+Colarlo aquí promete una lista de apuntados que no existe, y lo traía de los eventos, que es el único sitio donde sí
+hay inscripción.
+
+**La lectura.** En vez del reparto por estado, la segunda columna enseña **cuánta gente lo ha iniciado de la que podía
+haberlo iniciado**: «22 de 55 · 40 %». Saber que lo empezaron 22 personas no dice nada sin saber cuántas podían.
+Veintidós de veinticinco es un éxito; veintidós de toda la empresa, un problema de difusión.
+
+El denominador depende de **la visibilidad**, y la línea de abajo lo explica siempre: un contenido publicado le llega a
+toda la empresa; uno privado, oculto o archivado, solo a quien lo tenga asignado.
+
+
+### RN-44: desde cuándo se está mirando
+
+Toda la pantalla cuelga de un **rango de fechas**, con **el último mes ya puesto dentro del campo**. Sin él, Resultados
+decía «22 personas» sin decir nunca «22 desde cuándo», y las cifras de un contenido de hace dos años no se parecen en
+nada a las de este mes (Cristian Niño, 14-oct).
+
+**Un solo control**, como en producción: el campo de rango, que al abrirlo enseña el último mes seleccionado y deja
+cambiarlo. Se probó la otra forma —un selector de atajos («Últimos 30 días», «Último año», «Personalizado») con el
+rango a mano escondido detrás del último— y se descartó: dos controles para una sola pregunta, y el de atajos tapaba
+al que de verdad responde «¿cómo le fue la semana del lanzamiento?» (Dave, 15-oct).
+
+Es `RangoDeFechas`, la pieza del design system que ya usan el filtro de Tareas y los formularios de planes y
+objetivos. No hace falta tocar nada de nadie.
+
+**Dónde vive.** En **su propia fila, encima de las pestañas y alineado a la derecha** —el lado de los controles de la
+página—. Manda sobre la pantalla entera, y los otros tres sitios que se probaron dicen algo que no es (Dave, 14 y
+15-oct):
+
+| Dónde | Qué parece |
+| --- | --- |
+| Debajo de las pestañas, dentro del contenido | El filtro de la pestaña abierta |
+| En la propia franja de las pestañas | Lo mismo |
+| En la fila de acciones, junto a «⋯» y «Descargar» | Una acción sobre el contenido, y no lo es |
+
+**Cómo recorta.** Cada cosa entra por **su** fecha: una persona por el día que empezó, un bloqueo por el día que se
+bloqueó, una asistencia por el día que se confirmó. Eso no se escribe en pantalla, pero es lo que hace que las cifras
+cuadren. Se aplica a los datos **una sola vez**, antes de repartirlos a las pestañas: si cada una filtrara lo suyo,
+bastaría que una se olvidara para que la pantalla diera dos cifras distintas de lo mismo.
+
+Dos cosas **no** se mueven con el rango:
+
+- **Qué pestañas tiene el contenido.** Un mes corto no puede hacer desaparecer la de asistencias: cambiar de fechas
+  cambiaría el mapa de la pantalla.
+- **A cuánta gente le llega** (el denominador de RN-43). Recortar a un mes encogía también «de cuántos», y entonces
+  el porcentaje no se movía nunca.
+
+**Viaja con lo que se descarga:** el nombre del archivo lleva el rango y cada hoja lo dice en su cabecera. Un archivo
+sacado con un mes puesto llega al correo de alguien que no vio el filtro, y sin eso lo lee como si fuera todo.
+
+**Hasta un año atrás, y nada del futuro.** El calendario apaga los dos extremos, así que ni siquiera se pueden
+intentar: más de un año no tendría sentido pedirlo —ni el informe lo tendría, ni el sistema lo serviría en un tiempo
+razonable—, y una fecha futura no existe todavía, así que ofrecerla solo sirve para que alguien se pregunte por qué
+sale vacío (Dave, 15-oct).
+
+**Cada cambio de fechas se relee, y se ve que se está releyendo.** La pantalla se tapa con el mismo estado que usa el
+editor cuando la IA genera preguntas —el orbe, «Analizando los resultados del periodo» y los segundos que lleva— y no
+se puede tocar hasta que termina. Dos razones:
+
+- En el producto, cambiar el periodo es **volver a pedirlo todo**. Aquí el dato ya está en memoria y el cambio sería
+  instantáneo; dejarlo así haría que la maqueta prometiera algo que el sistema real no puede dar.
+- Sin ese momento, cambiar las fechas movía siete cifras de golpe y parecía un parpadeo.
+
+Tarda **lo que tardaría**: de dos segundos a quince, en proporción a lo largo que sea el periodo —un año son los
+quince—. Solo con el rango completo: entre el primer y el segundo clic del calendario no hay nada que releer.
+
+**En la dirección**, en dos parámetros: `?desde=2026-10-01&hasta=2026-10-10`. Se escriben **en una sola operación**:
+yendo en dos seguidas, la segunda pisaba a la primera —leía la dirección antes de que la primera se aplicara—, así
+que al elegir el primer día se guardaba `hasta` y se perdía `desde`, el campo se quedaba en «Elige desde y hasta» y
+no filtraba nada (Dave, 15-oct). Con solo el primer día elegido, la pantalla enseña **de ese día en adelante** en vez
+de vaciarse.
+
+### RN-45: el nombre se abre, también en Evaluaciones y en Encuestas
+
+Lo que ya hacía Roleplay lo hacen ahora las tres pestañas de personas: **el nombre de la tabla se abre** y el panel
+enseña, pregunta por pregunta, qué marcó esa persona (Cristian Niño, 14-oct). La tabla dice **quién** falló; el panel,
+**en qué**, que es lo único que se puede arreglar. Con varias evaluaciones —o varias encuestas— van en pestañas dentro
+del panel: verlas seguidas en una columna estrecha hace perder de vista cuál se está leyendo.
+
+Quién está abierto va en la dirección (`?persona=<correo>`), **el mismo parámetro que ya usaba Progreso**: un enlace a
+una persona la abre en la pestaña en la que estés, y no hay tres nombres distintos para la misma cosa.
+
+**La lista de preguntas es la misma pieza en los dos sitios**, porque la pregunta es la misma. Lo único que cambia es
+si se califica:
+
+| | Evaluación | Encuesta |
+| --- | --- | --- |
+| Opción marcada | Verde si acertó, roja si no | Negrita, sin color |
+| La que era correcta | Se señala aunque no la marcara («Era la correcta») | No existe |
+| Insignia de la pregunta | Correcta / Incorrecta | Ninguna |
+
+En una encuesta **no hay respuesta buena**: pintar una opinión de verde o de rojo la convierte en un examen.
+
+#### La pestaña de Encuestas
+
+Aparece cuando el contenido pregunta algo, y cubre las dos encuestas del Creator: la **de satisfacción**, que escribió
+UBITS y no se edita —por eso sus respuestas se comparan entre contenidos—, y la **libre**, que arma quien crea el
+contenido.
+
+Sus tres lecturas:
+
+| Cifra | Reparto | Tercera |
+| --- | --- | --- |
+| Satisfacción (promedio de 1 a 5) | Cómo lo puntuaron, una nota por tramo | **Lo que más señalan** |
+
+«Lo que más señalan» sale de la segunda pregunta de satisfacción, **sin contar «todo estuvo bien»**: contarlo taparía
+los motivos que sí lo son. Es la lectura que dice qué arreglar, que es a lo que se viene.
+
+Las notas de la tabla **son las mismas** que reparte el gráfico de arriba, así que el panel y la cabecera no se pueden
+contradecir.
+
+
+### RN-46: lo que necesita tu atención, encima de todo
+
+Lo que hay que hacer con el contenido **no es una pestaña**: es la **franja de «N cosas necesitan tu atención»**, y va
+arriba del todo, **encima del filtro de fechas** y de las pestañas.
+
+Fue una pestaña —«Análisis con IA», la primera— y el problema no era cómo se veía sino **dónde estaba**: una pestaña
+vive por debajo del filtro de fechas, así que elegir una semana podía esconder que hay gente bloqueada. Arriba se lee
+siempre, y **no depende del periodo**: quién está bloqueado lo está hoy, se esté mirando el último mes o el último año
+(Dave, 15-oct).
+
+Por eso estos avisos se calculan **sobre todos los datos del contenido**, no sobre los del rango elegido. Es la misma
+razón por la que el denominador de «lo han iniciado» tampoco se mueve con las fechas (RN-43).
+
+#### La pieza es la que ya existe
+
+`BloqueAtencion`, la franja que estrenó Vacantes y que usan también Contenidos y Planes de formación: plegada enseña
+todos los asuntos en una línea separados por «·», y al abrirla, una fila por asunto con su icono, su frase y su
+acción. No se arma nada nuevo.
+
+**Solo entra lo que pide una acción.** Las lecturas buenas —«la tasa de finalización es alta»— se quedan fuera: en una
+franja que se llama «lo que necesita tu atención», una felicitación es ruido. Siguen vivas como cifras en las
+pestañas.
+
+**Lo que se pierde al cambiar de sitio**, y conviene tenerlo presente: el orbe y «Volver a analizar». La franja es la
+pieza genérica de avisos del admin y no se anuncia como IA.
+
+#### El mapa de lo que puede decir
+
+Cada situación tiene **un** sitio al que ir. Si no hay adónde, no se dice: un aviso sin salida solo preocupa.
+
+| Lo que se mira | Cuándo salta | Qué se ofrece | Adónde lleva |
+| --- | --- | --- | --- |
+| **Bloqueos** | Alguien se quedó sin intentos | **Gestionar intentos** | Gestión de intentos |
+| **Evaluación** | Se reprueba | **Editar recurso** | El contenido en el paso de recursos |
+| **Difusión** | Lo ha abierto menos de la mitad de quien podía | **Crear plan de contenidos** | El flujo de planes de formación |
+| Finalización | Por debajo del 70 %, sin evaluación detrás | Ver dónde se detienen | Progreso |
+| Finalización | Del 70 % para arriba (va bien) | Ver el recorrido | Progreso |
+| Intentos por persona | Media de 2 o más, y ninguna evaluación saltó ya | Editar recurso | El contenido, recursos |
+| Gente sin terminar | Alguien empezó y no volvió | Enviar recordatorio | Progreso |
+| **Asistencia sin registrar** | Nadie tiene asistencia confirmada (solo eventos) | Cargar asistencias | Asistencias |
+| **Sin sesión a la que entrar** | Hay asistencias, pero alguien no aparece en ninguna (solo eventos) | **Editar recurso** | El contenido, recursos |
+| **Roleplay** | Un objetivo se queda sin alcanzar | **Editar roleplay** | El contenido, recursos (su edición propia cuando exista) |
+| **Encuesta** | Hay comentarios de mejora | **Descargar reporte** | Prepara el XLSX de encuestas y abre el panel |
+
+**Las dos lecturas de asistencia nunca salen juntas**, que es lo que las separa de ser la misma dicha dos veces: si
+no hay ninguna confirmación, lo que falta es **cargarlas**; si las hay y aun así alguien no aparece en ninguna sesión,
+a esa persona le falta **una sesión a la que ir**, y eso se arregla agregándola al recurso de asistencia. En un evento
+la asistencia es el contenido: quien no fue a ninguna no puede completarlo, y queda parado hasta que haya otra
+(Dave, 15-oct).
+
+Las dos se leen **sobre los datos sin filtrar**, no sobre el periodo: quién asistió y quién no es un estado de hoy, no
+una cifra del mes que se esté mirando. Con el último mes puesto, las confirmaciones de agosto quedaban fuera y nueve
+personas que sí fueron salían como si no hubieran ido nunca.
+
+**Los bloqueos van primero, siempre.** Es el único punto que deja a alguien **parado esperando** a que tú hagas algo;
+todo lo demás es mejorar el contenido (Dave, 15-oct). Lo mismo vale para quien se quedó sin sesión a la que entrar:
+los dos van arriba, antes que nada que hable del contenido.
+
+**La evaluación es un solo punto, y dice qué preguntas.** Antes salían dos filas seguidas —«el avance se detiene en
+X» y «la pregunta 2 de X concentra los errores»— que eran la misma cosa contada dos veces. Lo útil es el cruce: dónde
+se detiene y **qué preguntas se contestan mal**, que es lo que se va a reescribir. Se nombran las que falla más de la
+mitad, como mucho tres: con más, deja de ser una indicación y pasa a ser otra tabla.
+
+**La difusión no se arregla cambiando el contenido.** Dejarlo disponible no es difundirlo: lo que mueve la aguja es
+asignarlo en un plan con una fecha y un seguimiento detrás, así que la acción entra en el flujo de planes de Cristian.
+
+**De la encuesta, lo valioso no es la media: son los comentarios**, y esos no caben en una fila. Por eso el punto solo
+avisa de que los hay y la acción **prepara el reporte de encuestas y lo baja**, sin abrir el panel para volver a
+elegirlo.
+
+La única buena que se queda —la finalización alta— sigue ahí: una pantalla que solo dice lo que está mal no se abre
+dos veces.
+
+#### Una cosa por problema
+
+Antes salían dos filas seguidas —«la mayoría no termina» y «donde más se traba la gente es X»— que decían lo mismo con
+otras palabras, porque la primera ya contaba que la caída estaba en la evaluación. Si las dos cosas pasan a la vez, es
+**una** fila con un sitio al que ir. Dos filas repitiéndose hacen dudar de las dos. Por lo mismo, lo de los intentos
+por persona solo sale cuando no saltó ya nada sobre esa evaluación.
+
+
+### RN-47: la vista previa enseña un contenido de verdad
+
+«Vista previa» desde Resultados abría **la portada y la página de cierre, y nada en medio**: el prototipo recupera la
+ficha de un contenido de la lista, pero sus páginas no viajan con él. Una vista previa sin páginas no es la vista
+previa de nada (Dave, 14-oct).
+
+Así que la ficha de **este** contenido —su título, su portada, su categoría, su duración— se monta sobre las páginas
+del ejemplo:
+
+| Tipo | Qué se enseña |
+| --- | --- |
+| El curso de ejemplo (`f007`) | Lo suyo, que es el único con recursos reales |
+| **Evento** | El ejemplo de evento, con sus **asistencias**, que es de lo que trata un evento |
+| Curso, libro y los demás | El ejemplo normal: 3 secciones y 9 páginas, con vídeo, SCORM, evaluaciones, roleplay y encuestas |
+| **Ruta de aprendizaje** | **Pendiente**: todavía no hay vista previa de rutas. Se abre solo con su ficha |
+
+De paso se arregla la insignia del tipo en la vista del colaborador: un evento se anunciaba como «Curso». El catálogo
+de tipos solo tiene curso, libro, pódcast y compañía, así que el nombre de un evento o de una ruta sale de la clase
+del borrador, igual que ya lo resolvía el resumen del asistente.

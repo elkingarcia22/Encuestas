@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Download04Icon, UserMultipleIcon } from '@hugeicons/core-free-icons'
-import { Button, Heading, Text } from '@ubits/flux-ui'
-import { ActionDialog } from '@/shared/components/ActionDialog'
+import { Download04Icon, Mail01Icon, UserMultipleIcon } from '@hugeicons/core-free-icons'
+import { Button } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { WS } from '../../drawers/components/drawer-styles'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../../navegacion/components/case-frame'
 import { AgentNote, AgentStage, AgentThread, ContextPanel, ReopenAgentButton, UserBubble, type PanelState } from '../components/agent-kit'
 import { PILL } from '../components/agent-styles'
@@ -32,6 +32,7 @@ export function Component() {
   const [step, setStep] = useState(0)
   const [countdown, setCountdown] = useState(30)
   const [confirm, setConfirm] = useState(false)
+  const [programando, setProgramando] = useState(false)
   const [undone, setUndone] = useState(false)
   const [snapshot, setSnapshot] = useState<{ ids: string[]; reached: number; steps: string[] } | null>(null)
   const thread = useAgentThread()
@@ -80,7 +81,7 @@ export function Component() {
   const setChannel = (key: keyof Channels, value: boolean) => {
     const next = { ...channels, [key]: value }
     if (!next.email && !next.app) {
-      notify('Deja al menos un canal')
+      notify('Deja al menos un canal', undefined, 'warning')
       return
     }
     setChannels(next)
@@ -178,12 +179,27 @@ export function Component() {
             onFallback={() => setFallback(true)}
             previewName={chosen[0].name}
           />
+          {/* Orden de una fila (13-oct, I-464): primero el secundario y a la derecha el primario. */}
           <div className="mt-4 flex flex-wrap items-center gap-2.5">
-            <Button data-undo-focus="" className={PILL} onClick={() => setConfirm(true)}>
-              Enviar recordatorio
-            </Button>
-            <Button variant="outline" className={PILL} onClick={() => notify('Recordatorio programado para mañana a las 8:00')}>
+            <Button
+              variant="outline"
+              className={PILL}
+              onClick={() => {
+                setProgramando(true)
+                setConfirm(true)
+              }}
+            >
               Programar para mañana
+            </Button>
+            <Button
+              data-undo-focus=""
+              className={PILL}
+              onClick={() => {
+                setProgramando(false)
+                setConfirm(true)
+              }}
+            >
+              Enviar recordatorio
             </Button>
           </div>
         </>
@@ -218,7 +234,7 @@ export function Component() {
       hint="El agente arma el envío, muestra el impacto y pide confirmación"
       width="default"
       anatomy={false}
-      back={{ label: 'Casos de Orbit Flow', to: '/design-system/agente-contextual' }}
+      back={{ label: 'Casos de Orbit', to: '/design-system/agente-contextual' }}
     >
       <AgentStage state={panel} onOpen={() => setPanel('open')} panel={agentPanel}>
         <div className="@container px-8 py-6">
@@ -229,7 +245,7 @@ export function Component() {
               description="Ciclo Q3 2026 · cerraba el 5 de septiembre. Elige a quién recordarle y pídeselo al agente."
               actions={
                 <>
-                  <Button variant="outline" className={WS} onClick={() => notify('Exportando la lista a Excel')}>
+                  <Button variant="outline" className={WS} onClick={() => notify('Exportando la lista a Excel', undefined, 'info')}>
                     <HugeiconsIcon icon={Download04Icon} size={16} />
                     Exportar
                   </Button>
@@ -262,27 +278,32 @@ export function Component() {
         </div>
       </AgentStage>
 
-      {/* Confirmación corta en la ventana única (auditoría 5-oct): título fijo; a cuántos y por dónde, en la primera línea. */}
-      <ActionDialog
-        open={confirm}
-        onOpenChange={setConfirm}
-        size="sm"
-        title="Enviar recordatorio"
-        sub="Sale a nombre de Talento Humano · Meta Colombia y queda en el historial de cada persona. Tendrás 30 segundos para deshacerlo."
-        lead={
-          <>
-            <Heading as="h3" level={6}>
-              {reached} {reached === 1 ? 'persona' : 'personas'} · Evaluación 360 Q3
-            </Heading>
-            <Text as="span" variant="muted" size="sm">
-              {impact}
-            </Text>
-          </>
+      {/* Confirmar un envío a varias personas va en DialogoConfirmar con RegistroConfirmar (regla «dos-ventanas», 13-oct;
+          antes era un ActionDialog con el registro en la primera línea): título fijo; a cuántos y por dónde, en la tarjeta.
+          Programar pregunta igual que enviar. */}
+      <DialogoConfirmar
+        abierto={confirm}
+        onAbiertoChange={setConfirm}
+        icono={Mail01Icon}
+        titulo={programando ? '¿Programar el recordatorio?' : '¿Enviar el recordatorio?'}
+        descripcion={
+          programando
+            ? 'Sale mañana a las 8:00 a nombre de Talento Humano · Meta Colombia y queda en el historial de cada persona.'
+            : 'Sale a nombre de Talento Humano · Meta Colombia y queda en el historial de cada persona. Tendrás 30 segundos para deshacerlo.'
         }
-        cancelLabel="Revisar"
-        confirmLabel="Enviar ahora"
-        onConfirm={startSend}
-      />
+        cancelar="Revisar"
+        accion={programando ? 'Programar para mañana' : 'Enviar ahora'}
+        onConfirmar={() => {
+          if (programando) {
+            setConfirm(false)
+            notify('Recordatorio programado', `Sale mañana a las 8:00 a ${reached} ${reached === 1 ? 'persona' : 'personas'}.`, 'success')
+            return
+          }
+          startSend()
+        }}
+      >
+        <RegistroConfirmar nombre="Evaluación 360 Q3" detalle={impact} estado={`${reached} ${reached === 1 ? 'persona' : 'personas'}`} tono="neutro" icono={Mail01Icon} />
+      </DialogoConfirmar>
     </CaseFrame>
   )
 }

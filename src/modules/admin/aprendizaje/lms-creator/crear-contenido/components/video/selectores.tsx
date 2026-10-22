@@ -5,7 +5,6 @@ import {
   Avatar as AvatarUi,
   AvatarFallback,
   AvatarImage,
-  Badge,
   Button,
   Checkbox,
   Field,
@@ -34,6 +33,7 @@ import {
   Text,
   cn,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIa } from '@/shared/components/BotonIa'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
@@ -542,7 +542,7 @@ export function CampoAvatar({ valor, estilo, sector, genero, onValor, deshabilit
       <FieldDescription>
         {admite
           ? 'Se usará en las escenas con presentador. Solo en Corporativo y Fotografía Real.'
-          : 'Solo disponible con estilo Corporativo o Fotografía Real, para que coincida con el look del video.'}
+          : 'Solo disponible con estilo Corporativo o Fotografía Real, para que coincida con el aspecto del video.'}
       </FieldDescription>
       <Item variant="outline" className="items-center">
         <ItemMedia>
@@ -650,7 +650,7 @@ export function ModalAvatar({ abierto, valor, genero, onCerrar, onGuardar, conAp
               onCerrar()
             }}
           >
-            Guardar
+            Guardar cambios
           </Button>
         </>
       }

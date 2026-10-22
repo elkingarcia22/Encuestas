@@ -28,6 +28,7 @@ import {
   ToggleGroupItem,
 } from '@ubits/flux-ui'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
+import { usePanelActual } from '@/modules/design-system/drawers/components/panel-actual'
 import { Hint } from '@/shared/components/Hint'
 import { notify } from '@/shared/components/notify'
 import { AMBITION_META, AMBITION_ORDER, type AmbitionLevel } from '../../../modelo/constructor/aiObjectiveGenerator'
@@ -49,6 +50,10 @@ function useFormulario({ objetivo, alcance, onCerrar }: { objetivo: Objective; a
   const [tema, setTema] = useState<string>(area?.themes[0]?.id ?? TEMA_NUEVO)
   const [temaNuevo, setTemaNuevo] = useState('')
   const [nivel, setNivel] = useState<AmbitionLevel>('retador')
+  // Algo elegido o escrito distinto de lo que ofrece al abrir (I-251, 13-oct): el panel ya no se cierra al tocar fuera y,
+  // al cerrarlo, pregunta «Seguir editando · Descartar».
+  const [alAbrir] = useState(() => `${areaId}|${tema}|${nivel}`)
+  const cambiado = temaNuevo.trim() !== '' || `${areaId}|${tema}|${nivel}` !== alAbrir
 
   const esNuevo = tema === TEMA_NUEVO
   const sePuede = esNuevo ? temaNuevo.trim() !== '' : tema !== ''
@@ -84,12 +89,12 @@ function useFormulario({ objetivo, alcance, onCerrar }: { objetivo: Objective; a
     })
     if (guardado) {
       const destino = esNuevo ? temaNuevo.trim() : (opcionesTema.find((opcion) => opcion.value === tema)?.label ?? '')
-      notify('Objetivo guardado en el banco', `Quedó en ${area?.name ?? ''} · ${destino}.`)
+      notify('Objetivo guardado en el banco', `Quedó en ${area?.name ?? ''} · ${destino}.`, 'success')
     }
     onCerrar()
   }
 
-  return { sePuede, guardar, cuerpo: (
+  return { sePuede, cambiado, guardar, cuerpo: (
     <Frame>
       <FrameHeader>
         <FrameTitle>Datos del objetivo</FrameTitle>
@@ -113,6 +118,7 @@ function useFormulario({ objetivo, alcance, onCerrar }: { objetivo: Objective; a
           <Field>
             <FieldLabel htmlFor="banco-guardar-area">Área</FieldLabel>
             <Select value={areaId} onValueChange={(valor) => cambiarArea(valor as string)} items={opcionesArea}>
+              {/* Fondo blanco: el selector es transparente y se pierde sobre el gris (diferencias.json › select-trigger-fondo-solido). */}
               <SelectTrigger id="banco-guardar-area" className="w-full bg-background!">
                 <SelectValue placeholder="Selecciona el área" />
               </SelectTrigger>
@@ -129,6 +135,7 @@ function useFormulario({ objetivo, alcance, onCerrar }: { objetivo: Objective; a
           <Field>
             <FieldLabel htmlFor="banco-guardar-tema">Tema</FieldLabel>
             <Select value={tema} onValueChange={(valor) => setTema(valor as string)} items={opcionesTema}>
+              {/* Fondo blanco: el selector es transparente y se pierde sobre el gris (diferencias.json › select-trigger-fondo-solido). */}
               <SelectTrigger id="banco-guardar-tema" className="w-full bg-background!">
                 <SelectValue placeholder="Selecciona el tema" />
               </SelectTrigger>
@@ -150,6 +157,7 @@ function useFormulario({ objetivo, alcance, onCerrar }: { objetivo: Objective; a
           {esNuevo ? (
             <Field>
               <FieldLabel htmlFor="banco-guardar-tema-nuevo">Nombre del tema nuevo</FieldLabel>
+              {/* Fondo blanco: el campo es transparente y se pierde sobre el gris (diferencias.json › input-group-fondo-solido). */}
               <Input id="banco-guardar-tema-nuevo" className="bg-background!" value={temaNuevo} placeholder="Escribe el nombre del tema" autoFocus onChange={(evento) => setTemaNuevo(evento.target.value)} />
             </Field>
           ) : null}
@@ -175,22 +183,32 @@ function useFormulario({ objetivo, alcance, onCerrar }: { objetivo: Objective; a
   ) }
 }
 
+// «Cancelar» hace lo mismo que la X: con algo elegido pregunta antes de descartarlo (regla «panel-con-datos»). Va dentro
+// del pie del panel, que es donde se conoce el panel que lo envuelve.
+function BotonCancelar({ alCancelar }: { alCancelar: () => void }) {
+  const panel = usePanelActual()
+  return (
+    <Button variant="outline" onClick={() => (panel ? panel.cerrarPanel() : alCancelar())}>
+      Cancelar
+    </Button>
+  )
+}
+
 function DrawerGuardar({ objetivo, alcance, abierto, onAbiertoChange }: GuardarEnBancoProps) {
   const cerrar = () => onAbiertoChange(false)
-  const { sePuede, guardar, cuerpo } = useFormulario({ objetivo, alcance, onCerrar: cerrar })
+  const { sePuede, cambiado, guardar, cuerpo } = useFormulario({ objetivo, alcance, onCerrar: cerrar })
   return (
     <DrawerShell
       open={abierto}
       onOpenChange={onAbiertoChange}
+      conCambios={cambiado}
       size="md"
       icon={BookmarkAdd02Icon}
       title="Guardar objetivo en el banco"
       description="Elige en qué área y tema del banco queda este objetivo."
       footer={
         <>
-          <Button variant="outline" onClick={cerrar}>
-            Cancelar
-          </Button>
+          <BotonCancelar alCancelar={cerrar} />
           <Button disabled={!sePuede} onClick={guardar}>
             Guardar en el banco
           </Button>

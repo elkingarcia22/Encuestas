@@ -5,7 +5,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Frame,
   FrameHeader,
   FramePanel,
@@ -32,7 +31,9 @@ import {
   SelectValue,
   Text,
   Textarea,
+  cn,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import type { ConfigEvaluacion, Pregunta, TipoPregunta } from '../borrador'
 import { TextoEnriquecido } from '../editor-texto'
 import { enunciadoDe } from './logica'
@@ -40,6 +41,7 @@ import { entradasDe, esListaSimple, type SeccionPreguntas } from './secciones'
 import { EscalaCaras, EscalaEstrellas, EscalaNps, EscalaNumerica } from './tarjeta-pregunta'
 import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import { Condicion, Condiciones } from '../condicion'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // La evaluación como la responde el colaborador (Vista del colaborador): el recordatorio de cómo se aprueba, el
 // cronómetro si tiene tiempo límite, las preguntas para responder y, al enviar, el resultado. «Enviar respuestas»,
@@ -129,6 +131,37 @@ export function calificar(preguntas: Pregunta[], respuestas: Respuestas, config:
   }).length
   const porcentaje = calificables.length ? Math.round((correctas / calificables.length) * 100) : 100
   return { correctas, total: calificables.length, porcentaje, aprobado: porcentaje >= config.aprobacion }
+}
+
+/**
+ * La cuenta atrás de una evaluación con tiempo.
+ *
+ * Va **aparte de las condiciones** y a la derecha de su fila: las insignias dicen cosas que no cambian —cuántas
+ * preguntas, con cuánto se aprueba, cuánto dura— y un número que se mueve cada segundo entre ellas hace que la fila
+ * entera parezca inquieta.
+ *
+ * Se queda **a la vista al bajar** porque la cabecera entera se queda pegada mientras se responde: lo que más importa
+ * de un reloj es poder mirarlo sin buscarlo. Y cambia de color en el **último minuto**, que es cuando deja de ser un
+ * dato para ser un aviso (Dave, 14-oct).
+ */
+function RelojEvaluacion({ reloj, restante }: { reloj: string; restante: number }) {
+  const ultimoMinuto = restante <= 60
+
+  return (
+    <div className="ms-auto">
+      <Badge
+        variant={ultimoMinuto ? 'destructive' : 'secondary'}
+        size="lg"
+        className="tabular-nums shadow-sm"
+        role="timer"
+        aria-live={ultimoMinuto ? 'assertive' : 'off'}
+        aria-label={`Tiempo restante: ${reloj}`}
+      >
+        <HugeiconsIcon icon={Timer02Icon} aria-hidden="true" />
+        {reloj}
+      </Badge>
+    </div>
+  )
 }
 
 /** «70 % para aprobar · sin límite de tiempo · 3 intentos». */
@@ -223,7 +256,26 @@ export function EvaluacionColaborador({
     // los 3 px de la librería las cajas se leían pegadas (Dave, 14-oct).
     <Frame className="gap-3">
       {/* Cómo se llama la evaluación y sus reglas, en el marco gris; el panel blanco es lo que se responde (Dave, 9-oct). */}
-      <FrameHeader className="gap-2">
+      {/* **Respondiendo, la cabecera se queda arriba.** Es la que lleva el reloj, y un reloj que hay que ir a buscar
+          no sirve de nada: se responde abajo, lejos de aquí. De paso se queda a la vista en qué evaluación se está y
+          con cuánto se aprueba, que es lo que se pregunta a mitad de camino (Dave, 14-oct).
+          Solo durante el intento: antes de empezar y al ver el resultado no hay nada que seguir.
+
+          **Se queda donde está, sin salirse del marco.** El primer intento la sacaba con márgenes negativos de 16 px
+          para que tapara de lado a lado, pero el marco solo tiene 3 px de relleno y 1 px de borde: la cabecera acababa
+          13 px más ancha que las preguntas y por fuera del borde, y parecía otra cosa pegada encima (Dave, 14-oct).
+          Dentro basta, porque las preguntas miden exactamente lo mismo que ella.
+
+          **Y el gris es el del marco, no uno parecido.** Tiene que ser opaco para que las preguntas no se vean por
+          debajo al subir, y `bg-muted` a secas sale más oscuro que el marco, que es medio transparente. Así que el
+          fondo blanco va en la cabecera y el gris encima, en una capa: el mismo resultado exacto que el marco. */}
+      <FrameHeader
+        className={cn(
+          'gap-2',
+          fase === 'intento' &&
+            'bg-background before:bg-muted/50 relative isolate sticky top-0 z-20 before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:content-[\'\']',
+        )}
+      >
         <FrameTitle>{titulo}</FrameTitle>
         {/**
          * **Las condiciones, en insignias y debajo del título.** Antes eran una línea de texto apagado —«5 preguntas ·
@@ -242,16 +294,10 @@ export function EvaluacionColaborador({
           ) : (
             <>
               <Condicion icono={Target02Icon}>{`${config.aprobacion} % para aprobar`}</Condicion>
-              {config.tiempoLimite ? (
-                // Respondiendo, este sitio lo ocupa la cuenta regresiva; antes de empezar dice cuánto va a durar.
-                <Condicion
-                  icono={Timer02Icon}
-                  alerta={fase === 'intento' && restante != null && restante <= 60}
-                  aria-label={fase === 'intento' && reloj ? `Tiempo restante: ${reloj}` : undefined}
-                >
-                  {fase === 'intento' && reloj ? reloj : `${config.minutos} min`}
-                </Condicion>
-              ) : null}
+              {/* La insignia dice **cuánto dura**, siempre lo mismo. La cuenta atrás es otra cosa y va aparte: un
+                  número que cambia cada segundo dentro de una fila de datos fijos hace que la fila entera parezca
+                  moverse, y encima se pierde al bajar a responder (Dave, 14-oct). */}
+              {config.tiempoLimite ? <Condicion icono={Timer02Icon}>{`${config.minutos} min`}</Condicion> : null}
               {config.limitarIntentos ? (
                 /* **El último intento se pone en rojo.** No es lo mismo fallar el primero que el último, y es
                    justo cuando hay que saberlo: antes de responder, no después (Dave, 13-oct). */
@@ -261,6 +307,8 @@ export function EvaluacionColaborador({
               ) : null}
             </>
           )}
+          {/* La cuenta atrás, a la derecha de la fila y pegada arriba mientras se responde. */}
+          {config.tiempoLimite && fase === 'intento' && reloj ? <RelojEvaluacion reloj={reloj} restante={restante ?? 0} /> : null}
         </Condiciones>
       </FrameHeader>
       {/* **Respondiendo, el marco gris es el lienzo**: la cabecera de la parte y las cajas de pregunta cuelgan
@@ -330,7 +378,7 @@ export function EvaluacionColaborador({
                   {resultado.aprobado ? 'Aprobaste la evaluación' : sinIntentos ? 'Usaste todos tus intentos' : 'No aprobaste esta vez'}
                 </EmptyTitle>
                 <EmptyDescription>
-                  {resultado.correctas} de {resultado.total} respuestas correctas · se aprueba con {config.aprobacion} %
+                  {resultado.correctas} de {resultado.total} {plural(resultado.total, 'respuesta correcta', 'respuestas correctas')} · se aprueba con {config.aprobacion} %
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>

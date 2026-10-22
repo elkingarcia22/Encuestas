@@ -4,6 +4,7 @@ import { AiThinking } from '@/shared/components/AiThinking'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import type { Objective } from '../../../modelo/constructor/cicloBuilderTypes'
 import type { IaTarjeta } from './usar-ia-tarjeta'
+import { MARGEN_BARRA, useMostrarAlAbrir } from '../mostrar-al-abrir'
 
 // Paso 1 · «¿Qué quieres lograr?»: el título, el botón de IA al final de su fila y la descripción opcional detrás de
 // un interruptor. Mientras la IA pide contexto, el mismo campo cambia de etiqueta y de ejemplo (como el enunciado de
@@ -31,9 +32,11 @@ export function CampoTitulo({
   const conDescripcion = quiereDescripcion || objetivo.description !== ''
   const marcarRojo = invalido && vacio && !pidiendo
 
+  const [campoDescripcion, mostrarDescripcion] = useMostrarAlAbrir()
   const cambiarDescripcion = (activa: boolean) => {
     if (!activa && objetivo.description) onCambio({ description: '' })
     setQuiereDescripcion(activa)
+    if (activa) mostrarDescripcion()
   }
 
   return (
@@ -41,6 +44,7 @@ export function CampoTitulo({
       <Field data-invalid={marcarRojo || undefined}>
         <FieldLabel htmlFor={`${id}-titulo`}>{pidiendo ? 'De qué va el objetivo' : 'Objetivo'}</FieldLabel>
         {/* El botón de IA va dentro del campo como su complemento final: el texto termina antes de él y no se monta. */}
+        {/* Fondo blanco: el campo es transparente y se pierde sobre el gris (diferencias.json › input-group-fondo-solido). */}
         <InputGroup className="bg-background!">
           <InputGroupInput
             ref={campo}
@@ -82,18 +86,20 @@ export function CampoTitulo({
 
       {ia.fase === 'quieta' ? (
         <>
+          {/* Campo en fila que ocupa solo lo suyo: el tema le da ancho completo y la clase sola no le gana (diferencias.json › instalacion-estilos-sin-capa). */}
           <Field orientation="horizontal" className="w-auto!">
             <Switch id={`${id}-con-descripcion`} checked={conDescripcion} onCheckedChange={cambiarDescripcion} />
-            <FieldLabel htmlFor={`${id}-con-descripcion`}>Añadir descripción</FieldLabel>
+            <FieldLabel htmlFor={`${id}-con-descripcion`}>Agregar descripción</FieldLabel>
           </Field>
           {conDescripcion ? (
-            <Field>
+            <Field ref={campoDescripcion} className={MARGEN_BARRA}>
               <FieldLabel htmlFor={`${id}-descripcion`} className="sr-only">
                 Descripción del objetivo
               </FieldLabel>
               <Textarea
                 id={`${id}-descripcion`}
                 rows={2}
+                // Fondo blanco: el campo es transparente y se pierde sobre el gris (diferencias.json › input-group-fondo-solido).
                 className="bg-background!"
                 value={objetivo.description}
                 placeholder="Descripción: contexto, cómo se va a medir, de dónde sale el dato."

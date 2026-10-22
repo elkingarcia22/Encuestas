@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
-import { Badge, cn, Collapsible, CollapsibleContent, Frame, FramePanel, Text } from '@ubits/flux-ui'
+import { cn, Collapsible, CollapsibleContent, Frame, FramePanel, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // El árbol de la encuesta tal como lo escribió quien la armó, para leer resultados: cada sección de
 // nivel 1 es un bloque que se abre (la primera arranca abierta) y dentro van sus preguntas y sus
@@ -28,7 +30,7 @@ type Pinta<T extends NodoSeccion> = {
   incluir?: (seccion: T) => boolean
 }
 
-const subtituloBase = (seccion: NodoSeccion, hijas: number) => `${contarPreguntas(seccion)} preguntas${hijas > 0 ? ` · ${hijas} subsecciones` : ''}`
+const subtituloBase = (seccion: NodoSeccion, hijas: number) => `${contarPreguntas(seccion)} ${plural(contarPreguntas(seccion), 'pregunta', 'preguntas')}${hijas > 0 ? ` · ${hijas} ${plural(hijas, 'subsección', 'subsecciones')}` : ''}`
 
 function Cabecera({ seccion, abierta, onAlternar, raiz, subtitulo, metrica }: { seccion: NodoSeccion; abierta: boolean; onAlternar: () => void; raiz: boolean; subtitulo: ReactNode; metrica: ReactNode }) {
   return (

@@ -1,4 +1,5 @@
-import { Badge, Text } from '@ubits/flux-ui'
+import { Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { PAISES, etiquetaExperiencia as experienciaEnTexto } from './datos'
 import { pendienteEtapa, resumenEtapa } from './etapas'
@@ -111,7 +112,7 @@ function FocoDescripcion({ vacante }: { vacante: VacanteNueva }) {
       {pendientes.length ? (
         <Aviso tono="warning">{plural(pendientes.length, 'Falta escribir una sección', `Faltan escribir ${pendientes.length} secciones`)}</Aviso>
       ) : (
-        <Aviso tono="success">{`Las ${vacante.secciones.length} secciones están escritas.`}</Aviso>
+        <Aviso tono="success">{plural(vacante.secciones.length, 'La sección está escrita.', `Las ${vacante.secciones.length} secciones están escritas.`)}</Aviso>
       )}
       <div className="flex flex-col gap-2.5">
         {vacante.secciones.map((seccion) => (

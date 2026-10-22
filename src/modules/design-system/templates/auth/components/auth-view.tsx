@@ -1,6 +1,7 @@
 import { cn, Text } from '@ubits/flux-ui'
 import { ANCHO_ACCESO } from '@/shared/components/page-width'
 import { CasosMenu } from './casos-menu'
+import entrada from './entrada.module.css'
 import { SignInPanel } from './sign-in-panel'
 import { TestimonialSidebar } from './testimonial-sidebar'
 
@@ -13,6 +14,7 @@ export function AuthView({ fullPage = false }: { fullPage?: boolean }) {
       className={cn(
         'w-full bg-background text-foreground xl:grid xl:grid-cols-2',
         fullPage ? 'min-h-svh' : 'min-h-full',
+        entrada.raiz,
       )}
     >
       <TestimonialSidebar />
@@ -30,16 +32,19 @@ export function AuthView({ fullPage = false }: { fullPage?: boolean }) {
             PageAmbience, que sigue rigiendo el resto de pantallas. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-linear-208 from-primary/20 via-primary/8 via-22% to-transparent to-50%"
+          className={cn(
+            'pointer-events-none absolute inset-0 -z-10 bg-linear-208 from-primary/20 via-primary/8 via-22% to-transparent to-50%',
+            entrada.ambiente,
+          )}
         />
 
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+        <div className={cn('absolute top-4 right-4 sm:top-6 sm:right-6', entrada.tarde)}>
           <CasosMenu />
         </div>
 
         {/* Una sola columna para todos los pasos: al cambiar de paso nada salta de ancho. Mide la «Columna de acceso»,
             360 px, la medida oficial de Espacio y esquinas › Ancho del contenido (7 oct). */}
-        <section className={cn('mx-auto flex w-full flex-col gap-6', ANCHO_ACCESO)}>
+        <section className={cn('mx-auto flex w-full flex-col gap-6', ANCHO_ACCESO, entrada.cascada)}>
           <SignInPanel />
 
           <div className="mt-2 flex items-center justify-center gap-2">

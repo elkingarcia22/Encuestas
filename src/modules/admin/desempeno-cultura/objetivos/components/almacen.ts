@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { CICLOS, type Ciclo } from '../modelo/ciclos'
+import { borradorDeCiclo } from '../modelo/borrador'
+import { CONFIG_INICIAL, type ConfigCiclo } from '../modelo/configuracion'
 
 // La lista de ciclos del módulo, compartida por el home y el constructor, con el mismo molde que la de Encuestas. Vive
 // fuera de React para que un ciclo creado, duplicado o editado siga así al ir al constructor y volver. Se reinicia al
@@ -67,4 +69,12 @@ export function duplicarCiclos(ids: readonly string[]) {
     })
   }
   reemplazar(siguientes)
+}
+
+/** La configuración de estados y niveles de un ciclo: la suya o, si nunca se tocó, la de siempre. */
+export const configDe = (ciclo: Ciclo): ConfigCiclo => ciclo.draft?.config ?? CONFIG_INICIAL
+
+/** Guarda la configuración en el borrador del ciclo (un ciclo de ejemplo estrena borrador con ella). */
+export function guardarConfig(ciclo: Ciclo, config: ConfigCiclo) {
+  actualizarCiclo(ciclo.id, { draft: { ...borradorDeCiclo(ciclo), config } })
 }

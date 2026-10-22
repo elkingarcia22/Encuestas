@@ -14,7 +14,7 @@ import { iniciales, plural } from '@/modules/design-system/patrones/formato'
 import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
 import { fichaDe } from './catalogo'
 import { usuarioDe } from './grupos-datos'
-import { TIPOS, aQuien, enfoqueDe, itemsDe, type Plan } from './planes-datos'
+import { TIPOS, aQuien, enfoqueDe, itemsDe, personasDelPlan, usuarioIdDe, type Plan } from './planes-datos'
 import type { Participante } from '@/modules/design-system/templates/planes-formacion/components/datos'
 
 // «Detalle de colaborador»: cómo va una persona en el plan, ítem por ítem, y desde qué asignación le llegó.
@@ -38,10 +38,10 @@ export function PanelColaborador({
   onRecordar: () => void
 }) {
   const textos = TIPOS[plan.tipo]
-  // El id es «<asignación>-<usuario>»: de ahí salen su asignación y su ficha.
-  const idUsuario = participante.id.match(/(u-\d+)$/)?.[1] ?? ''
+  // El id de la fila es el del usuario: de ahí salen su ficha y la primera asignación por la que le llega.
+  const idUsuario = usuarioIdDe(participante.id)
   const usuario = usuarioDe(idUsuario)
-  const asignacion = plan.asignaciones.find((a) => participante.id.startsWith(`${a.id}-`))
+  const asignacion = plan.asignaciones.find((a) => a.id === personasDelPlan(plan).find((p) => p.usuario === idUsuario)?.asignacionId)
   const items = itemsDe(plan, participante.id)
   const estadoDe = (indice: number) =>
     indice < participante.hechos ? 'hecho' : indice === participante.hechos && participante.ultimoAcceso && participante.progreso < 100 ? 'curso' : 'pendiente'

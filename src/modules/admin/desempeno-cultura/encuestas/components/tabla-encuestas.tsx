@@ -2,7 +2,6 @@ import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Alert02Icon, Download01Icon, GitCompareIcon, MoreHorizontalIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -15,10 +14,13 @@ import {
   Text,
   TooltipProvider,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { plural } from '@/modules/design-system/patrones/formato'
+import { numero } from '@/modules/design-system/graficos/piezas'
 import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
-import { CLOSE_BUCKETS, ORIGIN_BUCKETS, PROGRESS_BUCKETS, matchesFilters, originOf, NO_FILTERS, type SurveyListFilters } from '../modelo/surveyListFilters'
+import { FiltroRangoCierre } from './filtro-rango-cierre'
+import { ORIGIN_BUCKETS, PROGRESS_BUCKETS, matchesFilters, originOf, NO_FILTERS, type SurveyListFilters } from '../modelo/surveyListFilters'
 import { dateValue, parseSurveyDate, startOfToday } from '../modelo/surveyListDates'
 import type { SurveyListItem } from '../modelo/types'
 import { BotonIcono } from '@/shared/components/BotonIcono'
@@ -31,9 +33,11 @@ import { MAXIMO, MINIMO, TIPOS_COMPARABLES } from './comparar/asistente-comparat
 import { CeldaFecha, type ModoFecha } from './celda-fecha'
 import { VARIANTE_ESTADO } from './tonos'
 
-export type EdicionFecha = { id: string; modo: ModoFecha }
+// Una fecha del calendario del filtro → «aaaa-mm-dd» (hora local); sin fecha, extremo abierto.
+const aIso = (fecha: Date | undefined) =>
+  fecha ? `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}` : ''
 
-const numero = (valor: number) => valor.toLocaleString('es-CO')
+export type EdicionFecha = { id: string; modo: ModoFecha }
 
 // La fecha mínima de cada edición: una encuesta reabierta tiene que quedar abierta al menos hasta
 // mañana, y el cierre no puede quedar antes del inicio ni en el pasado.
@@ -92,6 +96,7 @@ const icono = (accion: AccionEncuesta) => <HugeiconsIcon icon={ACCIONES[accion].
 
 export function TablaEncuestas({
   encuestas,
+  titulo,
   filtros,
   onFiltros,
   edicion,
@@ -106,8 +111,7 @@ export function TablaEncuestas({
   aviso,
 }: {
   encuestas: readonly SurveyListItem[]
-  // Ya no se dibuja: la tabla del sistema no lleva título dentro del marco (lo da la pestaña). Queda para no romper a
-  // quien lo pasa.
+  // El título en lo gris, sobre el conteo (16-oct, Nicolás: «no me les quites los títulos a las tablas»).
   titulo?: string
   filtros: SurveyListFilters
   onFiltros: (filtros: SurveyListFilters) => void
@@ -340,9 +344,9 @@ export function TablaEncuestas({
         cell: ({ row }) => (
           <div className="flex min-w-0 flex-col gap-1">
             <div className="flex items-center gap-3">
-              <Progress value={row.original.progress} className="w-20" aria-label={`Avance ${row.original.progress}%`} />
+              <Progress value={row.original.progress} className="w-20" aria-label={`Avance ${row.original.progress} %`} />
               <Text as="span" size="xs" variant="muted" className="w-9 text-right tabular-nums">
-                {row.original.progress}%
+                {row.original.progress} %
               </Text>
             </div>
             <Text as="span" size="xs" variant="muted" className="tabular-nums">
@@ -386,13 +390,12 @@ export function TablaEncuestas({
         multiple: true,
       },
       {
-        id: 'close',
-        // En el encabezado de Cierre: sin columna, el filtro no salía en ningún encabezado.
+        id: 'closeRange',
+        // En el encabezado de Cierre, un rango de fechas con el embudo de los demás filtros (Elkin, 21-oct).
         columnId: 'endDate',
         label: 'Cierre',
-        type: 'select',
-        options: CLOSE_BUCKETS.map((e) => ({ label: e, value: e })),
-        multiple: true,
+        type: 'custom',
+        component: FiltroRangoCierre,
       },
       {
         id: 'progress',
@@ -405,16 +408,19 @@ export function TablaEncuestas({
     onColumnFiltersChange: (nuevos) => {
       const f = { ...filtros }
       for (const filter of nuevos) {
-        if (filter.id === 'type' || filter.id === 'origin' || filter.id === 'status' || filter.id === 'close' || filter.id === 'progress') {
+        if (filter.id === 'type' || filter.id === 'origin' || filter.id === 'status' || filter.id === 'progress') {
            f[filter.id] = filter.value as string[]
         }
-        // La tabla nombra el filtro por su columna: el de Cierre llega como `endDate`.
-        if (filter.id === 'endDate') f.close = filter.value as string[]
+        // La tabla nombra el filtro por su columna: el de Cierre llega como `endDate`, con [desde, hasta] en fechas.
+        if (filter.id === 'endDate' || filter.id === 'closeRange') {
+          const [desde, hasta] = (filter.value as (Date | undefined)[] | undefined) ?? []
+          f.closeRange = desde || hasta ? [aIso(desde), aIso(hasta)] : []
+        }
         if (filter.id === 'name') f.type = filter.value as string[]
       }
       // If a filter is missing from nuevos, it means it was cleared
-      const presentes = nuevos.map(n => (n.id === 'endDate' ? 'close' : n.id === 'name' ? 'type' : n.id))
-      for (const key of ['type', 'origin', 'status', 'close', 'progress'] as const) {
+      const presentes = nuevos.map(n => (n.id === 'endDate' ? 'closeRange' : n.id === 'name' ? 'type' : n.id))
+      for (const key of ['type', 'origin', 'status', 'closeRange', 'progress'] as const) {
         if (!presentes.includes(key)) {
           f[key] = []
         }
@@ -462,6 +468,7 @@ export function TablaEncuestas({
         config={config}
         data={paginaActual}
         paginacion={{ pagina: actual, setPagina: setActual, porPagina, setPorPagina, total: resultado.length }}
+        titulo={titulo}
         nombre="encuestas"
         singular="encuesta"
         id="encuestas"

@@ -458,7 +458,7 @@ export function Component() {
     <div className="flex flex-col gap-8">
       <EncabezadoPatron
         titulo={activa === 'resumen' ? 'Unificación' : actual.etiqueta}
-        antetitulo="Design system · Unificación"
+        antetitulo="Design system · Por revisar"
         etiqueta={<Badge variant="warning-light">Revisado el {REVISION.fecha} en {REVISION.rama}</Badge>}
       >
         Las piezas que cada persona resuelve a su manera (Cristian, Nicolás, David y Elkin), la deuda del tema y lo que el

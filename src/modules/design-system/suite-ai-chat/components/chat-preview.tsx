@@ -14,6 +14,7 @@ import { Composer } from '@/modules/admin/suite-ai/shared/composer'
 import { SlotArea } from '../../components/anatomy/anatomy-kit'
 import { PantallaReal } from '../../components/anatomy/pantalla-real'
 import { PART, type ChatConfig, type ChatSample } from './chat-config'
+import { AvisoOrbit } from '@/modules/design-system/ia/aviso-orbit'
 
 // Vista previa del chat de Suite AI. No es una réplica: usa los mismos componentes de la pantalla real
 // (mensajes, plan, métricas, propuesta y panel de actividad) y solo les pone el nombre de cada parte con `data-region`.
@@ -140,9 +141,7 @@ export function ChatPreview({ config, sample, real = false }: { config: ChatConf
             </div>
             <div className="flex flex-col items-center gap-3 px-8 pb-4">
               <div className="w-full max-w-3xl">{caja}</div>
-              <p className="w-full max-w-3xl text-center text-sm text-muted-foreground">
-                El agente puede cometer errores. Antes de ejecutar verás el impacto.
-              </p>
+              <AvisoOrbit className="w-full max-w-3xl" />
             </div>
           </div>
         </div>

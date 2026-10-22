@@ -132,7 +132,7 @@ export function useConversacionObjetivos(borrador: CicloDraft, pedido: PedidoIa,
   /** Igual con los frentes: venga de la lista o escrito a mano, se vuelve a preguntar. */
   const masFrentes = (actual: ParsedBrief, anadido: string) =>
     despues(MS_RONDA, () =>
-      decir(`Frente «${anadido}» añadido. ¿Quieres agregar otro o seguimos?`, [
+      decir(`Frente «${anadido}» agregado. ¿Quieres agregar otro o seguimos?`, [
         { label: 'Seguir con estos', value: CONTINUE_VALUE, tone: 'primary', description: actual.focuses.map(focusLabel).join(', ') },
         ...focusChips(contexto, actual.focuses),
       ]),

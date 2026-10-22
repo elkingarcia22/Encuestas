@@ -68,6 +68,7 @@ export function ResumenPestana({
   top,
   pieTop,
   sinTop = 'Sin datos todavía',
+  graficoTop = true,
   tercera,
 }: {
   titulo: string
@@ -75,24 +76,29 @@ export function ResumenPestana({
   cifra: ReactNode
   pie: string
   grafico?: ReactNode
-  tituloReparto: string
-  totalReparto: string
-  reparto: readonly TramoReparto[]
+  /** El reparto es opcional: sin él, la fila se queda sin esa columna (Roleplay y Encuestas, 15-oct). */
+  tituloReparto?: string
+  totalReparto?: string
+  reparto?: readonly TramoReparto[]
   pieReparto?: string
   /** El top 3, la tercera lectura por defecto. No hace falta cuando se pasa `tercera`. */
   tituloTop?: string
   top?: readonly { id: string; etiqueta: string; valor: number; texto: string }[]
   pieTop?: string
   sinTop?: string
+  /** Con `false`, el top se queda sin sus barras: la lectura se lee en el texto (Encuestas, 15-oct). */
+  graficoTop?: boolean
   /** Sustituye la tercera lectura; con `null`, el resumen se queda en dos columnas. */
   tercera?: ReactNode | null
 }) {
   const conTercera = tercera !== null
+  const conReparto = !!reparto && !!tituloReparto
   const primero = top?.at(0)
-  const segmentos = reparto.map((tramo) => ({ id: tramo.id, etiqueta: tramo.etiqueta, valor: tramo.porcentaje, color: tramo.color, texto: tramo.cantidad }))
+  const segmentos = (reparto ?? []).map((tramo) => ({ id: tramo.id, etiqueta: tramo.etiqueta, valor: tramo.porcentaje, color: tramo.color, texto: tramo.cantidad }))
+  const columnas = 1 + (conReparto ? 1 : 0) + (conTercera ? 1 : 0)
 
   return (
-    <FilaIndicadores etiqueta={`Resumen: ${titulo.toLowerCase()}`} columnas={conTercera ? 3 : 2}>
+    <FilaIndicadores etiqueta={`Resumen: ${titulo.toLowerCase()}`} columnas={columnas}>
       <ColumnaIndicador
         titulo={titulo}
         ayuda={<BotonAyuda etiqueta={`Qué mide ${titulo.toLowerCase()}`}>{ayuda}</BotonAyuda>}
@@ -100,19 +106,21 @@ export function ResumenPestana({
         grafico={grafico}
         pie={<Detalle texto={pie} />}
       />
-      <ColumnaIndicador
-        titulo={tituloReparto}
-        cifra={<Total texto={totalReparto} />}
-        grafico={<DonaReparto segmentos={segmentos} etiqueta={tituloReparto} tamano={48} />}
-        pie={<Detalle texto={pieReparto ?? reparto.filter((tramo) => tramo.cantidad !== '0').map((tramo) => `${tramo.cantidad} ${tramo.etiqueta.toLowerCase()}`).join(' · ')} />}
-      />
+      {conReparto ? (
+        <ColumnaIndicador
+          titulo={tituloReparto}
+          cifra={<Total texto={totalReparto ?? ''} />}
+          grafico={<DonaReparto segmentos={segmentos} etiqueta={tituloReparto} tamano={48} />}
+          pie={<Detalle texto={pieReparto ?? (reparto ?? []).filter((tramo) => tramo.cantidad !== '0').map((tramo) => `${tramo.cantidad} ${tramo.etiqueta.toLowerCase()}`).join(' · ')} />}
+        />
+      ) : null}
       {tercera ??
         (conTercera && tituloTop ? (
           <ColumnaIndicador
             titulo={tituloTop}
             cifra={primero ? primero.texto : '—'}
             grafico={
-              top && top.length > 1 ? (
+              graficoTop && top && top.length > 1 ? (
                 <div className="h-9 w-24 xl:w-28">
                   <BarrasMini
                     barras={top.map((fila) => ({ id: fila.id, nombre: fila.etiqueta, valor: fila.valor }))}

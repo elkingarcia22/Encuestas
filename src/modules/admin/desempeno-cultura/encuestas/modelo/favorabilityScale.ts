@@ -129,8 +129,8 @@ export const VERDICT_COPY: Readonly<Record<FavorabilityVerdict, { label: string;
   critical: { label: "Requiere acción", variant: "negative" },
 };
 
-/** `38.3` → `"38,3%"`. */
-export const formatPercent = (value: number): string => `${value.toFixed(1).replace(/\.0$/, "").replace(".", ",")}%`;
+/** `38.3` → `"38,3 %"`. */
+export const formatPercent = (value: number): string => `${value.toFixed(1).replace(/\.0$/, "").replace(".", ",")} %`;
 
 /** `3.42` → `"3,4"`. */
 export const formatScore = (value: number): string => value.toFixed(1).replace(".", ",");

@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState, type ReactNode } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
-import { Calendar03Icon, ChartColumnIcon, CheckmarkCircle02Icon, Copy01Icon, Delete02Icon, Download01Icon, Edit02Icon, MoreHorizontalIcon, Share08Icon, UserAdd01Icon, UserGroupIcon, UserMultiple02Icon } from '@hugeicons/core-free-icons'
+import { Calendar03Icon, ChartColumnIcon, CheckmarkCircle02Icon, Copy01Icon, Delete02Icon, Settings02Icon, Download01Icon, Edit02Icon, MoreHorizontalIcon, Share08Icon, UserAdd01Icon, UserGroupIcon, UserMultiple02Icon } from '@hugeicons/core-free-icons'
 import {
   Badge,
   DropdownMenu,
@@ -22,6 +22,11 @@ import { BotonIcono } from '@/shared/components/BotonIcono'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { dateValue, parseSurveyDate, startOfToday } from '../../encuestas/modelo/surveyListDates'
+import { FiltroRangoCierre } from '../../encuestas/components/filtro-rango-cierre'
+
+// Una fecha del calendario del filtro → «aaaa-mm-dd» (hora local); sin fecha, extremo abierto.
+const aIso = (fecha: Date | undefined) =>
+  fecha ? `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}` : ''
 import { CeldaFecha, type ModoFecha, type TextosFecha } from '../../encuestas/components/celda-fecha'
 import { formatoAvance, type Ciclo, type EstadoCiclo } from '../modelo/ciclos'
 import { SIN_FILTROS, TRAMOS_AVANCE, cumpleFiltros, type FiltrosCiclos } from '../modelo/filtros'
@@ -30,15 +35,16 @@ import { SIN_FILTROS, TRAMOS_AVANCE, cumpleFiltros, type FiltrosCiclos } from '.
 // recuento y el paginador en español; las acciones de la selección junto al buscador y un menú de tres puntos por fila
 // con solo lo que su estado permite y «Eliminar» al final, en rojo. Sin título dentro del marco: lo da la pestaña.
 
-export type AccionCiclo = 'ver' | 'editar' | 'editarFechas' | 'editarParticipantes' | 'objetivosGrupos' | 'objetivosColaborador' | 'duplicar' | 'compartir' | 'finalizar' | 'eliminar'
+export type AccionCiclo = 'ver' | 'editar' | 'editarFechas' | 'editarParticipantes' | 'objetivosGrupos' | 'objetivosColaborador' | 'configurar' | 'duplicar' | 'compartir' | 'finalizar' | 'eliminar'
 
 const ACCIONES: Record<AccionCiclo, { etiqueta: string; icono: IconSvgElement }> = {
   ver: { etiqueta: 'Ver resultados', icono: ChartColumnIcon },
   editar: { etiqueta: 'Editar ciclo', icono: Edit02Icon },
+  configurar: { etiqueta: 'Configurar ciclo', icono: Settings02Icon },
   editarFechas: { etiqueta: 'Editar fechas', icono: Calendar03Icon },
   editarParticipantes: { etiqueta: 'Editar participantes', icono: UserMultiple02Icon },
-  objetivosGrupos: { etiqueta: 'Añadir objetivos a grupos', icono: UserGroupIcon },
-  objetivosColaborador: { etiqueta: 'Añadir objetivos a colaborador', icono: UserAdd01Icon },
+  objetivosGrupos: { etiqueta: 'Agregar objetivos a grupos', icono: UserGroupIcon },
+  objetivosColaborador: { etiqueta: 'Agregar objetivos a un colaborador', icono: UserAdd01Icon },
   duplicar: { etiqueta: 'Duplicar', icono: Copy01Icon },
   compartir: { etiqueta: 'Compartir', icono: Share08Icon },
   finalizar: { etiqueta: 'Finalizar ciclo', icono: CheckmarkCircle02Icon },
@@ -59,10 +65,11 @@ const PERIODOS = ['Mes', 'Bimestre', 'Trimestre', 'Semestre', 'Año', 'Personali
 /** Las acciones de cada estado, en grupos, como en el prototipo (`CICLO_ACTIONS_BY_ESTADO`); «Eliminar» va siempre aparte,
  *  al final. Un ciclo que no ha empezado todavía no tiene resultados que ver; uno finalizado ya no tiene nada que editar. */
 function accionesDe(estado: EstadoCiclo): AccionCiclo[][] {
-  if (estado === 'Borrador') return [['editar'], ['objetivosGrupos', 'objetivosColaborador'], ['duplicar']]
-  if (estado === 'Por iniciar') return [['editar', 'editarFechas', 'editarParticipantes'], ['objetivosGrupos', 'objetivosColaborador'], ['duplicar', 'compartir']]
-  if (estado === 'En curso') return [['ver'], ['editar', 'editarFechas', 'editarParticipantes'], ['objetivosGrupos', 'objetivosColaborador'], ['duplicar', 'compartir', 'finalizar']]
-  return [['ver'], ['duplicar']]
+  // «Configurar ciclo» (estados de objetivos y niveles, 21-oct) va con las de cambiar el ciclo, en todos los estados.
+  if (estado === 'Borrador') return [['editar', 'configurar'], ['objetivosGrupos', 'objetivosColaborador'], ['duplicar']]
+  if (estado === 'Por iniciar') return [['editar', 'configurar', 'editarFechas', 'editarParticipantes'], ['objetivosGrupos', 'objetivosColaborador'], ['duplicar', 'compartir']]
+  if (estado === 'En curso') return [['ver'], ['editar', 'configurar', 'editarFechas', 'editarParticipantes'], ['objetivosGrupos', 'objetivosColaborador'], ['duplicar', 'compartir', 'finalizar']]
+  return [['ver'], ['configurar'], ['duplicar']]
 }
 
 /** Los textos del selector de fecha, en lo que significa para un ciclo. */
@@ -199,7 +206,7 @@ export function TablaCiclos({
   ]
 
   // Cuántos filtros hay puestos (el atajo «Para atender» cuenta como uno), para el vacío «Sin resultados».
-  const filtrosActivos = [filtros.periodo, filtros.estado, filtros.avance].filter((valores) => valores.length > 0).length + (filtros.soloIds !== null ? 1 : 0)
+  const filtrosActivos = [filtros.periodo, filtros.estado, filtros.avance, filtros.cierre].filter((valores) => valores.length > 0).length + (filtros.soloIds !== null ? 1 : 0)
   const conFiltros = busqueda.trim() !== '' || filtrosActivos > 0
   const limpiar = () => {
     setBusqueda('')
@@ -241,7 +248,7 @@ export function TablaCiclos({
       {
         accessorKey: 'nombre',
         header: 'Nombre',
-        size: 260,
+        size: 270,
         // `w-0 min-w-full`: el nombre se encoge con «…» en vez de ensanchar la columna, y la tabla cabe en el marco.
         cell: ({ row }) => (
           <div className="w-0 min-w-full">
@@ -249,10 +256,10 @@ export function TablaCiclos({
           </div>
         ),
       },
-      { accessorKey: 'periodo', header: 'Periodo', size: 120, cell: ({ row }) => <Text as="span" size="sm" variant="muted">{row.original.periodo}</Text> },
-      { accessorKey: 'estado', header: 'Estado', size: 120, cell: ({ row }) => <Badge variant={VARIANTE_ESTADO[row.original.estado]}>{row.original.estado}</Badge> },
-      { accessorKey: 'inicio', header: 'Inicio', size: 110, cell: ({ row }) => celdaFecha(row.original, 'inicio') },
-      { accessorKey: 'cierre', header: 'Cierre', size: 110, cell: ({ row }) => celdaFecha(row.original, 'cierre') },
+      { accessorKey: 'periodo', header: 'Periodo', size: 130, cell: ({ row }) => <Text as="span" size="sm" variant="muted">{row.original.periodo}</Text> },
+      { accessorKey: 'estado', header: 'Estado', size: 130, cell: ({ row }) => <Badge variant={VARIANTE_ESTADO[row.original.estado]}>{row.original.estado}</Badge> },
+      { accessorKey: 'inicio', header: 'Inicio', size: 125, cell: ({ row }) => celdaFecha(row.original, 'inicio') },
+      { accessorKey: 'cierre', header: 'Cierre', size: 125, cell: ({ row }) => celdaFecha(row.original, 'cierre') },
       {
         accessorKey: 'avance',
         header: 'Avance',
@@ -274,10 +281,14 @@ export function TablaCiclos({
       { id: 'periodo', label: 'Periodo', type: 'select', options: PERIODOS.map((valor) => ({ label: valor, value: valor })), multiple: true },
       { id: 'estado', label: 'Estado', type: 'select', options: ESTADOS.map((valor) => ({ label: valor, value: valor })), multiple: true },
       { id: 'avance', label: 'Avance', type: 'select', options: TRAMOS_AVANCE.map((valor) => ({ label: valor, value: valor })), multiple: true },
+      // Un rango de fechas con el embudo de los demás filtros, como en Encuestas (21-oct).
+      { id: 'cierre', label: 'Cierre', type: 'custom', component: FiltroRangoCierre },
     ],
     onColumnFiltersChange: (nuevos) => {
       const siguiente: FiltrosCiclos = { ...filtros }
       for (const campo of CAMPOS_FILTRO) siguiente[campo] = (nuevos.find((filtro) => filtro.id === campo)?.value as string[] | undefined) ?? []
+      const [desde, hasta] = (nuevos.find((filtro) => filtro.id === 'cierre')?.value as (Date | undefined)[] | undefined) ?? []
+      siguiente.cierre = desde || hasta ? [aIso(desde), aIso(hasta)] : []
       onFiltros(siguiente)
       setActual(1)
     },
@@ -314,6 +325,7 @@ export function TablaCiclos({
         config={config}
         data={paginaActual}
         paginacion={{ pagina: actual, setPagina: setActual, porPagina, setPorPagina, total: resultado.length }}
+        titulo={filtrosActivos > 0 ? 'Ciclos filtrados' : 'Lista de ciclos de objetivos'}
         nombre="ciclos"
         singular="ciclo"
         id="ciclos"

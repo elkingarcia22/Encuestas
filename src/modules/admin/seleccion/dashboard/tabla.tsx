@@ -1,12 +1,12 @@
-import { Link } from 'react-router'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
-import { Button, Progress, Text, Tooltip, TooltipContent, TooltipTrigger, type DataGridListConfig } from '@ubits/flux-ui'
+import { Progress, Text, Tooltip, TooltipContent, TooltipTrigger, type DataGridListConfig } from '@ubits/flux-ui'
 import { Badge } from '@/shared/components/Badge'
-import { PageSection } from '@/shared/components/PageShell'
 import { plural } from '@/modules/design-system/patrones/formato'
-import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
+import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import type { VacanteUI } from '../propuestas/datos'
 import { DIAS_ESTANCADA } from '../vacantes/components/datos'
 import { ETAPAS_EMBUDO, nombreCorto, type FilaVacante, type Resumen } from './datos'
@@ -16,8 +16,8 @@ import { ETAPAS_EMBUDO, nombreCorto, type FilaVacante, type Resumen } from './da
 // Vacantes y no se repite aquí (1 oct, Nicolás: «no repetir lo que vive en otra vista»); el botón lleva allá.
 // Las columnas son las de «Tus vacantes» en el inicio de Vacantes, con el embudo en miniatura de la lista: así la misma
 // vacante se lee igual en las dos pantallas. Sin avatares de iniciales (5 oct).
-// Es la tabla del sistema (`TablaDatos`; decisión 4a de Cristian, 9 oct), en su sección con título: son cinco filas ya
-// ordenadas por quien más gente movió, así que no se reordena ni se pagina.
+// 16 oct: en la tabla del sistema (TablaDatos) con su título en lo gris, como Vacantes. La trae Orbit en «Habla con tus
+// datos» cuando se le pregunta por las vacantes con más gente o se le pide un tablero con ellas.
 
 const RUTA_VACANTES = '/admin/seleccion/exploraciones/uno'
 const RUTA_VACANTE = (id: string) => `${RUTA_VACANTES}/${id}`
@@ -32,142 +32,164 @@ const ESTADO_INSIGNIA: Record<Estado, 'success-light' | 'warning-light' | 'secon
 }
 const estadoDe = (vacante: VacanteUI): Estado => (vacante.estado === 'Publicada' && vacante.oculta ? 'Oculta del portal' : vacante.estado)
 
-// La tabla lee cada fila por su `id`.
+// `id`: lo que la tabla usa para reconocer cada fila.
 type Fila = FilaVacante & { id: string }
 
-// El «w-0 min-w-full» de cada celda: la tabla mide cada columna por lo que lleva y, sin esto, un texto largo la ensancha en
-// vez de cortarse con «…».
 const COLUMNAS: DataGridListConfig<Fila>['columns'] = [
   {
-    accessorKey: 'vacante',
+    id: 'vacante',
+    accessorFn: (fila) => fila.vacante.titulo,
     header: 'Vacante',
-    size: 280,
-    enableSorting: false,
-    cell: ({ row }) => {
-      const { vacante } = row.original
-      return (
-        <div className="w-0 min-w-full" title={vacante.titulo}>
-          <CeldaTitulo titulo={vacante.titulo} detalle={`${vacante.area} · ${vacante.sede.split(' · ')[0]}`} to={RUTA_VACANTE(vacante.id)} />
-        </div>
-      )
-    },
+    size: 260,
+    cell: ({ row }) => (
+      <CeldaTitulo
+        titulo={row.original.vacante.titulo}
+        detalle={`${row.original.vacante.area} · ${row.original.vacante.sede.split(' · ')[0]}`}
+        to={RUTA_VACANTE(row.original.vacante.id)}
+      />
+    ),
   },
   {
     id: 'estado',
     accessorFn: (fila) => estadoDe(fila.vacante),
     header: 'Estado',
-    size: 140,
-    enableSorting: false,
+    size: 150,
     cell: ({ row }) => {
       const estado = estadoDe(row.original.vacante)
       return <Badge variant={ESTADO_INSIGNIA[estado]}>{estado}</Badge>
     },
   },
-  {
-    accessorKey: 'candidatos',
-    header: 'Candidatos',
-    size: 130,
-    enableSorting: false,
-    cell: ({ row }) => {
-      const { vacante, candidatos } = row.original
-      return (
-        <span className="flex w-0 min-w-full flex-col gap-0.5">
-          <Text as="span" size="sm" className="tabular-nums">
-            {candidatos.toLocaleString('es-CO')}
-          </Text>
-          {/* Debajo, lo que no dice la cifra: el total si el periodo deja gente fuera; si no, cuántos llegaron esta semana. */}
-          <Text as="span" variant="muted" size="xs" className="truncate tabular-nums">
-            {candidatos < vacante.aplicaciones
-              ? `de ${vacante.aplicaciones} en total`
-              : vacante.estado === 'Cerrada'
-                ? 'Ya no recibe'
-                : vacante.ultimaSemana
-                  ? `${vacante.ultimaSemana} esta semana`
-                  : 'Nadie esta semana'}
-          </Text>
-        </span>
-      )
-    },
-  },
+  { accessorKey: 'candidatos', header: 'Candidatos', size: 130, cell: ({ row }) => <CeldaCandidatos fila={row.original} /> },
   {
     id: 'avance',
-    accessorFn: (fila) => fila.llegaron.join(','),
     header: 'Cómo avanza',
-    size: 260,
+    size: 240,
     enableSorting: false,
     cell: ({ row }) => {
-      const { vacante, candidatos, llegaron, cierre } = row.original
+      const { llegaron, candidatos, vacante, cierre } = row.original
       return <Avance llegaron={llegaron} candidatos={candidatos} vacante={vacante} contrato={cierre?.contratados ? cierre.como : null} />
     },
   },
-  {
-    id: 'dias',
-    accessorFn: (fila) => fila.vacante.diasAbierta,
-    header: 'Días abierta',
-    size: 130,
-    enableSorting: false,
-    cell: ({ row }) => {
-      const { vacante } = row.original
-      return vacante.estado === 'Borrador' ? (
-        <Text as="span" variant="muted" size="sm">
-          Sin publicar
-        </Text>
-      ) : (
-        <span className="flex flex-col items-start gap-0.5">
-          <Text as="span" size="sm" variant={vacante.estado === 'Cerrada' ? 'muted' : undefined} className="tabular-nums">
-            {vacante.diasAbierta}
-          </Text>
-          {vacante.estado === 'Cerrada' ? (
-            <Text as="span" variant="muted" size="xs">
-              Cerrada
-            </Text>
-          ) : vacante.diasAbierta >= DIAS_ESTANCADA ? (
-            <Badge variant="warning-light">Estancada</Badge>
-          ) : null}
-        </span>
-      )
-    },
-  },
+  { id: 'dias', accessorFn: (fila) => fila.vacante.diasAbierta, header: 'Días abierta', size: 130, cell: ({ row }) => <CeldaDias vacante={row.original.vacante} /> },
   {
     id: 'reclutador',
     accessorFn: (fila) => fila.vacante.reclutador.nombre,
     header: 'Reclutador',
     size: 140,
-    enableSorting: false,
     cell: ({ row }) => (
-      <Text as="span" size="sm" className="block w-0 min-w-full truncate" title={row.original.vacante.reclutador.nombre}>
+      <Text as="span" size="sm" className="block w-0 min-w-full truncate">
         {nombreCorto(row.original.vacante.reclutador.nombre)}
       </Text>
     ),
   },
 ]
 
-export function TablaDashboard({ resumen, cargando }: { resumen: Resumen; cargando: boolean }) {
-  const filas = resumen.conGente.slice(0, CUANTAS).map<Fila>((fila) => ({ ...fila, id: fila.vacante.id }))
+// En el chat de Orbit solo caben vacante, candidatos y el avance del proceso (630 px); estado, días y reclutador viven
+// en Vacantes, adonde lleva «Ver todas en Vacantes».
+const EN_EL_CHAT = new Set(['vacante', 'candidatos', 'avance'])
+const COLUMNAS_CHAT = COLUMNAS.filter((columna) => EN_EL_CHAT.has(String(columna.id ?? ('accessorKey' in columna ? columna.accessorKey : ''))))
+
+// `id`: cada respuesta de la conversación lleva la suya, para que no se repita en la página.
+export function TablaDashboard({
+  resumen,
+  cargando,
+  id = 'vacantes-con-mas-candidatos',
+  enElChat = false,
+}: {
+  resumen: Resumen
+  cargando: boolean
+  id?: string
+  enElChat?: boolean
+}) {
+  const navigate = useNavigate()
+  const [orden, setOrden] = useState<string | undefined>(undefined)
+  const [pagina, setPagina] = useState(1)
+  const [porPagina, setPorPagina] = useState(10)
+  const filas = useMemo<Fila[]>(() => {
+    const primeras = resumen.conGente.slice(0, CUANTAS).map((fila) => ({ ...fila, id: fila.vacante.id }))
+    if (!orden) return primeras
+    const alReves = orden.startsWith('-')
+    const campo = alReves ? orden.slice(1) : orden
+    const valor = (fila: Fila): number | string =>
+      campo === 'vacante' ? fila.vacante.titulo : campo === 'estado' ? estadoDe(fila.vacante) : campo === 'dias' ? fila.vacante.diasAbierta : campo === 'reclutador' ? fila.vacante.reclutador.nombre : fila.candidatos
+    return [...primeras].sort((a, b) => {
+      const va = valor(a)
+      const vb = valor(b)
+      const r = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb), 'es')
+      return alReves ? -r : r
+    })
+  }, [resumen.conGente, orden])
   if (!cargando && !filas.length) return null
 
+  const config: DataGridListConfig<Fila> = {
+    columns: enElChat ? COLUMNAS_CHAT : COLUMNAS,
+    sort: { onSortChange: setOrden },
+    labels: { dragToReorder: 'Arrastrar para reordenar la columna' },
+    frame: {
+      description: `${filas.length === 1 ? 'La que más gente recibió' : `Las ${filas.length} que más gente recibieron`} en los últimos ${resumen.dias} días.`,
+    },
+    // La lista completa vive en Vacantes: el botón lleva allá.
+    actions: {
+      secondary: [{ id: 'ver-todas', label: 'Ver todas en Vacantes', icon: <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />, onClick: () => navigate(RUTA_VACANTES) }],
+    },
+  }
+
   return (
-    <PageSection
-      title="Las vacantes con más candidatos"
-      description={`${filas.length === 1 ? 'La que más gente recibió' : `Las ${filas.length} que más gente recibieron`} en los últimos ${resumen.dias} días.`}
-      actions={
-        <Button variant="outline" size="sm" nativeButton={false} render={<Link to={RUTA_VACANTES} />}>
-          Ver todas en Vacantes
-          <HugeiconsIcon icon={ArrowRight01Icon} size={16} aria-hidden="true" />
-        </Button>
-      }
-    >
-      <TablaDatos
-        id="vacantes-con-mas-candidatos"
-        nombre="vacantes"
-        singular="vacante"
-        config={{ columns: COLUMNAS }}
-        data={filas}
-        isLoading={cargando}
-        paginacion={{ pagina: 1, setPagina: () => {}, porPagina: CUANTAS, setPorPagina: () => {}, total: filas.length }}
-        pieSoloSiHaceFalta
-      />
-    </PageSection>
+    <TablaDatos
+      titulo="Las vacantes con más candidatos"
+      config={config}
+      data={filas}
+      isLoading={cargando}
+      paginacion={{ pagina, setPagina, porPagina, setPorPagina, total: filas.length }}
+      nombre="vacantes"
+      singular="vacante"
+      id={id}
+      pieSoloSiHaceFalta
+    />
+  )
+}
+
+function CeldaCandidatos({ fila }: { fila: Fila }) {
+  const { vacante, candidatos } = fila
+  return (
+    <span className="flex flex-col gap-0.5">
+      <Text as="span" size="sm" className="tabular-nums">
+        {candidatos.toLocaleString('es-CO')}
+      </Text>
+      {/* Debajo, lo que no dice la cifra: el total si el periodo deja gente fuera; si no, cuántos llegaron esta semana. */}
+      <Text as="span" variant="muted" size="xs" className="truncate tabular-nums">
+        {candidatos < vacante.aplicaciones
+          ? `de ${vacante.aplicaciones} en total`
+          : vacante.estado === 'Cerrada'
+            ? 'Ya no recibe'
+            : vacante.ultimaSemana
+              ? `${vacante.ultimaSemana} esta semana`
+              : 'Nadie esta semana'}
+      </Text>
+    </span>
+  )
+}
+
+function CeldaDias({ vacante }: { vacante: VacanteUI }) {
+  if (vacante.estado === 'Borrador')
+    return (
+      <Text as="span" variant="muted" size="sm">
+        Sin publicar
+      </Text>
+    )
+  return (
+    <span className="flex flex-col items-start gap-0.5">
+      <Text as="span" size="sm" variant={vacante.estado === 'Cerrada' ? 'muted' : undefined} className="tabular-nums">
+        {vacante.diasAbierta}
+      </Text>
+      {vacante.estado === 'Cerrada' ? (
+        <Text as="span" variant="muted" size="xs">
+          Cerrada
+        </Text>
+      ) : vacante.diasAbierta >= DIAS_ESTANCADA ? (
+        <Badge variant="warning-light">Estancada</Badge>
+      ) : null}
+    </span>
   )
 }
 
@@ -199,7 +221,7 @@ function Avance({
     <Tooltip>
       <TooltipTrigger
         render={
-          <span className="flex w-0 min-w-full flex-col gap-1.5">
+          <span className="flex w-full max-w-56 flex-col gap-1.5">
             <span className="flex items-end gap-1">
               {ETAPAS_EMBUDO.map((etapa, indice) => (
                 <Progress

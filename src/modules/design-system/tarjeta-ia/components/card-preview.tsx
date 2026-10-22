@@ -5,9 +5,9 @@ import { PantallaReal } from '../../components/anatomy/pantalla-real'
 import { InicioOperativo } from '../../templates/home-operativo/components/inicio-operativo'
 import { PART, type CardConfig, type CardSample } from './card-config'
 
-// Vista previa de la tarjeta de invitación a la IA. No es una réplica: usa el mismo componente que el Inicio
+// Vista previa de la tarjeta de invitación a la IA. No es una réplica: usa el mismo componente que Home operativo
 // (`AiCard`) y solo le pasa el nombre de cada parte, así que no puede quedarse desfasada.
-// `real`: «Probar en pantalla». La tarjeta configurada va en su sitio de verdad —Quick actions del Inicio real— dentro
+// `real`: «Probar en pantalla». La tarjeta configurada va en su sitio de verdad —Quick actions de Home operativo— dentro
 // del marco real del Workspace, en vez de sola junto a un slot.
 export function CardPreview({ config, sample, real = false }: { config: CardConfig; sample: CardSample; real?: boolean }) {
   if (real) {

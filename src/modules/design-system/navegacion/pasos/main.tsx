@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft01Icon, ArrowRight01Icon, LogoutSquare01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { Tick02Icon } from '@hugeicons/core-free-icons'
 import { useNavigate } from 'react-router'
 import {
   Button,
@@ -28,12 +28,12 @@ import { BotonSalirCreacion } from '@/modules/design-system/navegacion/boton-sal
 import { ChipGuardado } from '@/shared/components/ChipGuardado'
 import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import { notify } from '@/shared/components/notify'
-import { PageActionBar, PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
+import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { STEP_INDICATOR, STEP_LINE, WS } from '../../drawers/components/drawer-styles'
-import { DialogoConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../components/case-frame'
 import { EMPTY_PLAN, STEPS, audienceCount, isStepValid, type PlanForm } from './components/plan-data'
 import { AudienceStep, BasicsStep, ContentStep, ReviewStep } from './components/plan-steps'
+import { BarraPasos } from '@/modules/design-system/navegacion/barra-pasos'
 
 // Patrón · Asistente por pasos: crear algo con principio y fin, sin distracciones y a 720px.
 export function Component() {
@@ -41,7 +41,6 @@ export function Component() {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<PlanForm>(EMPTY_PLAN)
   const [dirty, setDirty] = useState(false)
-  const [confirmExit, setConfirmExit] = useState(false)
   const [created, setCreated] = useState(false)
 
   const update = (patch: Partial<PlanForm>) => {
@@ -56,13 +55,7 @@ export function Component() {
     setCreated(false)
   }
 
-  const exit = () => {
-    if (dirty && !created) {
-      setConfirmExit(true)
-      return
-    }
-    navigate('/design-system/navegacion')
-  }
+  const exit = () => navigate('/design-system/navegacion')
 
   const next = () => {
     if (step < STEPS.length) {
@@ -71,7 +64,7 @@ export function Component() {
     }
     setCreated(true)
     setDirty(false)
-    notify(`Plan «${form.name}» creado`)
+    notify(`Plan «${form.name}» creado`, undefined, 'success')
   }
 
   const current = STEPS[step - 1]
@@ -89,7 +82,14 @@ export function Component() {
           // Cristian eligió como la buena el 5-oct: contorno, icono de salir y «Salir de la creación». Nada de flecha de
           // volver junto al título: en un paso a paso se lee como «paso anterior». Es la pieza real de LMS Creator
           // (BotonSalirCreacion, regla de creación del 6-oct), que también dice «Volver a añadir página» o «Salir de la edición».
-          actions={<BotonSalirCreacion onClick={exit} />}
+          // La ventana de salir la trae la pieza (`salida`, war room del 13-oct). Este asistente no tiene un borrador real
+          // donde guardar, así que la ventana avisa que se pierde lo que se lleva y la barra dice «Cambios sin guardar».
+          actions={
+            <BotonSalirCreacion
+              onClick={exit}
+              salida={{ conCambios: dirty && !created }}
+            />
+          }
         />
 
         <PageContent>
@@ -110,8 +110,8 @@ export function Component() {
                 <Button variant="outline" className={WS} onClick={reset}>
                   Crear otro
                 </Button>
-                <Button className={WS} onClick={() => notify('Abrir el plan')}>
-                  Ver plan
+                <Button className={WS} onClick={() => navigate('/admin/aprendizaje/planes-de-formacion/planes')}>
+                  Ver planes
                 </Button>
               </EmptyContent>
             </Empty>
@@ -167,44 +167,19 @@ export function Component() {
               </Stepper>
 
               {/* Abajo, el estado del guardado a la izquierda (informa, no se pulsa) y «Atrás» con contorno + seguir. Sin
-                  «Cancelar»: la salida es una sola, la de junto al título (regla de creación, 6-oct). */}
-              <PageActionBar className="mb-1">
-                <ChipGuardado estado={dirty ? 'editando' : 'guardado'} />
-                <div className="ml-auto flex items-center gap-2">
-                  <Button variant="outline" className={WS} disabled={step === 1} onClick={() => setStep((s) => s - 1)}>
-                    <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
-                    Atrás
-                  </Button>
-                  <Button className={WS} disabled={!valid} onClick={next}>
-                    {step < STEPS.length ? 'Siguiente' : 'Crear plan'}
-                    {step < STEPS.length ? <HugeiconsIcon icon={ArrowRight01Icon} size={16} /> : null}
-                  </Button>
-                </div>
-              </PageActionBar>
+                  «Cancelar»: la salida es una sola, la de junto al título (regla de creación, 6-oct). Sin borrador real,
+                  dice «Cambios sin guardar» hasta que se crea (regla «guardado-honesto», 13-oct). */}
+              <BarraPasos
+                className="mb-1"
+                inicio={dirty ? <ChipGuardado estado="editando" /> : null}
+                paso={step}
+                onAtras={() => setStep((s) => s - 1)}
+                principal={{ texto: step < STEPS.length ? undefined : 'Crear plan', deshabilitado: !valid, onClick: next }}
+              />
             </>
           )}
         </PageContent>
       </PageShell>
-
-      {/* Salir con cambios es preguntar antes de hacer algo: va en DialogoConfirmar (dos ventanas, 6-oct), con sus tres
-          salidas y en su tamaño normal, porque en el chico los tres botones no caben en una fila. */}
-      <DialogoConfirmar
-        abierto={confirmExit}
-        onAbiertoChange={setConfirmExit}
-        icono={LogoutSquare01Icon}
-        titulo="¿Salir de la creación?"
-        descripcion="Tienes cambios en el plan que no están en un borrador. Si sales ahora se pierden."
-        cancelar="Seguir editando"
-        otra={{
-          texto: 'Guardar y salir',
-          onClick: () => {
-            notify('Borrador guardado')
-            navigate('/design-system/navegacion')
-          },
-        }}
-        accion="Salir sin guardar"
-        onConfirmar={() => navigate('/design-system/navegacion')}
-      />
     </CaseFrame>
   )
 }

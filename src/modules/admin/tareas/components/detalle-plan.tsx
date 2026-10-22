@@ -4,7 +4,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +11,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
   Frame,
   FrameDescription,
   FrameHeader,
@@ -33,6 +28,8 @@ import {
   ProgressValue,
   Text,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 
 import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
@@ -56,12 +53,8 @@ export function DetallePlan({ plan, tareas, acciones }: { plan: Plan | undefined
     return (
       <Frame>
         <FramePanel>
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>Elige un plan</EmptyTitle>
-              <EmptyDescription>Su avance y sus tareas aparecen aquí.</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          {/* Vacío con su ilustración glass (13-oct). */}
+          <PrimeraVez icono="glass-paper" titulo="Elige un plan" descripcion="Su avance y sus tareas aparecen aquí." />
         </FramePanel>
       </Frame>
     )

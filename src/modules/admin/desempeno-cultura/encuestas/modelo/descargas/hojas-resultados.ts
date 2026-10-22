@@ -284,7 +284,7 @@ export function npsDepthSheet(draft: SurveyDraft, results: SurveyResults, filter
     name: 'Profundidad',
     columns: [190, 300, 95, 300, 85, 95, 85, 420, 170],
     rows: [
-      ...sheetIntro('Preguntas de profundidad', draft, results, filters, `${totals.answered} respuestas de ${totals.people} personas · ${totals.coverage ?? 0}% de cobertura`),
+      ...sheetIntro('Preguntas de profundidad', draft, results, filters, `${totals.answered} respuestas de ${totals.people} personas · ${totals.coverage ?? 0} % de cobertura`),
       headRow(['Sección', 'Pregunta de escala', 'Banda', 'Pregunta de profundidad', 'Personas en la banda', 'Respondieron', 'Cobertura (%)', 'Respuesta', 'Segmento']),
       ...rows,
     ],

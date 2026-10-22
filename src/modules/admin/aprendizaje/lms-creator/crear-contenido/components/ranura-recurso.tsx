@@ -58,7 +58,7 @@ export function usePantallaCompleta(caja: RefObject<HTMLElement | null>) {
       if (document.fullscreenElement) await document.exitFullscreen()
       else await caja.current?.requestFullscreen()
     } catch {
-      notify('Tu navegador no permitió abrir la pantalla completa')
+      notify('Tu navegador no permitió abrir la pantalla completa', undefined, 'error')
     }
   }
   return { activa, alternar }

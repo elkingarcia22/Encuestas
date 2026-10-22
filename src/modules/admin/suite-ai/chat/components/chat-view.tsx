@@ -5,14 +5,19 @@ import { Activity01Icon } from '@hugeicons/core-free-icons'
 import { useNavigate, useSearchParams } from 'react-router'
 import {
   Button,
+  Item,
+  ItemContent,
+  ItemMedia,
   MessageGroup,
   ScrollArea,
+  Text,
   TooltipProvider,
   cn,
 } from '@ubits/flux-ui'
 import { FeatureDialog } from '@/shared/components/Announcements'
 import { Orb } from '@/shared/components/Orb'
 import { ProcessCenter } from '@/shared/components/ProcessCenter'
+import { Hint } from '@/shared/components/Hint'
 import { setRightPanelOpen } from '@/shared/components/right-panel-store'
 import { notify } from '@/shared/components/notify'
 import { Composer } from '../../shared/composer'
@@ -32,6 +37,7 @@ import { TypingIndicator } from './typing-indicator'
 import { UserMessage } from './user-message'
 import greet from './greeting.module.css'
 import { useApprovalFlow } from './use-approval-flow'
+import { AvisoOrbit } from '@/modules/design-system/ia/aviso-orbit'
 
 type ChatViewProps = {
   convo: ConvoId
@@ -189,11 +195,37 @@ export function ChatView({ convo }: ChatViewProps) {
 
   const isNew = convo === 'new'
 
+  // La bandeja con la caja de escribir y, pegado debajo, el aviso. En un chat nuevo va centrada en la pantalla, bajo el
+  // saludo y con las sugerencias debajo; con la conversación iniciada baja al pie y sin sugerencias (15 oct, Carlos).
+  const bandeja = (
+    <div className="flex w-full max-w-3xl flex-col items-center gap-3">
+    <div className="flex w-full flex-col gap-2 rounded-[1.75rem] bg-muted p-2">
+      <Composer
+        inputRef={inputRef}
+        value={draft}
+        onChange={setDraft}
+        onSend={send}
+        placeholder={placeholderFor(convo)}
+        onVoice={() => navigate('/suite-ai/voz')}
+        news={isNew && news}
+        onDismissNews={() => setNews(false)}
+        onOpenNews={() => setFeature(true)}
+        contextChip={convo === 'evaluaciones' && context ? 'Plan · Feedback efectivo' : undefined}
+        onRemoveContext={() => {
+          setContext(false)
+          notify('El agente ya no responde sobre el plan')
+        }}
+      />
+    </div>
+    <AvisoOrbit className="w-full" />
+    </div>
+  )
+
   return (
     <TooltipProvider delay={300}>
       {/* Dos columnas: a la izquierda el chat (mensajes + composer, centrados en el espacio que queda) y, cuando hay
           panel de actividad, este ocupa toda la derecha de arriba abajo y empuja el chat. */}
-      <div className="-m-6 flex h-[calc(100%+3rem)] min-h-0 flex-1 [&_button]:rounded-full!">
+      <div className="-m-6 flex h-[calc(100%+3rem)] min-h-0 flex-1 [&_button:not(.cn-item)]:rounded-full!">
         <ProcessCenter open={processes} onOpenChange={setProcesses} />
         <FeatureDialog open={feature} onOpenChange={setFeature} />
 
@@ -218,7 +250,7 @@ export function ChatView({ convo }: ChatViewProps) {
               {isNew ? (
                 <div className="flex flex-col items-center gap-4 py-8 text-center">
                   <span className={greet.orb}>
-                    <Orb className="size-14" />
+                    <Orb className="size-16" />
                   </span>
                   {/* Las palabras entran escalonadas al llegar a la pantalla. El lector de pantalla lee la frase
                       completa (oculta a la vista), no palabra por palabra. */}
@@ -236,13 +268,57 @@ export function ChatView({ convo }: ChatViewProps) {
                 </div>
               ) : null}
 
+              {isNew ? (
+                <>
+                  {bandeja}
+                  {/* Sugerencias para empezar: cuatro tarjetas con icono, título y bajada. Una abre su conversación y
+                      las demás dejan la pregunta escrita en la caja para que la persona la revise antes de enviar. */}
+                  <ul aria-label="Sugerencias para empezar" className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    {STARTERS.map((starter) => (
+                      <li key={starter.label} className="flex">
+                        {/* La bajada va en una línea; el globo la dice entera al pasar por cualquier parte de la tarjeta. */}
+                        <Hint side="top" label={starter.description}>
+                          <Item
+                            variant="outline"
+                            render={<button type="button" />}
+                            className="w-full text-left transition-colors hover:bg-accent/60"
+                            onClick={() => {
+                              if (starter.convo) navigate(`/suite-ai/chat/${starter.convo}`)
+                              else {
+                                setDraft(starter.draft ?? '')
+                                inputRef.current?.focus()
+                              }
+                            }}
+                          >
+                            {/* El icono va dentro del bloque de textos: así lo separan 8px (los 4 del bloque y 4 de margen)
+                                y no los 14 que el tema pone entre las partes del Item. Letra de 12px (15 oct, Carlos). */}
+                            <ItemContent className="w-full min-w-0">
+                              <ItemMedia variant="icon" className="mb-1 self-start">
+                                {/* Icono en el gris de los textos secundarios, más claro que el texto (15 oct, Carlos). */}
+                                <HugeiconsIcon icon={starter.icon} size={20} className="text-muted-foreground" />
+                              </ItemMedia>
+                              <Text as="span" size="xs" weight="medium" className="truncate">
+                                {starter.label}
+                              </Text>
+                              <Text as="span" size="xs" variant="muted" className="truncate">
+                                {starter.description}
+                              </Text>
+                            </ItemContent>
+                          </Item>
+                        </Hint>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+
               {convo === 'evaluaciones' ? (
                 <>
                   <MetricsCard
                     reminderSent={reminderSent}
                     onSendReminder={() => {
                       setReminderSent(true)
-                      notify('Recordatorio enviado a 24 personas')
+                      notify('Recordatorio enviado a 24 personas', undefined, 'success')
                       say('agent', 'Recordatorio enviado. Vuelvo a medir la terminación mañana a las 9:00 y te aviso si no se mueve.')
                     }}
                   />
@@ -293,44 +369,8 @@ export function ChatView({ convo }: ChatViewProps) {
             </div>
           </ScrollArea>
 
-          {/* Bandeja del composer */}
-          <div className="flex shrink-0 flex-col items-center gap-3 px-8 pt-2 pb-5">
-            <div className="flex w-full max-w-3xl flex-col gap-2 rounded-[1.75rem] bg-muted p-2">
-              {isNew ? (
-                <div className="flex flex-wrap gap-2 px-1 pt-1">
-                  {STARTERS.map((starter) => (
-                    <Button
-                      key={starter.label}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => (starter.convo ? navigate(`/suite-ai/chat/${starter.convo}`) : setDraft(starter.draft ?? ''))}
-                    >
-                      {starter.label}
-                    </Button>
-                  ))}
-                </div>
-              ) : null}
-              <Composer
-                inputRef={inputRef}
-                value={draft}
-                onChange={setDraft}
-                onSend={send}
-                placeholder={placeholderFor(convo)}
-                onVoice={() => navigate('/suite-ai/voz')}
-                news={isNew && news}
-                onDismissNews={() => setNews(false)}
-                onOpenNews={() => setFeature(true)}
-                contextChip={convo === 'evaluaciones' && context ? 'Plan · Feedback efectivo' : undefined}
-                onRemoveContext={() => {
-                  setContext(false)
-                  notify('El agente ya no responde sobre el plan')
-                }}
-              />
-            </div>
-            <p className="w-full max-w-3xl text-center text-sm text-muted-foreground">
-              El agente puede cometer errores. Antes de ejecutar verás el impacto.
-            </p>
-          </div>
+          {/* Pie: la bandeja del composer cuando ya hay conversación. */}
+          {isNew ? null : <div className="flex shrink-0 flex-col items-center px-8 pt-2 pb-5">{bandeja}</div>}
         </div>
 
         {/* El panel de actividad va en el hueco derecho del marco: sube hasta arriba, junto al header, y el header

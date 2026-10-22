@@ -14,6 +14,7 @@ import { ProfundidadNps, SeccionesNps, SegmentoNps } from './enps-vistas'
 import { BotonPantallaCompleta } from './pantalla-completa'
 import { TarjetaResumen } from './tarjeta-resumen'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // eNPS: ¿nos recomiendan? Arriba el puntaje, de −100 a +100, con el reparto de promotores, neutros
 // y detractores (tocar un anillo resalta ese grupo abajo). Tres vistas: por secciones, que va
@@ -57,7 +58,7 @@ export function Enps({ borrador, resultados, segmento, onSegmento }: Props) {
   const nps = resultados.nps
   if (!nps) {
     return (
-      <PrimeraVez icono="glass-chart" titulo="Esta encuesta no midió recomendabilidad" descripcion="El eNPS aparece cuando la encuesta incluye una pregunta de tipo NPS. Puedes añadirla en la siguiente medición." />
+      <PrimeraVez icono="glass-chart" titulo="Esta encuesta no midió recomendabilidad" descripcion="El eNPS aparece cuando la encuesta incluye una pregunta de tipo NPS. Puedes agregarla en la siguiente medición." />
     )
   }
 
@@ -96,10 +97,10 @@ export function Enps({ borrador, resultados, segmento, onSegmento }: Props) {
 
   const descripcion =
     vista === 'secciones'
-      ? `${contar(secciones)} preguntas`
+      ? `${contar(secciones)} ${plural(contar(secciones), 'pregunta', 'preguntas')}`
       : vista === 'segmento'
-        ? `${porSegmento?.columns.length ?? 0} grupos`
-        : `${numero(cobertura.answered)} respuestas de ${numero(cobertura.people)} personas${cobertura.coverage === null ? '' : ` · ${cobertura.coverage.toFixed(1).replace('.', ',')}% de cobertura`}`
+        ? `${porSegmento?.columns.length ?? 0} ${plural(porSegmento?.columns.length ?? 0, 'grupo', 'grupos')}`
+        : `${numero(cobertura.answered)} ${plural(cobertura.answered, 'respuesta', 'respuestas')} de ${numero(cobertura.people)} ${plural(cobertura.people, 'persona', 'personas')}${cobertura.coverage === null ? '' : ` · ${cobertura.coverage.toFixed(1).replace('.', ',')} % de cobertura`}`
 
   // Ver por, filtros, personalizar y la leyenda: en la cabecera de la caja y, igual, dentro de la pantalla completa.
   const controles = (
@@ -141,7 +142,7 @@ export function Enps({ borrador, resultados, segmento, onSegmento }: Props) {
         ayuda="Es el % de promotores menos el % de detractores, de −100 a +100. Detractores: 0 a 6; neutros: 7 y 8; promotores: 9 y 10."
         cifra={conSigno(nps.score)}
         lectura={LECTURA[tono]}
-        pie={`${numero(nps.n)} respuestas`}
+        pie={`${numero(nps.n)} ${plural(nps.n, 'respuesta', 'respuestas')}`}
         tituloAnillos="Distribución de respuestas"
         totalAnillos={`${numero(nps.n)} en total`}
         anillos={[
@@ -159,6 +160,7 @@ export function Enps({ borrador, resultados, segmento, onSegmento }: Props) {
             <div className="flex flex-col gap-4">
       {sinDemograficos ? <AvisoSinDemograficos /> : null}
       <Frame spacing="sm" className="[--frame-gap:0px]">
+        {/* Cabecera del marco en fila (título a la izquierda, controles a la derecha): con el tema sin capa solo obedece con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
         <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
           <div>
             <FrameTitle>{TITULO[vista]}</FrameTitle>
@@ -194,7 +196,10 @@ export function Enps({ borrador, resultados, segmento, onSegmento }: Props) {
           </FramePanel>
         ) : null}
         {vista === 'segmento' && porSegmento && activo ? (
-          <FramePanel className="p-0!">
+          <FramePanel
+            // Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita.
+            className="p-0!"
+          >
             <SegmentoNps key={activo.key} datos={porSegmento} niveles={nivelesVista} resaltadas={resaltadas} />
           </FramePanel>
         ) : (

@@ -60,7 +60,7 @@ import {
   ToggleGroupItem,
   cn,
 } from '@ubits/flux-ui'
-import { useAccion } from './carga'
+import { useAccion } from '@/modules/design-system/estados/carga'
 import { Badge } from '@/shared/components/Badge'
 import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
 import { notify, notifyAction } from '@/shared/components/notify'
@@ -145,6 +145,7 @@ import { simulado } from '../simular'
 import { VistaPreviaCorreo } from './vista-previa-correo'
 import { PORTAL } from './dialogos-vacante'
 import { noSeGuardo } from '../simular'
+import { plural, fechaCorta } from '@/modules/design-system/patrones/formato'
 
 // «Copiloto IA › Gestionar vacante con IA» (25 sep, Nicolás: «ahí deberíamos usar el agente contextual y que pueda
 // preguntar cosas y que sea hermoso»). Es el agente contextual del sistema de diseño, a la derecha y debajo del header.
@@ -160,7 +161,7 @@ import { noSeGuardo } from '../simular'
 //    en una hoja de vida y deja registrado lo que se aprobó a propuesta suya.
 // Nada cambia sin que el equipo lo apruebe (decisión 12).
 
-export type FiltroTablero = { soloEspera?: boolean; soloExEmpleados?: boolean }
+export type FiltroTablero = { vista?: 'espera' | 'proceso' }
 type Cambio = { candidatura: Candidatura; destino: string }
 
 type Agente = {
@@ -214,10 +215,10 @@ const F = {
   tablero: (ctx: ContextoVacante): ReplySource => ({ label: 'Tablero de la vacante', detail: `${personasTexto(ctx.dentro.length)} en proceso · al día`, icon: UserGroupIcon }),
   cv: (n: number): ReplySource => ({ label: 'Evaluación de los CVs', detail: `La IA leyó ${n === 1 ? 'un CV' : `${n} CVs`} contra los requisitos`, icon: File01Icon }),
   serena: (n: number): ReplySource => ({ label: 'Entrevistas con Serena AI', detail: n ? `${n} hechas en esta vacante` : 'Ninguna hecha todavía', icon: ChartAverageIcon }),
-  vacante: (ctx: ContextoVacante): ReplySource => ({ label: 'La vacante', detail: `${ctx.vacante.titulo} · ${ctx.vacante.requisitos.length} requisitos · ${pesos(ctx.vacante.rango[0])} – ${pesos(ctx.vacante.rango[1])}`, icon: Briefcase06Icon }),
+  vacante: (ctx: ContextoVacante): ReplySource => ({ label: 'La vacante', detail: `${ctx.vacante.titulo} · ${ctx.vacante.requisitos.length} ${plural(ctx.vacante.requisitos.length, 'requisito', 'requisitos')} · ${pesos(ctx.vacante.rango[0])} – ${pesos(ctx.vacante.rango[1])}`, icon: Briefcase06Icon }),
   salario: (): ReplySource => ({ label: 'Lo que pidió cada persona', detail: 'Al aplicar o en la entrevista; lo que alguien no dijo no cuenta', icon: MoneyBag02Icon }),
   rechazos: (ctx: ContextoVacante): ReplySource => ({ label: 'Rechazos de la vacante', detail: `${personasTexto(ctx.rechazadas.length)} con su motivo`, icon: File01Icon }),
-  base: (n: number): ReplySource => ({ label: 'Mis candidatos', detail: `${n} personas en la base de la empresa`, icon: Database01Icon }),
+  base: (n: number): ReplySource => ({ label: 'Mis candidatos', detail: `${n} ${plural(n, 'persona', 'personas')} en la base de la empresa`, icon: Database01Icon }),
   lotes: (n: number): ReplySource => ({ label: 'CVs importados', detail: `${n === 1 ? 'Un lote' : `${n} lotes`} de esta vacante`, icon: FileImportIcon }),
   actividad: (): ReplySource => ({ label: 'Actividad de la vacante', detail: 'Entradas, cambios de etapa y salidas', icon: UserGroupIcon }),
   persona: (c: Candidatura): ReplySource => ({ label: `CV · ${c.candidato.empresa}`, detail: `${c.candidato.nombre} · ${c.candidato.cargo}`, icon: File01Icon }),
@@ -602,17 +603,17 @@ function Comparacion({ ids, enfoques }: { ids: string[]; enfoques: Enfoque[] }) 
   // La comparación como texto, para pegarla en un correo o un chat, y como nota en la ficha de cada una (OF-25).
   const comoTexto = () =>
     [
-      `Comparación para ${ctx.vacante.titulo} (${new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })})`,
+      `Comparación para ${ctx.vacante.titulo} (${fechaCorta(new Date().toLocaleDateString('en-CA'))})`,
       ...personas.map((c) => `- ${c.candidato.nombre}: cumple ${cumplidosDe(c.criterios)} de ${c.criterios.length}, ${c.candidato.anios} años${c.candidato.serena !== undefined ? `, Serena ${c.candidato.serena}/100` : ''}${rechazoDe(ctx, c.id) ? ', fuera del proceso' : `, en ${tituloEtapa(c.etapa)}`}.`),
       `Con quién seguiría: ${elegida.candidato.nombre}. ${razones.join(' ')}`,
     ].join('\n')
   const guardar = () => {
     if (noSeGuardo(`comparacion:${personas.map((c) => c.id).join(',')}`, 'No pudimos guardar la comparación', guardar)) return
-    const texto = `Orbit Flow comparó a ${nombres(personas.map((c) => c.candidato.nombre))}. Seguiría con ${elegida.candidato.nombre}: ${razones.join(' ')}`
+    const texto = `Orbit comparó a ${nombres(personas.map((c) => c.candidato.nombre))}. Seguiría con ${elegida.candidato.nombre}: ${razones.join(' ')}`
     const deshacer = personas.map((c) =>
       expedienteDeSesion.comentar(
         claveDeComentario(c.candidato.id, c.id, c.etapa),
-        { id: Date.now() + Math.random(), autor: 'Orbit Flow', fecha: `Hoy, ${new Date().toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}`, texto, agente: true },
+        { id: Date.now() + Math.random(), autor: 'Orbit', fecha: `Hoy, ${new Date().toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}`, texto, agente: true },
         tituloEtapa(c.etapa),
       ),
     )
@@ -1081,7 +1082,7 @@ function ConfirmarCambio({ id, campo, valor }: { id: string; campo: CampoEditabl
             setEstado({ tipo: 'deshecho' })
           }}
         >
-          {nombreDeCampo(campo)} de {primerNombre(c)} {actualizadoCampo(campo)} por {QUIEN_MUEVE.split(' ')[0]}, desde Orbit Flow
+          {nombreDeCampo(campo)} de {primerNombre(c)} {actualizadoCampo(campo)} por {QUIEN_MUEVE.split(' ')[0]}, desde Orbit
         </UndoRow>
       ) : null}
     </>
@@ -1111,7 +1112,7 @@ function Rechazar({ ids }: { ids: string[] }) {
         derecha={(c) => (c.candidato.accion ? <Badge variant="warning-light">Espera</Badge> : null)}
       />
       <Acciones>
-        <Button className={PILL} onClick={() => onRechazar(siguen, porAgente('lo pediste a Orbit Flow'))}>
+        <Button className={PILL} onClick={() => onRechazar(siguen, porAgente('lo pediste a Orbit'))}>
           {siguen.length === 1 ? `Rechazar a ${primerNombre(siguen[0])}…` : `Rechazar a ${personasTexto(siguen.length)}…`}
         </Button>
         {siguen.length === 1 ? (
@@ -1169,7 +1170,7 @@ function Mover({ ids, destino }: { ids: string[]; destino?: string }) {
                   </div>
                 </div>
                 <div className="flex gap-2 pl-8.5">
-                  <Button size="sm" onClick={() => onMover(c, a, porAgente('lo pediste a Orbit Flow'))}>
+                  <Button size="sm" onClick={() => onMover(c, a, porAgente('lo pediste a Orbit'))}>
                     Aprobar
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setAhoraNo([...ahoraNo, c.id])}>
@@ -1234,8 +1235,8 @@ function Plan({ accion, grupo, destino }: { accion: 'rechazar' | 'mover' | 'reco
   const cuantas = accion === 'mover' ? movibles.length : elegidas.length
 
   const aprobar = () => {
-    if (accion === 'rechazar') onRechazar(elegidas, porAgente(`lo propuso Orbit Flow para ${quien}`))
-    if (accion === 'mover') onMoverVarias(movibles.map((c) => ({ candidatura: c, destino: destinoDe(c) as string })), porAgente(`lo propuso Orbit Flow para ${quien}`))
+    if (accion === 'rechazar') onRechazar(elegidas, porAgente(`lo propuso Orbit para ${quien}`))
+    if (accion === 'mover') onMoverVarias(movibles.map((c) => ({ candidatura: c, destino: destinoDe(c) as string })), porAgente(`lo propuso Orbit para ${quien}`))
     if (accion === 'recordar') setEscribiendo(true)
     if (accion !== 'recordar') setHecho(true)
   }
@@ -1258,7 +1259,7 @@ function Plan({ accion, grupo, destino }: { accion: 'rechazar' | 'mover' | 'reco
       quien: QUIEN_MUEVE,
       saltadas: [],
       aviso: ASUNTO_RECORDAR,
-      porAgente: porAgente(`lo propuso Orbit Flow para ${quien}`),
+      porAgente: porAgente(`lo propuso Orbit para ${quien}`),
     }))
     const reciben = elegidas.filter((c) => !baseDeCandidatos.deId(c.personaId)?.noContactar)
     registroDeMovimientos.agregar(nuevos.filter((m) => reciben.some((c) => c.id === m.candidaturaId)))
@@ -1318,7 +1319,7 @@ function Plan({ accion, grupo, destino }: { accion: 'rechazar' | 'mover' | 'reco
           <span>
             <span className="text-foreground">Se puede deshacer: </span>sí, con «Deshacer» en el aviso que sale al terminar.
           </span>
-          <span>Queda en la historia de cada persona que lo propuso Orbit Flow y lo aprobaste tú.</span>
+          <span>Queda en la historia de cada persona que lo propuso Orbit y lo aprobaste tú.</span>
         </div>
       </AgentCard>
       {hecho ? (
@@ -1434,7 +1435,7 @@ function Propuestas() {
             onClick={() =>
               onMoverVarias(
                 avances.map((p) => ({ candidatura: buscarEn(ctx, p.candidatura.id) as Candidatura, destino: p.destino })),
-                porAgente('lo propuso Orbit Flow en «¿Qué me propones hacer hoy?»'),
+                porAgente('lo propuso Orbit en «¿Qué me propones hacer hoy?»'),
               )
             }
           >
@@ -1482,7 +1483,7 @@ function Embudo() {
                   ) : null}
                 </span>
               </div>
-              <Progress value={(cuantos / mayor) * 100} aria-label={`${etapa.titulo}: ${cuantos} personas`} />
+              <Progress value={(cuantos / mayor) * 100} aria-label={`${etapa.titulo}: ${cuantos} ${plural(cuantos, 'persona', 'personas')}`} />
             </div>
           ))}
         </div>
@@ -1509,7 +1510,7 @@ function ResumenParaComite({ c }: { c: Candidatura }) {
     if (noSeGuardo(`resumen:${c.id}`, 'No pudimos guardar el resumen', guardar)) return
     const deshacer = expedienteDeSesion.comentar(
       claveDeComentario(c.candidato.id, c.id, c.etapa),
-      { id: Date.now(), autor: 'Orbit Flow', fecha: `Hoy, ${new Date().toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}`, texto: lineas.join(' · '), agente: true },
+      { id: Date.now(), autor: 'Orbit', fecha: `Hoy, ${new Date().toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}`, texto: lineas.join(' · '), agente: true },
       tituloEtapa(c.etapa),
     )
     setGuardada(true)
@@ -1912,7 +1913,7 @@ function AcercaDe() {
             'Uso los datos de esta vacante: los CVs, lo que concluyó la IA de cada requisito, las entrevistas, lo que pide cada persona y el historial. Nada que tu permiso no deje ver.',
             'No uso la edad, el género, la nacionalidad, el estado civil ni la foto, y no respondo por ellos.',
             'Nada cambia sin que lo apruebes, y queda en la historia de cada persona que lo propuse yo.',
-            'Esta conversación la ves solo tú. Se guarda mientras dure tu visita a Selección y se borra al cerrar la sesión.',
+            'Esta conversación la ves solo tú. Se guarda mientras dure tu visita a Selección y se elimina al cerrar la sesión.',
             'Preguntarme no gasta créditos de IA. Gastan las etapas con IA (Serena AI, las pruebas) cuando alguien entra a ellas.',
           ]}
         />
@@ -1973,7 +1974,7 @@ function Esperan() {
       />
       {onFiltrar ? (
         <Acciones>
-          <Button variant="outline" className={PILL_XS} onClick={() => onFiltrar({ soloEspera: true })}>
+          <Button variant="outline" className={PILL_XS} onClick={() => onFiltrar({ vista: 'espera' })}>
             Ver solo a ellas en el tablero
           </Button>
         </Acciones>
@@ -2034,7 +2035,7 @@ function Salario() {
       </AgentNote>
       <ListaPersonas
         personas={piden}
-        detalle={(c) => `${tituloEtapa(c.etapa)} · ${cumplidosDe(c.criterios)} de ${c.criterios.length} requisitos`}
+        detalle={(c) => `${tituloEtapa(c.etapa)} · ${cumplidosDe(c.criterios)} de ${c.criterios.length} ${plural(c.criterios.length, 'requisito', 'requisitos')}`}
         derecha={(c) => (
           <Badge variant="warning-light" className="tabular-nums">
             {pesos(c.candidato.pretension)}
@@ -2270,20 +2271,14 @@ function Origen({ origen }: { origen?: string }) {
 }
 
 function ExEmpleados() {
-  const { ctx, onFiltrar } = useAgente()
+  const { ctx } = useAgente()
   const ex = exEmpleadosDe(ctx)
   if (!ex.length) return <AgentNote>Nadie en proceso trabajó antes en la empresa.</AgentNote>
   return (
     <>
       <AgentNote>{ex.length === 1 ? 'Una persona en proceso ya trabajó' : `${ex.length} personas en proceso ya trabajaron`} en la empresa. Su ficha dice cuándo y por qué salió.</AgentNote>
+      {/* Sin «Ver solo a ellas en el tablero»: el tablero ya no filtra por ex empleados (13 oct, PM). */}
       <ListaPersonas personas={ex} detalle={(c) => `${tituloEtapa(c.etapa)} · ${c.candidato.cargo}`} derecha={cumpleBadge} />
-      {onFiltrar ? (
-        <Acciones>
-          <Button variant="outline" className={PILL_XS} onClick={() => onFiltrar({ soloExEmpleados: true })}>
-            Ver solo a ellas en el tablero
-          </Button>
-        </Acciones>
-      ) : null}
     </>
   )
 }
@@ -2293,7 +2288,7 @@ function RequisitosDeLaVacante() {
   return (
     <>
       <AgentNote>
-        {ctx.vacante.titulo} pide {ctx.vacante.requisitos.length} requisitos. Con ellos la IA lee cada CV:
+        {ctx.vacante.titulo} pide {ctx.vacante.requisitos.length} {plural(ctx.vacante.requisitos.length, 'requisito', 'requisitos')}. Con ellos la IA lee cada CV:
       </AgentNote>
       <AgentCard className={cn('mt-3', styles.propIn)}>
         <AgentList items={ctx.vacante.requisitos} />
@@ -2351,7 +2346,7 @@ function EtapasDeLaVacante() {
   const { ctx } = useAgente()
   return (
     <>
-      <AgentNote>El proceso de {ctx.vacante.titulo} tiene {ctx.vacante.etapas.length} etapas:</AgentNote>
+      <AgentNote>El proceso de {ctx.vacante.titulo} tiene {ctx.vacante.etapas.length} {plural(ctx.vacante.etapas.length, 'etapa', 'etapas')}:</AgentNote>
       <AgentCard className={cn('mt-3', styles.propIn)}>
         <ol className="flex flex-col gap-2">
           {ctx.vacante.etapas.map((etapa, indice) => (
@@ -2423,7 +2418,7 @@ function Desenlace() {
   return (
     <>
       <AgentNote>
-        {ctx.vacante.desenlace ?? 'Está cerrada.'} Estuvo abierta {ctx.vacante.diasAbierta} días.
+        {ctx.vacante.desenlace ?? 'Está cerrada.'} Estuvo abierta {ctx.vacante.diasAbierta} {plural(ctx.vacante.diasAbierta, 'día', 'días')}.
       </AgentNote>
       <AgentCard className={cn('mt-3', styles.propIn)}>
         <AgentList

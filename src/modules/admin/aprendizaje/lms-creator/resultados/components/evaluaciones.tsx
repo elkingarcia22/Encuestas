@@ -1,19 +1,21 @@
 import { useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CheckmarkCircle02Icon, Clock01Icon, RepeatIcon, ScaleIcon, Task01Icon } from '@hugeicons/core-free-icons'
-import { Alert, AlertDescription, Button, Frame, FrameHeader, FramePanel, FrameTitle, Heading, Text, type DataGridListConfig } from '@ubits/flux-ui'
+import { Alert, AlertDescription, Button, Frame, FrameHeader, FramePanel, FrameTitle, Heading, Tabs, TabsContent, TabsList, TabsTrigger, Text, type DataGridListConfig } from '@ubits/flux-ui'
 import { Badge } from '@/shared/components/Badge'
 import { AnilloAvance, DonaReparto } from '@/modules/design-system/graficos/piezas'
 import { ColumnaIndicador } from '@/modules/design-system/graficos/fila-indicadores'
 import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { ActionDialog } from '@/shared/components/ActionDialog'
+import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { BotonAyuda } from '@/shared/components/BotonAyuda'
 import { PageSection } from '@/shared/components/PageShell'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
-import { intentosPorPersona, leerEvaluacion, numero, porcentaje, type EstadoEvaluacion, type Resultados } from './datos'
-import { ESTADO_EVALUACION, ResumenPestana, ordenarFilas } from './piezas'
+import { intentosPorPersona, leerEvaluacion, numero, porcentaje, respuestasDeEvaluacion, type EstadoEvaluacion, type Resultados } from './datos'
+import { ESTADO_EVALUACION, ResumenPestana, ordenarFilas, useParametroUrl } from './piezas'
+import { ListaRespuestas } from './respuestas'
 
 // Evaluaciones: ¿cuánta gente aprueba, y cuál es la que se atraganta?
 //
@@ -33,6 +35,9 @@ export function Evaluaciones({ resultados }: { resultados: Resultados }) {
   const [porPagina, setPorPagina] = useState(10)
   const [version, setVersion] = useState(0)
   const [conPesos, setConPesos] = useState(false)
+  // Quién está abierto, en la dirección: `?persona=<correo>` abre su detalle y se puede enlazar.
+  const [correoAbierto, setCorreoAbierto] = useParametroUrl('persona')
+  const abierta = colaboradores.find((persona) => persona.email === correoAbierto) ?? null
 
   const filas = useMemo<Fila[]>(
     () =>
@@ -92,7 +97,8 @@ export function Evaluaciones({ resultados }: { resultados: Resultados }) {
   }
 
   const columnas: DataGridListConfig<Fila>['columns'] = [
-    { accessorKey: 'nombre', header: 'Nombre', size: 230, cell: ({ row }) => <CeldaTitulo titulo={row.original.nombre} detalle={row.original.email} /> },
+    // El nombre se abre, como en Roleplay: la tabla dice quién falló y el panel, en qué (Cristian Niño, 14-oct).
+    { accessorKey: 'nombre', header: 'Nombre', size: 230, cell: ({ row }) => <CeldaTitulo titulo={row.original.nombre} detalle={row.original.email} onClick={() => setCorreoAbierto(row.original.email)} /> },
     ...evaluaciones.map((evaluacion) => ({
       id: evaluacion.id,
       // Las condiciones de la evaluación viven en la ayuda de su columna: ahí es donde se preguntan, al leer un resultado raro.
@@ -202,6 +208,10 @@ export function Evaluaciones({ resultados }: { resultados: Resultados }) {
         />
       </PageSection>
 
+      <DrawerShell open={abierta !== null} onOpenChange={(valor) => !valor && setCorreoAbierto('')} title="Respuestas de la persona" size="md">
+        {abierta ? <DetallePersona persona={abierta} evaluaciones={evaluaciones} /> : null}
+      </DrawerShell>
+
       {/* Las condiciones de todas las evaluaciones, en su ventana.
 
           Antes iban como insignias junto al título, y eso solo se sostiene con dos o tres: un contenido con diez
@@ -301,5 +311,92 @@ export function ColumnaIntentos({ intentos }: { intentos: { uno: number; dos: nu
         </Text>
       }
     />
+  )
+}
+
+/**
+ * Una persona por dentro: qué sacó en cada evaluación y qué marcó en cada pregunta.
+ *
+ * Es el mismo panel que ya tenía Roleplay, traído aquí porque la pregunta es la misma: la tabla dice **quién** falló y
+ * el panel dice **en qué**, que es lo único que se puede arreglar (Cristian Niño, 14-oct). Con varias evaluaciones van
+ * en pestañas, porque verlas seguidas en un panel estrecho hace perder de vista cuál se está leyendo.
+ */
+function DetallePersona({ persona, evaluaciones }: { persona: Resultados['datos']['colaboradores'][number]; evaluaciones: Resultados['datos']['evaluaciones'] }) {
+  const primera = evaluaciones[0]
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-1">
+        <Text as="p" size="sm" weight="semibold">
+          {persona.nombre}
+        </Text>
+        <Text as="p" size="sm" variant="muted">
+          {persona.email}
+        </Text>
+      </div>
+
+      {evaluaciones.length === 1 ? (
+        <BloqueEvaluacion persona={persona} evaluacion={primera} />
+      ) : (
+        <Tabs defaultValue={primera.id}>
+          <TabsList variant="line">
+            {evaluaciones.map((evaluacion) => (
+              <TabsTrigger key={evaluacion.id} value={evaluacion.id} className="flex-none">
+                {evaluacion.nombre}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {evaluaciones.map((evaluacion) => (
+            <TabsContent key={evaluacion.id} value={evaluacion.id}>
+              <div className="pt-4">
+                <BloqueEvaluacion persona={persona} evaluacion={evaluacion} />
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
+    </div>
+  )
+}
+
+/** Lo que sacó en una evaluación: el resultado arriba y, debajo, pregunta por pregunta. */
+function BloqueEvaluacion({ persona, evaluacion }: { persona: Resultados['datos']['colaboradores'][number]; evaluacion: Resultados['datos']['evaluaciones'][number] }) {
+  const lectura = leerEvaluacion(persona.evaluaciones[evaluacion.id], evaluacion)
+  const respuestas = respuestasDeEvaluacion(persona, evaluacion)
+
+  if (lectura.estado === 'Pendiente') {
+    return (
+      <PrimeraVez
+        icono="glass-document"
+        titulo="Todavía no la ha presentado"
+        descripcion={`Cuando responda «${evaluacion.nombre}», aquí se verán sus respuestas pregunta por pregunta.`}
+      />
+    )
+  }
+
+  const acertadas = respuestas.filter((respuesta) => respuesta.acertada).length
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-3">
+        <AnilloAvance valor={lectura.logrado ?? 0} color="var(--primary)" etiqueta={`Resultado de ${evaluacion.nombre}`} tamano={44} />
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="flex items-center gap-2">
+            <Text as="span" size="sm" weight="semibold" className="tabular-nums">
+              {porcentaje(lectura.logrado ?? 0)}
+            </Text>
+            <Badge variant={ESTADO_EVALUACION[lectura.estado]} size="sm">
+              {lectura.estado}
+            </Badge>
+          </span>
+          <Text as="span" size="xs" variant="muted" className="tabular-nums">
+            {acertadas} de {respuestas.length} correctas · aprueba con{' '}
+            {evaluacion.porcentajeAprobar == null ? 'cualquier resultado' : `${evaluacion.porcentajeAprobar}%`}
+          </Text>
+        </div>
+      </div>
+
+      <ListaRespuestas respuestas={respuestas} />
+    </div>
   )
 }

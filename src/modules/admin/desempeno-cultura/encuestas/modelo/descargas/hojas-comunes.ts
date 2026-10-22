@@ -1,6 +1,7 @@
 import { flattenResultSections, sectionResultsForFilters, type SegmentFilter, type SurveyResults } from '../surveyResults'
 import type { SurveyDraft } from '../surveyBuilderTypes'
 import { bandStyle, blankRow, dataRow, headRow, hintRow, titleRow, type RowSpec, type SheetSpec } from './libro'
+import { fechaCorta } from '@/modules/design-system/patrones/formato'
 
 /** Piezas que comparten varios libros de clima: el encabezado de cada hoja y la tabla de preguntas. */
 
@@ -16,7 +17,7 @@ export const filterLabelFor = (results: SurveyResults, filters: readonly Segment
 /** The "title + context + blank" block every sheet opens with. */
 export const sheetIntro = (title: string, draft: SurveyDraft, results: SurveyResults, filters: readonly SegmentFilter[], extra?: string): RowSpec[] => [
   titleRow(title),
-  hintRow([draft.name, `Generado el ${new Date().toLocaleDateString('es-CO')}`, `Población: ${filterLabelFor(results, filters)}`, ...(extra ? [extra] : [])].join('  ·  ')),
+  hintRow([draft.name, `Generado el ${fechaCorta(new Date().toLocaleDateString('en-CA'))}`, `Población: ${filterLabelFor(results, filters)}`, ...(extra ? [extra] : [])].join('  ·  ')),
   blankRow,
 ]
 

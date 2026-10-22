@@ -45,7 +45,8 @@ type Detalle = { nombre: string; hechaCon: string[]; grupo: Grupo; verEn: string
 // página del design system donde se ve. La clave es el primer nombre de `usa` en el catálogo.
 const DETALLE: Record<string, Detalle> = {
   PageShell: { nombre: 'Marco de página', hechaCon: ['Breadcrumb', 'Heading', 'Text'], grupo: 'marco', verEn: '/design-system/marco', ficha: 'pieza-pageshell' },
-  CommandPalette: { nombre: 'Buscador de comandos', hechaCon: ['Command', 'Dialog', 'Kbd'], grupo: 'marco', verEn: '/design-system/marco/capturas', ficha: 'buscador' },
+  // 13-oct: el buscador quedó fuera del rediseño (regla «sin-buscador-global»); sigue en la lista porque el encabezado actual lo trae.
+  CommandPalette: { nombre: 'Buscador de comandos (fuera del rediseño)', hechaCon: ['Command', 'Dialog', 'Kbd'], grupo: 'marco', verEn: '/design-system/marco/header', ficha: 'buscador' },
   ProcessCenter: { nombre: 'Centro de procesos', hechaCon: ['Popover', 'Progress', 'Item'], grupo: 'marco', verEn: '/design-system/estados', ficha: 'pieza-process-center' },
   ChatStatusDot: { nombre: 'Punto de estado del chat', hechaCon: [], grupo: 'marco', verEn: '/design-system/suite-ai-chat', ficha: 'pensando' },
 
@@ -55,10 +56,18 @@ const DETALLE: Record<string, Detalle> = {
   DrawerShell: { nombre: 'Panel lateral', hechaCon: ['Drawer', 'Button'], grupo: 'ventanas', verEn: '/design-system/drawers', ficha: 'drawer' },
   FeatureDialog: { nombre: 'Novedades y bienvenida', hechaCon: ['Dialog', 'Button', 'Badge'], grupo: 'ventanas', verEn: '/design-system/modales', ficha: 'dialogos' },
   CloseButton: { nombre: 'Botón de cerrar', hechaCon: ['Button'], grupo: 'ventanas', verEn: '/design-system/drawers', ficha: 'cerrar' },
+  // 13-oct: piezas que salían con su nombre de código en «Tarjetas» porque nadie las sumó a esta tabla.
+  RegistroConfirmar: { nombre: 'Tarjeta de lo que se toca', hechaCon: ['IconTile', 'Heading', 'Badge'], grupo: 'ventanas', verEn: '/design-system/estados' },
+  // 13-oct: es también la ventana de salir (VentanaSalir); va con las ventanas y se ve en Ventanas.
+  BotonSalirCreacion: { nombre: 'Ventana de salir de una creación', hechaCon: ['AlertDialog', 'Button'], grupo: 'ventanas', verEn: '/design-system/modales' },
+  DialogoEscribir: { nombre: 'Ventana para escribir un correo', hechaCon: ['Dialog', 'Select', 'Textarea'], grupo: 'pantallas', verEn: '/design-system/componentes' },
+  DialogoCompartirVacante: { nombre: 'Ventana para compartir una vacante', hechaCon: ['Dialog', 'Input', 'Button'], grupo: 'pantallas', verEn: '/design-system/componentes' },
+  pedirMover: { nombre: 'Mover de etapa', hechaCon: ['Dialog', 'Select'], grupo: 'pantallas', verEn: '/design-system/componentes' },
 
   BotonIcono: { nombre: 'Botón de solo icono', hechaCon: ['Button'], grupo: 'botones', verEn: '/design-system/botones', ficha: 'boton-icono' },
-  FiltroChip: { nombre: 'Chip de filtro rápido', hechaCon: ['Button', 'Badge'], grupo: 'botones', verEn: '/design-system/data-grid', ficha: 'pieza-filtro-chip' },
-  ChipGuardado: { nombre: 'Chip de guardado', hechaCon: ['Badge', 'Spinner'], grupo: 'botones', verEn: '/design-system/formularios', ficha: 'save-indicator' },
+  // 13-oct: el chip de filtro y el de guardado se ven en Navegación (y Navegación › Pasos), no en Tablas ni Formularios.
+  FiltroChip: { nombre: 'Chip de filtro rápido', hechaCon: ['Button', 'Badge'], grupo: 'botones', verEn: '/design-system/navegacion', ficha: 'pieza-filtro-chip' },
+  ChipGuardado: { nombre: 'Chip de guardado', hechaCon: ['Badge', 'Spinner'], grupo: 'botones', verEn: '/design-system/navegacion/pasos', ficha: 'save-indicator' },
   Badge: { nombre: 'Insignia del proyecto', hechaCon: ['Badge'], grupo: 'botones', verEn: '/design-system/componentes/reglas', ficha: 'insignias' },
   SelectorMultiple: { nombre: 'Selector múltiple', hechaCon: ['Combobox', 'Badge'], grupo: 'botones', verEn: '/design-system/formularios', ficha: 'pieza-selector-multiple' },
   SelectorColor: { nombre: 'Selector de color', hechaCon: ['Popover', 'Slider', 'Select', 'Input', 'Button'], grupo: 'botones', verEn: '/design-system/formularios', ficha: 'pieza-selector-color' },
@@ -83,6 +92,7 @@ const DETALLE: Record<string, Detalle> = {
   LluviaConfeti: { nombre: 'Confeti de cierre', hechaCon: [], grupo: 'estados', verEn: '/design-system/componentes/ficha/pieza-confeti', ficha: 'pieza-confeti' },
   PrimeraVez: { nombre: 'Estados vacíos', hechaCon: ['Empty', 'Button'], grupo: 'estados', verEn: '/design-system/estados', ficha: 'pieza-primera-vez' },
   PantallaDeError: { nombre: 'Pantalla de error', hechaCon: ['Empty', 'Button'], grupo: 'estados', verEn: '/design-system/estados', ficha: 'pieza-pantalla-error' },
+  PantallaProximamente: { nombre: 'Pantalla que viene en camino', hechaCon: ['Empty', 'Badge'], grupo: 'estados', verEn: '/design-system/estados' },
   useCarga: { nombre: 'Esqueletos y espera', hechaCon: ['Skeleton'], grupo: 'estados', verEn: '/design-system/estados', ficha: 'pieza-carga' },
   ImagenGlass: { nombre: 'Ilustración Glass', hechaCon: [], grupo: 'estados', verEn: '/design-system/icons', ficha: 'pieza-imagen-glass' },
 
@@ -94,11 +104,12 @@ const DETALLE: Record<string, Detalle> = {
   BotonIa: { nombre: 'Botones de IA', hechaCon: ['Button'], grupo: 'ia', verEn: '/design-system/ia/botones', ficha: 'ia' },
   AiCard: { nombre: 'Tarjeta de IA', hechaCon: ['Card', 'Button'], grupo: 'ia', verEn: '/design-system/tarjeta-ia', ficha: 'pieza-ai-card' },
   AiThinking: { nombre: 'Estado «Razonando»', hechaCon: ['Text'], grupo: 'ia', verEn: '/design-system/ia/estados', ficha: 'pieza-ai-thinking' },
-  AgentStage: { nombre: 'Agente contextual (Orbit Flow)', hechaCon: ['Frame', 'Item', 'Button', 'Badge'], grupo: 'ia', verEn: '/design-system/agente-contextual', ficha: 'rotulos-agente' },
+  AgentStage: { nombre: 'Agente contextual (Orbit)', hechaCon: ['Frame', 'Item', 'Button', 'Badge'], grupo: 'ia', verEn: '/design-system/agente-contextual', ficha: 'rotulos-agente' },
   'issue-card': { nombre: 'Tarjeta de incidencia del agente', hechaCon: ['Card', 'Badge'], grupo: 'ia', verEn: '/design-system/agente-contextual', ficha: 'pieza-issue-card' },
 }
 
-const claveDe = (usa: string) => usa.split(/[\s,(:]/)[0]
+// El primer nombre de `usa`, sin el punto o la comilla que a veces lo acompañan («CommandPalette.»).
+const claveDe = (usa: string) => usa.split(/[\s,(:]/)[0].replace(/[.`]+$/, '')
 
 const DEL_CATALOGO: PiezaInventario[] = (catalogo.piezas_del_proyecto.ya_resueltas as PiezaCatalogo[]).map((p) => {
   const pieza = claveDe(p.usa)

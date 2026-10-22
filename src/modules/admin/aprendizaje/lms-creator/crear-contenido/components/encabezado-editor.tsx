@@ -7,7 +7,6 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-  Badge,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -21,6 +20,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ChipGuardado, type EstadoGuardado } from '@/shared/components/ChipGuardado'
 import { CloseButton } from '@/shared/components/CloseButton'
 import type { Visibilidad } from './borrador'

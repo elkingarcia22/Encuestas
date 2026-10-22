@@ -20,6 +20,9 @@ import {
 // la librería trae su propia copia de recharts). El patrón con ChartContainer está en
 // src/modules/admin/desempeno-cultura/encuestas/components/graficos.tsx.
 
+// Sparkline, Anillo y Dona se retiraron el 13-oct (reglas.json): solo los usa el Archivo congelado. En su lugar,
+// Tendencia, AnilloAvance y DonaReparto de design-system/graficos/piezas.
+
 const EJE = { fill: 'var(--muted-foreground)', fontSize: 12 }
 
 const TOOLTIP = {

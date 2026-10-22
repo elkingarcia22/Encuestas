@@ -36,6 +36,8 @@ export function BloqueTipo({ id, valor, onCambio, deshabilitado = false }: { id:
         <RadioGroup value={valor} onValueChange={(nuevo) => onCambio(nuevo as DemographicType)} disabled={deshabilitado} className="grid gap-2">
             {DEMOGRAPHIC_TYPES.map((entrada) => (
               <FieldLabel key={entrada.value} htmlFor={`${id}-${entrada.value}`} className={TARJETA_OPCION}>
+                {/* items-center!: el radio, el icono y el texto centrados en la tarjeta; el campo en fila los alinea arriba y no
+                    cede con una clase normal (ficha instalacion-estilos-sin-capa en ai-tools/flux-ui/diferencias.json). */}
                 <Field orientation="horizontal" className="items-center!">
                   <RadioGroupItem value={entrada.value} id={`${id}-${entrada.value}`} />
                   <IconTile variant="soft" size="sm" className={`shrink-0 ${TEXTO_POR_TONO[demographicTypeTone(entrada.value)]}`}>
@@ -88,6 +90,7 @@ export function BloqueOpciones({
             </Text>
             <Input value={opcion.texto} disabled={fijas} maxLength={LIMITE_OPCION_DEMOGRAFICO.max} aria-label={`Opción ${indice + 1}`} placeholder={`Opción ${indice + 1}`} onChange={(evento) => onCambiar(opcion.clave, evento.target.value.slice(0, LIMITE_OPCION_DEMOGRAFICO.max))} />
             {fijas ? null : (
+              // text-destructive!: el botón de icono no trae tono rojo para eliminar (ficha button-ghost-tonos).
               <BotonIcono aria-label={`Eliminar opción ${indice + 1}`} className="text-destructive!" disabled={opciones.length <= minimo} onClick={() => onQuitar(opcion.clave)}>
                 <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
               </BotonIcono>

@@ -1,8 +1,7 @@
-import { Fragment, type KeyboardEvent, type ReactNode } from 'react'
+import { Fragment, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowDown01Icon, DragDropVerticalIcon, PencilEdit02Icon, PlusSignIcon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { ArrowDown01Icon, DragDropVerticalIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   cn,
   DropdownMenu,
@@ -33,10 +32,10 @@ import {
   KanbanItemHandle,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
-import { Hint } from '@/shared/components/Hint'
 import { EtiquetaIA } from '@/modules/design-system/ia/etiqueta-ia'
-import { notify } from '@/shared/components/notify'
+import { notifyAction } from '@/shared/components/notify'
 import {
   childEntries,
   countDescendants,
@@ -59,12 +58,11 @@ import { useMotivoBloqueo } from '../en-curso'
 import { LIMITE_TITULO_SECCION, cercaDelTope, contador, cortoDeMinimo, mensajeMinimo } from '../../../modelo/limites-texto'
 
 // Una sección con todo lo que cuelga de ella. Tres piezas, de mayor a menor:
-// · la sección (nivel 1) es un contenedor, como los de Participantes: cabecera con sus acciones siempre visibles y, al
-//   pie, UNA sola barra «Añadir» que crea preguntas y subsecciones en cualquier punto de la sección;
+// · la sección (nivel 1) es un contenedor, como los de Participantes: cabecera con sus acciones y, al
+//   pie, UNA sola barra «Agregar» que crea preguntas, subsecciones o una nueva sección;
 // · las subsecciones son acordeones sin caja, separados por una línea, con sus preguntas debajo y con sangría;
 // · las preguntas son filas (lista-preguntas).
-// En subsecciones y preguntas las acciones (editar, mover, eliminar) salen al pasar el cursor. El título y la
-// descripción se editan en el mismo sitio donde se leen. La numeración sale de la posición.
+// El título y la descripción se editan dándole clic directamente donde se leen.
 import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 const resumen = (seccion: SurveySection) => {
@@ -81,24 +79,51 @@ function descendientes(entrada: SectionTreeEntry): SectionTreeEntry[] {
   return childEntries(entrada).flatMap((hija) => [hija, ...descendientes(hija)])
 }
 
-// Título y descripción: se leen en la cabecera y, con el lápiz, se editan ahí mismo.
-function Titulo({ entrada, editando, onTerminar }: { entrada: SectionTreeEntry; editando: boolean; onTerminar: () => void }) {
+// Título y descripción: se leen en la cabecera y, al hacer clic sobre ellos, se editan ahí mismo sin botones adicionales.
+function Titulo({
+  entrada,
+  editando,
+  bloqueado,
+  focoInicial,
+  onIniciar,
+  onTerminar,
+}: {
+  entrada: SectionTreeEntry
+  editando: boolean
+  bloqueado: boolean
+  focoInicial: 'titulo' | 'descripcion'
+  onIniciar: (campo: 'titulo' | 'descripcion') => void
+  onTerminar: () => void
+}) {
   const { secciones, cambiar, recien } = useArbol()
   const { section: seccion, depth, numbering } = entrada
   const nombre = seccion.title.trim() || `${NIVEL[depth]} ${numbering}`
   const terminarConTecla = (evento: KeyboardEvent<HTMLInputElement>) => {
-    if (evento.key === 'Enter' || evento.key === 'Escape') onTerminar()
+    if (evento.key === 'Enter' || evento.key === 'Escape') {
+      evento.currentTarget.blur()
+      onTerminar()
+    }
   }
-  if (editando) {
+  if (editando && !bloqueado) {
     return (
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <div
+        className="flex min-w-0 flex-1 flex-col gap-1.5"
+        onClick={(evento) => evento.stopPropagation()}
+        onBlur={(evento) => {
+          if (!evento.currentTarget.contains(evento.relatedTarget as Node | null)) {
+            onTerminar()
+          }
+        }}
+      >
+        {/* «!» en los dos campos: el fondo sólido, que la librería deja transparente y se pierde sobre el gris de la fila
+            (diferencias.json › input-group-fondo-solido). */}
         <Input
           aria-label={depth === 1 ? 'Título de la sección' : `Título de la ${NIVEL[depth].toLowerCase()}`}
           className="w-full bg-background! font-medium"
           value={seccion.title}
           maxLength={LIMITE_TITULO_SECCION.max}
           placeholder={`${NIVEL[depth]} ${numbering}`}
-          autoFocus
+          autoFocus={focoInicial === 'titulo'}
           onFocus={(evento) => {
             if (recien === seccion.id) evento.target.select()
           }}
@@ -112,32 +137,81 @@ function Titulo({ entrada, editando, onTerminar }: { entrada: SectionTreeEntry; 
           className="w-full bg-background!"
           value={seccion.description}
           placeholder="Descripción (opcional)"
+          autoFocus={focoInicial === 'descripcion'}
           onKeyDown={terminarConTecla}
           onChange={(evento) => cambiar(patchSection(secciones, seccion.id, { description: evento.target.value }))}
         />
       </div>
     )
   }
-  // Debajo del título, en gris: la descripción y el conteo. Van aquí y no a la derecha para que, al aparecer las
-  // acciones con el cursor, nada se mueva.
-  const detalle = [seccion.description.trim(), resumen(seccion)].filter(Boolean).join(' · ')
+  // Debajo del título, en gris: la descripción y el conteo. Hacer clic en el título o en la descripción activa la edición en el sitio;
+  // el resto del encabezado queda libre para abrir o cerrar el acordeón.
+  const textoDescripcion = seccion.description.trim() || (!bloqueado ? 'Agrega una descripción (opcional)' : '')
+  const detalle = [textoDescripcion, resumen(seccion)].filter(Boolean).join(' · ')
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-      <TextoCompleto texto={nombre}><Heading as={depth === 1 ? 'h3' : 'h4'} level={6} className={cn('truncate', !seccion.title.trim() && 'text-muted-foreground!')}>
-        {nombre}
-      </Heading></TextoCompleto>
-      <TextoCompleto texto={detalle}><Text as="p" size="sm" variant="muted" className="truncate">
-        {detalle}
-      </Text></TextoCompleto>
+    <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+      <div
+        role={bloqueado ? undefined : 'button'}
+        tabIndex={bloqueado ? undefined : 0}
+        aria-label={bloqueado ? undefined : `Editar título de ${nombre}`}
+        onClick={(evento) => {
+          if (bloqueado) return
+          evento.stopPropagation()
+          onIniciar('titulo')
+        }}
+        onKeyDown={(evento) => {
+          if (bloqueado) return
+          if (evento.key === 'Enter' || evento.key === ' ') {
+            evento.preventDefault()
+            evento.stopPropagation()
+            onIniciar('titulo')
+          }
+        }}
+        className={cn(
+          'max-w-full rounded-md transition-colors',
+          !bloqueado && '-mx-1.5 -my-0.5 cursor-text px-1.5 py-0.5 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        )}
+      >
+        {/* «!»: el título sin escribir en gris; la clase sola no le gana al color del Heading (diferencias.json › instalacion-estilos-sin-capa). */}
+        <TextoCompleto texto={nombre}><Heading as={depth === 1 ? 'h3' : 'h4'} level={6} className={cn('truncate', !seccion.title.trim() && 'text-muted-foreground!')}>
+          {nombre}
+        </Heading></TextoCompleto>
+      </div>
+      <div
+        role={bloqueado ? undefined : 'button'}
+        tabIndex={bloqueado ? undefined : 0}
+        aria-label={bloqueado ? undefined : `Editar descripción de ${nombre}`}
+        onClick={(evento) => {
+          if (bloqueado) return
+          evento.stopPropagation()
+          onIniciar('descripcion')
+        }}
+        onKeyDown={(evento) => {
+          if (bloqueado) return
+          if (evento.key === 'Enter' || evento.key === ' ') {
+            evento.preventDefault()
+            evento.stopPropagation()
+            onIniciar('descripcion')
+          }
+        }}
+        className={cn(
+          'max-w-full rounded-md transition-colors',
+          !bloqueado && '-mx-1.5 -my-0.5 cursor-text px-1.5 py-0.5 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        )}
+      >
+        <TextoCompleto texto={detalle}><Text as="p" size="sm" variant="muted" className="truncate">
+          {detalle}
+        </Text></TextoCompleto>
+      </div>
       {/* El título es opcional; escrito, debe llegar al mínimo. Mientras no llegue, el paso no se da por completo. */}
       {cortoDeMinimo(seccion.title, LIMITE_TITULO_SECCION.min) ? <FieldError>{mensajeMinimo(LIMITE_TITULO_SECCION.min)}</FieldError> : null}
     </div>
   )
 }
 
-// La única barra de crear de la sección. Con una sola opción de destino, crea directo; con varias, pregunta dónde.
-function MenuAnadir({ entrada }: { entrada: SectionTreeEntry }) {
-  const { crearSubseccion, crearPregunta, bloqueado } = useArbol()
+// Botón unificado para agregar: permite crear preguntas en la sección, subsecciones o una nueva sección en la encuesta.
+export function MenuAnadir({ entrada }: { entrada: SectionTreeEntry }) {
+  const { crearSeccion, crearSubseccion, crearPregunta, bloqueado } = useArbol()
   const todas = descendientes(entrada)
   // Las preguntas van en las secciones que no tienen subsecciones: en cuanto una las tiene, sus preguntas viven en ellas.
   const paraPreguntas = [entrada, ...todas].filter((destino) => destino.section.children.length === 0)
@@ -174,7 +248,7 @@ function MenuAnadir({ entrada }: { entrada: SectionTreeEntry }) {
       <EnCurso bloqueado className="shrink-0">
         <Button variant="outline" className="shrink-0" disabled>
           <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
-          Añadir
+          Agregar
           <HugeiconsIcon icon={ArrowDown01Icon} aria-hidden="true" />
         </Button>
       </EnCurso>
@@ -184,16 +258,20 @@ function MenuAnadir({ entrada }: { entrada: SectionTreeEntry }) {
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="outline" className="shrink-0" />}>
         <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
-        Añadir
+        Agregar
         <HugeiconsIcon icon={ArrowDown01Icon} aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuGroup>
-          {opcion(plus, 'Pregunta', paraPreguntas, crearPregunta)}
+          {opcion(plus, 'Agregar pregunta', paraPreguntas, crearPregunta)}
+          {opcion(plus, 'Agregar subsección', paraSubsecciones, crearSubseccion, (destino) => (destino.depth === 1 ? `En ${etiquetaDe(destino)}` : `Dentro de ${etiquetaDe(destino)}`))}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          {opcion(plus, 'Subsección', paraSubsecciones, crearSubseccion, (destino) => (destino.depth === 1 ? `En ${etiquetaDe(destino)}` : `Dentro de ${etiquetaDe(destino)}`))}
+          <DropdownMenuItem onClick={crearSeccion}>
+            {plus}
+            Agregar sección
+          </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -217,14 +295,12 @@ function Hijas({ entrada }: { entrada: SectionTreeEntry }) {
 
 // El contenido de una sección o subsección: sus preguntas y, debajo, sus subsecciones.
 function Contenido({ entrada }: { entrada: SectionTreeEntry }) {
-  const { editandoSeccion } = useArbol()
   const { section: seccion, depth } = entrada
   const conPreguntas = seccion.questions.length > 0 || (depth > 1 && seccion.children.length === 0)
   return (
     <div className="flex flex-col">
       {conPreguntas ? (
-        // Las preguntas se apagan mientras se edita cualquier título; las subsecciones de abajo deciden por sí mismas.
-        <div inert={editandoSeccion !== null} className={editandoSeccion ? APAGADO : undefined}>
+        <div>
           <ListaPreguntas entrada={entrada} />
         </div>
       ) : null}
@@ -234,58 +310,53 @@ function Contenido({ entrada }: { entrada: SectionTreeEntry }) {
 }
 
 export function NodoSeccion({ entrada, esUltimaRaiz }: { entrada: SectionTreeEntry; esUltimaRaiz: boolean }) {
-  const { secciones, cambiar, abiertas, alternar, seleccionar, pedirBorrado, editando, setEditando, editandoSeccion, setEditandoSeccion, crearSubseccion, crearPregunta, bloqueado, creandoIa } = useArbol()
+  const { secciones, cambiar, abiertas, alternar, seleccionar, pedirBorrado, editando, setEditando, editandoSeccion, setEditandoSeccion, bloqueado, creandoIa } = useArbol()
   const motivo = useMotivoBloqueo()
   const { section: seccion, depth } = entrada
   const abierta = abiertas.includes(seccion.id)
   const vacia = seccion.questions.length === 0 && seccion.children.length === 0
   const nombre = seccion.title.trim() || `${NIVEL[depth]} ${entrada.numbering}`
-  // Una sola edición de título a la vez en todo el paso: mientras dura, lo demás queda apagado (APAGADO).
   const editandoDatos = editandoSeccion === seccion.id
-  // Otra cosa en edición: otro título o cualquier pregunta abierta. Entonces esta cabecera queda apagada.
-  const otraEditando = (editandoSeccion !== null && !editandoDatos) || editando !== null
-  const ocupado = editandoSeccion !== null || editando !== null
-  const setEditandoDatos = (editar: boolean) => setEditandoSeccion(editar ? seccion.id : null)
+  // Solo cuando hay una pregunta abierta en edición queda apagado lo demás.
+  const ocupado = editando !== null
+  const [focoInicial, setFocoInicial] = useState<'titulo' | 'descripcion'>('titulo')
+  const setEditandoDatos = (editar: boolean, campo: 'titulo' | 'descripcion' = 'titulo') => {
+    setFocoInicial(campo)
+    setEditandoSeccion(editar ? seccion.id : null)
+  }
 
   // Eliminar siempre pide confirmar, con el diálogo del design system (lo abre el paso).
   const pedirBorradoDeEsta = () => pedirBorrado({ tipo: 'seccion', id: seccion.id })
 
-  // En curso, el asa, el lápiz, mover y eliminar se ven apagados y dicen por qué (en curso, o pregunta oficial en una NOM-035).
+  const alternarSeccion = () => {
+    seleccionar(seccion.id)
+    alternar(entrada)
+  }
+
+  // «!» en el asa: el gris del icono; el ghost de la librería no trae tono gris (diferencias.json › button-ghost-tonos).
   const asa = bloqueado ? (
     <EnCurso bloqueado className="flex">
-      <BotonIcono size="icon-xs" aria-label={`Mover ${nombre}`} className="text-muted-foreground!" disabled>
+      <BotonIcono size="icon-xs" aria-label={`Mover ${nombre}`} className="text-muted-foreground!" disabled onClick={(evento) => evento.stopPropagation()}>
         <HugeiconsIcon icon={DragDropVerticalIcon} size={16} aria-hidden="true" />
       </BotonIcono>
     </EnCurso>
   ) : (
-    <KanbanItemHandle render={<BotonIcono size="icon-xs" aria-label={`Mover ${nombre}`} className="text-muted-foreground!" />}>
+    // «!»: gris del asa; el ghost no trae tono gris (diferencias.json › button-ghost-tonos).
+    <KanbanItemHandle render={<BotonIcono size="icon-xs" aria-label={`Mover ${nombre}`} className="text-muted-foreground!" onClick={(evento) => evento.stopPropagation()} />}>
       <HugeiconsIcon icon={DragDropVerticalIcon} size={16} aria-hidden="true" />
     </KanbanItemHandle>
   )
   const plegar = (
-    <BotonIcono aria-label={abierta ? `Contraer ${nombre}` : `Expandir ${nombre}`} aria-expanded={abierta} onClick={() => alternar(entrada)}>
+    <BotonIcono
+      aria-label={abierta ? `Contraer ${nombre}` : `Expandir ${nombre}`}
+      aria-expanded={abierta}
+      onClick={(evento) => {
+        evento.stopPropagation()
+        alternarSeccion()
+      }}
+    >
       <HugeiconsIcon icon={ArrowDown01Icon} aria-hidden="true" className={cn('transition-transform', abierta ? 'rotate-180' : depth > 1 && '-rotate-90')} />
     </BotonIcono>
-  )
-  const editar = bloqueado ? (
-    <EnCurso bloqueado className="flex">
-      <BotonIcono aria-label={`Editar ${nombre}`} disabled>
-        <HugeiconsIcon icon={PencilEdit02Icon} aria-hidden="true" />
-      </BotonIcono>
-    </EnCurso>
-  ) : (
-    <Hint label={editandoDatos ? 'Listo' : 'Editar título y descripción'}>
-      {/* Editando, el check es un secundario (con borde) del alto del campo; si no, el terciario redondo de siempre. */}
-      {editandoDatos ? (
-        <Button variant="outline" size="icon" aria-label={`Terminar de editar ${nombre}`} onClick={() => setEditandoDatos(false)}>
-          <HugeiconsIcon icon={Tick02Icon} aria-hidden="true" />
-        </Button>
-      ) : (
-        <BotonIcono aria-label={`Editar ${nombre}`} onClick={() => setEditandoDatos(true)}>
-          <HugeiconsIcon icon={PencilEdit02Icon} aria-hidden="true" />
-        </BotonIcono>
-      )}
-    </Hint>
   )
 
   // ── Subsección: una fila de acordeón, sin caja ──
@@ -294,7 +365,15 @@ export function NodoSeccion({ entrada, esUltimaRaiz }: { entrada: SectionTreeEnt
     const destinosDentro = bloqueado ? [] : moveIntoDestinationsForSection(secciones, entrada)
     return (
       <div id={`seccion-${seccion.id}`} className="flex flex-col">
-        <Item size="sm" inert={otraEditando} className={cn('items-start! px-0! hover:bg-transparent!', otraEditando && APAGADO)} onClick={() => seleccionar(seccion.id)}>
+        {/* «!»: la fila del acordeón alineada arriba, a ras y sin el fondo al pasar de la librería (diferencias.json ›
+            instalacion-estilos-sin-capa). */}
+        <Item
+          size="sm"
+          inert={ocupado}
+          // «!»: alineada arriba, a ras y sin fondo al pasar; la clase sola no le gana a la librería (diferencias.json › instalacion-estilos-sin-capa).
+          className={cn('cursor-pointer items-start! px-0! hover:bg-transparent!', ocupado && APAGADO)}
+          onClick={alternarSeccion}
+        >
           <span className={cn('flex shrink-0 items-center gap-2', editandoDatos ? 'h-9' : 'h-6')}>
             {plegar}
             {asa}
@@ -302,33 +381,38 @@ export function NodoSeccion({ entrada, esUltimaRaiz }: { entrada: SectionTreeEnt
               {entrada.numbering}
             </Badge>
           </span>
-          <Titulo entrada={entrada} editando={editandoDatos} onTerminar={() => setEditandoDatos(false)} />
-          <div className={cn('shrink-0 items-center gap-1', editandoDatos ? 'flex h-9' : cn('h-6', AL_PASAR))}>
-            {editar}
-            {/* Editando se quita «Mover a…» (no es de la cabecera); eliminar se queda, como en la sección. */}
-            {editandoDatos ? null : (
-              <>
-                <MoverA
-                  que={nombre}
-                  destinos={destinos}
-                  sinDestinos={bloqueado ? motivo : 'No hay otra sección o subsección donde moverla'}
-                  destinosDentro={destinosDentro}
-                  onMoverDentro={(destino) => {
-                    setEditando(null)
-                    cambiar(moveSectionInto(secciones, seccion.id, destino.section.id))
-                    seleccionar(seccion.id)
-                    notify('Subsección movida', `Ahora está dentro de ${etiquetaDe(destino)}.`)
-                  }}
-                  onMover={(destino) => {
-                    setEditando(null)
-                    cambiar(moveSectionTo(secciones, seccion.id, destino.section.id))
-                    seleccionar(seccion.id)
-                    notify('Subsección movida', `Quedó debajo de ${etiquetaDe(destino)}.`)
-                  }}
-                />
-              </>
-            )}
-            <BotonBorrar que={nombre} bloqueo={bloqueado ? motivo : null} onBorrar={pedirBorradoDeEsta} secundario={editandoDatos} />
+          <Titulo
+            entrada={entrada}
+            editando={editandoDatos}
+            bloqueado={bloqueado}
+            focoInicial={focoInicial}
+            onIniciar={(campo) => {
+              seleccionar(seccion.id)
+              setEditandoDatos(true, campo)
+            }}
+            onTerminar={() => setEditandoDatos(false)}
+          />
+          <div className={cn('h-6 shrink-0 items-center gap-1', AL_PASAR)} onClick={(evento) => evento.stopPropagation()}>
+            <MoverA
+              que={nombre}
+              destinos={destinos}
+              sinDestinos={bloqueado ? motivo : 'No hay otra sección o subsección donde moverla'}
+              destinosDentro={destinosDentro}
+              onMoverDentro={(destino) => {
+                setEditando(null)
+                cambiar(moveSectionInto(secciones, seccion.id, destino.section.id))
+                seleccionar(seccion.id)
+                notifyAction('Subsección movida', `Ahora está dentro de ${etiquetaDe(destino)}.`, { label: 'Deshacer', onClick: () => cambiar([...secciones]) }, 'success')
+              }}
+              onMover={(destino) => {
+                setEditando(null)
+                cambiar(moveSectionTo(secciones, seccion.id, destino.section.id))
+                seleccionar(seccion.id)
+                // Mover se deshace: «Deshacer» devuelve el árbol a como estaba antes de moverla.
+                notifyAction('Subsección movida', `Quedó debajo de ${etiquetaDe(destino)}.`, { label: 'Deshacer', onClick: () => cambiar([...secciones]) }, 'success')
+              }}
+            />
+            <BotonBorrar que={nombre} bloqueo={bloqueado ? motivo : null} onBorrar={pedirBorradoDeEsta} />
           </div>
         </Item>
         {abierta ? (
@@ -344,27 +428,34 @@ export function NodoSeccion({ entrada, esUltimaRaiz }: { entrada: SectionTreeEnt
   return (
     <Frame id={`seccion-${seccion.id}`}>
       <FramePanel className="[--frame-panel-px:0px] [--frame-panel-py:0px]">
-        {/* Editando, todo se alinea con el primer campo (el título), no con el centro de los dos. */}
-        <div inert={otraEditando} className={cn('group/item flex items-start gap-2 px-5 py-4', otraEditando && APAGADO)} onClick={() => seleccionar(seccion.id)}>
-          {/* Todo arriba, a la altura de la línea del título (o del campo del título al editar), nunca centrado. */}
+        <div
+          inert={ocupado}
+          className={cn('group/item flex cursor-pointer items-start gap-2 px-5 py-4', ocupado && APAGADO)}
+          onClick={alternarSeccion}
+        >
           <span className={cn('flex shrink-0 items-center gap-2', editandoDatos ? 'h-9' : 'h-6')}>
             {asa}
             <Badge size="sm" className="tabular-nums">
               {entrada.numbering}
             </Badge>
           </span>
-          {/* La marca de IA es la etiqueta del sistema: gris, en pastilla y con el orbe (auditoría, decisión 8). Mientras el
-              agente la arma dice «Creando…»; después, «Creada con IA» (ya no es una propuesta: queda en la encuesta). */}
           {seccion.isAiGenerated ? <EtiquetaIA>{creandoIa === seccion.id ? 'Creando…' : 'Creada con IA'}</EtiquetaIA> : null}
-          <Titulo entrada={entrada} editando={editandoDatos} onTerminar={() => setEditandoDatos(false)} />
-          <div className={cn('flex shrink-0 items-center gap-1', editandoDatos ? 'h-9' : 'h-6')}>
-            {/* Editar y eliminar salen al pasar el cursor (siempre, mientras se edita); plegar se ve siempre. */}
-            <div className={cn('items-center gap-1', editandoDatos ? 'flex' : AL_PASAR)}>
-              {editar}
-              <BotonBorrar que={nombre} bloqueo={bloqueado ? motivo : esUltimaRaiz ? 'La encuesta debe tener al menos una sección' : null} onBorrar={pedirBorradoDeEsta} secundario={editandoDatos} />
+          <Titulo
+            entrada={entrada}
+            editando={editandoDatos}
+            bloqueado={bloqueado}
+            focoInicial={focoInicial}
+            onIniciar={(campo) => {
+              seleccionar(seccion.id)
+              setEditandoDatos(true, campo)
+            }}
+            onTerminar={() => setEditandoDatos(false)}
+          />
+          <div className={cn('flex shrink-0 items-center gap-1', editandoDatos ? 'h-9' : 'h-6')} onClick={(evento) => evento.stopPropagation()}>
+            <div className={cn('items-center gap-1', AL_PASAR)}>
+              <BotonBorrar que={nombre} bloqueo={bloqueado ? motivo : esUltimaRaiz ? 'La encuesta debe tener al menos una sección' : null} onBorrar={pedirBorradoDeEsta} />
             </div>
-            {/* Editando el título no se pliega la sección: solo quedan el check y la papelera. */}
-            {editandoDatos ? null : plegar}
+            {plegar}
           </div>
         </div>
         {abierta ? (
@@ -377,19 +468,10 @@ export function NodoSeccion({ entrada, esUltimaRaiz }: { entrada: SectionTreeEnt
                     <ImagenGlass nombre="glass-add" />
                   </EmptyMedia>
                   <EmptyTitle>Esta sección está vacía</EmptyTitle>
-                  <EmptyDescription>Agrega una subsección o una pregunta para empezar.</EmptyDescription>
+                  <EmptyDescription>Agrega una pregunta, una subsección o una nueva sección desde el menú.</EmptyDescription>
                 </EmptyHeader>
                 <EmptyContent className="flex-row justify-center gap-2">
-                  <EnCurso bloqueado={bloqueado}>
-                    <Button variant="outline" disabled={bloqueado} onClick={() => crearSubseccion(entrada)}>
-                      Crear subsección
-                    </Button>
-                  </EnCurso>
-                  <EnCurso bloqueado={bloqueado}>
-                    <Button variant="outline" disabled={bloqueado} onClick={() => crearPregunta(entrada)}>
-                      Crear pregunta
-                    </Button>
-                  </EnCurso>
+                  <MenuAnadir entrada={entrada} />
                 </EmptyContent>
               </Empty>
             ) : (
@@ -398,8 +480,6 @@ export function NodoSeccion({ entrada, esUltimaRaiz }: { entrada: SectionTreeEnt
                   <Contenido entrada={entrada} />
                 </div>
                 <Separator />
-                {/* El pie, como el de «Agregar etapa» en Crear vacante: qué tiene la sección a la izquierda y la
-                    acción para sumar a la derecha. */}
                 <div inert={ocupado} className={cn('flex flex-wrap items-center justify-between gap-3 px-5 py-3', ocupado && APAGADO)}>
                   <Text as="p" size="sm" variant="muted" aria-live="polite">
                     {`Esta sección tiene ${resumen(seccion)}.`}

@@ -8,7 +8,7 @@ import { MarcoPlantilla, type Miga } from './marco-plantilla'
 // Marco de las plantillas del administrador que llevan los patrones a pantallas reales (Gestión de usuarios,
 // Planes de formación y Encuestas). La barra lateral, la barra superior y el pie son los del design system
 // (sección «plantilla-admin» de nav-config); aquí queda el contexto que usan las pantallas: la empresa. La IA de
-// cada pantalla es el agente contextual en el panel de la derecha («Orbit Flow»), nunca un salto a Suite AI.
+// cada pantalla es el agente contextual en el panel de la derecha («Orbit»), nunca un salto a Suite AI.
 
 export function MarcoAdmin({ migas, ancho, children }: { migas: Miga[]; ancho?: PageWidth; children: ReactNode }) {
   const valor: MarcoAdmin = {

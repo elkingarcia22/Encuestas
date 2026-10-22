@@ -317,8 +317,8 @@ export interface Objective {
   maxValue: string;
   /** Share of the ciclo this objective carries, 1–100. */
   weight: number;
-  /** Company objective this one contributes to, or null when standalone. */
-  alignedTo: string | null;
+  /** A qué objetivos contribuye (de la empresa o del mismo ciclo); vacío si va solo. Desde el 22-oct puede ser más de uno. */
+  alignedTo: readonly string[];
   /** La IA escribió esta tarjeta: qué se mide, hacia dónde y hasta dónde. Se
    * queda puesto aunque el autor después la retoque —lo que marca es de dónde
    * salió, no si sigue intacta— y solo se pierde si el objetivo se borra. Pulir
@@ -469,6 +469,8 @@ export interface CicloDraft {
   objectiveSets: readonly ObjectiveSet[];
   /** Qué puede hacer cada rol con sus objetivos. Ausente = los valores por defecto (`DEFAULT_CICLO_PERMISSIONS`). */
   permissions?: import("./permisos").CicloPermissions;
+  /** Estados de objetivos y niveles de desempeño del ciclo. Ausente = los del prototipo (`CONFIG_INICIAL`). */
+  config?: import("../configuracion").ConfigCiclo;
   /** El paso donde el autor dejó el borrador. Al reabrirlo se retoma ahí. */
   _lastStep?: import("./cicloStepper").CicloStepId;
   /** El bloque de la parametrización que estaba abierto al guardar. Retomar
@@ -504,7 +506,7 @@ export const createBlankObjective = (weight = 0): Objective => ({
   minValue: "",
   maxValue: "",
   weight,
-  alignedTo: null,
+  alignedTo: [],
   createdByAI: false,
   keyActions: [],
   keyActionsDriveProgress: false,
@@ -551,10 +553,10 @@ export function keyActionsIssue(
   const actions = objective.keyActions;
   if (actions.length === 0) {
     if (rules.childrenRequired) {
-      return `Añade al menos ${isMasculine ? "un" : "una"} ${child}`;
+      return `Agrega al menos ${isMasculine ? "un" : "una"} ${child}`;
     }
     return drivesProgress
-      ? `Añade al menos ${isMasculine ? "un" : "una"} ${child} o desactiva el avance por ${children}`
+      ? `Agrega al menos ${isMasculine ? "un" : "una"} ${child} o desactiva el avance por ${children}`
       : null;
   }
 
@@ -662,7 +664,7 @@ export function objectiveIssue(
     return `El peso no puede ser inferior al ${MIN_OBJECTIVE_WEIGHT} %`;
   }
 
-  if (options.requireAlignment && objective.alignedTo === null) {
+  if (options.requireAlignment && objective.alignedTo.length === 0) {
     return "Alinéalo a un objetivo de la empresa";
   }
 

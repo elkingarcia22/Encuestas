@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
-import { plural } from '@/modules/design-system/patrones/formato'
+import { plural, fechaCorta } from '@/modules/design-system/patrones/formato'
 import type { VacanteUI } from '../../../propuestas/datos'
-import type { Grupo } from '../../../propuestas/grupos-atencion'
+import type { Grupo } from '@/modules/design-system/metricas/grupos-atencion'
 import {
   DIAS_ATAJO,
   HOY,
@@ -67,13 +67,14 @@ export type AsuntoCredito = {
 
 /* Cómo se dicen -------------------------------------------------------------------------------------------------- */
 
-const FECHA = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'long' })
+// «25 sept 2026» con la utilidad de fechas del sistema (13-oct: antes era «25 de septiembre»).
+const fechaDe = (dia: Date) => fechaCorta(dia.toLocaleDateString('en-CA'))
 
 // «Analista de datos» · «Analista de datos» y «Analista de nómina» · 4 vacantes
 export function nombresDe(vacantes: readonly VacanteUI[]) {
   if (vacantes.length === 1) return `«${vacantes[0].titulo}»`
   if (vacantes.length === 2) return `«${vacantes[0].titulo}» y «${vacantes[1].titulo}»`
-  return `${vacantes.length} vacantes`
+  return `${vacantes.length} ${plural(vacantes.length, 'vacante', 'vacantes')}`
 }
 
 // «Psicométrico» · «Psicométrico y Serena AI» · «Psicométrico, Prueba de idiomas y Serena AI»
@@ -179,12 +180,12 @@ export function asuntosCreditos({
       id: 'bolsa',
       grupo: 'atencion',
       titulo: `La bolsa alcanza para unos ${diasBolsa} días`,
-      resumen: `Se gastan unos ${creditos(gasto)} créditos al día: a ese ritmo se acaba hacia el ${FECHA.format(fin)}.`,
+      resumen: `Se gastan unos ${creditos(gasto)} créditos al día: a ese ritmo se acaba hacia el ${fechaDe(fin)}.`,
       datos: [
         { termino: 'Libres', valor: `${creditos(libres)} · sin asignar y en los agentes` },
         { termino: 'Reservados', valor: `${creditos(bolsa.reservado)} · ya comprometidos` },
         { termino: 'Gasto por día', valor: `Unos ${creditos(gasto)} · últimas dos semanas` },
-        { termino: 'Se acaba hacia', valor: `El ${FECHA.format(fin)}` },
+        { termino: 'Se acaba hacia', valor: `El ${fechaDe(fin)}` },
       ],
       como: 'Compra créditos antes de esa fecha (con tarjeta, entran al momento) o prende la recarga automática: si la bolsa se vacía, todos los agentes se pausan.',
       pie: { pedir: true, revisado: true },

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { File01Icon } from '@hugeicons/core-free-icons'
+import { ArrowRight01Icon, File01Icon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarFallback,
@@ -9,6 +9,7 @@ import {
 import { Composer } from '@/modules/admin/suite-ai/shared/composer'
 import { AgentNote, UserBubble } from '../../agente-contextual/components/agent-kit'
 import { notify } from '@/shared/components/notify'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { DrawerShell } from './drawer-shell'
 import { KICKER, PILL } from './drawer-styles'
 
@@ -23,6 +24,7 @@ const PICKS = [
 // Caso de Suite AI: el agente trabaja sobre el registro abierto sin sacar a la persona de la lista.
 export function AgentDrawer({ open, onOpenChange }: Props) {
   const [applied, setApplied] = useState(false)
+  const [pregunta, setPregunta] = useState(false)
   const [draft, setDraft] = useState('')
   const [messages, setMessages] = useState<{ role: 'user' | 'agent'; text: string }[]>([])
 
@@ -45,7 +47,7 @@ export function AgentDrawer({ open, onOpenChange }: Props) {
       onOpenChange={onOpenChange}
       size="md"
       ai
-      title="Orbit Flow"
+      title="Orbit"
       description="Trabaja sobre la vacante abierta"
       headerExtra={
         <div className="flex items-center gap-2 border-b bg-muted px-5 py-2.5 text-[13px] text-muted-foreground">
@@ -61,7 +63,7 @@ export function AgentDrawer({ open, onOpenChange }: Props) {
           onChange={setDraft}
           onSend={send}
           placeholder="Pregunta algo sobre esta vacante"
-          onVoice={() => notify('El modo voz se abre desde el chat de Orbit')}
+          onVoice={() => notify('El modo voz se abre desde el chat de Orbit', undefined, 'info')}
           contextNote=""
         />
       }
@@ -96,26 +98,39 @@ export function AgentDrawer({ open, onOpenChange }: Props) {
             className={PILL}
             onClick={() => {
               setApplied(false)
-              notify('Cambio deshecho')
+              notify('Cambio deshecho', undefined, 'info')
             }}
           >
             Deshacer
           </Button>
         ) : (
-          <Button
-            className={PILL}
-            onClick={() => {
-              setApplied(true)
-              notify('3 candidatos movidos a Entrevista final')
-            }}
-          >
+          <Button className={PILL} onClick={() => setPregunta(true)}>
             Mover los 3 a Entrevista final
           </Button>
         )}
-        <Button variant="outline" className={PILL} onClick={() => notify('Preparando otra propuesta')}>
+        <Button variant="outline" className={PILL} onClick={() => notify('Preparando otra propuesta', undefined, 'info')}>
           Otra propuesta
         </Button>
       </div>
+
+      {/* Mover a otras personas de etapa pregunta antes, también cuando lo propone el agente (13-oct). Dentro del panel se
+          abre como vista del mismo panel. */}
+      <DialogoConfirmar
+        abierto={pregunta}
+        onAbiertoChange={setPregunta}
+        icono={ArrowRight01Icon}
+        titulo="¿Mover a Entrevista final?"
+        descripcion="Los 3 candidatos pasan de etapa y se avisa a Juan Rincón, que lleva las entrevistas."
+        cancelar="Todavía no"
+        accion="Mover 3 candidatos"
+        onConfirmar={() => {
+          setPregunta(false)
+          setApplied(true)
+          notify('3 candidatos movidos a Entrevista final', 'Avisamos a Juan Rincón.', 'success')
+        }}
+      >
+        <RegistroConfirmar nombre="3 candidatos" detalle="Analista de datos · Laura Méndez, Andrés Malo y Julián Rojas" estado="Pasan a Entrevista final" tono="neutro" />
+      </DialogoConfirmar>
 
       {/* Conversación en vivo: la respuesta del agente se anuncia al llegar. */}
       <div role="log">
@@ -135,7 +150,7 @@ export function AgentDrawer({ open, onOpenChange }: Props) {
       <div role="heading" aria-level={3} className={`${KICKER} mt-7`}>Sobre esta vacante</div>
       <div className="mt-2.5 flex flex-col items-start gap-2">
         {['Resumir el embudo de la semana', 'Redactar correo para los no seleccionados'].map((label) => (
-          <Button key={label} variant="outline" size="sm" className={`${PILL} font-normal`} onClick={() => notify(label)}>
+          <Button key={label} variant="outline" size="sm" className={`${PILL} font-normal`} onClick={() => notify(label, undefined, 'info')}>
             {label}
           </Button>
         ))}

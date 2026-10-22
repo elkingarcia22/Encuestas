@@ -27,7 +27,7 @@ export const STRENGTHS: Finding[] = [
   },
   {
     text: 'Explica hallazgos a públicos no técnicos: el panel le dio 4,6 de 5 en comunicación.',
-    sources: [{ label: 'Entrevista técnica · 12 sep', section: 'entrevista-tecnica' }],
+    sources: [{ label: 'Entrevista técnica · 12 sept', section: 'entrevista-tecnica' }],
   },
 ]
 
@@ -40,13 +40,13 @@ export const RISKS: Finding[] = [
     ],
   },
   {
-    text: 'Pide $7,8 M: 12% por encima del rango aprobado para la vacante.',
+    text: 'Pide $7,8 M: 12 % por encima del rango aprobado para la vacante.',
     sources: [{ label: 'Notas de entrevista', section: 'notas' }],
   },
 ]
 
 export const SUMMARY_NOTE =
-  'Encaje con el cargo 82%. Fortalezas: analítica de producto en Rappi, 9/10 en SQL y muy buena comunicación. Riesgos: Python básico y pretensión 12% sobre el rango.'
+  'Encaje con el cargo 82 %. Fortalezas: analítica de producto en Rappi, 9/10 en SQL y muy buena comunicación. Riesgos: Python básico y pretensión 12 % sobre el rango.'
 
 export const QUESTIONS = [
   'Cuéntanos un reporte que hayas automatizado de punta a punta: ¿qué herramienta usaste y por qué?',
@@ -70,7 +70,7 @@ export const JOBS = [
     period: 'Mar 2023 – hoy · 2 años y 6 meses',
     points: [
       'Lidera el tablero de retención de usuarios Prime (Looker y SQL).',
-      'Diseñó el experimento de precios que subió la conversión 6%.',
+      'Diseñó el experimento de precios que subió la conversión 6 %.',
     ],
   },
   {
@@ -116,13 +116,13 @@ export const INITIAL_NOTES: Note[] = [
   {
     id: 1,
     author: 'Andrés Pardo',
-    date: '12 sep, 4:10 p. m.',
+    date: '12 sept, 4:10 p. m.',
     text: 'Muy clara al explicar el tablero de retención. Pidió $7,8 M; dice que negocia si hay bono por resultados.',
   },
   {
     id: 2,
     author: 'Sara Gómez',
-    date: '12 sep, 4:32 p. m.',
+    date: '12 sept, 4:32 p. m.',
     text: 'Le falta práctica en Python, pero mostró cómo lo aprendería. Recomiendo segunda entrevista con el líder del área.',
   },
 ]

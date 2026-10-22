@@ -1,8 +1,8 @@
-import { FormularioPlan } from '../../components/formulario-plan'
+import { CrearPlan } from '../../components/crear-plan'
 
-// Aprendizaje › Planes de formación › Crear plan (/…/planes/crear?tipo=…): la misma página, como en UBITS.
+// Aprendizaje › Planes de formación › Crear plan (/…/planes/crear?tipo=…): tres pasos, como Encuestas.
 export function Component() {
-  return <FormularioPlan />
+  return <CrearPlan />
 }
 
 Component.displayName = 'AdminAprendizajePlanesCrearPage'

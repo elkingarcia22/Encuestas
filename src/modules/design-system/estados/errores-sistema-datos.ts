@@ -134,7 +134,7 @@ export const EJEMPLOS_ERROR: ErrorDeSistema[] = [
   registroQueNoExiste('este plan', 'Planes'),
   registroSinEdicion(
     'Esta encuesta ya no se puede editar',
-    'Ya está en curso: solo se puede cambiar su fecha de cierre.',
+    'Ya está en curso: el resto queda fijo. Para cambiar su fecha de cierre, usa «Editar» en la lista.',
     'Encuestas',
   ),
 ]

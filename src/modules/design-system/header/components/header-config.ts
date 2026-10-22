@@ -15,9 +15,9 @@ export type HeaderKind = 'general' | 'focused'
 // Menú o panel que se ve abierto en la vista previa.
 export type HeaderOpen = 'none' | 'notifications' | 'profile'
 
-// Acciones de la derecha del header general, en su orden real. Desde el 1 oct ya no van Centro de ayuda (pasó al menú
-// de perfil) ni Centro de procesos (se abre desde Notificaciones).
-export const RIGHT_ACTIONS = ['news', 'notifications', 'profile'] as const
+// Acciones de la derecha del header general, en su orden real. Desde el 1 oct ya no va Centro de ayuda (pasó al menú
+// de perfil). Centro de procesos se quitó el 1 oct y volvió el 13 oct (Charlie), a la derecha de Notificaciones.
+export const RIGHT_ACTIONS = ['news', 'notifications', 'processes', 'profile'] as const
 export type RightAction = (typeof RIGHT_ACTIONS)[number]
 
 // Todo lo que se puede prender o apagar en el header.
@@ -29,6 +29,7 @@ export type HeaderConfig = {
   news: boolean
   notifications: boolean
   unread: boolean
+  processes: boolean
   profile: boolean
   // Solo en pantalla enfocada.
   own: boolean
@@ -56,14 +57,17 @@ export type HeaderCase = {
   sample: HeaderSample
 }
 
+// 13-oct: a la izquierda va la miga de pan junto al botón del menú (como el producto y Marco › Barra superior); el nombre
+// de la pantalla lo pone la página, no el encabezado. El buscador del centro quedó fuera del rediseño (7-oct).
 const GENERAL: HeaderConfig = {
   kind: 'general',
   menu: true,
-  left: 'title',
+  left: 'crumbs',
   search: 'wide',
   news: true,
   notifications: true,
   unread: true,
+  processes: true,
   profile: true,
   own: false,
   open: 'none',
@@ -91,7 +95,7 @@ export const HEADER_CASES: HeaderCase[] = [
   {
     id: 'workspace',
     title: 'Workspace',
-    summary: 'El header de todas las pantallas del Workspace: título a la izquierda, buscador al centro y las acciones a la derecha.',
+    summary: 'El header de todas las pantallas del Workspace: el botón del menú con la miga de pan a la izquierda y las acciones a la derecha. El buscador del centro quedó fuera del rediseño.',
     icon: LayoutDashboardIcon,
     example: '/admin/seleccion/vacantes',
     config: GENERAL,
@@ -100,7 +104,7 @@ export const HEADER_CASES: HeaderCase[] = [
   {
     id: 'suite-ai',
     title: 'Orbit',
-    summary: 'Es el mismo header: el título es la conversación abierta y el buscador también le pregunta al agente.',
+    summary: 'Es el mismo header: la miga de pan termina en la conversación abierta.',
     icon: ICONO_IA,
     example: '/suite-ai',
     config: GENERAL,
@@ -109,7 +113,7 @@ export const HEADER_CASES: HeaderCase[] = [
   {
     id: 'panel',
     title: 'Con panel del agente abierto',
-    summary: 'Con «Actividad del agente» a toda la derecha el header se acorta: Novedades queda solo con su icono y el buscador se achica.',
+    summary: 'Con «Actividad del agente» a toda la derecha el header se acorta: Novedades queda solo con su icono.',
     icon: SidebarRightIcon,
     example: '/suite-ai/chat/vacaciones',
     config: { ...GENERAL, width: 'panel' },
@@ -118,7 +122,7 @@ export const HEADER_CASES: HeaderCase[] = [
   {
     id: 'editor',
     title: 'Pantalla enfocada (editor)',
-    summary: 'El editor ocupa toda la pantalla: migas en vez de título y, a la derecha, las mismas acciones del header general: Novedades, Notificaciones y Perfil. «Orbit Flow» no va en el header: va al final de la fila de acciones de la pantalla, a la derecha del botón primario de la pantalla.',
+    summary: 'El editor ocupa toda la pantalla: migas en vez de título y, a la derecha, las mismas acciones del header general: Novedades, Centro de procesos, Notificaciones y Perfil. «Orbit» no va en el header: va al final de la fila de acciones de la pantalla, a la derecha del botón primario de la pantalla.',
     icon: PencilEdit02Icon,
     example: '/admin/aprendizaje/lms-creator/contenidos/onboarding-operativo',
     config: FOCUSED,
@@ -131,7 +135,7 @@ export const HEADER_CASES: HeaderCase[] = [
   {
     id: 'portal',
     title: 'Portal colaborador',
-    summary: 'El colaborador ve el mismo header del Workspace; el título sale del menú del portal.',
+    summary: 'El colaborador ve el mismo header del Workspace; la miga de pan sale del menú del portal.',
     icon: BrowserIcon,
     example: '/portal-colaborador/aprendizaje',
     config: GENERAL,
@@ -140,9 +144,9 @@ export const HEADER_CASES: HeaderCase[] = [
   {
     id: 'movil',
     title: 'Móvil o angosto',
-    summary: 'Propuesta para celular: el buscador pasa a lupa y solo quedan notificaciones y perfil. Hoy el header real no esconde acciones.',
+    summary: 'Propuesta para celular: solo quedan notificaciones y perfil. Hoy el header real no esconde acciones.',
     icon: SmartPhone01Icon,
-    config: { ...GENERAL, news: false, width: 'phone' },
+    config: { ...GENERAL, news: false, processes: false, width: 'phone' },
     sample: SAMPLE,
   },
 ]
@@ -163,6 +167,7 @@ export const PART = {
 export const RIGHT_NAME: Record<RightAction, string> = {
   news: 'Novedades',
   notifications: 'Notificaciones',
+  processes: 'Centro de procesos',
   profile: 'Perfil',
 }
 
@@ -204,19 +209,21 @@ const TEXT = {
   title: 'El nombre de la pantalla. Sale solo del menú y se corta con «…» si no cabe.',
   crumbs: 'Dicen dónde estás y dejan subir de nivel. Reemplazan al título en pantallas enfocadas.',
   back: 'Regresa a la pantalla de donde vienes cuando la actual es un paso de algo más grande.',
-  searchWide: 'Busca o le pregunta al agente en todo el producto; también se abre con ⌘K. Siempre al centro exacto: se achica si falta espacio y en un header angosto queda solo la lupa.',
-  searchIcon: 'El buscador en su forma mínima: una lupa que abre lo mismo que ⌘K.',
+  searchWide: 'Fuera del rediseño (7-oct): no es una pieza vigente, no se suma a pantallas nuevas ni se amplía; sigue en el encabezado actual hasta que ingeniería lo retire. Hoy busca o le pregunta al agente con ⌘K.',
+  searchIcon: 'El buscador en su forma mínima (fuera del rediseño): una lupa que abre lo mismo que ⌘K.',
   own: 'Algo propio de esta pantalla, como «Guardado hace 1 min» o deshacer. No es parte del header.',
   tooltip: 'El nombre de la acción al pasar el cursor. Lo llevan todas menos el buscador, que ya dice qué hace.',
   open: 'Se abre justo debajo, alineado a la derecha, y su botón se pinta azul como la opción activa de la barra lateral. Se cierra con clic afuera o Esc.',
   openProfile: 'Se abre justo debajo, alineado a la derecha, y la foto se rodea de un anillo azul. Se cierra con clic afuera o Esc.',
-  panel: 'Un panel de 360px a toda la altura, como «Actividad del agente» en el chat de Orbit. No es parte del header: el header se acorta a su lado. Orbit Flow no lo acorta: abre debajo del header.',
+  panel: 'Un panel de 360px a toda la altura, como «Actividad del agente» en el chat de Orbit. No es parte del header: el header se acorta a su lado. Orbit no lo acorta: abre debajo del header.',
 }
 
 const RIGHT_TEXT: Record<RightAction, string> = {
   news: 'Lo nuevo de la plataforma, en azul para que se note. Con poco espacio queda solo el icono.',
   notifications:
-    'Avisos de lo que pasó; se abren en un panel debajo. Desde aquí también se abre el Centro de procesos (importaciones, revisiones y reportes que corren en segundo plano), que ya no tiene botón propio.',
+    'Avisos de lo que pasó; se abren en un panel debajo. Desde aquí también se abre el Centro de procesos.',
+  processes:
+    'Lo que corre en segundo plano: importaciones, revisiones y reportes, con su avance y lo que quedó pendiente. Se abre en un panel y el botón queda en azul mientras está abierto. También se abre desde Notificaciones.',
   profile: 'La foto de la persona. Abre su menú: arriba, una tarjeta con quién eres y otra con la vista actual, que cambia al Portal colaborador; debajo, centro de ayuda, contraseña, tema y cerrar sesión.',
 }
 

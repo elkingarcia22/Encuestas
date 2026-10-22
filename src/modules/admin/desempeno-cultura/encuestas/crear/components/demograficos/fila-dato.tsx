@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react'
-import { BookmarkAdd02Icon, Delete02Icon, PencilEdit02Icon, ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons'
+import { BookmarkAdd02Icon, Delete02Icon, LockIcon, PencilEdit02Icon } from '@hugeicons/core-free-icons'
 import type { ReactElement, ReactNode } from 'react'
 import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle, Switch, Toggle } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
@@ -9,19 +9,19 @@ import { TextoCompleto } from '@/shared/components/TextoCompleto'
 import { EnCurso } from '../aviso-en-curso'
 
 // Una fila de dato demográfico: se activa con su interruptor, dice de dónde sale y, activo, deja
-// elegir si el participante lo ve o si solo sirve para filtrar. «Editar» abre el panel lateral con
+// elegir si permite edición al participante o no. «Editar» abre el panel lateral con
 // su formulario: el enunciado, el tipo y las opciones.
 
 export function Visibilidad({ visible, onCambio, id, bloqueado = false }: { visible: boolean; onCambio: (visible: boolean) => void; id: string; bloqueado?: boolean }) {
   const toggle = (
-    <Toggle id={id} variant="outline" size="sm" pressed={visible} disabled={bloqueado} onPressedChange={onCambio} aria-label="Mostrar al participante" className="w-24 justify-start">
-      <HugeiconsIcon icon={visible ? ViewIcon : ViewOffIcon} aria-hidden="true" />
-      {visible ? 'Visible' : 'Oculto'}
+    <Toggle id={id} variant="outline" size="sm" pressed={visible} disabled={bloqueado} onPressedChange={onCambio} aria-label="Permitir edición al participante" className="shrink-0 justify-start">
+      <HugeiconsIcon icon={visible ? PencilEdit02Icon : LockIcon} aria-hidden="true" />
+      {visible ? 'Permitir edición' : 'No permite edición'}
     </Toggle>
   )
   if (bloqueado) return <EnCurso bloqueado>{toggle}</EnCurso>
   return (
-    <Hint label={visible ? 'El participante lo ve y puede corregirlo. Pulsa para ocultarlo (solo filtra).' : 'Solo sirve para filtrar los resultados. Pulsa para mostrarlo al participante.'}>
+    <Hint label={visible ? 'El participante ve este dato y puede editarlo al responder. Pulsa para no permitir edición.' : 'Se toma directo del sistema sin que el participante pueda editarlo. Pulsa para permitir edición.'}>
       {toggle}
     </Hint>
   )
@@ -46,19 +46,19 @@ export function FilaDato({
   detalle: string
   /** El campo en la encuesta, o null si este dato no está activo. */
   campo: DemographicField | null
-  /** Los creados solo para esta encuesta no se activan: existen o se quitan. */
+  /** Si lleva el interruptor para activarlo o desactivarlo en la encuesta. */
   activable?: boolean
   onActivar?: (activo: boolean) => void
   onEditar: () => void
   onCambio: (campo: DemographicField) => void
   onQuitar?: () => void
-  /** Guardarlo en el módulo para reutilizarlo; solo si aplica. */
+  /** Guardar la pregunta para reutilizarla en futuras encuestas; solo si aplica. */
   onGuardar?: () => void
   /** Los precargados del sistema no se editan: son los valores que la plataforma guarda. */
   editable?: boolean
-  /** Mostrar u ocultar al participante solo aplica a los precargados del sistema. */
+  /** Permitir o no edición al participante solo aplica a los precargados del sistema. */
   conVisibilidad?: boolean
-  /** Lo que va antes del nombre: la casilla para marcar la fila, cuando la lista se puede seleccionar. */
+  /** Lo que va antes del nombre, cuando aplica. */
   control?: ReactNode
   /** La encuesta está en curso: la fila se ve, pero no se activa, edita, guarda ni quita. Cada control dice por qué. */
   bloqueado?: boolean
@@ -66,6 +66,8 @@ export function FilaDato({
   const id = campo?.id ?? titulo
   const conAyuda = (etiqueta: string, boton: ReactElement) => (bloqueado ? <EnCurso bloqueado>{boton}</EnCurso> : <Hint label={etiqueta}>{boton}</Hint>)
   return (
+    // «!»: la fila en columna estirada y sin su relleno (lo pone la franja de dentro); la clase sola no le gana a la
+    // librería (diferencias.json › instalacion-estilos-sin-capa).
     <Item variant="outline" className="flex-col items-stretch! gap-0 p-0!">
       <div className="flex flex-wrap items-center gap-3 p-3">
         {control}
@@ -79,7 +81,7 @@ export function FilaDato({
           <ItemDescription>{detalle}</ItemDescription>
         </ItemContent>
         <ItemActions className="ms-auto flex-wrap">
-          {campo && editable ? (
+          {(campo || onQuitar) && editable ? (
             conAyuda(
               'Editar',
               <BotonIcono aria-label={`Editar ${titulo || 'el dato'}`} disabled={bloqueado} onClick={onEditar}>
@@ -89,8 +91,8 @@ export function FilaDato({
           ) : null}
           {onGuardar ? (
             conAyuda(
-              'Guardar en el módulo para reutilizarlo',
-              <BotonIcono aria-label={`Guardar ${titulo || 'el dato'} en el módulo`} disabled={bloqueado} onClick={onGuardar}>
+              'Guardar pregunta para reutilizarla en futuras encuestas',
+              <BotonIcono aria-label={`Guardar ${titulo || 'la pregunta'} para reutilizarla en futuras encuestas`} disabled={bloqueado} onClick={onGuardar}>
                 <HugeiconsIcon icon={BookmarkAdd02Icon} aria-hidden="true" />
               </BotonIcono>,
             )
@@ -98,6 +100,7 @@ export function FilaDato({
           {onQuitar ? (
             conAyuda(
               'Quitar',
+              // «!»: el icono de quitar en rojo; el ghost de la librería no trae tono rojo (diferencias.json › button-ghost-tonos).
               <BotonIcono aria-label={`Quitar ${titulo || 'el dato'}`} className="text-destructive!" disabled={bloqueado} onClick={onQuitar}>
                 <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
               </BotonIcono>,

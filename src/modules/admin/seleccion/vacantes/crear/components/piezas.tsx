@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { InformationCircleIcon, MinusSignIcon, PlusSignIcon, Tick02Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Field,
   FieldContent,
   FieldDescription,
@@ -28,6 +27,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 
 // Sección del formulario: tarjeta con su título y sus campos siempre a la vista. Antes se abría y

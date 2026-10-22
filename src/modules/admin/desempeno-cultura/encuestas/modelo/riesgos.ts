@@ -176,7 +176,7 @@ function nomRisks(survey: SurveyListItem, draft: SurveyDraft, results: SurveyRes
       kind: "nom-participacion",
       group: "critico",
       title: "No cumple la participación de la norma",
-      summary: `Cerró con ${formatPercent(survey.progress)} y la NOM 035 exige el ${NOM035_REQUIRED_PARTICIPATION}% del personal.`,
+      summary: `Cerró con ${formatPercent(survey.progress)} y la NOM 035 exige el ${NOM035_REQUIRED_PARTICIPATION} % del personal.`,
       facts: [
         { label: "Participación", value: formatPercent(survey.progress) },
         { label: "Exigida", value: formatPercent(NOM035_REQUIRED_PARTICIPATION) },
@@ -308,7 +308,7 @@ function commentRisks(draft: SurveyDraft, results: SurveyResults, closingSoon: b
         { label: "Por revisar", value: String(unsure) },
         { label: "Comentarios en total", value: String(comments.length) },
       ],
-      items: unsureComments.slice(0, 20).map((comment) => ({ id: comment.id, title: comment.text, detail: `La IA lo leyó como ${{ positive: "positivo", neutral: "neutral", negative: "negativo" }[comment.aiSentiment]} · confianza ${Math.round(comment.aiConfidence)}%` })),
+      items: unsureComments.slice(0, 20).map((comment) => ({ id: comment.id, title: comment.text, detail: `La IA lo leyó como ${{ positive: "positivo", neutral: "neutral", negative: "negativo" }[comment.aiSentiment]} · confianza ${Math.round(comment.aiConfidence)} %` })),
     });
   }
 }
@@ -364,7 +364,7 @@ function paceRisks(survey: SurveyListItem, today: Date, push: Push): boolean {
   const items = pendingPeople(survey);
   const missesTarget = projected !== null && projected < PARTICIPATION_TARGET;
   if (missesTarget && days !== null && days <= FINAL_DAYS) {
-    push({ kind: "meta-final", group: "critico", title: "No llegará a la meta de participación", summary: `${daysLeftText(days)} y va para ${formatPercent(projected)}, lejos del ${PARTICIPATION_TARGET}%.`, facts, items });
+    push({ kind: "meta-final", group: "critico", title: "No llegará a la meta de participación", summary: `${daysLeftText(days)} y va para ${formatPercent(projected)}, lejos del ${PARTICIPATION_TARGET} %.`, facts, items });
     return true;
   }
   if (elapsed !== null && elapsed - survey.progress >= LAG_POINTS) {
@@ -372,7 +372,7 @@ function paceRisks(survey: SurveyListItem, today: Date, push: Push): boolean {
     return true;
   }
   if (missesTarget) {
-    push({ kind: "meta", group: "atencion", title: "La meta de participación está en riesgo", summary: `A este ritmo cerrará con ${formatPercent(projected)}, por debajo del ${PARTICIPATION_TARGET}%.`, facts, items });
+    push({ kind: "meta", group: "atencion", title: "La meta de participación está en riesgo", summary: `A este ritmo cerrará con ${formatPercent(projected)}, por debajo del ${PARTICIPATION_TARGET} %.`, facts, items });
     return true;
   }
   return false;
@@ -443,7 +443,7 @@ function scheduledRisks(survey: SurveyListItem, today: Date, push: Push): void {
       kind: "abre",
       group: "manual",
       title: untilStart === 0 ? "Abre hoy" : untilStart === 1 ? "Abre mañana" : `Abre en ${untilStart} días`,
-      summary: "Comparte el enlace o el QR con quienes no reciben correo.",
+      summary: "Comparte el enlace con quienes no reciben correo.",
       facts: [
         { label: "Abre", value: survey.startDate },
         { label: "Cierra", value: survey.endDate },

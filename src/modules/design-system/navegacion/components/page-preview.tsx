@@ -59,7 +59,7 @@ const INNER_MENU = [
 ]
 
 const LIST = [
-  { title: 'Vacaciones · Sara Gómez', meta: '5 días · desde el 21 sep' },
+  { title: 'Vacaciones · Sara Gómez', meta: '5 días · desde el 21 sept' },
   { title: 'Permiso · Andrés Pardo', meta: 'Medio día · mañana' },
   { title: 'Certificado laboral', meta: 'Laura Méndez · hoy' },
   { title: 'Vacaciones · Juan Rincón', meta: '10 días · en octubre' },
@@ -129,7 +129,7 @@ export function PagePreview({
         <HugeiconsIcon icon={StarIcon} size={18} className={favorite ? 'text-warning' : undefined} />
       </BotonIcono>
     ) : c.titleAction === 'edit' ? (
-      <BotonIcono data-region="Editar nombre" className={cn(shape, 'text-muted-foreground!')} aria-label="Editar nombre" onClick={() => notify('Editar nombre')}>
+      <BotonIcono data-region="Editar nombre" className={cn(shape, 'text-muted-foreground!')} aria-label="Editar nombre" onClick={() => notify('Editar nombre', undefined, 'info')}>
         <HugeiconsIcon icon={PencilEdit02Icon} size={17} />
       </BotonIcono>
     ) : undefined
@@ -152,25 +152,25 @@ export function PagePreview({
             </DropdownMenuTrigger>
             {/* Primero de la fila, con su menú abriendo hacia adentro (decisión 15 de la auditoría). */}
             <DropdownMenuContent align="start" className="w-52">
-              <DropdownMenuItem onClick={() => notify('Duplicado')}>Duplicar</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => notify('Enlace copiado')}>Copiar enlace</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => notify('Duplicado', undefined, 'success')}>Duplicar</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => notify('Enlace copiado', undefined, 'success')}>Copiar enlace</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : null}
         {c.secondary ? (
-          <Button data-region="Botón secundario" variant="outline" className={shape} onClick={() => notify(s.secondary)}>
+          <Button data-region="Botón secundario" variant="outline" className={shape} onClick={() => notify(s.secondary, undefined, 'info')}>
             {s.secondaryIcon ? <HugeiconsIcon icon={s.secondaryIcon} size={16} /> : null}
             {s.secondary}
           </Button>
         ) : null}
         {c.primary ? (
-          <Button data-region="Botón primario" className={shape} onClick={() => notify(s.primary)}>
+          <Button data-region="Botón primario" className={shape} onClick={() => notify(s.primary, undefined, 'info')}>
             {s.primaryIcon ? <HugeiconsIcon icon={s.primaryIcon} size={16} /> : null}
             {s.primary}
           </Button>
         ) : null}
-        {/* Orbit Flow: siempre el último de la fila, a la derecha del primario (18 sep); abre el agente contextual de verdad. */}
-        {c.modoIa !== 'none' ? <ReopenAgentButton region="Orbit Flow" chip="top" compact={c.modoIa === 'orb'} onClick={() => setAgent(true)} /> : null}
+        {/* Orbit: siempre el último de la fila, a la derecha del primario (18 sep); abre el agente contextual de verdad. */}
+        {c.modoIa !== 'none' ? <ReopenAgentButton region="Orbit" chip="top" compact={c.modoIa === 'orb'} onClick={() => setAgent(true)} /> : null}
       </>
     ) : undefined
 
@@ -194,7 +194,7 @@ export function PagePreview({
           dibuja esa franja para poder verla en su sitio: no es parte del marco de página (va en gris de slot). */}
       {c.crumbs !== 'off' && !real ? (
         <div data-slot-region="Barra superior" className="mb-6 flex h-15 items-center gap-2 rounded-xl border border-dashed px-3">
-          <BotonIcono aria-label="Abrir o cerrar el menú" onClick={() => notify('Abrir o cerrar el menú')}>
+          <BotonIcono aria-label="Abrir o cerrar el menú" onClick={() => notify('Abrir o cerrar el menú', undefined, 'info')}>
             <HugeiconsIcon icon={SidebarLeftIcon} size={17} />
           </BotonIcono>
           <PreviewBreadcrumbs config={c} sample={s} />
@@ -203,7 +203,7 @@ export function PagePreview({
     <PageShell width={c.width}>
       <PageHeader
         breadcrumbs={real && c.crumbs !== 'off' ? s.crumbs.map((label) => ({ label })) : false}
-        back={c.top === 'back' ? { label: s.back, variant: c.back, onClick: () => notify(`Volver a ${s.back}`) } : undefined}
+        back={c.top === 'back' ? { label: s.back, variant: c.back, onClick: () => notify(`Volver a ${s.back}`, undefined, 'info') } : undefined}
         kicker={c.kicker ? s.kicker : undefined}
         media={media}
         title={s.title}
@@ -239,7 +239,7 @@ export function PagePreview({
                 variant={index === 0 ? 'secondary' : 'ghost'}
                 aria-current={index === 0 ? 'page' : undefined}
                 className={cn('h-9 w-full justify-start gap-2 px-3', WS, index !== 0 && 'text-muted-foreground!')}
-                onClick={() => notify(item.label)}
+                onClick={() => notify(item.label, undefined, 'info')}
               >
                 <HugeiconsIcon icon={item.icon} size={17} />
                 {item.label}
@@ -285,10 +285,10 @@ export function PagePreview({
           <HugeiconsIcon icon={InformationCircleIcon} size={18} className="text-primary" />
           <span className="text-sm">Tienes 2 cambios sin guardar</span>
           <div className="ml-auto flex gap-2">
-            <Button variant="ghost" className={shape} onClick={() => notify('Cambios descartados')}>
+            <Button variant="ghost" className={shape} onClick={() => notify('Cambios descartados', undefined, 'info')}>
               Descartar
             </Button>
-            <Button className={shape} onClick={() => notify('Cambios guardados')}>
+            <Button className={shape} onClick={() => notify('Cambios guardados', undefined, 'success')}>
               Guardar cambios
             </Button>
           </div>
@@ -297,14 +297,15 @@ export function PagePreview({
 
       {c.footer === 'wizard' ? (
         <PageActionBar className="relative! bottom-auto! mt-6 shadow-sm">
-          {/* Como en Crear vacante (5-oct): el estado del guardado a la izquierda (informa, no se pulsa). */}
-          <ChipGuardado estado="guardado" />
+          {/* Como en Crear vacante (5-oct): el estado del guardado a la izquierda (informa, no se pulsa). A mitad del
+              asistente y sin borrador real dice «Cambios sin guardar», no «Guardado» (13-oct, «guardado-honesto»). */}
+          <ChipGuardado estado="editando" />
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" className={shape} onClick={() => notify('Paso anterior')}>
+            <Button variant="outline" className={shape} onClick={() => notify('Paso anterior', undefined, 'info')}>
               <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
               Atrás
             </Button>
-            <Button className={shape} onClick={() => notify('Siguiente paso')}>
+            <Button className={shape} onClick={() => notify('Siguiente paso', undefined, 'info')}>
               Siguiente
               <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
             </Button>
@@ -315,7 +316,7 @@ export function PagePreview({
       {/* Con el marco real el pie ya lo pone el marco: no se repite. */}
       {c.footer === 'legal' && !real ? (
         <div data-region="Pie" className="mt-10 [&>footer]:m-0! [&>footer]:p-0!">
-          <AppFooter />
+          <AppFooter siempre />
         </div>
       ) : null}
 

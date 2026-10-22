@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Download04Icon, MoreHorizontalIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -13,6 +12,7 @@ import {
   type BulkAction,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { notify } from '@/shared/components/notify'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
@@ -22,9 +22,12 @@ import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrast
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { pagina } from '@/modules/design-system/templates/admin-compartido/lista'
 import { channeledRoster } from '../../modelo/descargas/canalizados'
+import { fileStamp, slugify } from '../../modelo/descargas/libro'
 import type { Respondent } from '../../modelo/questionResponses'
 import type { SurveyDraft } from '../../modelo/surveyBuilderTypes'
 import type { SurveyResults } from '../../modelo/surveyResults'
+import { imprimir } from '../descargas/imprimir'
+import { CartasCanalizacion } from '../descargas/reportes-nom035'
 import { numero } from './escala'
 import { TarjetaResumen } from './tarjeta-resumen'
 
@@ -47,8 +50,19 @@ function ordenar(filas: Persona[], orden?: string) {
 
 const cartas = (cuantas: number) => `${cuantas} ${cuantas === 1 ? 'carta' : 'cartas'} de canalización`
 
+// Las cartas se bajan de verdad: es el mismo documento que Descargar › Cartas de canalización, solo con las personas
+// elegidas, y se guarda con «Guardar como PDF» del diálogo de impresión (como todos los PDF de Resultados).
+function descargarCartas(borrador: SurveyDraft, resultados: SurveyResults, personas: Persona[]) {
+  const canalizadas = personas.filter((persona) => persona.canalizar)
+  if (canalizadas.length === 0) return
+  const titulo = `cartas-canalizacion-nom035-${slugify(borrador.name)}-${fileStamp()}`
+  const listo = imprimir(<CartasCanalizacion borrador={borrador} resultados={resultados} pedido={{ responsible: null }} soloIds={canalizadas.map((persona) => persona.id)} />, titulo)
+  if (listo) notify(canalizadas.length === 1 ? 'Carta lista para guardar' : `${cartas(canalizadas.length)} listas para guardar`, 'Elige «Guardar como PDF» en el diálogo de impresión.', 'success')
+  else notify('No pudimos preparar las cartas', 'Vuelve a intentarlo o descárgalas desde Descargar › Cartas de canalización.', 'error')
+}
+
 // El menú de cada fila, como en Data grid del design system. La carta solo existe para quien hay que canalizar.
-function MenuFila({ persona }: { persona: Persona }) {
+function MenuFila({ persona, onCarta }: { persona: Persona; onCarta: (persona: Persona) => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<BotonIcono aria-label={`Acciones de ${persona.name}`} />}>
@@ -56,7 +70,7 @@ function MenuFila({ persona }: { persona: Persona }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuGroup>
-          <DropdownMenuItem disabled={!persona.canalizar} onClick={() => notify('Carta de canalización descargada', persona.name)}>
+          <DropdownMenuItem disabled={!persona.canalizar} onClick={() => onCarta(persona)}>
             <HugeiconsIcon icon={Download04Icon} aria-hidden="true" />
             Descargar carta de canalización
           </DropdownMenuItem>
@@ -68,7 +82,7 @@ function MenuFila({ persona }: { persona: Persona }) {
 
 // La tabla es la del sistema (TablaDatos, auditoría 5-oct, decisiones 1 y 2): buscador, orden y filtro en cada columna
 // y el pie en español de todo el admin. Las columnas van fuera del componente: si no, el filtro se cierra al marcar.
-const COLUMNAS: DataGridListConfig<Persona>['columns'] = [
+const columnas = (onCarta: (persona: Persona) => void): DataGridListConfig<Persona>['columns'] => [
   { accessorKey: 'name', header: 'Participante', size: 240, cell: ({ row }) => <CeldaPersona nombre={row.original.name} /> },
   { accessorKey: 'area', header: 'Área', size: 160, cell: ({ row }) => <Text as="span" size="sm">{row.original.area ?? '—'}</Text> },
   { accessorKey: 'leader', header: 'Líder', size: 170, cell: ({ row }) => <Text as="span" size="sm">{row.original.leader ?? '—'}</Text> },
@@ -82,7 +96,7 @@ const COLUMNAS: DataGridListConfig<Persona>['columns'] = [
       </Badge>
     ),
   },
-  { id: 'acciones', header: 'Acciones', size: 100, enableSorting: false, enableResizing: false, ...SIN_ARRASTRE, cell: ({ row }) => <MenuFila persona={row.original} /> },
+  { id: 'acciones', header: 'Acciones', size: 100, enableSorting: false, enableResizing: false, ...SIN_ARRASTRE, cell: ({ row }) => <MenuFila persona={row.original} onCarta={onCarta} /> },
 ]
 
 const SIN_FILTROS: Record<Filtro, string[]> = { area: [], leader: [], resultado: [] }
@@ -102,6 +116,9 @@ export function Canalizacion({ borrador, resultados }: { borrador: SurveyDraft; 
     () => channeledRoster(borrador, resultados).map((persona) => ({ ...persona, afirmativas: persona.affirmatives, canalizar: persona.channeled, resultado: persona.channeled ? POR_CANALIZAR : SIN_INDICADORES })),
     [borrador, resultados],
   )
+
+  // Las columnas se arman una vez por encuesta (no en cada pintado): si no, el filtro de la columna se cierra al marcar.
+  const columnasTabla = useMemo(() => columnas((persona) => descargarCartas(borrador, resultados, [persona])), [borrador, resultados])
 
   const casos = personas.filter((persona) => persona.canalizar)
   const { invited, completed } = resultados.participation
@@ -147,7 +164,7 @@ export function Canalizacion({ borrador, resultados }: { borrador: SurveyDraft; 
       icon: <HugeiconsIcon icon={Download04Icon} aria-hidden="true" />,
       visibility: 'always',
       disabled: cartasMarcadas === 0,
-      onClick: () => notify(`Se descargaron ${cartas(cartasMarcadas)}`, 'Solo de las personas por canalizar.'),
+      onClick: () => descargarCartas(borrador, resultados, marcadas),
     },
   ]
 
@@ -159,7 +176,7 @@ export function Canalizacion({ borrador, resultados }: { borrador: SurveyDraft; 
   }
 
   const config: DataGridListConfig<Persona> = {
-    columns: COLUMNAS,
+    columns: columnasTabla,
     columnFilters: filtrosColumna,
     onColumnFiltersChange: (nuevos) => {
       const valores = (id: Filtro) => {

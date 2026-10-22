@@ -6,7 +6,6 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  Badge,
   Button,
   Checkbox,
   Frame,
@@ -29,8 +28,10 @@ import {
   SelectValue,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
+import { BotonCancelarPanel } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { useQuestionBankLibrary } from '../../../modelo/questionBankLibrary'
 import type { QuestionBankItem, QuestionBankSection } from '../../../modelo/questionBankData'
@@ -50,7 +51,8 @@ const esListaSuelta = (secciones: readonly QuestionBankSection[]) => secciones.l
 function ListaPreguntas({ preguntas, marcadas, onAlternar }: { preguntas: readonly QuestionBankItem[]; marcadas: Marcadas; onAlternar: (pregunta: QuestionBankItem) => void }) {
   return (
     // Una línea entre pregunta y pregunta: con 20 o más seguidas, el texto solo no dice dónde acaba una. El borde lo pone
-    // el marco del banco, así que la lista no lleva el suyo.
+    // el marco del banco, así que la lista no lleva el suyo. «!»: sin el espacio entre filas de la librería
+    // (diferencias.json › instalacion-estilos-sin-capa).
     <ItemGroup className="gap-0!">
       {preguntas.map((pregunta, indice) => {
         const marcada = marcadas.has(pregunta.id)
@@ -157,9 +159,13 @@ export function BancoPreguntas({
       size="lg"
       icon={LibraryIcon}
       title="Banco de preguntas"
-      description="Preguntas de UBITS listas para usar. Elige el tipo de encuesta, abre una sección y marca las que quieras añadir."
+      description="Preguntas de UBITS listas para usar. Elige el tipo de encuesta, abre una sección y marca las que quieras agregar."
+      // 13-oct (I-087): con preguntas marcadas, no se cierra al tocar fuera y pregunta antes de descartar.
+      conCambios={marcadas.size > 0}
       headerExtra={
         <div className="border-b px-5 py-3">
+          {/* «!»: el fondo sólido del selector y del buscador, que la librería deja transparentes y se pierden sobre el gris
+              (diferencias.json › select-trigger-fondo-solido e input-group-fondo-solido). */}
           <div className="grid gap-2 sm:grid-cols-[minmax(0,16rem)_1fr]">
             <Select value={tipo} onValueChange={(valor) => cambiarTipo(valor as string)} items={banco.map((entrada) => ({ value: entrada.id, label: entrada.name }))}>
               <SelectTrigger aria-label="Tipo de encuesta" className="w-full bg-background!">
@@ -173,6 +179,7 @@ export function BancoPreguntas({
                 ))}
               </SelectContent>
             </Select>
+            {/* «!»: fondo sólido; la librería lo deja transparente (diferencias.json › input-group-fondo-solido). */}
             <InputGroup className="bg-background!">
               <InputGroupAddon>
                 <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
@@ -185,11 +192,9 @@ export function BancoPreguntas({
       footer={
         <>
           <Text as="span" size="sm" variant="muted" className="mr-auto">
-            {marcadas.size === 0 ? `Se añadirán a ${destino}` : `${plural(marcadas.size, 'elegida', 'elegidas')} · irán a ${destino}`}
+            {marcadas.size === 0 ? `Se agregarán a ${destino}` : `${plural(marcadas.size, 'elegida', 'elegidas')} · irán a ${destino}`}
           </Text>
-          <Button variant="outline" onClick={cerrar}>
-            Cancelar
-          </Button>
+          <BotonCancelarPanel alCerrar={cerrar} />
           <Button
             disabled={marcadas.size === 0}
             onClick={() => {
@@ -197,7 +202,7 @@ export function BancoPreguntas({
               cerrar()
             }}
           >
-            Añadir {marcadas.size > 0 ? `(${marcadas.size})` : ''}
+            Agregar {marcadas.size > 0 ? `(${marcadas.size})` : ''}
           </Button>
         </>
       }
@@ -230,6 +235,8 @@ export function BancoPreguntas({
               const elegidas = contarElegidas(actual.questions)
               return (
                 <Frame key={actual.id}>
+                  {/* «!»: el acordeón sin su borde ni su relleno, que los pone el marco; la clase sola no le gana a la librería
+                      (diferencias.json › instalacion-estilos-sin-capa). */}
                   <AccordionItem value={actual.id} className="border-0!">
                     <FrameHeader className="py-0!">
                       <AccordionTrigger>
@@ -251,6 +258,7 @@ export function BancoPreguntas({
                         </div>
                       </AccordionTrigger>
                     </FrameHeader>
+                    {/* «!»: sin el relleno de abajo del acordeón, lo pone el marco; la clase sola no le gana a la librería (diferencias.json › instalacion-estilos-sin-capa). */}
                     <AccordionContent className="pb-0!">
                       <FramePanel className="flex flex-col gap-1">
                         <ElegirTodas preguntas={actual.questions} marcadas={marcadas} onElegir={elegir} />

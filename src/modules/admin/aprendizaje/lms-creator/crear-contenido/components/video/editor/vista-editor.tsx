@@ -346,9 +346,20 @@ export function VistaEditor() {
       subtitulo="Video con IA"
       tokens={tokens}
       lleno
-      // Una sola salida, `BotonSalirCreacion`, sin X (regla de creación, 6-oct). No pregunta: el editor se autoguarda y
-      // salir deja el borrador en «Tus videos recientes», así que no hay nada que perder.
-      acciones={<BotonSalirCreacion texto="Salir de la edición" onClick={salir} />}
+      // Una sola salida, `BotonSalirCreacion`, sin X (regla de creación, 6-oct). El editor se autoguarda y salir deja el
+      // borrador en «Tus videos recientes»: con todo guardado sale directo; si hay algo a medio guardar pregunta con la
+      // ventana del sistema, «¿Salir de la edición?» (war room del 13-oct).
+      acciones={
+        <BotonSalirCreacion
+          texto="Salir de la edición"
+          onClick={salir}
+          salida={{
+            conCambios: guardado !== 'guardado',
+            alGuardarYSalir: salir,
+            retomarEn: '«Tus videos recientes»',
+          }}
+        />
+      }
       // Las acciones al pie, donde el setup las tiene: la principal no cambia de sitio al entrar al editor
       // (el jefe de Dave, 5-oct). Y sin volver: la salida es la de arriba.
       pie={

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useBlocker } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Copy01Icon, InformationCircleIcon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, Copy01Icon, InformationCircleIcon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Field,
@@ -21,6 +22,8 @@ import fondoDemo from '@/modules/auth/Assets/Background.jpg'
 import metaLogo from '@/shared/assets/meta.png'
 import { notify } from '@/shared/components/notify'
 import { PageActionBar, PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
+import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { VentanaSalir } from '@/modules/design-system/navegacion/boton-salir-creacion'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { CampoImagen } from '../components/carga-imagen'
 import { EMPRESA, VACIO, listo, mismoArchivo, type Archivo } from '../components/datos'
@@ -39,6 +42,15 @@ const imagenSi = (archivo: Archivo, src: string) => (archivo.estado === 'listo' 
 // Formulario a la izquierda y vista previa a la derecha. Las cargas son simuladas.
 export function Component() {
   const [pestana, setPestana] = useState<Pestana>('inicio')
+  // Cuántos cambios sin guardar tiene la pestaña que se ve (la propia pestaña lo avisa). Cada pestaña guarda lo suyo y
+  // se monta de nuevo al cambiar, así que irse con cambios los perdía sin avisar (13-oct, I-014).
+  const [cambios, setCambios] = useState(0)
+  const [pendiente, setPendiente] = useState<Pestana | null>(null)
+  // Cambiar de pantalla (barra lateral, «atrás» del navegador, un enlace) con cambios también pregunta.
+  const bloqueo = useBlocker(({ currentLocation, nextLocation }) => cambios > 0 && currentLocation.pathname !== nextLocation.pathname)
+  const salidaBloqueada = bloqueo.state === 'blocked' ? bloqueo : null
+  const nombrePestana = PESTANAS.find((item) => item.value === pestana)?.label ?? ''
+  const detalleCambios = `Personalización · ${cambios} ${plural(cambios, 'cambio', 'cambios')}`
 
   return (
     <PageShell>
@@ -46,7 +58,14 @@ export function Component() {
         title="Personaliza tu experiencia"
         description="Pon la marca de Meta Colombia en la página de inicio de sesión y en el encabezado de UBITS."
         tabs={
-          <Tabs value={pestana} onValueChange={(value) => setPestana(value as Pestana)}>
+          <Tabs
+            value={pestana}
+            onValueChange={(value) => {
+              if (value === pestana) return
+              if (cambios > 0) setPendiente(value as Pestana)
+              else setPestana(value as Pestana)
+            }}
+          >
             <TabsList variant="line">
               {PESTANAS.map((item) => (
                 <TabsTrigger key={item.value} value={item.value} className="flex-none px-3">
@@ -58,18 +77,56 @@ export function Component() {
         }
       />
 
-      <PageContent>{pestana === 'inicio' ? <InicioSesion key="inicio" /> : <LogoPrincipal key="logo" />}</PageContent>
+      <PageContent>
+        {pestana === 'inicio' ? <InicioSesion key="inicio" onCambios={setCambios} /> : <LogoPrincipal key="logo" onCambios={setCambios} />}
+      </PageContent>
+
+      <DialogoConfirmar
+        abierto={pendiente !== null}
+        onAbiertoChange={(abierto) => (abierto ? undefined : setPendiente(null))}
+        icono={Alert02Icon}
+        titulo="¿Descartar los cambios?"
+        descripcion="Si cambias de pestaña ahora, se pierde lo que cambiaste en esta. Puedes guardarlo antes con «Guardar cambios»."
+        cancelar="Seguir editando"
+        accion="Descartar"
+        destructiva
+        onConfirmar={() => {
+          if (pendiente) setPestana(pendiente)
+          setCambios(0)
+          setPendiente(null)
+        }}
+      >
+        <RegistroConfirmar nombre={nombrePestana} detalle={detalleCambios} estado="Cambios sin guardar" />
+      </DialogoConfirmar>
+
+      <VentanaSalir
+        abierto={salidaBloqueada !== null}
+        onAbiertoChange={(abierto) => (abierto ? undefined : salidaBloqueada?.reset())}
+        texto="Salir de la edición"
+        borrador={false}
+        mensaje="Lo que cambiaste no queda guardado al salir."
+        onSalir={() => salidaBloqueada?.proceed()}
+      />
     </PageShell>
   )
 }
 
-function InicioSesion() {
+// Cada pestaña dice cuántos cambios lleva a quien la muestra, y al desmontarse avisa que ya no hay ninguno.
+function useAvisarCambios(cambios: number, onCambios: (cambios: number) => void) {
+  useEffect(() => {
+    onCambios(cambios)
+  }, [cambios, onCambios])
+  useEffect(() => () => onCambios(0), [onCambios])
+}
+
+function InicioSesion({ onCambios }: { onCambios: (cambios: number) => void }) {
   const [guardado, setGuardado] = useState({ logo: VACIO, fondo: VACIO })
   const [logo, setLogo] = useState<Archivo>(VACIO)
   const [fondo, setFondo] = useState<Archivo>(VACIO)
 
   const cargando = logo.estado === 'cargando' || fondo.estado === 'cargando'
   const cambios = [!mismoArchivo(logo, guardado.logo), !mismoArchivo(fondo, guardado.fondo)].filter(Boolean).length
+  useAvisarCambios(cambios, onCambios)
 
   return (
     <div className="grid animate-in items-start gap-8 duration-200 fade-in lg:grid-cols-2">
@@ -89,7 +146,7 @@ function InicioSesion() {
                 size="sm"
                 onClick={() => {
                   void navigator.clipboard?.writeText(EMPRESA.enlaceIngreso).catch(() => undefined)
-                  notify('Enlace copiado', 'Compártelo con tus colaboradores para que ingresen a UBITS.')
+                  notify('Enlace copiado', 'Compártelo con tus colaboradores para que ingresen a UBITS.', 'success')
                 }}
               >
                 <HugeiconsIcon icon={Copy01Icon} size={14} />
@@ -113,14 +170,14 @@ function InicioSesion() {
         }}
         onGuardar={() => {
           setGuardado({ logo, fondo })
-          notify('Cambios guardados', 'Tus colaboradores verán la nueva página de inicio de sesión.')
+          notify('Cambios guardados', 'Tus colaboradores verán la nueva página de inicio de sesión.', 'success')
         }}
       />
     </div>
   )
 }
 
-function LogoPrincipal() {
+function LogoPrincipal({ onCambios }: { onCambios: (cambios: number) => void }) {
   // Como en la plataforma: el logo horizontal ya está cargado y el de celular está subiendo.
   const [guardado, setGuardado] = useState({ logo: listo('logo'), celular: VACIO })
   const [logo, setLogo] = useState<Archivo>(() => listo('logo'))
@@ -129,6 +186,7 @@ function LogoPrincipal() {
 
   const cargando = logo.estado === 'cargando' || celular.estado === 'cargando'
   const cambios = [!mismoArchivo(logo, guardado.logo), !mismoArchivo(celular, guardado.celular)].filter(Boolean).length
+  useAvisarCambios(cambios, onCambios)
 
   return (
     <div className="grid animate-in items-start gap-8 duration-200 fade-in lg:grid-cols-2">
@@ -158,7 +216,7 @@ function LogoPrincipal() {
         }}
         onGuardar={() => {
           setGuardado({ logo, celular })
-          notify('Cambios guardados', 'El nuevo logo ya aparece en el encabezado de UBITS.')
+          notify('Cambios guardados', 'El nuevo logo ya aparece en el encabezado de UBITS.', 'success')
         }}
       />
     </div>

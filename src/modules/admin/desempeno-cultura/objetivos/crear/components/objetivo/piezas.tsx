@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import {
-  Badge,
   Field,
   FieldContent,
   FieldDescription,
@@ -17,6 +16,7 @@ import {
   Text,
   cn,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import type { Tone } from '../../../../encuestas/modelo/tone'
 import { TEXTO_FIJO_POR_TONO, soloCifra } from './formato'
 
@@ -24,12 +24,14 @@ import { TEXTO_FIJO_POR_TONO, soloCifra } from './formato'
 // opción (medida, dirección, sí/no) y el campo de cifra con su símbolo delante. Todas de flux-ui, con la misma
 // gramática que «Datos generales» de encuestas (RadioGroup de tarjetas con IconTile).
 
-/** Un paso de la tarjeta: número, la pregunta y su ayuda siempre a la vista; lo que se contesta, debajo y con sangría. */
-export function PasoTarjeta({ numero, pregunta, ayuda, extra, children }: { numero: number; pregunta: ReactNode; ayuda?: string; extra?: ReactNode; children: ReactNode }) {
+/** Un paso de la tarjeta: número, la pregunta y su ayuda siempre a la vista; lo que se contesta, debajo y con sangría.
+ *  `completo` (opcional) le dice a la tarjeta a qué paso bajar cuando se completa el anterior. */
+/** `conError`: el paso es obligatorio, falta y ya se revisó (se intentó avanzar o se cerró la tarjeta): su número va en rojo. */
+export function PasoTarjeta({ numero, pregunta, ayuda, extra, completo, conError = false, children }: { numero: number; pregunta: ReactNode; ayuda?: string; extra?: ReactNode; completo?: boolean; conError?: boolean; children: ReactNode }) {
   return (
-    <section data-paso-objetivo className="flex scroll-mt-24 scroll-mb-6 flex-col gap-3 py-4">
+    <section data-paso-objetivo data-completo={completo === undefined ? undefined : completo ? 'si' : 'no'} data-con-error={conError || undefined} className="flex scroll-mt-24 scroll-mb-6 flex-col gap-3 py-4">
       <header className="flex items-start gap-3">
-        <Badge variant="secondary" radius="full" size="sm" className="mt-0.5 shrink-0 tabular-nums">
+        <Badge variant={conError ? 'destructive-light' : 'secondary'} radius="full" size="sm" className="mt-0.5 shrink-0 tabular-nums">
           {numero}
         </Badge>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -70,9 +72,11 @@ export function TarjetaOpcion({
 }) {
   return (
     <FieldLabel htmlFor={id} className="bg-card">
+      {/* Alineación de la fila: el tema la fija y la clase sola no le gana (diferencias.json › instalacion-estilos-sin-capa). */}
       <Field orientation="horizontal" data-invalid={invalida || undefined} className="items-center!">
         <RadioGroupItem value={valor} id={id} aria-invalid={invalida || undefined} />
         {icono ? (
+          // Icono en el color de su tono: la baldosa «soft» lo pinta en gris y la clase sola no le gana (diferencias.json › instalacion-estilos-sin-capa).
           <IconTile variant="soft" size="sm" className={cn('shrink-0 **:text-inherit!', tono ? TEXTO_FIJO_POR_TONO[tono] : 'text-primary!')}>
             <HugeiconsIcon icon={icono} aria-hidden="true" />
           </IconTile>
@@ -113,6 +117,7 @@ export function CampoCifra({
   className?: string
 }) {
   return (
+    // Fondo blanco: el campo es transparente y se pierde sobre el gris (diferencias.json › input-group-fondo-solido).
     <InputGroup className={cn('bg-background!', className)}>
       <InputGroupAddon>
         <InputGroupText className="tabular-nums">{simbolo}</InputGroupText>

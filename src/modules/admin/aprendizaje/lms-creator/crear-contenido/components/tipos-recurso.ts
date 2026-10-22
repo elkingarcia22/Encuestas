@@ -1,4 +1,4 @@
-// Los tipos de recurso principal que puede tener una página: su icono en el índice y su tarjeta en «Añadir página».
+// Los tipos de recurso principal que puede tener una página: su icono en el índice y su tarjeta en «Agregar página».
 //
 // Los iconos son los de la exploración 1: el enlace en recuadro para lo embebido, el paquete para el SCORM, la
 // presentación con barras, la lista con visto para la evaluación, el calendario para la asistencia y el globo para la
@@ -43,7 +43,7 @@ export type TarjetaTipo = {
   etiqueta: string
   /** El icono de línea de las filas del índice y de la barra del recurso principal. */
   icono: IconSvgElement
-  /** La ilustración de vidrio de la tarjeta en «Añadir página»: las mismas que la exploración 1. */
+  /** La ilustración de vidrio de la tarjeta en «Agregar página»: las mismas que la exploración 1. */
   glass: string
   /** Lleva la marca de IA («Incluye asistencia con IA.»). */
   ia?: boolean
@@ -60,7 +60,7 @@ export type TarjetaTipo = {
 }
 
 /**
- * El orden del selector de «Añadir página» (Dave, 9-oct): primero **lo que fabrica la IA** —video, presentación,
+ * El orden del selector de «Agregar página» (Dave, 9-oct): primero **lo que fabrica la IA** —video, presentación,
  * roleplay y evaluación—, después los **archivos y enlaces** que trae el creador, luego las **encuestas** y al final
  * el SCORM. La asistencia cierra la lista porque solo aparece en Crear evento.
  */

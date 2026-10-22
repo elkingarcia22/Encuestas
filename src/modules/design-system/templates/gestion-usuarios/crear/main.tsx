@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Alert01Icon, LogoutSquare01Icon } from '@hugeicons/core-free-icons'
+import { Alert01Icon } from '@hugeicons/core-free-icons'
 import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -31,13 +30,13 @@ import {
   SelectTrigger,
   SelectValue,
   Separator,
-  toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify } from '@/shared/components/notify'
 import { PageActionBar } from '@/shared/components/PageShell'
 import { ChipGuardado } from '@/shared/components/ChipGuardado'
 import { BotonSalirCreacion } from '@/modules/design-system/navegacion/boton-salir-creacion'
 
-import { DialogoConfirmar, RegistroConfirmar } from '../../../estados/confirmaciones'
 import { PantallaDeError } from '../../../estados/errores-sistema'
 import { registroQueNoExiste } from '../../../estados/errores-sistema-datos'
 import { EncabezadoPantalla } from '../../admin-compartido/piezas'
@@ -175,7 +174,6 @@ export function Component() {
   const [original] = useState(borrador)
   const [errores, setErrores] = useState<Errores>({})
   const [enviado, setEnviado] = useState(false)
-  const [saliendo, setSaliendo] = useState(false)
 
   // Un id que no existe: el error de sistema «No encontramos esta página», con su botón navegando.
   if (id && !editando) {
@@ -261,7 +259,7 @@ export function Component() {
 
     if (editando) {
       setUsuarios((todos) => todos.map((u) => (u.id === editando.id ? { ...u, ...datos } : u)))
-      toast.add({ type: 'success', title: 'Usuario actualizado', description: `Guardamos los cambios de ${datos.nombres} ${datos.apellidos}.` })
+      notify('Usuario actualizado', `Guardamos los cambios de ${datos.nombres} ${datos.apellidos}.`, 'success')
     } else {
       const nuevo: Usuario = {
         ...datos,
@@ -272,23 +270,12 @@ export function Component() {
         ultimoIngreso: null,
       }
       setUsuarios((todos) => [nuevo, ...todos])
-      toast.add({
-        type: 'success',
-        title: 'Usuario creado',
-        description: `Le enviamos a ${datos.correo} el enlace para crear su contraseña.`,
-      })
+      notify('Usuario creado', `Le enviamos a ${datos.correo} el enlace para crear su contraseña.`, 'success')
     }
     navigate(ruta())
   }
 
   const hayCambios = JSON.stringify(borrador) !== JSON.stringify(original)
-  const cancelar = () => (hayCambios ? setSaliendo(true) : navigate(ruta()))
-  const nombreBorrador = `${borrador.nombres} ${borrador.apellidos}`.trim()
-  // «Guardar y salir» guarda como el botón de la barra: valida y, si falta algo, se queda a corregirlo con el resumen arriba.
-  const guardarYSalir = () => {
-    setSaliendo(false)
-    guardar()
-  }
   const lista = ORDEN.filter((c) => errores[c])
   const invalido = (campo: Campo) => (errores[campo] ? 'true' : undefined)
 
@@ -325,7 +312,15 @@ export function Component() {
             ? `Actualiza los datos de ${nombreCompleto(editando)}. Los campos de área y líder son necesarios para crear tu organigrama.`
             : 'Llena los campos requeridos para crear un nuevo usuario en el sistema. Los campos de área y líder son necesarios para crear tu organigrama.'
         }
-        acciones={<BotonSalirCreacion texto={editando ? 'Salir de la edición' : 'Salir de la creación'} onClick={cancelar} />}
+        // 13-oct: la ventana es la del sistema («¿Salir sin guardar?»). Ni crear ni editar un usuario tienen borrador
+        // donde guardar: dos salidas, sin «Guardar y salir» (guardar es «Guardar» o «Guardar cambios», en la barra).
+        acciones={
+          <BotonSalirCreacion
+            texto={editando ? 'Salir de la edición' : 'Salir de la creación'}
+            onClick={() => navigate(ruta())}
+            salida={{ conCambios: hayCambios }}
+          />
+        }
       />
 
       {enviado && lista.length > 0 ? (
@@ -510,7 +505,9 @@ export function Component() {
           pulsa) y la acción a la derecha. Sin «Cancelar»: la única salida es la de junto al título. Con un formulario
           corto baja hasta el final de la pantalla. */}
       <PageActionBar className="mt-auto">
-        <ChipGuardado estado={hayCambios ? 'editando' : 'guardado'} />
+        {/* Sin borrador real: «Cambios sin guardar» en cuanto hay algo escrito, hasta que se guarda; antes no hay nada que
+            decir (13-oct, I-276). */}
+        {hayCambios ? <ChipGuardado estado="editando" /> : <span />}
         {/* onMouseDown sin foco: si el campo que se deja muestra su error al perder el foco,
             el botón se correría antes de soltar el clic y el clic se perdería. */}
         <div className="ml-auto flex items-center gap-2">
@@ -519,36 +516,6 @@ export function Component() {
           </Button>
         </div>
       </PageActionBar>
-
-      {/* Salir con cambios es preguntar antes de hacer algo: DialogoConfirmar con sus tres salidas y en su tamaño normal
-          (en el chico los tres botones no caben en una fila). El título es fijo; el usuario va en la tarjeta. */}
-      <DialogoConfirmar
-        abierto={saliendo}
-        onAbiertoChange={setSaliendo}
-        icono={LogoutSquare01Icon}
-        titulo={editando ? '¿Salir de la edición?' : '¿Salir de la creación?'}
-        descripcion={
-          editando
-            ? 'Tienes cambios sin guardar. Si sales ahora, el usuario queda como estaba.'
-            : 'Tienes cambios sin guardar. Si sales ahora, el usuario no se crea.'
-        }
-        cancelar="Seguir editando"
-        otra={{
-          texto: 'Salir sin guardar',
-          onClick: () => {
-            setSaliendo(false)
-            navigate(ruta())
-          },
-        }}
-        accion="Guardar y salir"
-        onConfirmar={guardarYSalir}
-      >
-        <RegistroConfirmar
-          nombre={nombreBorrador || 'Usuario sin nombre'}
-          detalle={editando ? 'Usuario · en edición' : 'Usuario nuevo'}
-          estado="Cambios sin guardar"
-        />
-      </DialogoConfirmar>
 
     </div>
   )

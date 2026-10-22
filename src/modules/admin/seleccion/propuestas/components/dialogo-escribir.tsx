@@ -1,14 +1,11 @@
 import { useState } from 'react'
 import { Field, FieldDescription, FieldLabel, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@ubits/flux-ui'
-import type { ActionDialogItem } from '@/shared/components/ActionDialog'
-import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
+import { ActionDialog, type ActionDialogItem } from '@/shared/components/ActionDialog'
 
 // La ventana de «Escribirle a…»: la misma en la bandeja de la vacante (varias personas a la vez), en el expediente y en
 // el detalle de la vacante (auditoría del 8-oct, H-250: «Enviar correo» salía al instante, sin plantilla ni mensaje).
 // Lo que sale de la empresa se ve antes de mandarlo: a quién, con qué plantilla y con qué mensaje. Antes vivía dentro de
 // la barra de acciones en lote; se movió aquí sin cambiar lo que dice ni cómo se ve.
-// Es una `VentanaDeAccion` (la API de `ActionDialog`): dentro de un panel se abre como una vista suya, y la lista de
-// personas va sin el círculo de iniciales (los candidatos no lo llevan, 8 oct).
 
 const PLANTILLAS = [
   {
@@ -61,7 +58,7 @@ export function DialogoEscribir({
   const cuantas = destinatarios.length
 
   return (
-    <VentanaDeAccion
+    <ActionDialog
       open={abierto}
       onOpenChange={onOpenChange}
       size="wide"
@@ -106,6 +103,6 @@ export function DialogoEscribir({
           </FieldDescription>
         </Field>
       </div>
-    </VentanaDeAccion>
+    </ActionDialog>
   )
 }

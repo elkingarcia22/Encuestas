@@ -2,7 +2,8 @@ import type { OpcionEscala } from '../../../encuestas/resultados/components/cont
 import type { ScaleTone } from '../../../encuestas/modelo/favorabilityScale'
 import type { Corte } from './lecturas'
 import { MINIMO_GRUPO } from './ranking'
-import { OBJETIVOS_EMPRESA, riesgoDe, type ObjetivoSeguido, type PersonaSeguida, type ResultadosCiclo, type Riesgo } from './seguimiento'
+import type { TonoId } from '../configuracion'
+import { OBJETIVOS_EMPRESA, riesgoDe, type NivelVista, type ObjetivoSeguido, type PersonaSeguida, type ResultadosCiclo, type Riesgo } from './seguimiento'
 
 // Cumplimiento de un ciclo, objetivo por objetivo (portado del prototipo «configuración objetivos», 9-oct). Dos lecturas
 // del mismo dato:
@@ -86,15 +87,22 @@ export function arbol(r: ResultadosCiclo, corte: Corte): NodoCumplimiento[] {
   })
 }
 
-/** La escala del cumplimiento: los tres niveles del ciclo y, arriba, quien ya llegó a la meta. */
-export const ESCALA_CUMPLIMIENTO: readonly OpcionEscala[] = [
-  { id: 'meta', label: 'En meta', range: '100% o más', tone: 'deep-positive' },
-  { id: 'excelente', label: 'Excelente', range: '67 a 99%', tone: 'positive' },
-  { id: 'bueno', label: 'Bueno', range: '34 a 66%', tone: 'warning' },
-  { id: 'por-mejorar', label: 'Por mejorar', range: '0 a 33%', tone: 'softer-negative' },
-]
-export function bandaDe(avance: number): { id: string; label: string; tone: ScaleTone } {
-  const banda = avance >= 100 ? ESCALA_CUMPLIMIENTO[0] : avance >= 67 ? ESCALA_CUMPLIMIENTO[1] : avance >= 34 ? ESCALA_CUMPLIMIENTO[2] : ESCALA_CUMPLIMIENTO[3]
+// El tono del mapa de calor (la escala de colores de Encuestas) para el color que eligió cada nivel.
+const TONO_ESCALA: Readonly<Record<TonoId, ScaleTone>> = { destructive: 'softer-negative', warning: 'warning', info: 'positive', success: 'positive', primary: 'deep-positive', neutral: 'nsnr' }
+
+export type Escala = readonly (OpcionEscala & { desde: number; hasta: number })[]
+
+/** La escala del cumplimiento: los niveles del ciclo (de su configuración, 21-oct) y, arriba, quien ya llegó a la meta. */
+export function escalaDe(niveles: readonly NivelVista[]): Escala {
+  const propios = niveles.filter((nivel) => nivel.id !== 'por-iniciar').sort((a, b) => b.desde - a.desde)
+  return [
+    { id: 'meta', label: 'En meta', range: '100 % o más', tone: 'deep-positive', desde: 100, hasta: Number.POSITIVE_INFINITY },
+    ...propios.map((nivel) => ({ id: nivel.id, label: nivel.etiqueta, range: nivel.rango, tone: TONO_ESCALA[nivel.tono], desde: nivel.desde, hasta: Math.min(nivel.hasta, 99.9) })),
+  ]
+}
+
+export function bandaDe(avance: number, escala: Escala): { id: string; label: string; tone: ScaleTone } {
+  const banda = escala.find((tramo) => avance >= tramo.desde && avance <= tramo.hasta) ?? (avance >= 100 ? escala[0] : escala[escala.length - 1])
   return { id: banda.id, label: banda.label, tone: banda.tone as ScaleTone }
 }
 

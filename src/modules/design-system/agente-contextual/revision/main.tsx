@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Megaphone02Icon } from '@hugeicons/core-free-icons'
 import { Button, Progress, cn } from '@ubits/flux-ui'
 import { keepFocusNear } from '@/modules/admin/aprendizaje/lms-creator/components/agent-focus'
 import { Badge } from '@/shared/components/Badge'
@@ -6,6 +7,7 @@ import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { WS } from '../../drawers/components/drawer-styles'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../../navegacion/components/case-frame'
 import {
   AgentNote,
@@ -42,6 +44,8 @@ export function Component() {
   const [flash, setFlash] = useState<string | null>(null)
   const [pulse, setPulse] = useState<{ block: string; tick: number } | null>(null)
   const [fixAll, setFixAll] = useState<{ done: number; total: number } | null>(null)
+  const [publicando, setPublicando] = useState(false)
+  const [publicada, setPublicada] = useState(false)
   const timers = useRef<number[]>([])
   const ticks = useRef(0)
   const thread = useAgentThread()
@@ -123,7 +127,9 @@ export function Component() {
     setRound((current) => current + 1)
   }
 
-  const publish = () => notify('Política publicada · 1.240 personas notificadas')
+  // Publicar le llega a 1.240 personas: pregunta antes con DialogoConfirmar y RegistroConfirmar (regla «preguntar-antes»,
+  // 13-oct; el aviso de «publicada» salía sin haber preguntado).
+  const publish = () => setPublicando(true)
 
   const agentPanel = (
     <ContextPanel
@@ -135,7 +141,7 @@ export function Component() {
       onClose={() => setPanel('closed')}
       placeholder="Pregunta sobre la revisión"
       onSend={(text) =>
-        thread.ask(text, 'Lo tengo en cuenta en la próxima revisión. Pulsa «Revisar con el agente» cuando termines de editar.')
+        thread.ask(text, 'Lo tengo en cuenta en la próxima revisión. Pulsa «Revisar con IA» cuando termines de editar.')
       }
       // Sin la fase: al llegar los hallazgos el panel no baja, así se lee el resumen primero.
       scrollKey={`${round}-${thread.scrollKey}`}
@@ -222,8 +228,8 @@ export function Component() {
               <AgentNote className="mt-6">
                 {unresolved ? 'Ya puedes publicar. Las sugerencias que quedan son opcionales.' : 'Todo listo para publicar.'}
               </AgentNote>
-              <Button className={`${PILL} mt-3`} onClick={publish}>
-                Publicar
+              <Button className={`${PILL} mt-3`} disabled={publicada} onClick={publish}>
+                {publicada ? 'Publicada' : 'Publicar'}
               </Button>
             </div>
           ) : null}
@@ -240,7 +246,7 @@ export function Component() {
       hint="Marcas numeradas en el documento y hallazgos por gravedad"
       width="default"
       anatomy={false}
-      back={{ label: 'Casos de Orbit Flow', to: '/design-system/agente-contextual' }}
+      back={{ label: 'Casos de Orbit', to: '/design-system/agente-contextual' }}
     >
       <AgentStage state={panel} onOpen={() => setPanel('open')} pending={phase === 'done' && openImportant > 0} panel={agentPanel}>
         <div className="px-8 py-6">
@@ -261,11 +267,11 @@ export function Component() {
               }
               actions={
                 <>
-                  <Button className={WS} disabled={phase === 'reviewing' || openImportant > 0} onClick={publish}>
-                    Publicar
+                  <Button className={WS} disabled={phase === 'reviewing' || openImportant > 0 || publicada} onClick={publish}>
+                    {publicada ? 'Publicada' : 'Publicar'}
                   </Button>
-                  {/* Acción de IA: secundario de IA (orbe, sin chispa) después del primario y antes de «Orbit Flow» (auditoría 5-oct). */}
-                  <BotonIaSecundario onClick={review}>Revisar con el agente</BotonIaSecundario>
+                  {/* Acción de IA: secundario de IA (orbe, sin chispa) después del primario y antes de «Orbit» (auditoría 5-oct). */}
+                  <BotonIaSecundario onClick={review}>Revisar con IA</BotonIaSecundario>
                   {panel === 'closed' ? <ReopenAgentButton onClick={() => setPanel('open')} compact /> : null}
                 </>
               }
@@ -309,6 +315,24 @@ export function Component() {
           </PageShell>
         </div>
       </AgentStage>
+
+      <DialogoConfirmar
+        abierto={publicando}
+        onAbiertoChange={setPublicando}
+        icono={Megaphone02Icon}
+        titulo="¿Publicar la política?"
+        descripcion="Les llega a todas las personas de la empresa y deja de ser un borrador."
+        cancelar="Todavía no"
+        accion="Publicar para 1.240 personas"
+        enCurso="Publicando…"
+        onConfirmar={() => {
+          setPublicando(false)
+          setPublicada(true)
+          notify('Política publicada', '1.240 personas notificadas.', 'success')
+        }}
+      >
+        <RegistroConfirmar nombre="Política de trabajo remoto 2026" detalle="8 secciones · versión 3" estado="Borrador" tono="neutro" icono={Megaphone02Icon} />
+      </DialogoConfirmar>
     </CaseFrame>
   )
 }

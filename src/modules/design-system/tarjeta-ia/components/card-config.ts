@@ -8,7 +8,7 @@ export type CardConfig = {
   badge: boolean
   description: boolean
   action: boolean
-  // El resplandor de color en las esquinas.
+  // La luz de color del borde de arriba.
   halo: boolean
   // Compacta: sin bajada y con menos aire, para columnas estrechas.
   compact: boolean
@@ -32,7 +32,8 @@ export type CardCase = {
   sample: CardSample
 }
 
-// La tarjeta «Crear un curso» del Inicio tal cual: de ahí sale la configuración base.
+// La tarjeta «Crear un curso» de la plantilla Home operativo tal cual: de ahí sale la configuración base (el Inicio del
+// admin de hoy ya no la lleva; 13-oct).
 const BASE: CardConfig = {
   orb: true,
   badge: false,
@@ -44,7 +45,7 @@ const BASE: CardConfig = {
 
 const MUESTRA: CardSample = {
   title: 'Crear un curso',
-  description: 'Genera contenido de aprendizaje apoyado en AI en minutos.',
+  description: 'Genera contenido de aprendizaje apoyado en IA en minutos.',
   action: 'Crear ahora',
   badge: 'Nuevo',
 }
@@ -52,9 +53,9 @@ const MUESTRA: CardSample = {
 export const CARD_CASES: CardCase[] = [
   {
     id: 'inicio',
-    title: 'Invitación del Inicio',
+    title: 'Invitación de Home operativo',
     summary:
-      'La tarjeta completa: el orbe dice que lo hace la IA, la bajada explica qué gana la persona y el botón lleva el degradado de marca. Es la que está hoy en el Inicio.',
+      'La tarjeta completa: el orbe dice que lo hace la IA, la bajada explica qué gana la persona y el botón lleva el degradado de marca. Se ve en la plantilla Home operativo; el Inicio del admin de hoy no la lleva.',
     icon: Home02Icon,
     route: '/design-system/templates/home-operativo',
     config: BASE,
@@ -68,7 +69,7 @@ export const CARD_CASES: CardCase[] = [
     icon: LayoutLeftIcon,
     route: '/design-system/templates/home-operativo',
     config: { ...BASE, compact: true, description: false },
-    sample: { ...MUESTRA, title: 'Crear un curso con AI', action: 'Crear' },
+    sample: { ...MUESTRA, title: 'Crear un curso con IA', action: 'Crear' },
   },
   {
     id: 'novedad',
@@ -120,7 +121,7 @@ export const PART = {
 
 const TEXT: Record<string, string> = {
   [PART.card]: 'El bloque entero. Va dentro de una pantalla normal, nunca sola.',
-  [PART.halo]: 'El color difuminado en las esquinas. No rellena la tarjeta: el texto siempre va sobre fondo liso.',
+  [PART.halo]: 'Luz pastel con los cuatro colores de la IA a lo ancho del borde de arriba, que se apaga hacia abajo. No rellena la tarjeta: el texto siempre va sobre fondo liso.',
   [PART.orb]: 'La marca de la IA. Es lo que dice, sin leer nada, que esto lo hace el agente.',
   [PART.badge]: 'Para presentar algo nuevo. Se quita cuando deja de serlo.',
   [PART.title]: 'Qué gana la persona, en verbo. «Crear un curso», no «Generador de cursos».',

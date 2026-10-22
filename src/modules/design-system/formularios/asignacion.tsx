@@ -14,7 +14,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -22,9 +21,12 @@ import {
   ComboboxChip,
   ComboboxChips,
   ComboboxChipsInput,
+  ComboboxCollection,
   ComboboxContent,
   ComboboxEmpty,
+  ComboboxGroup,
   ComboboxItem,
+  ComboboxLabel,
   ComboboxList,
   ComboboxValue,
   Field,
@@ -46,9 +48,10 @@ import {
   RadioGroupItem,
   Separator,
   Text,
-  toast,
   useComboboxAnchor,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify } from '@/shared/components/notify'
 
 import { COLABORADORES } from '../data-grid/data'
 import { AdjuntoCsv } from '../estados/procesos'
@@ -76,10 +79,14 @@ const ALCANCES: { id: Exclude<Alcance, ''>; titulo: string; detalle: string; ico
 ]
 
 // Selector múltiple con buscador: Combobox con fichas. Los textos van en español porque el
-// componente no trae ninguno propio. Lo reutiliza el template Planes de formación.
+// componente no trae ninguno propio. Lo reutiliza el template Planes de formación. Con `grupos` (22-oct, «Contribuye a»
+// de Objetivos) la lista sale en grupos con su rótulo y el buscador filtra dentro de cada uno; sin ellos, igual que antes.
+export type GrupoSelector = { etiqueta: string; opciones: readonly string[] }
+
 export function SelectorMultiple({
   id,
   opciones,
+  grupos,
   valor,
   onCambio,
   placeholder,
@@ -87,15 +94,18 @@ export function SelectorMultiple({
 }: {
   id: string
   opciones: string[]
+  grupos?: readonly GrupoSelector[]
   valor: string[]
   onCambio: (valor: string[]) => void
   placeholder: string
   invalido?: boolean
 }) {
   const ancla = useComboboxAnchor()
+  const conGrupos = grupos && grupos.length > 0
+  const items = conGrupos ? grupos.filter((grupo) => grupo.opciones.length > 0).map((grupo) => ({ value: grupo.etiqueta, items: [...grupo.opciones] })) : opciones
 
   return (
-    <Combobox multiple items={opciones} value={valor} onValueChange={(nuevo) => onCambio(nuevo as string[])}>
+    <Combobox multiple items={items} value={valor} onValueChange={(nuevo) => onCambio(nuevo as string[])}>
       <ComboboxChips ref={ancla} aria-invalid={invalido ? true : undefined}>
         <ComboboxValue>
           {(elegidos: string[]) => (
@@ -111,11 +121,24 @@ export function SelectorMultiple({
       <ComboboxContent anchor={ancla}>
         <ComboboxEmpty>No encontramos nada con ese nombre.</ComboboxEmpty>
         <ComboboxList>
-          {(opcion: string) => (
-            <ComboboxItem key={opcion} value={opcion}>
-              {opcion}
-            </ComboboxItem>
-          )}
+          {conGrupos
+            ? (grupo: { value: string; items: string[] }) => (
+                <ComboboxGroup key={grupo.value} items={grupo.items}>
+                  <ComboboxLabel>{grupo.value}</ComboboxLabel>
+                  <ComboboxCollection>
+                    {(opcion: string) => (
+                      <ComboboxItem key={opcion} value={opcion}>
+                        {opcion}
+                      </ComboboxItem>
+                    )}
+                  </ComboboxCollection>
+                </ComboboxGroup>
+              )
+            : (opcion: string) => (
+                <ComboboxItem key={opcion} value={opcion}>
+                  {opcion}
+                </ComboboxItem>
+              )}
         </ComboboxList>
       </ComboboxContent>
     </Combobox>
@@ -163,10 +186,7 @@ export function FormularioAsignacion() {
     // RN-11: sin nombre se guarda como «Plan sin nombre». RN-04: nace en Planeado.
     const final = nombre.trim() || 'Plan sin nombre'
     setGuardado(final)
-    toast.add({
-      type: 'success',
-      title: tipo === 'contenidos' ? 'Plan de contenidos guardado correctamente.' : 'Plan de competencias guardado correctamente.',
-    })
+    notify(tipo === 'contenidos' ? 'Plan de contenidos guardado correctamente.' : 'Plan de competencias guardado correctamente.', undefined, 'success')
   }
 
   const cantidadErrores = Object.values(errores).filter(Boolean).length

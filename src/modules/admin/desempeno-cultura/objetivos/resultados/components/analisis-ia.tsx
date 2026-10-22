@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Badge, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Progress, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { useSearchParams } from 'react-router'
+import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Progress, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { AnilloAvance } from '@/modules/design-system/graficos/piezas'
 import { AiThinking } from '@/shared/components/AiThinking'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
+import { FallaIa } from '../../../encuestas/components/falla-ia'
 import { CONFIDENCE_LEGEND } from '../../../encuestas/modelo/insightConfidence'
 import { BloquePlegable, SobreGris } from '../../../encuestas/resultados/components/arbol-resultados'
 import { LeyendaEscala } from '../../../encuestas/resultados/components/controles'
@@ -80,6 +83,12 @@ function Brechas({ numero, brechas }: { numero: number; brechas: readonly Brecha
 export function AnalisisIa({ resultados, corte }: { resultados: ResultadosCiclo; corte: Corte }) {
   const [analizando, setAnalizando] = useState(false)
   const [avance, setAvance] = useState(0)
+  // Como en Encuestas (IA-031): si la IA no responde, la pestaña queda en el vacío de falla, sin nada de lo que ella hizo,
+  // y «Reintentar» lo vuelve a pedir. Se ve con `?simular=falla-ia`: el primer «Re-analizar» falla; el reintento sí sale.
+  const [parametros] = useSearchParams()
+  const simulaFalla = (parametros.get('simular') ?? '').split(',').includes('falla-ia')
+  const [fallo, setFallo] = useState(false)
+  const yaFallo = useRef(false)
   const reloj = useRef<number | undefined>(undefined)
   useEffect(() => () => window.clearInterval(reloj.current), [])
 
@@ -101,7 +110,12 @@ export function AnalisisIa({ resultados, corte }: { resultados: ResultadosCiclo;
         const siguiente = Math.min(100, previo + 12)
         if (siguiente >= 100) {
           window.clearInterval(reloj.current)
-          window.setTimeout(() => setAnalizando(false), 500)
+          window.setTimeout(() => {
+            const falla = simulaFalla && !yaFallo.current
+            if (falla) yaFallo.current = true
+            setAnalizando(false)
+            setFallo(falla)
+          }, 500)
         }
         return siguiente
       })
@@ -109,13 +123,35 @@ export function AnalisisIa({ resultados, corte }: { resultados: ResultadosCiclo;
   }
   const paso = PASOS[Math.min(PASOS.length - 1, Math.floor(avance / 25))]
 
+  if (fallo)
+    return (
+      <Frame spacing="sm">
+        <FrameHeader>
+          <div className="flex items-center gap-2">
+            <IconoIA />
+            <FrameTitle>Lectura de la IA</FrameTitle>
+          </div>
+        </FrameHeader>
+        <FramePanel>
+          {analizando ? (
+            <div className="flex flex-col gap-3 py-4">
+              <AiThinking label={paso} />
+              <Progress value={avance} aria-label="Avance del análisis" />
+            </div>
+          ) : (
+            <FallaIa titulo="No pudimos completar el análisis" descripcion="La IA no respondió. Vuelve a intentarlo en un momento." onReintentar={reanalizar} />
+          )}
+        </FramePanel>
+      </Frame>
+    )
+
   return (
     <div className="flex flex-col gap-6">
       <TarjetaResumen
         titulo="Lecturas de la IA"
         ayuda="Cuántas lecturas hizo la IA sobre el ciclo y de qué tipo. Cada una viaja con la cifra que la sostiene: alta viene de un número del ciclo; media, de un grupo mediano; baja, de muy pocas personas, y conviene confirmarla."
         cifra={total.toLocaleString('es-CO')}
-        pie={`${solidas}% con confiabilidad alta`}
+        pie={`${solidas} % con confiabilidad alta`}
         grafico={<AnilloAvance valor={solidas} color="var(--primary)" etiqueta="Confiabilidad alta" tamano={48} />}
         tituloAnillos="Qué contiene la lectura"
         totalAnillos={`${total.toLocaleString('es-CO')} en total`}

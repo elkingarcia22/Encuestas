@@ -121,7 +121,8 @@ export function Tendencia({
 
 /**
  * Anillo radial de avance: la parte cumplida en el color de su lectura y el resto en la pista
- * gris. `texto` es lo que dice el tooltip; sin él, el porcentaje.
+ * gris. `texto` es lo que dice el tooltip; sin él, el porcentaje. `centro` va escrito en el medio
+ * (la cifra grande de Créditos, 13 oct) y `grosor` engruesa el trazo en los anillos grandes.
  */
 export function AnilloAvance({
   valor,
@@ -130,6 +131,8 @@ export function AnilloAvance({
   tamano = 64,
   texto,
   globo = true,
+  centro,
+  grosor = 7,
 }: {
   valor: number
   color: string
@@ -141,12 +144,14 @@ export function AnilloAvance({
    * («1.231 de 1.847», «12 de 30 días»). Donde la cifra ya está escrita al lado, repetirla sobra y se apaga.
    */
   globo?: boolean
+  centro?: ReactNode
+  grosor?: number
 }) {
   const config = { valor: { label: etiqueta, color } } satisfies ChartConfig
   const radio = tamano / 2
-  return (
+  const anillo = (
     <ChartContainer config={config} className="aspect-square shrink-0" style={{ width: tamano, height: tamano }}>
-      <RadialBarChart width={tamano} height={tamano} data={[{ valor: Math.max(0, Math.min(100, valor)) }]} startAngle={90} endAngle={-270} innerRadius={radio - 9} outerRadius={radio - 2} barSize={7}>
+      <RadialBarChart width={tamano} height={tamano} data={[{ valor: Math.max(0, Math.min(100, valor)) }]} startAngle={90} endAngle={-270} innerRadius={radio - grosor - 2} outerRadius={radio - 2} barSize={grosor}>
         <PolarAngleAxis type="number" domain={[0, 100]} tick={false} axisLine={false} />
         {globo ? (
           <Tooltip
@@ -156,9 +161,16 @@ export function AnilloAvance({
             content={<ChartTooltipContent hideLabel formatter={(cifra) => <FilaTooltip color="var(--color-valor)" etiqueta={etiqueta} valor={texto ?? `${Math.round(Number(cifra))}%`} />} />}
           />
         ) : null}
-        <RadialBar dataKey="valor" fill="var(--color-valor)" background={{ fill: 'var(--muted)' }} cornerRadius={4} isAnimationActive={false} />
+        <RadialBar dataKey="valor" fill="var(--color-valor)" background={{ fill: 'var(--muted)' }} cornerRadius={Math.max(4, grosor / 2)} isAnimationActive={false} />
       </RadialBarChart>
     </ChartContainer>
+  )
+  if (!centro) return anillo
+  return (
+    <span className="relative grid shrink-0 place-items-center" style={{ width: tamano, height: tamano }}>
+      {anillo}
+      <span className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">{centro}</span>
+    </span>
   )
 }
 

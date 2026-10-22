@@ -1,25 +1,10 @@
-import { useMemo, type ReactNode } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
+import { useMemo } from 'react'
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { InformationCircleIcon } from '@hugeicons/core-free-icons'
 import {
   Alert,
   AlertDescription,
-  Badge,
   Button,
-  Combobox,
-  ComboboxChip,
-  ComboboxChips,
-  ComboboxChipsInput,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxItem,
-  ComboboxList,
-  ComboboxValue,
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
   Field,
   FieldContent,
   FieldDescription,
@@ -42,8 +27,11 @@ import {
   Spinner,
   Switch,
   Text,
-  useComboboxAnchor,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SelectorMultiple } from '@/modules/design-system/formularios/asignacion'
+import { formatPercent } from '../../modelo/favorabilityScale'
 import { FilasSeparadas, MarcoLista } from '../../components/marco-lista'
 import type { PopulationScope } from '../../modelo/descargas/anonimato'
 import { reportTypeFor, type DownloadEntry } from '../../modelo/descargas/tipos'
@@ -54,11 +42,11 @@ import { TextoCompleto } from '@/shared/components/TextoCompleto'
 // Las piezas del panel de descargas. Cada bloque configurable del reporte es una fila con su
 // interruptor y, debajo, su propia personalización; lo demás es el responsable de la NOM 035, el
 // filtro de población y la lista de lo ya pedido.
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 export type Opcion = { id: string; label: string }
 
-/** Varias opciones en fichas, con buscador. Las opciones se buscan por su nombre. */
+/** Varias opciones en fichas, con buscador: el SelectorMultiple del sistema, que trabaja con nombres. Aquí cada opción
+ *  tiene además su clave, así que se traduce de ida y de vuelta. */
 export function SelectorVarios({
   id,
   opciones,
@@ -74,35 +62,18 @@ export function SelectorVarios({
   placeholder: string
   error?: boolean
 }) {
-  const ancla = useComboboxAnchor()
   const porNombre = useMemo(() => new Map(opciones.map((opcion) => [opcion.label, opcion.id])), [opciones])
   const nombres = useMemo(() => opciones.map((opcion) => opcion.label), [opciones])
   const elegidas = opciones.filter((opcion) => valor.has(opcion.id)).map((opcion) => opcion.label)
   return (
-    <Combobox multiple items={nombres} value={elegidas} autoHighlight onValueChange={(nuevo) => onCambio(new Set((nuevo as string[]).map((nombre) => porNombre.get(nombre)).filter((clave): clave is string => clave !== undefined)))}>
-      <ComboboxChips ref={ancla} aria-invalid={error || undefined}>
-        <ComboboxValue>
-          {(actuales: string[]) => (
-            <>
-              {actuales.map((nombre) => (
-                <ComboboxChip key={nombre}>{nombre}</ComboboxChip>
-              ))}
-              <ComboboxChipsInput id={id} placeholder={actuales.length ? '' : placeholder} />
-            </>
-          )}
-        </ComboboxValue>
-      </ComboboxChips>
-      <ComboboxContent anchor={ancla}>
-        <ComboboxEmpty>No encontramos nada con ese nombre.</ComboboxEmpty>
-        <ComboboxList>
-          {(nombre: string) => (
-            <ComboboxItem key={nombre} value={nombre}>
-              {nombre}
-            </ComboboxItem>
-          )}
-        </ComboboxList>
-      </ComboboxContent>
-    </Combobox>
+    <SelectorMultiple
+      id={id}
+      opciones={nombres}
+      valor={elegidas}
+      onCambio={(nuevo) => onCambio(new Set(nuevo.map((nombre) => porNombre.get(nombre)).filter((clave): clave is string => clave !== undefined)))}
+      placeholder={placeholder}
+      invalido={error}
+    />
   )
 }
 
@@ -250,6 +221,7 @@ export function FiltroPoblacion({
           <Field>
             <FieldLabel htmlFor="filtro-demografico">Demográfico</FieldLabel>
             <Select value={clave} onValueChange={(valor) => onClave(valor as string)} items={opciones}>
+              {/* El selector es transparente y sobre el gris se pierde: fondo blanco forzado. Ficha: diferencias.json › select-trigger-fondo-solido. */}
               <SelectTrigger id="filtro-demografico" className="w-full bg-background!">
                 <SelectValue />
               </SelectTrigger>
@@ -290,18 +262,24 @@ export function FiltroPoblacion({
 }
 
 /** Lo ya pedido: el avance mientras se prepara y, al terminar, el recibo con la opción de repetir. */
-export function ListaDescargas({ entradas, onEntregar, vacio }: { entradas: readonly DownloadEntry[]; onEntregar: (id: string) => void; vacio: ReactNode }) {
+/** Lo que la lista necesita de cada descarga. Objetivos la usa con sus propios reportes y pasa `tipoDe` (21-oct). */
+export type FilaDescarga = Pick<DownloadEntry, 'id' | 'fileName' | 'status' | 'progress' | 'delivered'> & { kind: string }
+
+export function ListaDescargas({
+  entradas,
+  onEntregar,
+  vacio,
+  tipoDe = (entrada) => reportTypeFor(entrada.kind as DownloadEntry['kind']),
+}: {
+  entradas: readonly FilaDescarga[]
+  onEntregar: (id: string) => void
+  vacio: string
+  /** El nombre y el icono de cada reporte; por defecto, los de Encuestas. */
+  tipoDe?: (entrada: FilaDescarga) => { title: string; icon: IconSvgElement }
+}) {
   if (entradas.length === 0) {
     return (
-      <Empty className="py-10">
-        <EmptyHeader>
-          <EmptyMedia variant="default">
-              <ImagenGlass nombre="glass-document" />
-            </EmptyMedia>
-          <EmptyTitle>Aún no has pedido reportes</EmptyTitle>
-          <EmptyDescription>{vacio}</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <PrimeraVez icono="glass-document" titulo="Aún no has pedido reportes" descripcion={vacio} className="py-10" />
     )
   }
   // Como las listas de los drawers del módulo: un marco con su recuento y las filas separadas por una línea.
@@ -317,17 +295,18 @@ export function ListaDescargas({ entradas, onEntregar, vacio }: { entradas: read
       }
       descripcion="Se pueden volver a descargar."
     >
+      {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
       <FramePanel className="py-1!">
         <FilasSeparadas>
           {entradas.map((entrada) => {
-            const tipo = reportTypeFor(entrada.kind)
+            const tipo = tipoDe(entrada)
             const listo = entrada.status === 'ready'
             return (
               <Item key={entrada.id} size="sm">
                 <ItemMedia variant="icon">{listo ? <HugeiconsIcon icon={tipo.icon} aria-hidden="true" /> : <Spinner />}</ItemMedia>
                 <ItemContent className="min-w-0">
                   <TextoCompleto texto={tipo.title}><ItemTitle className="w-full truncate">{tipo.title}</ItemTitle></TextoCompleto>
-                  <TextoCompleto texto={entrada.fileName}><ItemDescription className="truncate" title={entrada.fileName}>
+                  <TextoCompleto texto={entrada.fileName}><ItemDescription className="truncate">
                     {entrada.fileName}
                   </ItemDescription></TextoCompleto>
                   {listo ? null : <Progress value={Math.round(entrada.progress)} aria-label={`Preparando ${tipo.title}`} className="mt-1" />}
@@ -335,7 +314,7 @@ export function ListaDescargas({ entradas, onEntregar, vacio }: { entradas: read
                 <ItemActions>
                   {!listo ? (
                     <Text as="span" size="xs" variant="muted" className="tabular-nums">
-                      {Math.round(entrada.progress)}%
+                      {formatPercent(Math.round(entrada.progress))}
                     </Text>
                   ) : entrada.delivered ? (
                     <Button variant="ghost" size="sm" onClick={() => onEntregar(entrada.id)}>

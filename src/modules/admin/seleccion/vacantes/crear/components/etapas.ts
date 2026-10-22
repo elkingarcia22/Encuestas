@@ -220,7 +220,7 @@ export function pendienteEtapa(etapa: EtapaFlujo): string | null {
   if (etapa.agente) {
     if (!etapa.agente.nombre.trim() || !etapa.agente.prompt.trim()) return 'Falta el nombre y el prompt del agente'
     const total = sumaPuntos(etapa.agente.criterios.map((criterio) => criterio.peso))
-    return total === LIMITE_PUNTOS ? null : `Los criterios suman ${total}% de 100%`
+    return total === LIMITE_PUNTOS ? null : `Los criterios suman ${total} % de 100 %`
   }
   return null
 }

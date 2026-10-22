@@ -3,7 +3,6 @@ import { Alert02Icon } from '@hugeicons/core-free-icons'
 import {
   Alert,
   AlertDescription,
-  Badge,
   Frame,
   FramePanel,
   Field,
@@ -16,19 +15,18 @@ import {
   SelectValue,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { BADGE_ESTADO } from '@/modules/admin/aprendizaje/planes-de-formacion/components/planes-datos'
 import { conteoContenidos, diasParaTerminar, metaPlan, minutosCompetencia, vencidoHace, vigencia, type Plan, type TipoPlan } from './datos'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // El widget del plan de las pestañas Plan de contenidos y Plan de competencias: qué plan se está viendo, su vigencia,
 // el recordatorio si ya venció y el avance.
 
+// El mismo color por estado que en Planes de formación del admin (auditoría, decisiones 21 y 22; vuelve el 13-oct tras el
+// revert 8a7e46e): una sola correspondencia, la de sus datos. «Procesando» llega aquí con el porcentaje pegado.
 const colorEstado = (estado: string) =>
-  estado === 'Vigente'
-    ? 'success-light'
-    : estado === 'Planeado'
-      ? 'info-light'
-      : String(estado).startsWith('Procesando')
-        ? 'warning-light'
-        : 'secondary'
+  String(estado).startsWith('Procesando') ? BADGE_ESTADO.Procesando : (BADGE_ESTADO[estado as keyof typeof BADGE_ESTADO] ?? 'secondary')
 
 export function EstadoPlan({ estado }: { estado: string }) {
   return (
@@ -72,10 +70,16 @@ export function PlanWidget({ tipo, planes, plan, onPlan }: { tipo: TipoPlan; pla
                 </Field>
                 <div className="flex flex-wrap items-center gap-2">
                   <Text as="p" size="sm" variant="muted">
-                    {vigencia(plan)} - termina en{' '}
-                    <Text as="span" size="sm" weight="semibold" className="text-foreground">
-                      {diasParaTerminar(plan)} días
-                    </Text>
+                    {vigencia(plan)}
+                    {/* 13-oct: un plan vencido no «termina en»; la alerta de abajo ya dice hace cuánto se venció. */}
+                    {plan.estado === 'No vigente' ? null : (
+                      <>
+                        {' '}- termina en{' '}
+                        <Text as="span" size="sm" weight="semibold" className="text-foreground">
+                          {diasParaTerminar(plan)} {plural(diasParaTerminar(plan), 'día', 'días')}
+                        </Text>
+                      </>
+                    )}
                   </Text>
                   <EstadoPlan estado={plan.estado} />
                 </div>

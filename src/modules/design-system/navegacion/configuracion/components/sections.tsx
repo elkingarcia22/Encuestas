@@ -2,7 +2,6 @@ import { useId, type ReactNode } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { BubbleChatIcon, Calendar03Icon, Image01Icon, UserGroupIcon, WorkflowSquare10Icon, Message01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -27,6 +26,7 @@ import {
   Switch,
   Textarea,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { notify } from '@/shared/components/notify'
 import { WS } from '../../../drawers/components/drawer-styles'
 import {
@@ -172,7 +172,7 @@ export function SectionPanel({ section, values, set }: { section: SectionId; val
                 <span className="text-sm font-medium">logo-meta.svg</span>
                 <span className="text-sm text-muted-foreground">SVG o PNG · mínimo 240 × 80 px</span>
               </div>
-              <Button variant="outline" className={WS} onClick={() => notify('Elige un archivo para el logo')}>
+              <Button variant="outline" className={WS} onClick={() => notify('Elige un archivo para el logo', undefined, 'info')}>
                 Cambiar logo
               </Button>
             </div>
@@ -215,7 +215,7 @@ export function SectionPanel({ section, values, set }: { section: SectionId; val
                     <span className="text-sm text-muted-foreground">{role.description}</span>
                   </div>
                   <span className="text-sm text-muted-foreground tabular-nums">{role.count}</span>
-                  <Button variant="ghost" size="sm" className={WS} onClick={() => notify(`Gestionar ${role.name.toLowerCase()}`)}>
+                  <Button variant="ghost" size="sm" className={WS} onClick={() => notify(`Gestionar ${role.name.toLowerCase()}`, undefined, 'info')}>
                     Gestionar
                   </Button>
                 </div>
@@ -277,10 +277,10 @@ export function SectionPanel({ section, values, set }: { section: SectionId; val
               <Progress value={94} aria-labelledby="cfg-licenses" />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" className={WS} onClick={() => notify('Historial de facturas')}>
+              <Button variant="outline" className={WS} onClick={() => notify('Historial de facturas', undefined, 'info')}>
                 Ver facturas
               </Button>
-              <Button variant="ghost" className={WS} onClick={() => notify('Comprar licencias')}>
+              <Button variant="ghost" className={WS} onClick={() => notify('Comprar licencias', undefined, 'info')}>
                 Comprar licencias
               </Button>
             </div>

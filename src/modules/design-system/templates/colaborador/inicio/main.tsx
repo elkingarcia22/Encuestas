@@ -14,10 +14,8 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-  Badge,
   Button,
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -41,8 +39,9 @@ import {
   ProgressValue,
   Separator,
   Text,
-  toast,
+  Textarea,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { FlechasCarrusel } from '@/modules/portal-colaborador/aprendizaje/zona-de-estudio/components/carrusel'
 
 import {
@@ -147,18 +146,27 @@ function Recomendados() {
 }
 
 function Noticias() {
+  // «Me gusta» y «Celebrar» marcan y cuentan; «Comentar» abre un campo y lo publicado se queda debajo (13-oct, I-017:
+  // nada que finja). «Ver todas» se quitó: solo avisaba a dónde llevaría.
   const [reacciones, setReacciones] = useState<Record<string, boolean>>({})
+  const [celebradas, setCelebradas] = useState<Record<string, boolean>>({})
+  const [comentando, setComentando] = useState<string | null>(null)
+  const [borrador, setBorrador] = useState('')
+  const [comentarios, setComentarios] = useState<Record<string, string[]>>({})
+
+  const publicar = (id: string) => {
+    const texto = borrador.trim()
+    if (!texto) return
+    setComentarios((previos) => ({ ...previos, [id]: [...(previos[id] ?? []), texto] }))
+    setBorrador('')
+    setComentando(null)
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Noticias y anuncios</CardTitle>
         <CardDescription>Lo que publica Recursos Humanos para toda la empresa.</CardDescription>
-        <CardAction>
-          <Button variant="ghost" size="sm" onClick={() => toast.add({ type: 'info', title: 'Hoy este botón lleva a Comunicaciones del administrador' })}>
-            Ver todas
-          </Button>
-        </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
         {NOTICIAS.map((noticia, indice) => (
@@ -195,15 +203,62 @@ function Noticias() {
                 <HugeiconsIcon icon={ThumbsUpIcon} aria-hidden="true" />
                 {noticia.meGusta + (reacciones[noticia.id] ? 1 : 0)}
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button
+                variant={celebradas[noticia.id] ? 'secondary' : 'ghost'}
+                size="sm"
+                aria-pressed={!!celebradas[noticia.id]}
+                onClick={() => setCelebradas((previas) => ({ ...previas, [noticia.id]: !previas[noticia.id] }))}
+              >
                 <HugeiconsIcon icon={Clapping01Icon} aria-hidden="true" />
-                {noticia.celebrar}
+                {noticia.celebrar + (celebradas[noticia.id] ? 1 : 0)}
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button
+                variant={comentando === noticia.id ? 'secondary' : 'ghost'}
+                size="sm"
+                aria-expanded={comentando === noticia.id}
+                onClick={() => {
+                  setBorrador('')
+                  setComentando((actual) => (actual === noticia.id ? null : noticia.id))
+                }}
+              >
                 <HugeiconsIcon icon={Comment01Icon} aria-hidden="true" />
                 Comentar
+                {comentarios[noticia.id]?.length ? ` · ${comentarios[noticia.id].length}` : ''}
               </Button>
             </div>
+            {comentarios[noticia.id]?.length ? (
+              <ul className="flex flex-col gap-2">
+                {comentarios[noticia.id].map((texto, posicion) => (
+                  <li key={posicion} className="flex flex-col gap-0.5 rounded-lg bg-muted/50 px-3 py-2">
+                    <Text as="span" size="xs" weight="medium">
+                      {PERSONA.corto}
+                    </Text>
+                    <Text as="span" size="sm">
+                      {texto}
+                    </Text>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {comentando === noticia.id ? (
+              <div className="flex flex-col items-end gap-2">
+                <Textarea
+                  autoFocus
+                  value={borrador}
+                  onChange={(evento) => setBorrador(evento.target.value)}
+                  placeholder="Escribe un comentario"
+                  aria-label={`Comentario sobre «${noticia.titulo}»`}
+                />
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setComentando(null)}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" disabled={!borrador.trim()} onClick={() => publicar(noticia.id)}>
+                    Publicar
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </article>
         ))}
       </CardContent>
@@ -243,9 +298,7 @@ function Perfil() {
             <ItemTitle>{PERSONA.lider.nombre}</ItemTitle>
           </ItemContent>
         </Item>
-        <Button variant="outline" size="sm" onClick={() => toast.add({ type: 'info', title: 'Organigrama', description: 'Hoy vive en /portal/org-chart; en el nuevo UBITS pasa a Configuración del administrador.' })}>
-          Ver organigrama
-        </Button>
+        {/* «Ver organigrama» se quitó (13-oct): no hay pantalla de organigrama en el portal y el botón solo avisaba dónde vive hoy. */}
       </CardFooter>
     </Card>
   )

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
-import { Search01Icon } from '@hugeicons/core-free-icons'
 import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Heading, Progress, Text } from '@ubits/flux-ui'
 import { FilaIndicadores } from '@/modules/design-system/graficos/fila-indicadores'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
@@ -35,7 +34,7 @@ import {
 import { INDICADORES, VACIOS } from './components/constantes'
 
 // Aprendizaje › Progreso del colaborador líder (HU-progreso). El avance de sus planes vigentes y los de su equipo, el
-// recordatorio de estudio, los rankings del mes y Orbit Flow, el agente contextual, para crear un plan con IA.
+// recordatorio de estudio, los rankings del mes y Orbit, el agente contextual, para crear un plan con IA.
 // ?demo=equipo-grande muestra un equipo de 25 personas y ?demo=sin-planes, el estado vacío.
 
 const RUTA_ZONA = '/portal-colaborador/aprendizaje/zona-de-estudio'
@@ -83,7 +82,7 @@ export function Component() {
         actions={
           <>
             <BotonRecordatorio hayPendientes={hayPendientes(personas, vacio)} onEnviado={() => window.open(RUTA_CORREO_RECORDATORIO, '_blank')} />
-            {/* Crear un plan con IA abre Orbit Flow (auditoría, decisión 9): el botón del agente, el último de la fila. */}
+            {/* Crear un plan con IA abre Orbit (auditoría, decisión 9): el botón del agente, el último de la fila. */}
             {agente.disponible ? (
               <ReopenAgentButton
                 onClick={() => {
@@ -181,8 +180,7 @@ export function Component() {
                     className="py-10"
                     icono="glass-document"
                     titulo="Todavía no tienes planes vigentes"
-                    descripcion="Cuando tu empresa te asigne uno, aquí vas a ver tu avance en cada uno. Mientras tanto, explora el catálogo."
-                    accion={{ texto: 'Explorar catálogo', icono: Search01Icon, onClick: () => navigate('/portal-colaborador/aprendizaje/catalogo') }}
+                    descripcion="Cuando tu empresa te asigne uno, aquí vas a ver tu avance en cada uno."
                   />
                 )}
               </FramePanel>

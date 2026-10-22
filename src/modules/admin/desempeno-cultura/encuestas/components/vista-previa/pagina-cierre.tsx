@@ -4,7 +4,7 @@ import { Button, Frame, FramePanel, Heading, IconTile, Separator, Text } from '@
 import type { PreviewSummary } from '../../modelo/previewModel'
 import { enBlanco } from '../../modelo/textoPagina'
 import { TEXTO_POR_TONO } from '../tonos'
-import { Confeti } from './confeti'
+import { LluviaConfeti } from '@/shared/components/Confeti'
 import { TextoPagina } from './texto-pagina'
 
 // La última página. Aquí no se pregunta nada, así que nada compite con el mensaje. Los contadores
@@ -30,7 +30,8 @@ export function PaginaCierre({ mensaje, resumen, respondidas, onReiniciar }: Pro
   const total = resumen.questionCount + resumen.demographicCount
   return (
     <div className="flex w-full flex-col items-center gap-6 py-10 text-center">
-      <Confeti />
+      {/* El confeti del marco, el mismo de toda la plataforma: cae sobre toda la pantalla y se apaga solo. */}
+      <LluviaConfeti />
       <IconTile variant="soft" size="xl" className={TEXTO_POR_TONO.positive}>
         <HugeiconsIcon icon={CheckmarkCircle02Icon} aria-hidden="true" />
       </IconTile>

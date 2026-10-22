@@ -41,7 +41,7 @@ type Fila = {
 /** El recordatorio siempre va a quien todavía no ha terminado: a quien ya lo hizo no hay nada que recordarle. */
 function recordar(lista: readonly Fila[]) {
   const quedan = lista.filter((fila) => fila.estado !== 'Completado')
-  if (quedan.length === 0) return notify('Nadie por recordar', 'Todas las personas que marcaste ya terminaron el contenido.', 'info')
+  if (quedan.length === 0) return notify('Nadie por recordar', 'Todas las personas que marcaste ya finalizaron el contenido.', 'info')
   // Un aviso corto, como el de Resultados de encuestas: qué pasó y por dónde les llega. Nada más.
   notify(
     quedan.length === 1 ? 'Recordatorio enviado' : `Recordatorio enviado a ${numero(quedan.length)} personas`,
@@ -127,9 +127,9 @@ export function Progreso({ resultados }: { resultados: Resultados }) {
   // El recordatorio nunca cuenta a quien ya terminó.
   const porRecordar = marcadas.filter((fila) => fila.estado !== 'Completado').length
 
-  const { inscritos, completaron, finalizacion } = resultados
-  const enCurso = filas.filter((fila) => fila.estado === 'En progreso').length
-  const sinEmpezar = filas.filter((fila) => fila.estado === 'Sin empezar').length
+  const { iniciaron, completaron, finalizacion, alcance } = resultados
+  // Qué parte de la gente a la que le llega el contenido lo ha abierto.
+  const tasaInicio = alcance.total === 0 ? 0 : (alcance.iniciaron / alcance.total) * 100
 
   const limpiar = () => {
     setBusqueda('')
@@ -244,28 +244,33 @@ export function Progreso({ resultados }: { resultados: Resultados }) {
     <div className="flex flex-col gap-6">
       <ResumenPestana
         titulo="Finalización"
-        ayuda="Es el porcentaje de personas inscritas que completaron el contenido entero: personas que lo terminaron ÷ personas inscritas."
+        ayuda="Es el porcentaje de quienes iniciaron el contenido y llegaron al final: personas que lo finalizaron ÷ personas que lo iniciaron."
         cifra={porcentaje(finalizacion)}
         // Sin «Baja», «Regular» ni «Buena»: poner nota a la finalización de un contenido es juzgar el contenido con
-        // un corte que nadie acordó, y eso se nos devuelve. El anillo se llena en azul y la cifra habla sola
-        // (Dave, 14-oct).
-        pie={`${numero(completaron)} de ${numero(inscritos)} inscritos`}
+        // un corte que nadie acordó, y eso se nos devuelve. El anillo se llena en azul y la cifra habla sola.
+        // Se nombra el denominador: al lado está «Lo han iniciado · 15 de 55», y un «de 15» suelto se podía leer
+        // contra el otro número (Dave, 15-oct). Y «finalizaron», la misma palabra que el título de la lectura.
+        pie={`${numero(completaron)} finalizaron de ${numero(iniciaron)} que lo iniciaron`}
         grafico={<AnilloAvance valor={finalizacion} color="var(--primary)" etiqueta="Finalización" tamano={48} />}
-        tituloReparto="Estado de los inscritos"
-        totalReparto={`${numero(inscritos)} en total`}
+        // **Cuántos de los que podían, lo abrieron.** Antes aquí estaba el reparto de estados, que no decía nada que
+        // la tabla no dijera. Saber que lo iniciaron 22 personas no significa nada sin saber cuántas podían: 22 de 25
+        // es un éxito y 22 de toda la empresa, un problema de difusión (Cristian Niño, 14-oct).
+        tituloReparto="Lo han iniciado"
+        totalReparto={`${numero(alcance.iniciaron)} de ${numero(alcance.total)}`}
         reparto={[
-          { id: 'completado', etiqueta: 'Completaron', porcentaje: inscritos === 0 ? 0 : (completaron / inscritos) * 100, color: 'var(--success)', cantidad: numero(completaron) },
-          { id: 'curso', etiqueta: 'En progreso', porcentaje: inscritos === 0 ? 0 : (enCurso / inscritos) * 100, color: 'var(--warning)', cantidad: numero(enCurso) },
-          { id: 'sin', etiqueta: 'Sin empezar', porcentaje: inscritos === 0 ? 0 : (sinEmpezar / inscritos) * 100, color: 'var(--destructive)', cantidad: numero(sinEmpezar) },
+          { id: 'iniciaron', etiqueta: 'Lo iniciaron', porcentaje: tasaInicio, color: 'var(--chart-1)', cantidad: numero(alcance.iniciaron) },
+          { id: 'noLoAbrieron', etiqueta: 'No lo han abierto', porcentaje: 100 - tasaInicio, color: 'var(--chart-4)', cantidad: numero(alcance.total - alcance.iniciaron) },
         ]}
+        // El porqué del denominador: sin esto, «de 55» no se sabe de dónde sale.
+        pieReparto={`${porcentaje(tasaInicio)} · ${alcance.motivo}`}
         tituloTop="Satisfacción"
         top={[]}
         // La satisfacción sale de la encuesta del contenido. Si no la tiene, el resumen se queda en dos lecturas: no
-        // es lo mismo «nadie ha respondido» que «aquí no se preguntó nada» (Dave, 13-oct).
+        // es lo mismo «nadie ha respondido» que «aquí no se preguntó nada».
         tercera={resultados.satisfaccion ? <ColumnaSatisfaccion satisfaccion={resultados.satisfaccion} /> : null}
       />
 
-      <PageSection title="Detalle por persona" description="Abre un nombre para ver en qué recurso se quedó esa persona.">
+      <PageSection title="Detalle por persona" description="Selecciona una persona para ver dónde se detuvo su avance.">
         <TablaDatos
           key={version}
           config={config}

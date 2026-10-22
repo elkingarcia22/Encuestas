@@ -168,7 +168,7 @@ export function summarySheet(draft: SurveyDraft, results: SurveyResults, filters
           { value: priority.why, style: 'wrap' },
           {
             value: priority.qual
-              ? `${priority.qual.negative} de ${priority.qual.mentions} comentarios sobre ${priority.qual.topic.toLowerCase()} son negativos (${Math.round(priority.qual.negativeShare)}%)`
+              ? `${priority.qual.negative} de ${priority.qual.mentions} comentarios sobre ${priority.qual.topic.toLowerCase()} son negativos (${Math.round(priority.qual.negativeShare)} %)`
               : 'Sin comentarios que confirmen la señal',
             style: 'wrap',
           },

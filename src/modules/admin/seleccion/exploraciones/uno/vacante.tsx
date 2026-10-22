@@ -1,25 +1,25 @@
+import { AnimatePresence, MotionConfig, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import {
-  Agreement01Icon,
   Cancel01Icon,
   FullScreenIcon,
   ArrowDown01Icon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
+  ArrowRight02Icon,
   ArrowUp01Icon,
-  Award01Icon,
   Briefcase06Icon,
   FileImportIcon,
-  FolderRemoveIcon,
+  KanbanIcon,
+  ListViewIcon,
   ViewIcon,
-  LanguageSkillIcon,
-  MoneyBag02Icon,
   PencilEdit02Icon,
   PlusSignIcon,
-  Settings01Icon,
+  UserAdd01Icon,
+  UserRemove01Icon,
 } from '@hugeicons/core-free-icons'
 import {
   Alert,
@@ -28,7 +28,6 @@ import {
   Avatar,
   AvatarFallback,
   Button,
-  Card,
   cn,
   Empty,
   EmptyContent,
@@ -45,17 +44,12 @@ import {
   Item,
   ItemContent,
   ItemMedia,
-  Progress,
-  ScrollArea,
-  ScrollBar,
   Heading,
   Separator,
   Skeleton,
-  Tabs,
-  TabsList,
-  TabsTrigger,
   Text,
-  TrafficLight,
+  ToggleGroup,
+  ToggleGroupItem,
 } from '@ubits/flux-ui'
 import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
@@ -65,34 +59,39 @@ import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { useVentanasEnPanel } from '@/modules/design-system/drawers/components/drawer-anidado'
-import { BarraSegmentada } from '@/modules/design-system/templates/dashboard/components/graficos'
 import { pesos } from '../../vacantes/detalle/components/data'
-import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
+import { PageContent, PageHeader, PageSection, PageShell } from '@/shared/components/PageShell'
 import { setRightPanelOpen } from '@/shared/components/right-panel-store'
 import { AgentDock, ReopenAgentButton } from '@/modules/design-system/agente-contextual/components/agent-kit'
 import {
-  agregarVacante,
-  primeraEtapaDe,
   siguienteEtapaDe,
   VACANTES_UI,
   buscarVacanteUI,
   type Candidatura,
+  type Rechazada,
   type VacanteUI,
-  type Veredicto,
 } from '../../propuestas/datos'
 import { AccionesVacante, EstadoVacante } from '../../propuestas/components/acciones-vacante'
 import { eliminarVacantes } from './inicio/acciones'
 import { estadoInicio } from './inicio/estado'
-import { cambiosDeEtapa, registroDeMovimientos } from '../../propuestas/movimientos'
+import { QUIEN_MUEVE, cambiosDeEtapa, registroDeMovimientos } from '../../propuestas/movimientos'
 import { permisoEn } from '../../propuestas/permisos'
 import { AgenteVacante } from '../../propuestas/components/agente-vacante'
-import { AgregarCandidatos } from '../../propuestas/components/agregar-candidatos'
 import { FichaPersona, pestanaParaEtapa } from '../../propuestas/components/ficha-persona'
 import { PestanaCvs, useImportaciones } from '../../propuestas/components/importar-cvs'
 import { useProceso, type Cambio } from '../../propuestas/components/use-proceso'
-import { AvisoVacanteCerrada, BarraTablero, PieTablero, TableroColumnas, useTablero, type Tablero } from '../../propuestas/components/tablero-candidatos'
+import { AvisoVacanteCerrada, BarraTablero, PieTablero, TableroColumnas, VistasTablero, useTablero, type Tablero } from '../../propuestas/components/tablero-candidatos'
+import { ListaCandidatos } from '../../propuestas/components/lista-candidatos'
+import { SaldoCreditos } from '../../propuestas/components/saldo-creditos'
 import { BarraEnLote } from './acciones-en-lote'
-import { AvatarEsqueleto, Esqueleto, LineaEsqueleto, useCarga } from '../../propuestas/components/carga'
+import { CaraCandidato } from '../../propuestas/components/cara-candidato'
+import { ubicacionDe } from '../../propuestas/base'
+import { quienDe } from '../../propuestas/rechazos'
+import { diasDesdeQueAplico } from '../../propuestas/perfil-candidato'
+import { CURVA, entrada } from '../../propuestas/components/movimiento'
+import { Deslizar, Fundido, POP, RESORTE, Revelar, celda } from '../../propuestas/components/animacion'
+import { AvatarEsqueleto, Esqueleto, LineaEsqueleto, useCarga } from '@/modules/design-system/estados/carga'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 // Exploración 1 — dentro de la vacante.
 //
@@ -101,83 +100,17 @@ import { AvatarEsqueleto, Esqueleto, LineaEsqueleto, useCarga } from '../../prop
 // mover de etapa, y la ficha se abre en un panel solo cuando se necesita («Sí, esa es como la mejor»). El panel abre
 // en la pestaña que sirve para la etapa en la que está la persona (lo decide `pestanaParaEtapa`, de la ficha).
 //
-// Pestañas: Candidatos (el tablero, primero y por defecto: el 90 % del tiempo se pasa ahí) · La vacante · CVs
-// importados. La información de la vacante casi no se consulta: la cabecera quedó corta y el detalle vive en su
-// pestaña. Arriba quedan las tres acciones que más se usan (Compartir, Importar CVs, Orbit Flow); editar está en «⋯» y
-// lleva a la misma creación por pasos de Elkin, en modo edición.
+// Una sola página, como un tablero de control (13 oct, reunión con la PM y el TL: «va a estar afuera la información de la
+// vacante, también CVs importados, actividad, y dentro de eso mismo una tabla que no va a estar como dentro de una tab»;
+// 14 oct, Nicolás: «una sola página… como si fuera un dashboard completo»). Sin pestañas: primero el tablero, donde se
+// pasa el 90 % del tiempo; debajo el proceso (el embudo de sus etapas); después la vacante (condiciones, lo que se pide
+// y el puesto) con la actividad al lado, y al final los CVs importados. Arriba quedan las tres acciones que más se usan
+// (Compartir, Importar CVs, Orbit Flow); editar está en «⋯» y lleva a la creación por pasos de Elkin, en modo edición.
 
-type Pestana = 'candidatos' | 'vacante' | 'cvs' | 'actividad'
-
-// Las tres caras de una vacante, como switch y **dentro** de la tarjeta, igual que «Vacantes / Mis candidatos»
-// en la lista (22 sep). Subrayadas y colgando de la cabecera parecían navegación de la página; aquí se lee que
-// son tres formas de mirar lo mismo. Respeta el mismo margen lateral que la tabla de abajo: el switch tiene
-// fondo propio, así que se alinea por su caja y no por su texto.
-// Genérica en la pestaña: cada exploración tiene las suyas. «Candidatos» es siempre el tablero kanban, como en el
-// producto; `primera` es la forma de trabajar propia de cada exploración, que va al lado, nunca escondida detrás de un
-// cambio de vista (24 sep): «Pipeline» en la 2 y «Revisar» en la 3. Va antes que el tablero salvo cuando la vacante
-// abre en él (`tableroPrimero`: la 2 desde el 27 sep). La 1 no tiene forma propia: desde el 29 sep su única vista de
-// candidatos es el tablero.
-export function BarraPestanas<P extends string = Pestana>({
-  pestana,
-  onPestana,
-  candidatos,
-  lotes,
-  primera,
-  tableroPrimero = false,
-  extra,
-}: {
-  pestana: P
-  onPestana: (valor: P) => void
-  candidatos?: number
-  lotes: number
-  primera?: { valor: P; etiqueta: string; cuenta?: number }
-  // El tablero antes que la forma propia, cuando la vacante abre en él (la 2, desde el 27 sep).
-  tableroPrimero?: boolean
-  // Al otro lado de la fila (en «Reclutamiento», cuánta gente libre de la base le sirve a la vacante).
-  extra?: ReactNode
-}) {
-  const propia = primera ? (
-    <TabsTrigger value={primera.valor}>
-      {primera.etiqueta}
-      {primera.cuenta ? (
-        <Badge variant="secondary" className="tabular-nums">
-          {primera.cuenta}
-        </Badge>
-      ) : null}
-    </TabsTrigger>
-  ) : null
-  const tablero =
-    candidatos !== undefined ? (
-      <TabsTrigger value="candidatos">
-        Candidatos
-        <Badge variant="secondary" className="tabular-nums">
-          {candidatos}
-        </Badge>
-      </TabsTrigger>
-    ) : null
-  return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-4">
-      {/* En el celular las pestañas se deslizan en vez de cortarse (VA-22). */}
-      <Tabs value={pestana} onValueChange={(valor) => onPestana(valor as P)} className="min-w-0 max-w-full">
-        <TabsList variant="view" className="max-w-full overflow-x-auto">
-          {tableroPrimero ? tablero : propia}
-          {tableroPrimero ? propia : tablero}
-          <TabsTrigger value="vacante">La vacante</TabsTrigger>
-          <TabsTrigger value="cvs">
-            CVs importados
-            {lotes ? (
-              <Badge variant="secondary" className="tabular-nums">
-                {lotes}
-              </Badge>
-            ) : null}
-          </TabsTrigger>
-          <TabsTrigger value="actividad">Actividad</TabsTrigger>
-        </TabsList>
-      </Tabs>
-      {extra ? <div className="ml-auto">{extra}</div> : null}
-    </div>
-  )
-}
+// Las partes de la página, para llegar a ellas desde un enlace (`?pestana=vacante|cvs|actividad`, como antes eran
+// pestañas), desde el agente o desde un lote.
+const SECCION = { tablero: 'tablero', vacante: 'la-vacante', actividad: 'actividad', cvs: 'cvs-importados' } as const
+const irASeccion = (id: string) => window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60)
 
 // La fila de una persona mientras carga, con los altos exactos de la fila de «Mis candidatos» (la usa esa lista; la
 // bandeja que también la usaba salió el 29 sep): casilla (sin cara: los candidatos no tienen foto, 8 oct), el nombre con su insignia (19,25px de línea),
@@ -210,8 +143,9 @@ export function FilaPersonaCargando({ conCasilla = true }: { conCasilla?: boolea
 // y a dónde vuelve la flecha: «Vacantes» o, en la 4, «Reclutamiento».
 //
 // 29 sep, reunión con Elkin: la información de la vacante casi no se consulta (el 90 % del tiempo se pasa en el
-// tablero) y arriba se veía apretada. Queda una sola línea —área, sede y modalidad, días abierta—; las aplicaciones ya
-// las cuentan las pestañas y quién la trabaja se ve en las caras de «Compartir».
+// tablero) y arriba se veía apretada. Queda una sola línea —área y días abierta—; las aplicaciones ya las cuenta el
+// tablero y quién la trabaja se ve en las caras de «Compartir». Sin sede ni modalidad (13 oct, PM: «eso no me dice
+// absolutamente nada y es ruido»): siguen en «La vacante». Sin pestañas debajo: la página es una sola (14 oct).
 export function CabeceraVacante({
   ruta,
   seccion = 'Vacantes',
@@ -240,9 +174,8 @@ export function CabeceraVacante({
   // Lo que puede hacer quien mira (VA-11): sin ser dueña no publica, no cierra ni elimina; con «Solo ver» no importa
   // ni edita.
   const permiso = permisoEn(vacante)
-  // Eliminar la saca de verdad de la lista de la sesión (Vacantes, el Dashboard y Mis candidatos dejan de verla), y
-  // «Deshacer» la devuelve una sola vez al mismo lugar (VA-03).
-  const deshacerEliminar = useRef<(() => void) | null>(null)
+  // Eliminar la saca de verdad de la lista de la sesión (Vacantes, el Dashboard y Mis candidatos dejan de verla). Es
+  // definitivo: sin «Deshacer» (13 oct, PM).
   return (
     <PageHeader
       breadcrumbs={[
@@ -267,26 +200,19 @@ export function CabeceraVacante({
             <HugeiconsIcon icon={Briefcase06Icon} size={15} />
             {vacante.area}
           </span>
-          {/* Una vacante remota tiene «Remoto» de sede y de modalidad: se dice una vez. */}
-          <span>{vacante.modalidad === vacante.sede ? vacante.sede : `${vacante.sede} · ${vacante.modalidad}`}</span>
           <span>{vacante.estado === 'Borrador' ? 'Sin publicar' : vacante.diasAbierta === 0 ? 'Abierta hoy' : vacante.diasAbierta === 1 ? '1 día abierta' : `${vacante.diasAbierta} días abierta`}</span>
         </>
       }
       actions={
         <>
+          {/* Los créditos de Selección, primero de la fila: mover a una etapa con IA los gasta (16 oct). */}
+          <SaldoCreditos />
           <AccionesVacante
             vacante={vacante}
             onCambio={onCambio}
             onEliminar={() => {
-              deshacerEliminar.current = eliminarVacantes(VACANTES_UI.filter((una) => una.id === vacante.id))
+              eliminarVacantes(VACANTES_UI.filter((una) => una.id === vacante.id))
               navigate(ruta)
-            }}
-            // «Deshacer» tiene que devolverla de verdad: si no, es un botón que miente.
-            onRestaurar={() => {
-              if (deshacerEliminar.current) deshacerEliminar.current()
-              else if (!buscarVacanteUI(vacante.id)) agregarVacante(vacante)
-              deshacerEliminar.current = null
-              navigate(`${ruta}/${vacante.id}`)
             }}
             onEditar={onEditar}
             compartir={compartir}
@@ -307,40 +233,194 @@ export function CabeceraVacante({
   )
 }
 
-// La actividad de la vacante (VA-35): cada cambio de la sesión, con quién lo hizo y lo que dejó (saltos, correos,
-// invitaciones). Lo que se deshace sale de aquí: lo deshecho no pasó.
-function ActividadVacante({ vacante, personas }: { vacante: VacanteUI; personas: Candidatura[] }) {
+// La actividad de la vacante (VA-35), como la columna de un tablero de control (14 oct, Nicolás: una sola página con la
+// vacante, los CVs importados, la actividad y el tablero). Lo de esta visita va arriba, con la hora; debajo, lo que ya
+// había pasado, sacado de dónde está cada persona: cuándo aplicó o entró, a qué etapa llegó y quién la llevó, y quién
+// quedó fuera o se retiró. Tocar el nombre abre su ficha. Lo que se deshace sale de aquí: lo deshecho no pasó.
+type Suceso = {
+  id: string
+  persona: Candidatura
+  que: string
+  quien: string
+  cuando: string
+  hace: number
+  ms: number
+  tipo: 'movio' | 'entro' | 'fuera' | 'ia'
+  detalle?: string
+}
+
+const ICONO_SUCESO: Record<Exclude<Suceso['tipo'], 'ia'>, IconSvgElement> = {
+  movio: ArrowRight02Icon,
+  entro: UserAdd01Icon,
+  fuera: UserRemove01Icon,
+}
+
+// Se ven los primeros; el resto, con «Ver toda la actividad».
+const VISIBLES_ACTIVIDAD = 8
+
+const haceTexto = (dias: number) => (dias <= 0 ? 'Hoy' : dias === 1 ? 'Ayer' : `Hace ${dias} días`)
+const grupoDe = (dias: number) => (dias <= 0 ? 'Hoy' : dias === 1 ? 'Ayer' : dias <= 7 ? 'Esta semana' : 'Antes')
+const agrupar = (lista: Suceso[]) =>
+  lista.reduce<[string, Suceso[]][]>((grupos, suceso) => {
+    const nombre = grupoDe(suceso.hace)
+    const ultimo = grupos[grupos.length - 1]
+    if (ultimo && ultimo[0] === nombre) ultimo[1].push(suceso)
+    else grupos.push([nombre, [suceso]])
+    return grupos
+  }, [])
+const quienEs = (nombre: string) => (nombre === QUIEN_MUEVE ? 'Tú' : nombre)
+
+function ActividadVacante({
+  vacante,
+  dentro,
+  rechazadas,
+  onAbrir,
+}: {
+  vacante: VacanteUI
+  dentro: Candidatura[]
+  rechazadas: Rechazada[]
+  onAbrir: (candidaturaId: string) => void
+}) {
   const registro = useSyncExternalStore(registroDeMovimientos.suscribir, registroDeMovimientos.leer)
-  const porId = new Map(personas.map((c) => [c.id, c]))
-  const suyos = [...registro].filter((movimiento) => porId.has(movimiento.candidaturaId)).reverse()
-  if (!suyos.length)
-    return (
-      <PrimeraVez
-        className="py-12"
-        icono="glass-clock"
-        titulo="Todavía no hay actividad en esta visita"
-        descripcion="Cuando alguien mueva, rechace, escriba o sume gente, queda aquí con su nombre y la hora."
-      />
-    )
+  const [todo, setTodo] = useState(false)
+  // El comienzo de hoy, para contar en días de calendario lo que tiene fecha (un rechazo de ayer dice «Ayer», como su ficha).
+  const [hoy] = useState(() => new Date().setHours(0, 0, 0, 0))
+  const sucesos = useMemo(() => {
+    const diasDesde = (ms: number) => Math.max(0, Math.round((hoy - new Date(ms).setHours(0, 0, 0, 0)) / 86_400_000))
+    const porId = new Map([...dentro, ...rechazadas.map((r) => r.candidatura)].map((c) => [c.id, c]))
+    const deLaVisita = registro.filter((movimiento) => porId.has(movimiento.candidaturaId))
+    const conVisita = new Set(deLaVisita.map((movimiento) => movimiento.candidaturaId))
+    const equipo = vacante.reclutador.nombre || 'El equipo'
+    const lista: Suceso[] = deLaVisita.map((movimiento) => {
+      const persona = porId.get(movimiento.candidaturaId)!
+      const cambio = cambiosDeEtapa(persona, vacante.etapas, [movimiento])[0]
+      return {
+        id: movimiento.id,
+        persona,
+        que: cambio.titulo.charAt(0).toLowerCase() + cambio.titulo.slice(1),
+        quien: cambio.quien,
+        cuando: cambio.cuando,
+        hace: 0,
+        ms: movimiento.cuando,
+        tipo: movimiento.tipo === 'rechazo' || movimiento.tipo === 'retiro' ? 'fuera' : movimiento.tipo === 'entra' ? 'entro' : 'movio',
+        detalle: [...cambio.marcas.map((marca) => marca.texto), cambio.comentario ? `«${cambio.comentario}»` : ''].filter(Boolean).join(' · ') || undefined,
+      }
+    })
+    // Lo de antes de la visita: a qué etapa llegó (y quién la llevó) o cómo entró.
+    for (const persona of dentro) {
+      if (conVisita.has(persona.id)) continue
+      const indice = vacante.etapas.findIndex((etapa) => etapa.id === persona.etapa)
+      if (indice > 0) {
+        const previa = vacante.etapas[indice - 1]
+        lista.push({
+          id: `${persona.id}-llego`,
+          persona,
+          que: `pasó a ${vacante.etapas[indice].titulo}`,
+          quien: previa.id === 'cv' ? 'La IA' : previa.ia ? `${previa.titulo}, al terminar` : equipo,
+          cuando: haceTexto(persona.dias),
+          hace: persona.dias,
+          ms: 0,
+          tipo: previa.id === 'cv' || previa.ia ? 'ia' : 'movio',
+        })
+        continue
+      }
+      const hace = diasDesdeQueAplico(persona)
+      lista.push({
+        id: `${persona.id}-entro`,
+        persona,
+        que: persona.importada ? `entró con el lote «${persona.importada.lote}»` : persona.postulada ? 'entró desde Mis candidatos' : 'aplicó por el portal de empleo',
+        quien: persona.importada ? quienEs(persona.importada.quien) : persona.postulada ? quienEs(persona.postulada.quien) : '',
+        cuando: haceTexto(hace),
+        hace,
+        ms: 0,
+        tipo: 'entro',
+      })
+    }
+    // Quien quedó fuera o se retiró antes de la visita.
+    for (const rechazada of rechazadas) {
+      if (conVisita.has(rechazada.candidatura.id)) continue
+      const retiro = quienDe(rechazada) === 'candidato'
+      const etapa = vacante.etapas.find((una) => una.id === rechazada.candidatura.etapa)
+      // Como su ficha (BloqueRechazo): el de la visita tiene su fecha; el de antes, «ayer» o los días que lleva.
+      const hace = rechazada.cuando ? diasDesde(rechazada.cuando) : Math.max(1, rechazada.candidatura.dias)
+      lista.push({
+        id: `${rechazada.candidatura.id}-fuera`,
+        persona: rechazada.candidatura,
+        que: `${retiro ? 'se retiró' : 'quedó fuera'} en ${etapa?.titulo ?? 'el proceso'}`,
+        quien: retiro ? '' : rechazada.por ? quienEs(rechazada.por) : equipo,
+        cuando: haceTexto(hace),
+        hace,
+        ms: rechazada.cuando ?? 0,
+        tipo: 'fuera',
+        detalle: `Motivo: ${rechazada.motivo}`,
+      })
+    }
+    return lista.sort((a, b) => a.hace - b.hace || b.ms - a.ms)
+  }, [registro, dentro, rechazadas, vacante, hoy])
+
+  // En pantalla ancha el bloque mide lo mismo que la columna de la vacante y la lista se desplaza dentro: antes, más
+  // larga, dejaba un hueco blanco debajo de «Sobre el puesto» (15 oct, Nicolás: «ese espacio tan horrible»). En el
+  // celular va completa, cortada en las primeras con «Ver toda la actividad».
+  const enLista = new Set(sucesos.slice(0, VISIBLES_ACTIVIDAD).map((suceso) => suceso.id))
   return (
-    <div className="flex flex-col divide-y px-5">
-      {suyos.map((movimiento) => {
-        const cambio = cambiosDeEtapa(porId.get(movimiento.candidaturaId)!, vacante.etapas, [movimiento])[0]
-        return (
-          <div key={movimiento.id} className="flex flex-col gap-1 py-3">
-            <Text as="p" size="sm">
-              <Text as="span" size="sm" weight="medium">
-                {cambio.quien}
-              </Text>{' '}
-              · {porId.get(movimiento.candidaturaId)?.candidato.nombre}: {cambio.titulo.charAt(0).toLowerCase() + cambio.titulo.slice(1)}
-            </Text>
-            <Text as="p" size="xs" variant="muted">
-              {[cambio.cuando, ...cambio.marcas.map((marca) => marca.texto), cambio.comentario ? `«${cambio.comentario}»` : ''].filter(Boolean).join(' · ')}
-            </Text>
-          </div>
-        )
-      })}
-    </div>
+    <Frame className="flex flex-col lg:absolute lg:inset-0">
+      <CabeceraBloque titulo="Actividad" descripcion="Lo último que pasó, con quién lo hizo." />
+      <FramePanel className="flex min-h-0 flex-1 flex-col gap-5 lg:overflow-y-auto">
+        {sucesos.length ? (
+          <>
+            {agrupar(sucesos).map(([grupo, delGrupo]) => (
+              <section key={grupo} aria-label={grupo} className={cn('flex flex-col gap-3', !todo && !delGrupo.some((suceso) => enLista.has(suceso.id)) && 'max-lg:hidden')}>
+                <Text as="span" variant="muted" size="xs" weight="medium">
+                  {grupo}
+                </Text>
+                <ol className="flex flex-col gap-3.5">
+                  {delGrupo.map((suceso, indice) => (
+                    // Lo que pasa mientras se mira la vacante (mover, rechazar) entra arriba y lo demás baja con suavidad.
+                    <motion.li
+                      key={suceso.id}
+                      {...entrada(indice)}
+                      layout="position"
+                      transition={{ ...entrada(indice).transition, layout: RESORTE }}
+                      className={cn('flex min-w-0 items-start gap-3', !todo && !enLista.has(suceso.id) && 'max-lg:hidden')}
+                    >
+                      <IconTile variant="soft" size="sm" className="shrink-0">
+                        {suceso.tipo === 'ia' ? <IconoIA /> : <HugeiconsIcon icon={ICONO_SUCESO[suceso.tipo]} aria-hidden="true" />}
+                      </IconTile>
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <Text as="p" size="sm" className="text-pretty">
+                          {/* El nombre abre su ficha: un enlace en la frase, sin alto ni relleno de botón
+                              (diferencias.json › button-enlace-en-linea). */}
+                          <Button variant="link" size="sm" className="h-auto! p-0! align-baseline text-sm!" onClick={() => onAbrir(suceso.persona.id)}>
+                            {suceso.persona.candidato.nombre}
+                          </Button>{' '}
+                          {suceso.que}
+                        </Text>
+                        <Text as="p" variant="muted" size="xs" className="text-pretty">
+                          {[suceso.cuando, suceso.quien, suceso.detalle].filter(Boolean).join(' · ')}
+                        </Text>
+                      </div>
+                    </motion.li>
+                  ))}
+                </ol>
+              </section>
+            ))}
+            {sucesos.length > VISIBLES_ACTIVIDAD ? (
+              <Button variant="outline" size="sm" className="self-start lg:hidden" aria-expanded={todo} onClick={() => setTodo(!todo)}>
+                {todo ? 'Ver menos' : `Ver toda la actividad (${sucesos.length})`}
+              </Button>
+            ) : null}
+          </>
+        ) : (
+          // Con su ilustración glass, como todo estado vacío (Cristian, 9 oct).
+          <PrimeraVez
+            className="py-8"
+            icono="glass-clock"
+            titulo="Todavía no pasa nada aquí"
+            descripcion="Cuando alguien aplique, se mueva o quede fuera, queda aquí con quién lo hizo y cuándo."
+          />
+        )}
+      </FramePanel>
+    </Frame>
   )
 }
 
@@ -403,7 +483,7 @@ export function NavegacionPanel({
 //    Vacantes desde el 8 oct: no se repiten aquí.)
 // 3. Lo que se pide: cada requisito con cómo lo cumple la gente en proceso según la IA, en una barra por veredicto
 //    (verde cumple, ámbar a medias, rojo no, gris por validar), y el que menos se cumple, señalado.
-// 4. El proceso: las etapas en fila, como un embudo, con cuánta gente hay en cada una y dónde se acumula.
+// 4. El proceso: las etapas en fila, como un embudo: cuántos llegaron a cada una, qué parte pasa y cuánto llevan ahí.
 // Cada bloque trae su acción con nombre, que abre el editor en su paso. La comparten las tres exploraciones: la
 // vacante es el mismo objeto en todas. En la 1 editar lleva a la creación por pasos de Elkin (29 sep), por eso cada
 // acción dice además qué sección se quiere cambiar: la pantalla decide a qué paso va.
@@ -414,39 +494,15 @@ export type SeccionVacante = 'condiciones' | 'puesto' | 'requisitos' | 'etapas'
 const LETRAS_SIN_RECORTE = 700
 
 
-const VEREDICTOS: { id: Veredicto; nombre: string; color: string }[] = [
-  { id: 'cumple', nombre: 'Cumplen', color: 'var(--success)' },
-  { id: 'parcial', nombre: 'A medias', color: 'var(--warning)' },
-  { id: 'no-cumple', nombre: 'No cumplen', color: 'var(--destructive)' },
-  // El gris del texto secundario, no uno mezclado con el fondo: ese se perdía en modo oscuro.
-  { id: 'por-validar', nombre: 'Por validar', color: 'var(--muted-foreground)' },
-]
+// «El proceso» (el embudo por etapa) salió de la vacante el 15 oct: Javi, 13 oct, «eso se ve muy confuso… diría que es
+// en los AI Insights». Lo que conviene de él (dónde se frena la gente) lo cuenta Orbit Flow.
 
-// El proceso, siempre en una sola fila: de izquierda a derecha, en el orden en que lo recorre cada persona, como el
-// tablero de candidatos. Las etapas se reparten el ancho; si no caben a su mínimo (10rem: el nombre en dos líneas sin
-// cortarse a mitad de palabra), la fila se desplaza de lado con su barra, igual que el tablero. Así 5, 8 o 12 etapas
-// se leen igual (1 oct, Nicolás: «¿qué sucede cuando son muchas más etapas?»; antes, desde siete bajaban a filas de a
-// cuatro sin divisores y se perdía el orden). Con el agente abierto la página se angosta y la barra aparece antes.
-const ANCHO_ETAPA = '10rem'
-const CELDA_ETAPA = 'flex min-w-0 flex-col gap-2 px-3 first:ps-0 last:pe-0'
-
-function FilaEtapas({ cuantas, children }: { cuantas: number; children: ReactNode }) {
-  return (
-    <FramePanel className="[--frame-panel-px:0px] [--frame-panel-py:0px]">
-      <ScrollArea className="w-full">
-        <div
-          className="grid divide-x p-4"
-          style={{ gridTemplateColumns: `repeat(${cuantas}, minmax(0, 1fr))`, minWidth: `calc(${cuantas} * ${ANCHO_ETAPA} + 2rem)` }}
-        >
-          {children}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
-    </FramePanel>
-  )
-}
-
-const personasEn = (n: number) => `${n} ${n === 1 ? 'persona' : 'personas'}`
+const DESCRIPCION_REQUISITOS = (
+  <span className="flex items-center gap-1.5">
+    <IconoIA />
+    Con ellos la IA le da un puntaje a cada CV.
+  </span>
+)
 
 // Cabecera de cada bloque: título, una frase y su acción con nombre a la derecha.
 // El tablero a pantalla completa, por encima del menú y del header (8 oct, Nicolás: «debería haber una opción para poder
@@ -469,25 +525,75 @@ function TableroAmpliable({ vacante, ampliado, onReducir, children }: { vacante:
   }, [ampliado, onReducir])
   if (!ampliado) return <>{children}</>
   return createPortal(
-    <div
+    // Se abre creciendo un poco desde el centro, con la curva de todo el movimiento de Selección.
+    <motion.div
       role="dialog"
       aria-modal="true"
       aria-label={`Tablero de ${vacante.titulo}`}
       data-tablero=""
-      className="fixed inset-0 z-40 flex flex-col bg-background animate-in duration-200 fade-in-0 zoom-in-[0.98]"
+      className="fixed inset-0 z-40 flex flex-col bg-background"
+      initial={{ opacity: 0, scale: 0.975 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.32, ease: CURVA }}
     >
       {/* Sin marco ni caja: la barra del tablero es la franja de arriba (con el nombre y «Cerrar») y las columnas
           ocupan todo lo demás (8 oct, Nicolás: «ya ampliado no debería estar encerrado»). */}
       {children}
-    </div>,
+    </motion.div>,
     document.body,
   )
 }
 
-// El marco del tablero: la tarjeta de siempre o, a pantalla completa, nada (las columnas van sobre el fondo).
-function MarcoTablero({ ampliado, children }: { ampliado: boolean; children: ReactNode }) {
-  if (ampliado) return <div className="relative flex min-h-0 flex-1 flex-col">{children}</div>
-  return <Card className="relative gap-0! overflow-hidden py-0!">{children}</Card>
+// El marco del tablero. En la página, con la forma de la tabla del sistema, que es su otra vista (16 oct, cambio
+// Lista/Tablero): en lo gris, cuántas personas a la izquierda y la búsqueda a la derecha; el título, las vistas y el
+// cambio de vista van arriba del marco, compartidos por las dos.
+// A pantalla completa, nada: la barra es la franja de arriba y las columnas van sobre el fondo.
+// `flotante`: la barra de acciones en lote. En la página se pega al borde de abajo de la ventana mientras el tablero se
+// ve (antes flotaba al pie del tablero y, con las condiciones arriba, quedaba debajo del borde de la pantalla).
+function MarcoTablero({
+  ampliado,
+  conteo,
+  avisos,
+  barra,
+  flotante,
+  children,
+}: {
+  ampliado: boolean
+  conteo: string
+  avisos: ReactNode
+  barra: ReactNode
+  flotante: ReactNode
+  children: ReactNode
+}) {
+  if (ampliado)
+    return (
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        {avisos}
+        {barra}
+        <Separator />
+        {children}
+        <div className="absolute bottom-4 left-1/2 z-20 max-w-[calc(100%-2rem)] -translate-x-1/2">{flotante}</div>
+      </div>
+    )
+  return (
+    <Frame>
+      <FrameHeader className="flex flex-row flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <FrameDescription role="status" className="tabular-nums">
+          {conteo}
+        </FrameDescription>
+        {barra}
+      </FrameHeader>
+      <FramePanel className="relative overflow-hidden [--frame-panel-px:0px] [--frame-panel-py:0px]">
+        {avisos}
+        {children}
+      </FramePanel>
+      {/* Una línea sin alto, pegada 16 px sobre el borde de la ventana: la barra va encima de ella. Cuando el pie del
+          tablero entra a la vista, se queda en el pie. */}
+      <div className="pointer-events-none sticky bottom-4 z-20 h-0">
+        <div className="pointer-events-auto absolute bottom-3 left-1/2 max-w-[calc(100%-2rem)] -translate-x-1/2">{flotante}</div>
+      </div>
+    </Frame>
+  )
 }
 
 function CabeceraBloque({
@@ -515,17 +621,22 @@ function CabeceraBloque({
   )
 }
 
-export function PestanaVacante({
+export function LaVacante({
   vacante,
   dentro,
   onEditar,
+  secciones,
 }: {
   vacante: VacanteUI
   dentro: Candidatura[]
   // Abre el editor de la vacante en un paso del editor de siempre (1 el puesto y los requisitos, 2 las etapas) y dice
   // qué sección se quiere cambiar, para la creación por pasos de la 1.
   onEditar?: (paso: number, seccion: SeccionVacante) => void
+  // Qué bloques se ponen (en la página van repartidos: las condiciones arriba, a todo el ancho, y el resto abajo). Sin
+  // esto, los tres.
+  secciones?: SeccionVacante[]
 }) {
+  const ver = (seccion: SeccionVacante) => !secciones || secciones.includes(seccion)
   const n = dentro.length
   const [todoElTexto, setTodoElTexto] = useState(false)
   const letras = vacante.descripcion.reduce((suma, parrafo) => suma + parrafo.length, 0)
@@ -544,43 +655,22 @@ export function PestanaVacante({
   })()
   const [minimo, maximo] = vacante.rango
   const enRango = dentro.filter((c) => c.candidato.pretension >= minimo && c.candidato.pretension <= maximo).length
-  const encima = dentro.filter((c) => c.candidato.pretension > maximo).length
-
-  // Cómo cumple la gente en proceso cada requisito, contado por veredicto.
-  const porRequisito = vacante.requisitos.map((requisito, indice) => ({
-    requisito,
-    cuenta: Object.fromEntries(
-      VEREDICTOS.map(({ id }) => [id, dentro.filter((c) => c.criterios[indice]?.veredicto === id).length]),
-    ) as Record<Veredicto, number>,
-  }))
-  const cumplenDe = (indice: number) => porRequisito[indice]?.cuenta.cumple ?? 0
-  // El que menos se cumple, si hay gente y no lo cumplen todos: es el que decide quién pasa.
-  const indiceDificil = n
-    ? porRequisito.reduce((menor, _, indice) => (cumplenDe(indice) < cumplenDe(menor) ? indice : menor), 0)
-    : -1
-  const dificil = indiceDificil >= 0 && cumplenDe(indiceDificil) < n ? indiceDificil : -1
-  const condiciones: { etiqueta: string; valor: string; detalle?: string; aviso?: string; icono: IconSvgElement }[] = [
+  // Una franja de cuatro cifras, como la de «Tablero con vistas» de Cristian: rótulo, cifra y una línea, sin iconos ni
+  // insignias (15 oct, Nicolás: «demasiada información»).
+  const condiciones: { etiqueta: string; valor: string; detalle?: string }[] = [
     {
       etiqueta: 'Salario al mes',
       valor: `${pesos(minimo)} a ${pesos(maximo)}`,
       detalle: n ? `${enRango} de ${n} piden dentro del rango` : 'Nadie en proceso todavía',
-      aviso: encima ? `${encima} por encima` : undefined,
-      icono: MoneyBag02Icon,
     },
-    { etiqueta: 'Experiencia', valor: vacante.experiencia, detalle: vacante.seniority, icono: Award01Icon },
-    { etiqueta: 'Contrato', valor: vacante.contrato, detalle: `Modalidad ${vacante.modalidad.toLowerCase()}`, icono: Agreement01Icon },
+    { etiqueta: 'Experiencia', valor: vacante.experiencia, detalle: vacante.seniority },
+    { etiqueta: 'Contrato', valor: vacante.contrato, detalle: `Modalidad ${vacante.modalidad.toLowerCase()}` },
     {
       etiqueta: 'Idioma',
       valor: vacante.idioma,
       detalle: vacante.idioma === 'No requerido' ? 'No es requisito' : 'Entra en los requisitos',
-      icono: LanguageSkillIcon,
     },
   ]
-
-  const enEtapa = vacante.etapas.map((etapa) => dentro.filter((c) => c.etapa === etapa.id).length)
-  const mayor = Math.max(0, ...enEtapa)
-  // «Aquí se acumula» solo si una etapa tiene más gente que todas las demás: con empate no dice nada.
-  const acumula = mayor > 0 && enEtapa.filter((cuantos) => cuantos === mayor).length === 1 ? enEtapa.indexOf(mayor) : -1
 
   // La pestaña carga al abrirla. Mientras tanto, los cuatro bloques ya tienen su título, sus botones de editar y sus
   // rótulos fijos (qué es cada cosa no depende de los datos); lo que viene de la vacante y de la gente va en gris, en su
@@ -588,14 +678,17 @@ export function PestanaVacante({
   const cargando = useCarga()
   if (cargando) {
     return (
-      <Esqueleto etiqueta="Cargando la vacante" className="@container flex flex-col gap-5 p-5">
+      <Esqueleto etiqueta="Cargando la vacante" className="@container flex flex-col gap-5">
+        {ver('condiciones') ? (
         <Frame>
-          <FramePanel className="grid gap-5 @lg:grid-cols-2 @4xl:grid-cols-4 @4xl:gap-0 @4xl:divide-x">
+          <CabeceraBloque
+            titulo="Condiciones"
+            descripcion="Lo que ofrece y lo que pide de entrada."
+            accion={onEditar ? { etiqueta: 'Editar condiciones', icono: PencilEdit02Icon, onClick: () => onEditar(1, 'condiciones') } : undefined}
+          />
+          <FramePanel className="grid gap-5 @lg:grid-cols-2 @3xl:grid-cols-4 @3xl:gap-0 @3xl:divide-x">
             {condiciones.map((condicion) => (
-              <div key={condicion.etiqueta} className="flex min-w-0 items-start gap-3 @4xl:px-5 @4xl:first:ps-0 @4xl:last:pe-0">
-                <IconTile variant="soft" size="sm" className="shrink-0">
-                  <HugeiconsIcon icon={condicion.icono} aria-hidden="true" />
-                </IconTile>
+              <div key={condicion.etiqueta} className="flex min-w-0 flex-col @3xl:px-5 @3xl:first:ps-0 @3xl:last:pe-0">
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <Text as="span" variant="muted" size="sm">
                     {condicion.etiqueta}
@@ -604,13 +697,14 @@ export function PestanaVacante({
                     <Skeleton className="h-5 w-4/5" />
                   </span>
                   <LineaEsqueleto tamano="chico" ancho="w-3/5" />
-                  {condicion.aviso ? <Skeleton className="mt-0.5 h-4.5 w-20" /> : null}
                 </div>
               </div>
             ))}
           </FramePanel>
         </Frame>
+        ) : null}
 
+        {ver('puesto') ? (
         <Frame>
           <CabeceraBloque
             titulo="Sobre el puesto"
@@ -646,80 +740,45 @@ export function PestanaVacante({
             </div>
           </FramePanel>
         </Frame>
+        ) : null}
 
+        {ver('requisitos') ? (
         <Frame>
           <CabeceraBloque
             titulo={vacante.requisitos.length ? `Lo que se pide · ${vacante.requisitos.length} ${vacante.requisitos.length === 1 ? 'requisito' : 'requisitos'}` : 'Lo que se pide'}
-            descripcion={
-              <span className="flex items-center gap-1.5">
-                <IconoIA />
-                La IA mide con ellos a cada persona: cambiarlos cambia el «cumple 2 de 4» de todas.
-              </span>
-            }
+            descripcion={DESCRIPCION_REQUISITOS}
             accion={onEditar ? { etiqueta: 'Editar requisitos', icono: PencilEdit02Icon, onClick: () => onEditar(1, 'requisitos') } : undefined}
           />
           <FramePanel className="flex flex-col divide-y py-0!">
             {vacante.requisitos.map((requisito, indice) => (
-              <div key={requisito} className="grid items-center gap-x-5 gap-y-2 py-4 @2xl:grid-cols-[1.5rem_minmax(0,1fr)_minmax(10rem,16rem)_8rem]">
-                <Text as="span" variant="muted" size="sm" className="tabular-nums max-@2xl:hidden">
+              <div key={requisito} className="flex items-center gap-4 py-3.5">
+                <Text as="span" variant="muted" size="sm" className="w-4 shrink-0 tabular-nums">
                   {indice + 1}
                 </Text>
                 <LineaEsqueleto className="h-6" ancho="w-3/5" />
-                <Skeleton className="h-2 w-full" />
-                <LineaEsqueleto tamano="chico" ancho="w-4/5" />
               </div>
             ))}
-            {n && vacante.requisitos.length ? (
-              <div className="flex items-center justify-between gap-3 py-3">
-                <LineaEsqueleto ancho="w-80 max-w-1/2" />
-                <LineaEsqueleto ancho="w-48 max-w-1/3" />
-              </div>
-            ) : null}
           </FramePanel>
         </Frame>
-
-        <Frame>
-          <CabeceraBloque
-            titulo={`El proceso · ${vacante.etapas.length} etapas`}
-            descripcion="Las etapas propias de esta vacante, en el orden en que las recorre cada persona."
-            accion={onEditar ? { etiqueta: 'Cambiar las etapas', icono: Settings01Icon, onClick: () => onEditar(2, 'etapas') } : undefined}
-          />
-          <FilaEtapas cuantas={vacante.etapas.length}>
-            {vacante.etapas.map((etapa, indice) => (
-              <div key={etapa.id} className={CELDA_ETAPA}>
-                <div className="flex min-w-0 items-center gap-1.5">
-                  <Text as="span" variant="muted" size="sm" className="tabular-nums">
-                    {indice + 1}
-                  </Text>
-                  <LineaEsqueleto ancho="w-3/4" />
-                </div>
-                <span className="flex h-7 items-center">
-                  <Skeleton className="h-5 w-16" />
-                </span>
-                <Skeleton className="h-2 w-full" />
-                <div className="flex flex-col">
-                  <LineaEsqueleto tamano="chico" ancho="w-full" />
-                  <LineaEsqueleto tamano="chico" ancho="w-2/3" />
-                </div>
-                {indice === acumula || etapa.origen === 'propia' ? <Skeleton className="h-4 w-24" /> : null}
-              </div>
-            ))}
-          </FilaEtapas>
-        </Frame>
+        ) : null}
       </Esqueleto>
     )
   }
 
   return (
-    <div className="@container flex flex-col gap-5 p-5">
+    <div className="@container flex flex-col gap-5">
       {/* 1 · Las condiciones, en cifras. */}
+      {ver('condiciones') ? (
       <Frame>
-        <FramePanel className="grid gap-5 @lg:grid-cols-2 @4xl:grid-cols-4 @4xl:gap-0 @4xl:divide-x">
-          {condiciones.map((condicion) => (
-            <div key={condicion.etiqueta} className="flex min-w-0 items-start gap-3 @4xl:px-5 @4xl:first:ps-0 @4xl:last:pe-0">
-              <IconTile variant="soft" size="sm" className="shrink-0">
-                <HugeiconsIcon icon={condicion.icono} aria-hidden="true" />
-              </IconTile>
+        <CabeceraBloque
+          titulo="Condiciones"
+          descripcion="Lo que ofrece y lo que pide de entrada."
+          accion={onEditar ? { etiqueta: 'Editar condiciones', icono: PencilEdit02Icon, onClick: () => onEditar(1, 'condiciones') } : undefined}
+        />
+        <FramePanel className="grid gap-5 @lg:grid-cols-2 @3xl:grid-cols-4 @3xl:gap-0 @3xl:divide-x">
+          {condiciones.map((condicion, indice) => (
+            // Entran una tras otra, de izquierda a derecha.
+            <motion.div key={condicion.etiqueta} {...celda(indice)} className="flex min-w-0 flex-col @3xl:px-5 @3xl:first:ps-0 @3xl:last:pe-0">
               <div className="flex min-w-0 flex-col gap-0.5">
                 <Text as="span" variant="muted" size="sm">
                   {condicion.etiqueta}
@@ -728,25 +787,19 @@ export function PestanaVacante({
                   {condicion.valor}
                 </Text>
                 {condicion.detalle ? (
-                  <span className="flex flex-wrap items-center gap-1.5">
-                    <Text as="span" variant="muted" size="xs">
-                      {condicion.detalle}
-                    </Text>
-                    {/* Quien pide más de lo que paga la vacante: un dato que cambia la conversación, en ámbar. */}
-                    {condicion.aviso ? (
-                      <Badge variant="warning-light" className="tabular-nums">
-                        {condicion.aviso}
-                      </Badge>
-                    ) : null}
-                  </span>
+                  <Text as="span" variant="muted" size="xs">
+                    {condicion.detalle}
+                  </Text>
                 ) : null}
               </div>
-            </div>
+            </motion.div>
           ))}
         </FramePanel>
       </Frame>
+      ) : null}
 
       {/* 2 · El puesto y, debajo, quién lo trabaja. */}
+      {ver('puesto') ? (
       <Frame>
         <CabeceraBloque
           titulo="Sobre el puesto"
@@ -799,157 +852,43 @@ export function PestanaVacante({
           </section>
         </FramePanel>
       </Frame>
+      ) : null}
 
-      {/* 3 · Lo que se pide, y cómo lo cumple la gente según la IA. */}
+      {/* 3 · Lo que se pide: la lista, sin contar quién lo cumple (15 oct). La PM, 13 oct: «la rúbrica que vota la
+          evaluación de CV no es Camila cumple 5 de los 10 requerimientos»; la IA da un puntaje, que va en cada tarjeta. */}
+      {ver('requisitos') ? (
       <Frame>
         <CabeceraBloque
           titulo={vacante.requisitos.length ? `Lo que se pide · ${vacante.requisitos.length} ${vacante.requisitos.length === 1 ? 'requisito' : 'requisitos'}` : 'Lo que se pide'}
-          descripcion={
-            <span className="flex items-center gap-1.5">
-              <IconoIA />
-              La IA mide con ellos a cada persona: cambiarlos cambia el «cumple 2 de 4» de todas.
-            </span>
-          }
+          descripcion={DESCRIPCION_REQUISITOS}
           accion={onEditar ? { etiqueta: 'Editar requisitos', icono: PencilEdit02Icon, onClick: () => onEditar(1, 'requisitos') } : undefined}
         />
         <FramePanel className="flex flex-col divide-y py-0!">
-          {porRequisito.length ? (
-            porRequisito.map(({ requisito, cuenta }, indice) => (
-              <div
-                key={requisito}
-                className="grid items-center gap-x-5 gap-y-2 py-4 @2xl:grid-cols-[1.5rem_minmax(0,1fr)_minmax(10rem,16rem)_8rem]"
-              >
-                <Text as="span" variant="muted" size="sm" className="tabular-nums max-@2xl:hidden">
+          {vacante.requisitos.length ? (
+            vacante.requisitos.map((requisito, indice) => (
+              <div key={requisito} className="flex items-baseline gap-4 py-3.5">
+                <Text as="span" variant="muted" size="sm" className="w-4 shrink-0 tabular-nums">
                   {indice + 1}
                 </Text>
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <Text as="span" weight="medium">
-                    {requisito}
-                  </Text>
-                  {indice === dificil ? (
-                    <Badge variant="warning-light">
-                      El que menos se cumple
-                    </Badge>
-                  ) : n && cuenta.cumple === n ? (
-                    <Badge variant="success-light">
-                      Lo cumplen todos
-                    </Badge>
-                  ) : null}
-                </div>
-                {n ? (
-                  <div aria-hidden="true">
-                    <BarraSegmentada
-                      segmentos={VEREDICTOS.filter(({ id }) => cuenta[id]).map(({ id, nombre, color }) => ({
-                        id,
-                        etiqueta: nombre,
-                        valor: cuenta[id],
-                        color,
-                      }))}
-                    />
-                  </div>
-                ) : (
-                  <Text as="span" variant="muted" size="sm">
-                    Sin gente para medir
-                  </Text>
-                )}
-                {n ? (
-                  <div className="flex items-baseline gap-1.5 whitespace-nowrap @2xl:justify-end">
-                    <Text as="span" weight="semibold" className="tabular-nums">
-                      {cuenta.cumple} de {n}
-                    </Text>
-                    <Text as="span" variant="muted" size="xs">
-                      {cuenta.cumple === 1 ? 'cumple' : 'cumplen'}
-                    </Text>
-                  </div>
-                ) : null}
+                <Text as="span" weight="medium">
+                  {requisito}
+                </Text>
               </div>
             ))
           ) : (
-            // No todas las vacantes los tienen (29 sep, reunión con Elkin: es un caso de uso más, no un error).
+            // No todas las vacantes los tienen (29 sep, reunión con Elkin: es un caso de uso más, no un error). Con su
+            // ilustración glass, como todo estado vacío (Cristian, 9 oct).
             <PrimeraVez
               className="py-8"
               icono="glass-paper-plus"
               titulo="Esta vacante no tiene requisitos"
-              descripcion="Sin ellos la IA no puede decir cuánto se ajusta cada persona a la vacante."
+              descripcion="Sin ellos la IA no tiene con qué darle un puntaje a cada CV."
               accion={onEditar ? { texto: 'Agregar requisitos', icono: PlusSignIcon, onClick: () => onEditar(1, 'requisitos') } : undefined}
             />
           )}
-          {/* Qué quiere decir cada color y sobre cuánta gente se mide, como pie del mismo bloque. */}
-          {n && porRequisito.length ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <TrafficLight
-                data={{
-                  label: 'Qué quiere decir cada color',
-                  items: VEREDICTOS.map(({ nombre, color }) => ({ label: nombre, value: '', color })),
-                }}
-              />
-              <Text as="span" variant="muted" size="sm">
-                Sobre {personasEn(n)} en proceso
-              </Text>
-            </div>
-          ) : null}
         </FramePanel>
       </Frame>
-
-      {/* 4 · El proceso: las etapas en fila, con cuánta gente hay en cada una. */}
-      <Frame>
-        <CabeceraBloque
-          titulo={`El proceso · ${vacante.etapas.length} etapas`}
-          descripcion="Las etapas propias de esta vacante, en el orden en que las recorre cada persona."
-          accion={onEditar ? { etiqueta: 'Cambiar las etapas', icono: Settings01Icon, onClick: () => onEditar(2, 'etapas') } : undefined}
-        />
-        <FilaEtapas cuantas={vacante.etapas.length}>
-          {vacante.etapas.map((etapa, indice) => (
-            <div key={etapa.id} className={CELDA_ETAPA}>
-              <div className="flex min-w-0 items-start gap-1.5">
-                <Text as="span" variant="muted" size="sm" className="tabular-nums">
-                  {indice + 1}
-                </Text>
-                {/* Las etapas que hace la IA llevan su icono. */}
-                {etapa.ia ? (
-                  <span className="flex h-5 shrink-0 items-center">
-                    <IconoIA />
-                  </span>
-                ) : null}
-                <Text as="span" size="sm" weight="medium" className="line-clamp-2" title={etapa.titulo}>
-                  {etapa.titulo}
-                </Text>
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <Text as="span" size="xl" weight="semibold" className="tabular-nums">
-                  {enEtapa[indice]}
-                </Text>
-                <Text as="span" variant="muted" size="xs">
-                  {enEtapa[indice] === 1 ? 'persona' : 'personas'}
-                </Text>
-              </div>
-              {/* Qué parte de la gente en proceso está en esta etapa: el embudo, leído de izquierda a derecha. */}
-              <Progress
-                value={n ? (enEtapa[indice] / n) * 100 : 0}
-                aria-label={`${enEtapa[indice]} de ${n} personas en ${etapa.titulo}`}
-              />
-              <Text as="p" variant="muted" size="xs" className="line-clamp-2">
-                {etapa.descripcion}
-              </Text>
-              {/* Lo que distingue a la etapa, solo cuando aplica: dónde se acumula la gente y cuál es propia. */}
-              {indice === acumula || etapa.origen === 'propia' ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {indice === acumula ? (
-                    <Badge variant="secondary">
-                      Aquí se acumula
-                    </Badge>
-                  ) : null}
-                  {etapa.origen === 'propia' ? (
-                    <Badge variant="outline">
-                      Propia de esta vacante
-                    </Badge>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </FilaEtapas>
-      </Frame>
+      ) : null}
     </div>
   )
 }
@@ -962,10 +901,8 @@ const vistosPorAgente = new Set<string>()
 // Los filtros puestos, dichos en palabras para el agente: «esperan respuesta · LinkedIn».
 const textoDeFiltros = (filtros: Tablero['filtros']) =>
   [
-    filtros.soloEspera ? 'esperan respuesta' : null,
-    filtros.soloExEmpleados ? 'ex empleados' : null,
+    filtros.vista === 'espera' ? 'esperando acción' : filtros.vista === 'proceso' ? 'en proceso' : null,
     filtros.lote ? `lote ${filtros.lote.nombre}` : null,
-    filtros.minCumple !== null ? `cumplen ${filtros.minCumple} o más` : null,
     filtros.busqueda ? `«${filtros.busqueda}»` : null,
   ]
     .filter(Boolean)
@@ -993,12 +930,11 @@ const PASO_DE: Record<SeccionVacante, 1 | 2 | 3> = { condiciones: 1, requisitos:
 //
 // Llega con:
 // - `?persona=<candidatura>`: abre el tablero con la ficha de esa persona (desde el inicio, «Lo que necesita tu
-//   atención»). `?pestana=vacante|cvs` abre esa pestaña.
+//   atención»). `?pestana=vacante|cvs|actividad` trae esa parte de la página a la vista.
 // - `state.publicada`: se acaba de publicar desde la creación; avisa y abre «Compartir», con el enlace.
 type PropsVacante = {
   ruta: string
   seccion?: string
-  extraPestanas?: (vacante: VacanteUI) => ReactNode
 }
 
 // Un enlace viejo, una notificación o una vacante recién eliminada: si la vacante no existe, se dice, en vez de abrir
@@ -1024,8 +960,8 @@ function VacanteQueNoExiste({ ruta, seccion = 'Vacantes' }: { ruta: string; secc
           <FramePanel>
             <Empty className="py-12">
               <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <HugeiconsIcon icon={FolderRemoveIcon} size={22} />
+                <EmptyMedia variant="default">
+                  <ImagenGlass nombre="glass-folder" />
                 </EmptyMedia>
                 <EmptyTitle>Esta vacante no existe o fue eliminada</EmptyTitle>
                 <EmptyDescription>
@@ -1043,7 +979,7 @@ function VacanteQueNoExiste({ ruta, seccion = 'Vacantes' }: { ruta: string; secc
   )
 }
 
-function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante & { guardada: VacanteUI }) {
+function VacanteAbierta({ ruta, seccion, guardada }: PropsVacante & { guardada: VacanteUI }) {
   const navigate = useNavigate()
   const location = useLocation()
   // La vacante se lleva en estado: desde la cabecera se publica, se esconde del portal y se elimina.
@@ -1080,10 +1016,16 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
   const tablero = useTablero(vacante, proceso)
   const { dentro } = proceso
 
-  const [pestana, setPestana] = useState<Pestana>('candidatos')
   const [abiertaId, setAbiertaId] = useState<string | null>(null)
   const [marcadas, setMarcadas] = useState<string[]>([])
-  const [agregando, setAgregando] = useState<string | null>(null)
+  // Los candidatos en tablero (por etapa) o en lista (la tabla del sistema), como «Tablero con vistas» de Cristian (16 oct).
+  const [modo, setModo] = useState<'tablero' | 'lista'>('tablero')
+  const cambiarModo = (nuevo: 'tablero' | 'lista') => {
+    // Cada vista trae su buscador y su forma de elegir: al cambiar, se empieza sin búsqueda ni elegidas.
+    setMarcadas([])
+    tablero.cambiar({ busqueda: '' })
+    setModo(nuevo)
+  }
 
   // Lo que pide la dirección se atiende en el render (como los lotes de `useImportaciones`) y la dirección se limpia
   // después, para que «atrás» o recargar no vuelvan a abrir lo mismo.
@@ -1094,15 +1036,14 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
   const pedido = personaPedida || pestanaPedida ? `${personaPedida ?? ''}|${pestanaPedida ?? ''}` : null
   if (pedido !== pedidoAtendido) {
     setPedidoAtendido(pedido)
-    if (personaPedida) {
-      setPestana('candidatos')
-      setAbiertaId(personaPedida)
-    } else if (pestanaPedida === 'vacante' || pestanaPedida === 'cvs') setPestana(pestanaPedida)
+    if (personaPedida) setAbiertaId(personaPedida)
   }
-  // La pestaña pedida se atiende una vez y sale de la dirección. La ficha abierta, en cambio, queda en la dirección
-  // (`?persona=`): se puede copiar el enlace para un colega, y recargar o volver la deja abierta (CA-20).
+  // La parte pedida (`?pestana=vacante|cvs|actividad`, de cuando eran pestañas) se trae a la vista una vez y sale de la
+  // dirección. La ficha abierta, en cambio, queda en la dirección (`?persona=`): se puede copiar el enlace para un colega,
+  // y recargar o volver la deja abierta (CA-20).
   useEffect(() => {
     if (!pestanaPedida) return
+    if (pestanaPedida === 'vacante' || pestanaPedida === 'cvs' || pestanaPedida === 'actividad') irASeccion(SECCION[pestanaPedida])
     setParametros(
       (antes) => {
         const siguientes = new URLSearchParams(antes)
@@ -1125,16 +1066,20 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
     if (!recienPublicada || avisoPublicada.current) return
     avisoPublicada.current = true
     setCompartiendo(true)
-    const detalle = invitaciones
-      ? `${invitaciones.personas === 1 ? 'A quien agregaste le llega' : `A las ${invitaciones.personas} que agregaste les llega`} la invitación a «${invitaciones.etapa}».`
-      : 'Comparte el enlace para empezar.'
-    notify(`Publicamos «${vacante.titulo}»`, detalle, 'success')
+    notify(
+      `Publicamos «${vacante.titulo}»`,
+      invitaciones
+        ? `${invitaciones.personas === 1 ? 'A quien agregaste le llega' : `A las ${invitaciones.personas} que agregaste les llega`} la invitación a «${invitaciones.etapa}».`
+        : 'Comparte el enlace para empezar.',
+      'success',
+    )
     navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
   }, [recienPublicada, invitaciones, vacante.titulo, navigate, location.pathname, location.search])
 
   // Editar = la creación por pasos de Elkin, abierta en el paso que toca; al guardar vuelve aquí (contrato con la
   // creación: `state.paso` y `state.volverA`).
   const editar = (paso: 1 | 2 | 3 = 1) => navigate(RUTA_EDITAR(vacante.id), { state: { paso, volverA: location.pathname } })
+  const editarSeccion = (_: number, seccionVacante: SeccionVacante) => editar(PASO_DE[seccionVacante])
 
   // El agente de la vacante («Gestionar vacante con IA»), a la derecha y debajo del header: se abre con «Orbit Flow» y
   // la página se angosta; el header no se mueve.
@@ -1154,10 +1099,7 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
     return () => setRightPanelOpen(false)
   }, [agente])
 
-  const abrirFicha = (candidaturaId: string) => {
-    setPestana('candidatos')
-    setAbiertaId(candidaturaId)
-  }
+  const abrirFicha = (candidaturaId: string) => setAbiertaId(candidaturaId)
 
   // Importar hojas de vida: la lectura sigue aunque se cambie de pestaña o se salga de la vacante. Quien entra cae en
   // la primera columna del tablero, marcada como nueva. La pestaña de lotes es solo el registro de las cargas (29 sep,
@@ -1172,7 +1114,7 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
       const lote = importaciones.lotes.find((uno) => uno.id === loteId)
       tablero.verLote({ id: loteId, nombre: lote?.nombre ?? 'importado' })
       setMarcadas([])
-      setPestana('candidatos')
+      irASeccion(SECCION.tablero)
     },
     dondeVerEntraron: 'el tablero',
     onAbrirFicha: abrirFicha,
@@ -1180,7 +1122,7 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
       const rechazada = proceso.rechazadaDe(candidaturaId)
       if (rechazada) proceso.reconsiderar(rechazada)
     },
-    onIrALotes: () => setPestana('cvs'),
+    onIrALotes: () => irASeccion(SECCION.cvs),
   })
 
   const fuera = useMemo(() => proceso.rechazadas.map((r) => r.candidatura), [proceso.rechazadas])
@@ -1217,6 +1159,13 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
     return [...fijos, ...tablero.enOrden.filter((c) => !ordenFicha.includes(c.id))]
   }, [ordenFicha, tablero.enOrden])
   const indiceAbierta = recorrido.findIndex((c) => c.id === abiertaId)
+  // Hacia dónde se pasó de ficha: con «Siguiente» la nueva entra desde la derecha; con «Anterior», desde la izquierda; al
+  // abrir una desde el tablero, sube en su sitio. Se ajusta durante el render, como la vacante mirada.
+  const [paseFicha, setPaseFicha] = useState<{ id: string | null; indice: number; direccion: number }>({ id: null, indice: -1, direccion: 0 })
+  if (paseFicha.id !== abiertaId) {
+    const venia = paseFicha.id !== null && paseFicha.indice >= 0 && indiceAbierta >= 0
+    setPaseFicha({ id: abiertaId, indice: indiceAbierta, direccion: venia ? Math.sign(indiceAbierta - paseFicha.indice) : 0 })
+  }
   // Solo cuenta lo marcado que se ve: si un filtro o la búsqueda esconde a alguien marcado, deja de estar marcado y
   // ninguna acción cae sobre quien no está a la vista (VA-15).
   const visiblesIds = useMemo(() => new Set(recorrido.map((c) => c.id)), [recorrido])
@@ -1236,16 +1185,6 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
       setMarcadas((actuales) => actuales.filter((id) => !ids.includes(id)))
     })
 
-  const pestanas = (
-    <BarraPestanas
-      pestana={pestana}
-      onPestana={setPestana}
-      candidatos={dentro.length}
-      lotes={importaciones.lotes.length}
-      tableroPrimero
-      extra={extraPestanas?.(vacante)}
-    />
-  )
   // Mover, rechazar o reabrir pedidos desde la ficha se abren dentro de ella, como drawer anidado; desde el tablero o el
   // agente, en la ventana de siempre (8 oct, Nicolás: desde un panel no se abre una ventana encima).
   const ventanasEnFicha = useVentanasEnPanel(proceso.ocupado, abierta !== null)
@@ -1253,6 +1192,8 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
   const etapaAbierta = abierta ? vacante.etapas.find((etapa) => etapa.id === abierta.etapa) : undefined
 
   return (
+    // Con «reducir movimiento» en el sistema, las animaciones de Selección se quedan quietas.
+    <MotionConfig reducedMotion="user">
     <PageShell>
       <CabeceraVacante
         ruta={ruta}
@@ -1268,40 +1209,126 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
         extra={agente ? null : <ReopenAgentButton compact pending={urgente} onClick={abrirAgente} />}
       />
 
-      <PageContent className="min-h-0 gap-4">
-        {/* El tablero de la vacante, lo primero que se ve al abrirla: corta en diez por columna y abre el resto ahí
-            mismo; la tarjeta abre la ficha en el panel lateral. Una sola pieza: pestañas, filtros, columnas y pie. */}
-        {pestana === 'candidatos' ? (
-          <TableroAmpliable vacante={vacante} ampliado={ampliado} onReducir={() => setAmpliado(false)}>
-          <MarcoTablero ampliado={ampliado}>
-            {ampliado ? null : (
-              <>
-                {pestanas}
-                <Separator />
-              </>
-            )}
-            {/* Cerrada, el tablero queda de consulta: nadie cambia de etapa hasta reabrirla. */}
-            <AvisoVacanteCerrada
-              vacante={vacante}
-              onReabrir={proceso.bloqueo?.onReabrir}
-              siguen={dentro.filter((c) => c.etapa !== vacante.etapas[vacante.etapas.length - 1]?.id).length}
-              onRechazarQuienesSiguen={() => rechazar(dentro.filter((c) => c.etapa !== vacante.etapas[vacante.etapas.length - 1]?.id))}
-            />
-            {/* Con «Solo ver» (o sin estar en el equipo): se dice arriba del tablero, una vez, y a quién pedir acceso. */}
-            {vacante.estado !== 'Cerrada' && proceso.bloqueo ? (
-              <div className="px-5 pt-4">
+      <PageContent className="min-h-0 gap-6">
+        {/* 1 · Lo que ofrece la vacante, en una franja de cuatro cifras: arriba y afuera del tablero, como lo pidió Javi
+            (13 oct: «arriba sí dejas la vacante, porque es la información de la vacante»). */}
+        <Revelar id={SECCION.vacante} className="scroll-mt-4">
+          <LaVacante vacante={vacante} dentro={dentro} onEditar={editarSeccion} secciones={['condiciones']} />
+        </Revelar>
+
+        {/* 2 · Los candidatos, en tablero o en lista (16 oct, Nicolás: sí al cambio Lista/Tablero de «Tablero con vistas» de
+            Cristian). Arriba, para las dos, el título, las vistas (todos, esperando acción, en proceso) y el cambio, como
+            en ese patrón y como pide la tabla del sistema (el título va fuera de su marco). Debajo, el tablero —corta en
+            diez por columna y abre el resto ahí mismo— o la tabla. Las dos abren la ficha en el panel lateral. */}
+        <Revelar id={SECCION.tablero} orden={1} className="scroll-mt-4">
+          <PageSection
+            title="Candidatos"
+            description="Quién va en cada etapa del proceso."
+            actions={
+              dentro.length || proceso.rechazadas.length ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <VistasTablero proceso={proceso} tablero={tablero} />
+                  <ToggleGroup
+                    aria-label="Cambio de vista"
+                    value={[modo]}
+                    onValueChange={(valor) => valor.length && cambiarModo(valor[0] as 'tablero' | 'lista')}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <ToggleGroupItem value="lista" aria-label="Lista" className="gap-1.5 px-3">
+                      <HugeiconsIcon icon={ListViewIcon} size={16} />
+                      Lista
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="tablero" aria-label="Tablero" className="gap-1.5 px-3">
+                      <HugeiconsIcon icon={KanbanIcon} size={16} />
+                      Tablero
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+              ) : null
+            }
+          >
+          {/* Cambiar de vista funde una en la otra: la de antes sube y se va, la nueva llega desde abajo. */}
+          <Fundido clave={modo === 'lista' && !ampliado ? 'lista' : 'tablero'}>
+          {modo === 'lista' && !ampliado ? (
+            <div className="flex flex-col gap-3">
+              <AvisoVacanteCerrada
+                vacante={vacante}
+                sinMargen
+                onReabrir={proceso.bloqueo?.onReabrir}
+                siguen={dentro.filter((c) => c.etapa !== vacante.etapas[vacante.etapas.length - 1]?.id).length}
+                onRechazarQuienesSiguen={() => rechazar(dentro.filter((c) => c.etapa !== vacante.etapas[vacante.etapas.length - 1]?.id))}
+              />
+              {vacante.estado !== 'Cerrada' && proceso.bloqueo ? (
                 <Alert>
                   <HugeiconsIcon icon={ViewIcon} size={16} />
                   <AlertTitle>{proceso.bloqueo.titulo}</AlertTitle>
                   <AlertDescription>{proceso.bloqueo.texto}</AlertDescription>
                 </Alert>
-              </div>
-            ) : null}
+              ) : null}
+              <ListaCandidatos
+                vacante={vacante}
+                proceso={proceso}
+                tablero={tablero}
+                abiertaId={abiertaId}
+                onAbrir={(candidatura) => setAbiertaId(candidatura.id)}
+                onImportar={() => importaciones.abrir()}
+              />
+            </div>
+          ) : (
+          <TableroAmpliable vacante={vacante} ampliado={ampliado} onReducir={() => setAmpliado(false)}>
+          <MarcoTablero
+            ampliado={ampliado}
+            conteo={
+              tablero.enOrden.length === dentro.length
+                ? `${dentro.length} ${dentro.length === 1 ? 'persona' : 'personas'}`
+                : `${tablero.enOrden.length} de ${dentro.length} personas`
+            }
+            avisos={
+              <>
+                {/* Cerrada, el tablero queda de consulta: nadie cambia de etapa hasta reabrirla. */}
+                <AvisoVacanteCerrada
+                  vacante={vacante}
+                  onReabrir={proceso.bloqueo?.onReabrir}
+                  siguen={dentro.filter((c) => c.etapa !== vacante.etapas[vacante.etapas.length - 1]?.id).length}
+                  onRechazarQuienesSiguen={() => rechazar(dentro.filter((c) => c.etapa !== vacante.etapas[vacante.etapas.length - 1]?.id))}
+                />
+                {/* Con «Solo ver» (o sin estar en el equipo): se dice arriba del tablero, una vez, y a quién pedir acceso. */}
+                {vacante.estado !== 'Cerrada' && proceso.bloqueo ? (
+                  <div className="px-5 pt-4">
+                    <Alert>
+                      <HugeiconsIcon icon={ViewIcon} size={16} />
+                      <AlertTitle>{proceso.bloqueo.titulo}</AlertTitle>
+                      <AlertDescription>{proceso.bloqueo.texto}</AlertDescription>
+                    </Alert>
+                  </div>
+                ) : null}
+              </>
+            }
+            // Actuar sobre varias: sube con resorte al elegir a la primera y baja al soltar a la última.
+            flotante={
+              <AnimatePresence>
+                {marcadas.length ? (
+                  <BarraEnLote
+                    key="en-lote"
+                    vacante={vacante}
+                    marcadas={marcadasCompletas}
+                    onLimpiar={() => setMarcadas([])}
+                    onMover={moverVarias}
+                    onElegirEtapa={elegirVarias}
+                    onRechazar={rechazar}
+                    bloqueo={proceso.bloqueo}
+                  />
+                ) : null}
+              </AnimatePresence>
+            }
+            barra={
             <BarraTablero
-              vacante={vacante}
               proceso={proceso}
               tablero={tablero}
-              onAgregar={permisoEn(vacante).trabaja ? () => setAgregando(primeraEtapaDe(vacante.etapas)) : undefined}
+              enMarco={!ampliado}
+              // En la página las vistas van arriba del marco, con el cambio Lista/Tablero; a pantalla completa, aquí.
+              vistas={ampliado}
               inicio={
                 ampliado ? (
                   // En el teléfono los filtros bajan a otras filas: la X se queda arriba, junto al nombre.
@@ -1320,7 +1347,8 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
               }
               fin={ampliado ? <span className="hidden sm:flex">{cerrarAmpliado}</span> : undefined}
             />
-            <Separator />
+            }
+          >
             <div className={cn('relative', ampliado ? 'min-h-0 flex-1' : 'min-h-[24rem] lg:h-[calc(100svh-24rem)]')}>
               <TableroColumnas
                 ampliado={ampliado}
@@ -1331,10 +1359,6 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
                 onMarcadas={setMarcadas}
                 abiertaId={abiertaId}
                 onAbrir={(candidatura) => setAbiertaId(candidatura.id)}
-                onAgregar={(etapa) => {
-                  if (proceso.bloqueo) return
-                  setAgregando(etapa ?? primeraEtapaDe(vacante.etapas))
-                }}
                 onImportar={() => importaciones.abrir()}
                 onEditarEtapas={() => editar(3)}
                 tope={{ cuantos: TOPE_TABLERO, etiqueta: (resto) => `Ver ${resto} más` }}
@@ -1342,55 +1366,41 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
               {/* «Ampliar» flota en la esquina del propio tablero, como el control de pantalla completa de un mapa o de
                   Figma (8 oct, Nicolás: en la barra de filtros no se asociaba al kanban). Con tarjetas marcadas se
                   esconde: abajo va la barra de acciones en lote. */}
-              {marcadas.length || !dentro.length || ampliado ? null : (
-                <Button variant="outline" size="sm" className="absolute right-5 bottom-5 z-10 shadow-md" onClick={() => setAmpliado(true)}>
-                  <HugeiconsIcon icon={FullScreenIcon} size={16} aria-hidden="true" />
-                  Ampliar tablero
-                </Button>
-              )}
+              <AnimatePresence>
+                {marcadas.length || !dentro.length || ampliado ? null : (
+                  <motion.div key="ampliar" {...POP} className="absolute right-5 bottom-5 z-10">
+                    <Button variant="outline" size="sm" className="shadow-md" onClick={() => setAmpliado(true)}>
+                      <HugeiconsIcon icon={FullScreenIcon} size={16} aria-hidden="true" />
+                      Ampliar tablero
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             {dentro.length || proceso.rechazadas.length ? <PieTablero vacante={vacante} /> : null}
-            {/* Actuar sobre varias: flota dentro de esta tarjeta, sobre el tablero. */}
-            {marcadas.length ? (
-              <BarraEnLote
-                vacante={vacante}
-                marcadas={marcadasCompletas}
-                onLimpiar={() => setMarcadas([])}
-                onMover={moverVarias}
-                onElegirEtapa={elegirVarias}
-                onRechazar={rechazar}
-                bloqueo={proceso.bloqueo}
-              />
-            ) : null}
           </MarcoTablero>
           </TableroAmpliable>
-        ) : null}
+          )}
+          </Fundido>
+          </PageSection>
+        </Revelar>
 
-        {pestana === 'vacante' ? (
-          <Card className="gap-0! overflow-hidden py-0!">
-            {pestanas}
-            <Separator />
-            <PestanaVacante vacante={vacante} dentro={dentro} onEditar={(_, seccionVacante) => editar(PASO_DE[seccionVacante])} />
-          </Card>
-        ) : null}
+        {/* 3 · Lo que pide la vacante y el puesto y, al lado, lo que pasó en ella. La actividad se queda a la vista mientras
+            se baja. «El proceso» (el embudo) ya no va aquí: Javi, 13 oct, «se ve muy confuso… en los AI Insights». */}
+        <Revelar className="grid gap-6 lg:grid-cols-3">
+          <div className="flex min-w-0 flex-col gap-5 lg:col-span-2">
+            <LaVacante vacante={vacante} dentro={dentro} onEditar={editarSeccion} secciones={['requisitos']} />
+            <LaVacante vacante={vacante} dentro={dentro} onEditar={editarSeccion} secciones={['puesto']} />
+          </div>
+          <div id={SECCION.actividad} className="relative min-w-0 scroll-mt-4 lg:min-h-96">
+            <ActividadVacante vacante={vacante} dentro={dentro} rechazadas={proceso.rechazadas} onAbrir={abrirFicha} />
+          </div>
+        </Revelar>
 
-        {/* Todo lo que pasó en la vacante, de lo más nuevo a lo más viejo: quién, qué y con quién (VA-35). */}
-        {pestana === 'actividad' ? (
-          <Card className="gap-0! overflow-hidden py-0!">
-            {pestanas}
-            <Separator />
-            <ActividadVacante vacante={vacante} personas={[...dentro, ...fuera]} />
-          </Card>
-        ) : null}
-
-        {/* El registro de lo que se cargó: cuándo, qué archivo, cómo quedó y cuántas hojas de vida traía. */}
-        {pestana === 'cvs' ? (
-          <Card className="gap-0! overflow-hidden py-0!">
-            {pestanas}
-            <Separator />
-            <PestanaCvs importaciones={importaciones} vacante={vacante} />
-          </Card>
-        ) : null}
+        {/* 4 · El registro de lo que se cargó: cuándo, qué archivo, cómo quedó y cuántas hojas de vida traía. */}
+        <Revelar id={SECCION.cvs} className="scroll-mt-4">
+          <PestanaCvs importaciones={importaciones} vacante={vacante} />
+        </Revelar>
       </PageContent>
 
       {/* La ficha, en panel lateral: se trabaja una persona sin perder el tablero y se pasa a la siguiente. Abre en la
@@ -1410,8 +1420,15 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
         size="lg"
         // En el celular, todo el ancho menos el margen: antes ocupaba tres cuartos (CA-33). Desde 640 px manda `size`.
         style={ANCHO_EN_CELULAR}
-        title="Candidatura"
-        description={vacante.titulo}
+        // Quién es: la cara, el nombre y dónde vive (13 oct, PM: sin «Candidatura» ni la vacante, que ya se sabe).
+        media={abierta ? <CaraCandidato nombre={abierta.candidato.nombre} /> : undefined}
+        title={abierta?.candidato.nombre ?? ''}
+        description={abierta ? ubicacionDe(abierta.candidato.ciudad) : undefined}
+        badge={
+          rechazadaAbierta ? (
+            <Badge variant="destructive-outline">{quienDe(rechazadaAbierta) === 'candidato' ? 'Se retiró' : 'Rechazada'}</Badge>
+          ) : undefined
+        }
         headerExtra={
           indiceAbierta >= 0 ? (
             <NavegacionPanel
@@ -1429,6 +1446,7 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
         {abierta ? (
           // La ficha trae su propio aire y su pie fijo: se anula el relleno del cuerpo del panel (solo posición).
           <div className="-mx-5 -my-4 h-[calc(100%+2rem)]">
+            <Deslizar clave={abierta.id} direccion={paseFicha.direccion} className="h-full">
             <FichaPersona
               key={abierta.id}
               candidatura={abierta}
@@ -1437,6 +1455,8 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
               // Su otra candidatura, en la otra vacante, con la ficha abierta (CA-08).
               onIrA={(id) => navigate(`${RUTA}/${id.slice(id.lastIndexOf('@') + 1)}?persona=${encodeURIComponent(id)}`)}
               onElegirEtapa={() => proceso.elegirEtapa([abierta])}
+              // Si entró a una etapa con IA sin invitación, se la envía desde su ficha (13 oct, PM).
+              onInvitar={permisoEn(vacante).trabaja && !proceso.bloqueo ? () => proceso.pedirInvitacion(abierta) : undefined}
               bloqueo={proceso.bloqueo}
               rechazada={rechazadaAbierta}
               onReconsiderar={rechazadaAbierta ? () => proceso.reconsiderar(rechazadaAbierta) : undefined}
@@ -1446,33 +1466,23 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
                 if (destino) moverA(abierta, destino)
               }}
               onRechazar={() => rechazar([abierta])}
+              // Se cierra la ficha antes: si no, la dirección pediría a alguien que ya no está.
+              onQuitar={
+                permisoEn(vacante).trabaja && !rechazadaAbierta
+                  ? () => {
+                      setAbiertaId(null)
+                      proceso.quitar(abierta)
+                    }
+                  : undefined
+              }
             />
+            </Deslizar>
           </div>
         ) : null}
         {ventanasEnFicha ? proceso.dialogos : null}
       </DrawerShell>
 
       {importaciones.dialogos}
-      <AgregarCandidatos
-        abierto={agregando !== null}
-        onOpenChange={(abiertoAhora) => !abiertoAhora && setAgregando(null)}
-        vacante={vacante}
-        etapaInicial={agregando ?? primeraEtapaDe(vacante.etapas)}
-        yaEstan={new Set([...dentro, ...fuera].map((c) => c.personaId))}
-        rechazadas={
-          new Map(
-            fuera.map((c) => [
-              c.personaId,
-              () => {
-                const rechazada = proceso.rechazadaDe(c.id)
-                if (rechazada) proceso.reconsiderar(rechazada)
-              },
-            ]),
-          )
-        }
-        onAgregar={(nuevas) => proceso.agregar(nuevas, 'Nadie recibe correo.')}
-        onImportar={() => importaciones.abrir()}
-      />
       {ventanasEnFicha ? null : proceso.dialogos}
 
       {/* Montado siempre: `AgentDock` lo deja entrar y salir deslizándose en vez de aparecer y desaparecer de golpe. */}
@@ -1503,18 +1513,16 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
                 }
                 onReconsiderar={(rechazada) => proceso.reconsiderar(rechazada)}
                 onAgregar={(nuevas) => proceso.agregar(nuevas, 'Nadie recibe correo.')}
-                // Lo que el agente sabe de la pantalla (OF-36 a OF-40): lo marcado, los filtros, la pestaña y el permiso.
+                // Lo que el agente sabe de la pantalla (OF-36 a OF-40): lo marcado, los filtros y el permiso.
                 marcadas={marcadasCompletas}
                 filtradas={tablero.activos ? { ids: tablero.enOrden.map((c) => c.id), texto: textoDeFiltros(tablero.filtros) } : null}
-                pestana={pestana}
                 puede={{ cambiar: permisoAgente.trabaja, porque: permisoAgente.porque, pedirA: permisoAgente.duena?.nombre ?? 'la dueña del proceso', salarios: permisoAgente.trabaja }}
                 lotes={importaciones.lotes}
                 onFiltrar={(filtro) => {
-                  setPestana('candidatos')
                   tablero.cambiar(filtro)
+                  irASeccion(SECCION.tablero)
                 }}
                 onVerEtapa={(etapa) => {
-                  setPestana('candidatos')
                   window.setTimeout(() => document.querySelector(`[data-etapa="${etapa}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }), 60)
                 }}
                 onImportar={() => importaciones.abrir()}
@@ -1527,6 +1535,7 @@ function VacanteAbierta({ ruta, seccion, extraPestanas, guardada }: PropsVacante
           )
         : null}
     </PageShell>
+    </MotionConfig>
   )
 }
 

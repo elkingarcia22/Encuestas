@@ -162,11 +162,11 @@ export function Component() {
           description="El degradado de Orbit, de azul a morado y fucsia. No es un color del tema: vive como imagen y como estilo del marco."
         />
         <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <Demo title="Degradado de IA" description="Tarjeta «Crear un curso» del Home y botón «Nueva conversación».">
+          <Demo title="Degradado de IA" description="Tarjeta «Crear un curso» de la plantilla Home operativo y botón «Nueva conversación».">
             {/* Las piezas reales, no una imagen: la imagen del degradado saturado de borde a borde se retiró cuando la
                 tarjeta pasó a «Halo» (18 sep) y aquí seguía mostrándose como si fuera la vigente. */}
             <div className="grid items-center gap-4 sm:grid-cols-[minmax(0,1fr)_auto]">
-              <AiCard title="Crear un curso" description="Genera contenido de aprendizaje apoyado en AI en minutos." action="Crear ahora" onAction={() => {}} />
+              <AiCard title="Crear un curso" description="Genera contenido de aprendizaje apoyado en IA en minutos." action="Crear ahora" onAction={() => {}} />
               <BotonIaUbits />
             </div>
           </Demo>

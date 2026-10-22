@@ -134,7 +134,7 @@ function RailItem({
         size="icon"
         aria-label={label}
         aria-current={active ? 'page' : undefined}
-        onClick={() => notify(`Abre ${label}`)}
+        onClick={() => notify(`Abre ${label}`, undefined, 'info')}
         className={cn(RAIL_BUTTON, active ? RAIL_ACTIVE : cn(RAIL_IDLE, open && RAIL_OPEN))}
       >
         {icon === ICONO_IA ? <Orb className="size-5" /> : <HugeiconsIcon icon={icon} strokeWidth={1.6} className="size-5!" />}
@@ -211,7 +211,7 @@ export function RailSidebar({ c, onChange }: SidebarPartProps) {
                   variant="ghost"
                   size="icon"
                   aria-label="Nueva conversación"
-                  onClick={() => notify('Empieza una conversación nueva')}
+                  onClick={() => notify('Empieza una conversación nueva', undefined, 'info')}
                   className={cn(newChat.button, 'relative z-1 size-10! rounded-full! border-0!')}
                 >
                   <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} className="size-4.5" />

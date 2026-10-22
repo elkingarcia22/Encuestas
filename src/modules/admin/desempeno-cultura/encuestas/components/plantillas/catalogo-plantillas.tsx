@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon, ArrowRight01Icon, CheckListIcon, GridViewIcon, Search01Icon } from '@hugeicons/core-free-icons'
+import { Badge } from '@/shared/components/Badge'
 import {
-  Badge,
   Button,
   FramePanel,
   IconTile,
@@ -15,11 +15,6 @@ import {
   ItemDescription,
   ItemMedia,
   ItemTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Text,
 } from '@ubits/flux-ui'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
@@ -49,7 +44,7 @@ const rutaDe = (plantilla: SurveyDraft) => {
   return estante ? [estante.category, ...estante.path].join(' › ') : 'Plantilla'
 }
 
-// El buscador mira solo el nombre (el corto y el completo), sin tildes ni mayúsculas. La categoría se elige aparte.
+// El buscador mira solo el nombre (el corto y el completo), sin tildes ni mayúsculas. Sin filtro de categorías: el catálogo se recorre entero, por estantes.
 const plegar = (valor: string) =>
   valor
     .normalize('NFD')
@@ -62,10 +57,6 @@ const porNombre = (plantilla: SurveyDraft, busqueda: string) => {
 }
 
 const TODAS = 'todas'
-const opcionesCategoria = [
-  { value: TODAS, label: 'Todas las categorías' },
-  ...TEMPLATE_SHELVES.map((estante) => ({ value: estante.id, label: [estante.category, ...estante.path].join(' › ') })),
-]
 
 const Preguntas = ({ plantilla }: { plantilla: SurveyDraft }) => (
   <Badge variant="secondary" size="xs">
@@ -145,6 +136,8 @@ export function CatalogoPlantillas({
       navigation={
         abierta ? (
           <div className="flex items-center border-b px-3 py-1.5">
+            {/* text-muted-foreground!: el botón sin borde no trae tono gris (ficha button-ghost-tonos en
+                ai-tools/flux-ui/diferencias.json). */}
             <Button variant="ghost" size="sm" className="text-muted-foreground!" onClick={() => setAbierta(null)}>
               <HugeiconsIcon icon={ArrowLeft01Icon} aria-hidden="true" />
               Volver a todas las plantillas
@@ -166,18 +159,6 @@ export function CatalogoPlantillas({
                 aria-label="Buscar plantilla"
               />
             </InputGroup>
-            <Select value={categoria} onValueChange={(valor) => setCategoria(String(valor ?? TODAS))} items={opcionesCategoria}>
-              <SelectTrigger className="w-full sm:w-52 sm:shrink-0"aria-label="Filtrar por categoría">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="w-max min-w-(--anchor-width)">
-                {opcionesCategoria.map((opcion) => (
-                  <SelectItem key={opcion.value} value={opcion.value}>
-                    {opcion.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         )
       }
@@ -216,6 +197,8 @@ export function CatalogoPlantillas({
                 }
                 descripcion={estante.description}
               >
+                {/* py-1!: las filas llevan su aire; al panel no se le cambia el relleno con una clase normal (ficha
+                    frame-panel-relleno-no-se-quita). line-clamp-2! en la descripción: ficha item-descripcion-corta-a-dos-lineas. */}
                 <FramePanel className="py-1!">
                   <FilasSeparadas>
                     {plantillas.map((plantilla) => (
@@ -225,6 +208,7 @@ export function CatalogoPlantillas({
                         </ItemMedia>
                         <ItemContent className="min-w-0">
                           <TextoCompleto texto={getTemplateDisplayName(plantilla)}><ItemTitle className="truncate">{getTemplateDisplayName(plantilla)}</ItemTitle></TextoCompleto>
+                          {/* line-clamp-2!: la descripción corta en dos líneas y TextoCompleto da el resto (ficha item-descripcion-corta-a-dos-lineas). */}
                           <TextoCompleto texto={plantilla.description}><ItemDescription className="line-clamp-2!">{plantilla.description}</ItemDescription></TextoCompleto>
                         </ItemContent>
                         <ItemActions className="gap-3">

@@ -33,7 +33,6 @@ import {
   AlertDescription,
   AlertTitle,
   AspectRatio,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -74,6 +73,7 @@ import {
   TimelineTitle,
   cn,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Confeti } from '@/shared/components/Confeti'
 import { estiloColorLibre } from '../color-libre'
@@ -1105,7 +1105,7 @@ function QuizEditor() {
         onClick={() => cambiar(['questions'], [...preguntas, preguntaNueva()])}
       >
         <HugeiconsIcon icon={Add01Icon} size={16} aria-hidden="true" />
-        Nueva pregunta
+        Agregar pregunta
       </Button>
     </div>
   )

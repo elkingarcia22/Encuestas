@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowRight01Icon, Delete02Icon, FilterIcon, PlusSignIcon, Search01Icon, Tag01Icon } from '@hugeicons/core-free-icons'
+import { ArrowRight01Icon, Delete02Icon, FilterIcon, PlusSignIcon, Search01Icon, Folder01Icon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Checkbox,
@@ -31,15 +31,16 @@ import {
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
 import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import { notifyAction } from '@/shared/components/notify'
 import { plural } from '@/modules/design-system/patrones/formato'
 import type { VacanteUI } from '../../../propuestas/datos'
 import { noSeGuardo } from '../../../propuestas/simular'
 import { crearEtiqueta, eliminarEtiqueta, etiquetaQueYaExiste, etiquetasDeVacantes, guardarEtiqueta, vacantesConEtiqueta, vacantesDeLaSesion } from './acciones'
 import { useEstadoInicio } from './estado'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
-// Las etiquetas de las vacantes (las carpetas del producto), en un panel que sale de la tabla (8 oct, Nicolás: «deben
+// Las carpetas de las vacantes (13 oct, PM: se llaman «Carpetas», como en el producto; por dentro siguen siendo
+// etiquetas y una vacante puede estar en varias), en un panel que sale de la tabla (8 oct, Nicolás: «deben
 // estar afuera de crear una vacante y más atadas a la tabla»; «¿ya tienes la experiencia de cómo crear una etiqueta,
 // cómo asociar una vacante con una etiqueta?»). Aquí se ven todas con cuántas vacantes las llevan, se crea una (sola o
 // ya puesta en algunas), y al abrir una se renombra, se marcan o desmarcan sus vacantes, se ven en la tabla o se
@@ -86,13 +87,13 @@ export function PanelEtiquetas({
       open={abierto}
       onOpenChange={cambiar}
       size="md"
-      icon={Tag01Icon}
-      title="Etiquetas"
-      description="Agrupan las vacantes para encontrarlas en la tabla."
+      icon={Folder01Icon}
+      title="Carpetas"
+      description="Agrupan las vacantes para encontrarlas en la tabla. Una vacante puede estar en varias."
       footer={
         <Button onClick={() => abrirCrear()}>
           <HugeiconsIcon icon={PlusSignIcon} size={16} aria-hidden="true" />
-          Crear etiqueta
+          Crear carpeta
         </Button>
       }
     >
@@ -102,7 +103,7 @@ export function PanelEtiquetas({
             <InputGroupAddon>
               <HugeiconsIcon icon={Search01Icon} size={16} aria-hidden="true" />
             </InputGroupAddon>
-            <InputGroupInput value={busqueda} onChange={(evento) => setBusqueda(evento.target.value)} placeholder="Buscar una etiqueta" aria-label="Buscar una etiqueta" />
+            <InputGroupInput value={busqueda} onChange={(evento) => setBusqueda(evento.target.value)} placeholder="Buscar una carpeta" aria-label="Buscar una carpeta" />
           </InputGroup>
           {visibles.length ? (
             <ItemGroup className="gap-2!">
@@ -116,16 +117,16 @@ export function PanelEtiquetas({
                     render={<button type="button" />}
                     className="w-full text-left hover:bg-accent/50"
                     onClick={() => setAbierta((antes) => ({ etiqueta, abierta: true, vez: antes.vez + 1 }))}
-                    aria-label={`Abrir la etiqueta ${etiqueta}`}
+                    aria-label={`Abrir la carpeta ${etiqueta}`}
                   >
                     <ItemMedia variant="icon">
-                      <HugeiconsIcon icon={Tag01Icon} aria-hidden="true" />
+                      <HugeiconsIcon icon={Folder01Icon} aria-hidden="true" />
                     </ItemMedia>
                     <ItemContent className="min-w-0!">
                       <ItemTitle className="w-full!">
                         <span className="truncate">{etiqueta}</span>
                       </ItemTitle>
-                      <ItemDescription>{n ? `La ${n === 1 ? 'lleva' : 'llevan'} ${cuantas(n)}` : 'Ninguna vacante la lleva'}</ItemDescription>
+                      <ItemDescription>{n ? cuantas(n) : 'Vacía'}</ItemDescription>
                     </ItemContent>
                     <ItemActions>
                       <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-muted-foreground" aria-hidden="true" />
@@ -138,7 +139,7 @@ export function PanelEtiquetas({
             // Lo buscado no existe: se ofrece crearla con ese nombre.
             <div className="flex flex-col items-start gap-2">
               <Text as="p" variant="muted" size="sm">
-                Ninguna etiqueta se llama así.
+                Ninguna carpeta se llama así.
               </Text>
               <Button variant="outline" size="sm" onClick={() => abrirCrear(busqueda.trim())}>
                 <HugeiconsIcon icon={PlusSignIcon} size={16} aria-hidden="true" />
@@ -150,17 +151,16 @@ export function PanelEtiquetas({
       ) : (
         <Empty className="py-10">
           <EmptyHeader>
-            {/* La carpeta «glass» (las etiquetas son las carpetas de las vacantes), no un icono de línea. */}
             <EmptyMedia variant="default">
               <ImagenGlass nombre="glass-folder" />
             </EmptyMedia>
-            <EmptyTitle>Todavía no hay etiquetas</EmptyTitle>
+            <EmptyTitle>Todavía no hay carpetas</EmptyTitle>
             <EmptyDescription>Crea una para agrupar vacantes, como «Temporada fin de año» o «Reemplazos».</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
             <Button onClick={() => abrirCrear()}>
               <HugeiconsIcon icon={PlusSignIcon} size={16} aria-hidden="true" />
-              Crear etiqueta
+              Crear carpeta
             </Button>
           </EmptyContent>
         </Empty>
@@ -209,16 +209,16 @@ function VistaCrear({ abierta, nombreInicial, onAbierta }: { abierta: boolean; n
     <VentanaDeAccion
       open={abierta}
       onOpenChange={onAbierta}
-      title="Crear etiqueta"
+      title="Crear carpeta"
       sub="Agrupa vacantes para encontrarlas en la tabla."
-      note={ids.length ? `La llevarán ${cuantas(ids.length)}.` : 'Puedes ponerla en vacantes ahora o después.'}
-      confirmLabel="Crear etiqueta"
+      note={ids.length ? `Tendrá ${cuantas(ids.length)}.` : 'Puedes meter vacantes ahora o después.'}
+      confirmLabel="Crear carpeta"
       confirmDisabled={!limpio || Boolean(error)}
       pendingLabel="Creando…"
       onConfirm={crear}
     >
       <CampoNombre valor={nombre} onCambiar={setNombre} error={error} />
-      <ElegirVacantes titulo="Ponla en estas vacantes" ayuda="Opcional. Se marca y se desmarca después igual." elegidas={ids} onCambiar={setIds} />
+      <ElegirVacantes titulo="Mete estas vacantes" ayuda="Opcional. Se marcan y se desmarcan después igual." elegidas={ids} onCambiar={setIds} />
     </VentanaDeAccion>
   )
 }
@@ -258,7 +258,7 @@ function VistaEtiqueta({
     const partes = [entran ? `entró en ${cuantas(entran)}` : '', salen ? `salió de ${cuantas(salen)}` : ''].filter(Boolean).join(' y ')
     notifyAction(
       renombrada ? `«${etiqueta}» ahora es «${limpio}»` : `Guardaste «${limpio}»`,
-      partes ? `${partes[0].toUpperCase()}${partes.slice(1)}.` : `Cambia en las ${cuantas(ids.length)} que la llevan.`,
+      partes ? `${partes[0].toUpperCase()}${partes.slice(1)}.` : `Cambia en las ${cuantas(ids.length)} que tiene.`,
       { label: 'Deshacer', onClick: deshacer },
       'success',
     )
@@ -268,7 +268,7 @@ function VistaEtiqueta({
     if (noSeGuardo(`eliminar-etiqueta:${etiqueta}`, `No pudimos eliminar «${etiqueta}»`, eliminar, 'Sigue en sus vacantes.')) return
     const deshacer = eliminarEtiqueta(etiqueta)
     onAbierta(false)
-    notifyAction(`Eliminaste «${etiqueta}»`, llevan.length ? `Salió de ${cuantas(llevan.length)}.` : 'Ninguna vacante la llevaba.', { label: 'Deshacer', onClick: deshacer }, 'success')
+    notifyAction(`Eliminaste «${etiqueta}»`, llevan.length ? `Salió de ${cuantas(llevan.length)}.` : 'Estaba vacía.', { label: 'Deshacer', onClick: deshacer }, 'success')
   }
 
   return (
@@ -276,7 +276,7 @@ function VistaEtiqueta({
       open={abierta}
       onOpenChange={onAbierta}
       title={etiqueta}
-      sub={llevan.length ? `La ${llevan.length === 1 ? 'lleva' : 'llevan'} ${cuantas(llevan.length)}.` : 'Ninguna vacante la lleva todavía.'}
+      sub={llevan.length ? `Tiene ${cuantas(llevan.length)}.` : 'Todavía está vacía.'}
       note={hayCambios && !error ? [renombrada ? 'Cambia de nombre' : '', entran ? `entra en ${entran}` : '', salen ? `sale de ${salen}` : ''].filter(Boolean).join(', ').replace(/^./, (letra) => letra.toUpperCase()) + '.' : undefined}
       confirmLabel="Guardar cambios"
       confirmDisabled={!hayCambios || Boolean(error)}
@@ -298,27 +298,27 @@ function VistaEtiqueta({
         </Button>
       ) : null}
       <CampoNombre valor={nombre} onCambiar={setNombre} error={error} />
-      <ElegirVacantes titulo="Vacantes que la llevan" elegidas={ids} onCambiar={setIds} />
+      <ElegirVacantes titulo="Vacantes en esta carpeta" elegidas={ids} onCambiar={setIds} />
       <Separator />
       <div className="flex flex-col items-start gap-2">
         <Text as="span" size="sm" weight="medium">
-          Eliminar la etiqueta
+          Eliminar la carpeta
         </Text>
         <Text as="p" variant="muted" size="sm">
-          {llevan.length ? `Sale de las ${cuantas(llevan.length)} que la llevan; las vacantes no cambian en nada más.` : 'Ninguna vacante la lleva.'}
+          {llevan.length ? `Las ${cuantas(llevan.length)} que tiene salen de ella y no cambian en nada más.` : 'Está vacía.'}
         </Text>
         <Button variant="destructive" size="sm" onClick={() => setEliminando(true)}>
           <HugeiconsIcon icon={Delete02Icon} size={16} aria-hidden="true" />
-          Eliminar la etiqueta
+          Eliminar la carpeta
         </Button>
       </div>
-      {/* Dentro de la vista: su «←» vuelve a la etiqueta, no a la lista. */}
+      {/* Dentro de la vista: su «←» vuelve a la carpeta, no a la lista. */}
       <DialogoConfirmar
         abierto={eliminando}
         onAbiertoChange={setEliminando}
         icono={Delete02Icon}
         titulo={`¿Eliminar «${etiqueta}»?`}
-        descripcion={llevan.length ? `Sale de las ${cuantas(llevan.length)} que la llevan y deja de estar en «Filtros».` : 'Deja de estar en «Filtros».'}
+        descripcion={llevan.length ? `Las ${cuantas(llevan.length)} que tiene salen de ella y deja de estar en «Filtros».` : 'Deja de estar en «Filtros».'}
         accion="Eliminar"
         destructiva
         enCurso="Eliminando…"
@@ -354,7 +354,7 @@ function ElegirVacantes({ titulo, ayuda, elegidas, onCambiar }: { titulo: string
     return [...todas.filter((vacante) => elegidas.includes(vacante.id)), ...todas.filter((vacante) => !elegidas.includes(vacante.id))]
   })
   const texto = normal(busqueda)
-  const visibles = orden.filter((vacante) => normal(`${vacante.titulo} ${vacante.area} ${vacante.sede}`).includes(texto))
+  const visibles = orden.filter((vacante) => normal(`${vacante.titulo} ${vacante.area}`).includes(texto))
   const alternar = (id: string) => onCambiar(elegidas.includes(id) ? elegidas.filter((otra) => otra !== id) : [...elegidas, id])
 
   return (
@@ -372,7 +372,7 @@ function ElegirVacantes({ titulo, ayuda, elegidas, onCambiar }: { titulo: string
         <InputGroupAddon>
           <HugeiconsIcon icon={Search01Icon} size={16} aria-hidden="true" />
         </InputGroupAddon>
-        <InputGroupInput id="etiqueta-buscar-vacante" value={busqueda} onChange={(evento) => setBusqueda(evento.target.value)} placeholder="Cargo, área o sede" />
+        <InputGroupInput id="etiqueta-buscar-vacante" value={busqueda} onChange={(evento) => setBusqueda(evento.target.value)} placeholder="Cargo o área" />
       </InputGroup>
       {visibles.length ? (
         <ItemGroup className="gap-1!">

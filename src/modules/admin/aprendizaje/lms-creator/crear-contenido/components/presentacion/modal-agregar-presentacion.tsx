@@ -10,7 +10,7 @@ import { leerSesion, limpiarSesionPresentacion, RUTA_EDITOR_PRESENTACION, RUTA_S
 
 // Modal «Agregar presentación interactiva»: la puerta del recurso, igual que la de «Agregar video».
 //
-// Antes, elegir «Presentación interactiva» en «Añadir página» caía directo en el setup, con la idea en blanco. El de
+// Antes, elegir «Presentación interactiva» en «Agregar página» caía directo en el setup, con la idea en blanco. El de
 // video, en cambio, primero ofrece crear uno nuevo **o retomar uno que ya existe**, y una presentación se retoma
 // igual: casi siempre se parte de una que ya se armó (Dave, 5-oct).
 //

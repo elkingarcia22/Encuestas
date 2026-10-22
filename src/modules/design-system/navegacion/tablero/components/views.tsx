@@ -4,7 +4,6 @@ import { MoreHorizontalIcon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarFallback,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -17,6 +16,7 @@ import {
   cn,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { notify } from '@/shared/components/notify'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
@@ -42,9 +42,9 @@ function MenuIngreso({ hire }: { hire: Hire }) {
         <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuItem onClick={() => notify(`Onboarding de ${hire.name}`)}>Ver onboarding</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => notify(`Recordatorio enviado a ${hire.name}`)}>Enviar recordatorio</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => notify('Cambiar responsable')}>Cambiar responsable</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify(`Onboarding de ${hire.name}`, undefined, 'info')}>Ver onboarding</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify(`Recordatorio enviado a ${hire.name}`, undefined, 'success')}>Enviar recordatorio</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify('Cambiar responsable', undefined, 'info')}>Cambiar responsable</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -242,7 +242,7 @@ export function BoardView({ hires, filtrosActivos, onLimpiar }: ViewProps) {
             </div>
             {column.length ? (
               column.map((hire) => (
-                <Card key={hire.id} className="cursor-pointer gap-3 py-3.5" onClick={() => notify(`Onboarding de ${hire.name}`)}>
+                <Card key={hire.id} className="cursor-pointer gap-3 py-3.5" onClick={() => notify(`Onboarding de ${hire.name}`, undefined, 'info')}>
                   <CardContent className="flex flex-col gap-3 px-3.5">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex min-w-0 flex-col gap-1">
@@ -324,7 +324,7 @@ export function CalendarView({ hires }: ViewProps) {
                   variant={hire.risk ? 'destructive-light' : 'primary-light'}
                   render={<button type="button" />}
                   className={cn('h-auto! cursor-pointer justify-start truncate rounded-md! px-1.5! py-1! text-left font-normal!')}
-                  onClick={() => notify(`Onboarding de ${hire.name}`)}
+                  onClick={() => notify(`Onboarding de ${hire.name}`, undefined, 'info')}
                   aria-label={`${hire.name}, ingresa el ${day} sep${hire.risk ? ', en riesgo' : ''}`}
                 >
                   {hire.name}

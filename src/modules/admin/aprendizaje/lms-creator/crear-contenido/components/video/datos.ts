@@ -593,7 +593,7 @@ export function camposVacios(plantilla: PlantillaCanvas): CamposCanvas {
       return { titulo, cuerpo }
     case 'keypoint':
       // `stat` del referente: el número del dato clave arranca en «00%».
-      return { titulo, dato: '00%', afirmacion: cuerpo, cuerpo: EJEMPLO.desc }
+      return { titulo, dato: '00 %', afirmacion: cuerpo, cuerpo: EJEMPLO.desc }
     case 'quote':
       return { cuerpo, autor: EJEMPLO.autor }
     case 'one_column':
@@ -699,19 +699,19 @@ export const CANVAS_CON_IMAGEN = new Set<PlantillaCanvas>(['intro', 'split', 'ke
 export const TRANSICIONES = [
   { id: 'soft-dissolve', label: 'Disolución suave' },
   { id: 'slide-left', label: 'Deslizar izquierda' },
-  { id: 'push-h', label: 'Push horizontal' },
-  { id: 'push-v', label: 'Push vertical' },
+  { id: 'push-h', label: 'Empuje horizontal' },
+  { id: 'push-v', label: 'Empuje vertical' },
   { id: 'wipe-left', label: 'Barrido izquierda' },
   { id: 'wipe-right', label: 'Barrido derecha' },
   { id: 'wipe-down', label: 'Barrido vertical' },
   { id: 'iris-open', label: 'Iris abrir' },
   { id: 'iris-close', label: 'Iris cerrar' },
-  { id: 'zoom-in', label: 'Zoom in' },
-  { id: 'zoom-out', label: 'Zoom out' },
-  { id: 'zoom-blur', label: 'Zoom blur' },
+  { id: 'zoom-in', label: 'Acercar' },
+  { id: 'zoom-out', label: 'Alejar' },
+  { id: 'zoom-blur', label: 'Acercar con desenfoque' },
   { id: 'cube', label: 'Cubo' },
   { id: 'barn', label: 'Puertas' },
-  { id: 'split-v', label: 'Split vertical' },
+  { id: 'split-v', label: 'División vertical' },
 ] as const
 
 export type TransicionId = (typeof TRANSICIONES)[number]['id']
@@ -723,8 +723,8 @@ export const CRUCE = 0.52
 export const MOVIMIENTOS = [
   { id: 'none', label: 'Sin movimiento' },
   { id: 'fade-in', label: 'Aparecer' },
-  { id: 'zoom-in', label: 'Zoom in' },
-  { id: 'zoom-out', label: 'Zoom out' },
+  { id: 'zoom-in', label: 'Acercar' },
+  { id: 'zoom-out', label: 'Alejar' },
 ] as const
 
 export type MovimientoId = (typeof MOVIMIENTOS)[number]['id']

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import {
   ArrowDown01Icon,
@@ -34,14 +34,18 @@ type ProcessCenterProps = {
   // Solo para el design system: suma tres procesos de ejemplo para enseñar el panel lleno. En el producto el panel
   // muestra únicamente lo que publican las pantallas y, si no hay nada, un estado vacío.
   ejemplos?: boolean
+  // El botón que lo abre en el header. Con él, el panel se ubica como Notificaciones y Perfil: 8px debajo del botón y
+  // alineado a su borde derecho (13 oct). Sin él (chat de Orbit, design system) queda en la esquina, bajo el header.
+  ancla?: RefObject<HTMLElement | null>
 }
 
 // Centro de procesos: tarjeta flotante de 320px bajo el header. Las filas son el Item de la librería (el mismo de REUI).
 // Llevaba debajo una barra de acciones oscura (filtrar, estado, exportar, avisar y «Nuevo»); se quitó el 30 sep a pedido
 // de diseño: el panel solo lista lo que corre y su acción por fila.
-export function ProcessCenter({ open, onOpenChange, ejemplos = false }: ProcessCenterProps) {
+export function ProcessCenter({ open, onOpenChange, ejemplos = false, ancla }: ProcessCenterProps) {
   const [collapsed, setCollapsed] = useState(false)
   const firstButtonRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   const live = useLiveProcesses()
   const history = useProcessHistory()
 
@@ -64,6 +68,21 @@ export function ProcessCenter({ open, onOpenChange, ejemplos = false }: ProcessC
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onOpenChange])
+
+  // Misma separación que los popovers de la librería (sideOffset 8, align end), medida contra el botón de verdad.
+  useLayoutEffect(() => {
+    const boton = ancla?.current
+    const panel = panelRef.current
+    if (!open || !boton || !panel) return
+    const ubicar = () => {
+      const caja = boton.getBoundingClientRect()
+      panel.style.top = `${caja.bottom + 8}px`
+      panel.style.right = `${document.documentElement.clientWidth - caja.right}px`
+    }
+    ubicar()
+    window.addEventListener('resize', ubicar)
+    return () => window.removeEventListener('resize', ubicar)
+  }, [open, ancla])
 
   if (!open) return null
 
@@ -102,6 +121,7 @@ export function ProcessCenter({ open, onOpenChange, ejemplos = false }: ProcessC
     <>
       <div className="fixed inset-0 z-40" aria-hidden="true" onClick={close} />
       <div
+        ref={panelRef}
         role="dialog"
         aria-label="Centro de procesos"
         // Sin pasarse del ancho de la ventana en móvil (AA 1.4.10): a 320px el panel se cortaba.

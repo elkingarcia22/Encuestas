@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft01Icon, ArrowRight01Icon, ArrowUpDownIcon, ChartColumnIcon, GitCompareIcon, Search01Icon } from '@hugeicons/core-free-icons'
+import { ArrowRight01Icon, ArrowUpDownIcon, ChartColumnIcon, GitCompareIcon, Search01Icon } from '@hugeicons/core-free-icons'
+import { Badge } from '@/shared/components/Badge'
 import {
-  Badge,
   Button,
   Checkbox,
   DropdownMenu,
@@ -152,6 +152,8 @@ export function AsistenteComparativo({ abierto, onAbierto, encuestas, inicial }:
       icon={GitCompareIcon}
       title={generando ? 'Generando comparativo' : 'Comparativo de encuestas'}
       description={generando ? 'Estamos cruzando las mediciones que elegiste.' : `Compara de ${MINIMO} a ${MAXIMO} encuestas finalizadas del mismo tipo.`}
+      // «← Volver» arriba (regla «panel-volver-arriba», 13-oct): el paso anterior, desde el 2.
+      onVolver={!generando && paso > 1 ? () => setPaso((paso - 1) as Paso) : undefined}
       headerExtra={
         generando ? null : (
           <PasosDrawer pasos={PASOS} actual={paso} onVolver={(valor) => setPaso(valor as Paso)} />
@@ -160,12 +162,7 @@ export function AsistenteComparativo({ abierto, onAbierto, encuestas, inicial }:
       footer={
         generando ? null : (
           <>
-            {paso > 1 ? (
-              <Button variant="outline" onClick={() => setPaso((paso - 1) as Paso)}>
-                <HugeiconsIcon icon={ArrowLeft01Icon} aria-hidden="true" />
-                Volver
-              </Button>
-            ) : null}
+
             {paso < 3 ? (
               <Button disabled={!puedeSeguir} onClick={() => setPaso((paso + 1) as Paso)}>
                 Continuar
@@ -190,7 +187,7 @@ export function AsistenteComparativo({ abierto, onAbierto, encuestas, inicial }:
                 {DETALLE_AVANCE(avance)}
               </Text>
               <Text as="span" size="sm" weight="semibold" className="tabular-nums">
-                {avance}%
+                {avance} %
               </Text>
             </div>
             <Progress value={avance} aria-label="Avance del comparativo" />

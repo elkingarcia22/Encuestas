@@ -33,10 +33,10 @@ export function PestanaDemograficos() {
     const creados = lista
       .map((fila) => duplicateAsLibraryDemographic({ label: fila.name, type: fila.type, optionLabels: fila.optionLabels }))
       .filter((creado) => creado !== null)
-    if (creados.length === 0) return notify('No se pudo duplicar', 'Inténtalo de nuevo en unos segundos.')
+    if (creados.length === 0) return notify('No se pudo duplicar', 'Inténtalo de nuevo en unos segundos.', 'error')
     notify(
       creados.length === 1 ? 'Demográfico duplicado' : `${creados.length} demográficos duplicados`,
-      creados.length === 1 ? `«${creados[0].label}» ya está disponible.` : undefined,
+      creados.length === 1 ? `«${creados[0].label}» ya está disponible.` : undefined, 'success',
     )
   }
 
@@ -60,7 +60,7 @@ export function PestanaDemograficos() {
     const borrados = porEliminar.filas.filter((fila) => deleteLibraryDemographic(fila.id)).length
     porEliminar.limpiar?.()
     cerrarEliminar()
-    if (borrados > 0) notify(borrados === 1 ? 'Demográfico eliminado' : `${borrados} demográficos eliminados`)
+    if (borrados > 0) notify(borrados === 1 ? 'Demográfico eliminado' : `${borrados} demográficos eliminados`, undefined, 'success')
   }
 
   return (
@@ -129,7 +129,7 @@ export function PestanaDemograficos() {
           <Field>
             <FieldLabel htmlFor="confirmar-eliminar-demografico">Escribe «{una.name}» para confirmar</FieldLabel>
             <Input id="confirmar-eliminar-demografico" value={texto} autoComplete="off" onChange={(evento) => setTexto(evento.target.value)} />
-            <FieldDescription>Así nadie borra un demográfico en uso por un clic de más.</FieldDescription>
+            <FieldDescription>Así nadie elimina un demográfico en uso por un clic de más.</FieldDescription>
           </Field>
         ) : null}
       </DialogoConfirmar>

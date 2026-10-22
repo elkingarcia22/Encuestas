@@ -13,7 +13,6 @@ import {
   ViewIcon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   IconTile,
   Item,
   ItemContent,
@@ -24,9 +23,10 @@ import {
   Text,
   ToggleGroup,
   ToggleGroupItem,
-  toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify } from '@/shared/components/notify'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 
 import { CasoUbits } from '../../patrones/piezas'
@@ -254,14 +254,13 @@ export function CasoContenidos() {
 
   const abrir = (contenido: Contenido) => {
     const destino = DESTINO[contenido.visibilidad]
-    toast.add({
-      type: 'info',
-      title: `Se abre: ${destino.titulo.toLowerCase()}`,
-      description:
-        contenido.visibilidad === 'Archivado'
-          ? `${contenido.titulo} está archivado: se puede leer, pero no editar.`
-          : `${contenido.titulo} está en ${contenido.visibilidad.toLowerCase()}. Al volver, queda primero en la lista.`,
-    })
+    notify(
+      `Se abre: ${destino.titulo.toLowerCase()}`,
+      contenido.visibilidad === 'Archivado'
+        ? `${contenido.titulo} está archivado: se puede leer, pero no editar.`
+        : `${contenido.titulo} está en ${contenido.visibilidad.toLowerCase()}. Al volver, queda primero en la lista.`,
+      'info',
+    )
     if (contenido.visibilidad !== 'Archivado') {
       setFijado(contenido.id)
       setPagina(1)
@@ -305,15 +304,15 @@ export function CasoContenidos() {
             ruta: 'Crear ruta de aprendizaje.',
             evento: 'Crear evento: igual que Crear contenido, con Asistencia en Recursos.',
           }
-          toast.add({ type: 'info', title: 'Se abre el asistente', description: nombres[id] })
+          notify('Se abre el asistente', nombres[id], 'info')
         },
         onClick: () => undefined,
       },
       item: [
         { id: 'abrir', label: 'Abrir', icon: <HugeiconsIcon icon={Edit02Icon} aria-hidden="true" />, onClick: ([fila]) => fila && abrir(fila) },
-        { id: 'vista', label: 'Ver como colaborador', icon: <HugeiconsIcon icon={ViewIcon} aria-hidden="true" />, onClick: ([fila]) => toast.add({ type: 'info', title: 'Vista previa', description: fila?.titulo }) },
-        { id: 'duplicar', label: 'Duplicar', icon: <HugeiconsIcon icon={Copy01Icon} aria-hidden="true" />, onClick: ([fila]) => toast.add({ type: 'success', title: 'Contenido duplicado como borrador', description: fila?.titulo }) },
-        { id: 'enlace', label: 'Copiar enlace', icon: <HugeiconsIcon icon={Link01Icon} aria-hidden="true" />, onClick: () => toast.add({ type: 'success', title: 'Enlace copiado' }) },
+        { id: 'vista', label: 'Ver como colaborador', icon: <HugeiconsIcon icon={ViewIcon} aria-hidden="true" />, onClick: ([fila]) => notify('Vista previa', fila?.titulo, 'info') },
+        { id: 'duplicar', label: 'Duplicar', icon: <HugeiconsIcon icon={Copy01Icon} aria-hidden="true" />, onClick: ([fila]) => notify('Contenido duplicado como borrador', fila?.titulo, 'success') },
+        { id: 'enlace', label: 'Copiar enlace', icon: <HugeiconsIcon icon={Link01Icon} aria-hidden="true" />, onClick: () => notify('Enlace copiado', undefined, 'success') },
       ],
     },
     // RN-03: título y acción fijos para el vacío de búsqueda.

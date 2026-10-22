@@ -78,16 +78,16 @@ import {
   Text,
   Textarea,
 } from '@ubits/flux-ui'
-import { useAccion } from './carga'
+import { useAccion } from '@/modules/design-system/estados/carga'
 import { Badge } from '@/shared/components/Badge'
 import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
 import { BotonIcono } from '@/shared/components/BotonIcono'
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { DialogoConfirmar, DialogoSalir } from '@/modules/design-system/estados/confirmaciones'
 import { notify, notifyAction } from '@/shared/components/notify'
 import { EtiquetaIA } from '@/modules/design-system/ia/etiqueta-ia'
 import { pesos } from '../../vacantes/detalle/components/data'
 import { noSeGuardo } from '../simular'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import {
   BIBLIOTECA_ETAPAS,
   CANDIDATURAS,
@@ -338,7 +338,7 @@ export function CompartirVacante({
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="default">
-                <ImagenGlass nombre="glass-profile" />
+                <ImagenGlass nombre="glass-profile" tamano={56} />
               </EmptyMedia>
               <EmptyTitle>No está en la lista</EmptyTitle>
               <EmptyDescription>Invítala con su correo: le llega el enlace y entra con su cuenta de la empresa.</EmptyDescription>
@@ -353,7 +353,7 @@ export function CompartirVacante({
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="default">
-                <ImagenGlass nombre="glass-profile" />
+                <ImagenGlass nombre="glass-profile" tamano={56} />
               </EmptyMedia>
               <EmptyTitle>{disponibles.length ? 'Nadie con ese nombre' : 'Ya está toda la empresa'}</EmptyTitle>
               <EmptyDescription>
@@ -1090,16 +1090,13 @@ export function EditarVacante({
         </Text>
       </DialogoConfirmar>
 
-      {/* Salir con cambios sin guardar. */}
-      <DialogoConfirmar
+      {/* Salir con cambios sin guardar, con la ventana de salida del sistema (13 oct). */}
+      <DialogoSalir
         abierto={preguntarSalida}
         onAbiertoChange={setPreguntarSalida}
-        titulo={cuantosCambios === 1 ? 'Hay un cambio sin guardar' : `Hay ${cuantosCambios} cambios sin guardar`}
-        descripcion="Si sales ahora, la vacante se queda como estaba antes de abrir el editor."
-        cancelar="Seguir editando"
-        accion="Salir sin guardar"
-        destructiva
-        onConfirmar={() => {
+        salida="Salir de la edición"
+        descripcion="Los cambios que hiciste se pierden y la vacante se queda como estaba."
+        onSalir={() => {
           setPreguntarSalida(false)
           onOpenChange(false)
         }}

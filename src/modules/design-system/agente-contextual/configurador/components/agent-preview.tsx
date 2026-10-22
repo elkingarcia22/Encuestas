@@ -74,7 +74,7 @@ function ResultBehind() {
 }
 
 // Lo que se envía desde la vista previa no cambia el hilo, para no desarmar la anatomía: se avisa y listo.
-const sent = (text: string) => notify(`Se enviaría «${text}». El hilo completo está en «Ver el caso completo».`)
+const sent = (text: string) => notify(`Se enviaría «${text}». El hilo completo está en «Ver el caso completo».`, undefined, 'info')
 
 // Estado de lo que se toca dentro del panel. Vive fuera del panel para que cerrarlo y abrirlo no lo pierda.
 function usePanelState(s: AgentSample, onApplied: (applied: boolean) => void) {
@@ -134,7 +134,7 @@ function Panel({ c, s, names, applied, onApplied, onChange, state, bare, ruta }:
               text={state.request}
               onEdit={(text) => {
                 state.setRequest(text)
-                notify('En la pantalla real el agente vuelve a responder desde aquí')
+                notify('En la pantalla real el agente vuelve a responder desde aquí', undefined, 'info')
               }}
             />
           ) : null}
@@ -161,11 +161,11 @@ function Panel({ c, s, names, applied, onApplied, onChange, state, bare, ruta }:
                   appliedNote={s.field.appliedNote}
                   onApply={() => {
                     onApplied(true)
-                    notify(s.field.appliedNote)
+                    notify(s.field.appliedNote, undefined, 'success')
                   }}
                   onUndo={() => {
                     onApplied(false)
-                    notify('Cambio deshecho')
+                    notify('Cambio deshecho', undefined, 'info')
                   }}
                   onOtherVersion={state.otherVersion}
                   regions={{ root: PART.field, actions: PART.fieldActions, undo: PART.undo }}
@@ -178,7 +178,7 @@ function Panel({ c, s, names, applied, onApplied, onChange, state, bare, ruta }:
               recortes propios que taparían su nombre. */}
           {c.result === 'card' ? (
             <div data-region={PART.card}>
-              <ProposalCard onOpenProcesses={() => notify('Centro de procesos de Orbit')} />
+              <ProposalCard onOpenProcesses={() => notify('Centro de procesos de Orbit', undefined, 'info')} />
             </div>
           ) : null}
           {c.result === 'plan' ? (
@@ -192,7 +192,7 @@ function Panel({ c, s, names, applied, onApplied, onChange, state, bare, ruta }:
                 reminderSent={state.reminderSent}
                 onSendReminder={() => {
                   state.setReminderSent(true)
-                  notify('Recordatorio enviado a 24 personas')
+                  notify('Recordatorio enviado a 24 personas', undefined, 'success')
                 }}
               />
             </div>
@@ -214,10 +214,10 @@ function Panel({ c, s, names, applied, onApplied, onChange, state, bare, ruta }:
             state.setDraft('')
           }}
           placeholder={s.placeholder}
-          onVoice={() => notify('El modo voz se abre desde el chat de Orbit')}
+          onVoice={() => notify('El modo voz se abre desde el chat de Orbit', undefined, 'info')}
           news={c.news}
           onDismissNews={() => onChange({ news: false })}
-          onOpenNews={() => notify('Novedades de Orbit')}
+          onOpenNews={() => notify('Novedades de Orbit', undefined, 'info')}
           contextChip={c.chip ? s.chip : undefined}
           // Sin nota junto a la pastilla, como en el editor: a 452px no cabe y la franja «Contexto» ya lo explica.
           contextNote=""
@@ -239,23 +239,23 @@ function Panel({ c, s, names, applied, onApplied, onChange, state, bare, ruta }:
 }
 
 // Escenario completo: la pantalla de trabajo a la izquierda (slot) y el agente acoplado a la derecha. Cerrado, arriba
-// de la pantalla queda «Orbit Flow», al final de la fila, a la derecha de su botón primario.
+// de la pantalla queda «Orbit», al final de la fila, a la derecha de su botón primario.
 export function AgentPreview(props: Props) {
   const { c, s, names, onApplied, onChange, bare } = props
   const state = usePanelState(s, onApplied)
   const open = c.state === 'open'
-  // Cerrar con la X o reabrir con «Orbit Flow» dentro de la vista previa: el foco pasa al botón o al panel que aparece.
+  // Cerrar con la X o reabrir con «Orbit» dentro de la vista previa: el foco pasa al botón o al panel que aparece.
   const previewRef = useRef<HTMLDivElement>(null)
   useAgentPanelFocus(previewRef, c.state)
 
   if (props.ruta) {
-    // La pantalla de trabajo con la cabecera de página real: sus botones y, con el panel cerrado, «Orbit Flow» al final.
+    // La pantalla de trabajo con la cabecera de página real: sus botones y, con el panel cerrado, «Orbit» al final.
     const acciones = (
       <>
-        <Button variant="outline" className={WS} onClick={() => notify(s.screenActions[0])}>
+        <Button variant="outline" className={WS} onClick={() => notify(s.screenActions[0], undefined, 'info')}>
           {s.screenActions[0]}
         </Button>
-        <Button className={WS} onClick={() => notify(s.screenActions[1])}>
+        <Button className={WS} onClick={() => notify(s.screenActions[1], undefined, 'info')}>
           {s.screenActions[1]}
         </Button>
         {c.state === 'closed' ? (
@@ -298,12 +298,12 @@ export function AgentPreview(props: Props) {
         {c.state === 'closed' ? (
           // Alineados abajo: con los nombres visibles los botones de la pantalla bajan 22px para su pastilla.
           <div className="flex flex-wrap items-end justify-end gap-2.5">
-            {/* Los botones de la pantalla no son del agente; «Orbit Flow» va siempre el último, a la derecha del primario. */}
+            {/* Los botones de la pantalla no son del agente; «Orbit» va siempre el último, a la derecha del primario. */}
             <div data-slot-region={PART.screenActions} className="flex items-center gap-2.5">
-              <Button variant="outline" className={WS} onClick={() => notify(s.screenActions[0])}>
+              <Button variant="outline" className={WS} onClick={() => notify(s.screenActions[0], undefined, 'info')}>
                 {s.screenActions[0]}
               </Button>
-              <Button className={WS} onClick={() => notify(s.screenActions[1])}>
+              <Button className={WS} onClick={() => notify(s.screenActions[1], undefined, 'info')}>
                 {s.screenActions[1]}
               </Button>
               <ReopenAgentButton region={PART.reopen} compact={c.reopen === 'orb'} onClick={() => onChange({ state: 'open' })} />

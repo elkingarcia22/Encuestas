@@ -10,7 +10,6 @@ import {
 } from '@hugeicons/core-free-icons'
 import { ICONO_IA } from '@/shared/layouts/nav-config'
 import {
-  Badge,
   Button,
   IconTile,
   Separator,
@@ -28,6 +27,7 @@ import {
   TabsTrigger,
   cn,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ChatStatusDot } from '@/shared/components/ChatStatusDot'
 import { FeedbackDialog } from '@/shared/components/FeedbackDialog'
 import { InviteCard } from '@/shared/components/InviteCard'
@@ -97,7 +97,7 @@ function SubRow({ child, roles, firstDrill, onChange }: { child: NavChild; roles
       <SidebarMenuSubButton
         render={<button type="button" />}
         isActive={active}
-        onClick={() => (firstDrill ? onChange({ level: 'third' }) : notify(`Abre ${child.title}`))}
+        onClick={() => (firstDrill ? onChange({ level: 'third' }) : notify(`Abre ${child.title}`, undefined, 'info'))}
         className={cn(SUB_BUTTON, 'group/sub w-full cursor-pointer text-left')}
       >
         <span className="min-w-0 flex-1 truncate">{child.title}</span>
@@ -126,7 +126,7 @@ function ItemRow({ item, roles, level, names, onChange }: { item: NavItem; roles
     <SidebarMenuItem data-region={region} className={cn(roles.active === item.path && ROW_MARK, hasBadge && !region && names && AIR)}>
       <SidebarMenuButton
         isActive={active}
-        onClick={() => (isHost ? onChange({ level: open ? 'first' : 'sub' }) : notify(`Abre ${item.title}`))}
+        onClick={() => (isHost ? onChange({ level: open ? 'first' : 'sub' }) : notify(`Abre ${item.title}`, undefined, 'info'))}
         className={cn('min-w-0', ROW, kids.length > 0 && PARENT_ROW, hasBadge && 'overflow-visible!')}
       >
         <NavIcon icon={item.icon} active={active} />
@@ -193,7 +193,7 @@ function ThirdLevel({ c, names, onChange }: SidebarPartProps) {
             data-region="Selector de sección"
             variant="ghost"
             className="h-auto! w-full justify-start gap-3! rounded-lg! px-1.5! py-1.5! text-left font-normal!"
-            onClick={() => notify('Aquí se salta a Planes de Formación o Certificados')}
+            onClick={() => notify('Aquí se salta a Planes de Formación o Certificados', undefined, 'info')}
           >
             {/* La misma IconTile de 36 px y esquina de 14 px del panel real (DrillPanel de AppSidebar). */}
             <IconTile
@@ -218,7 +218,7 @@ function ThirdLevel({ c, names, onChange }: SidebarPartProps) {
               const active = roles.active === page.path
               return (
                 <SidebarMenuItem key={page.path} data-region={active ? 'Ítem activo' : page.path === plain ? 'Ítem' : undefined} className={cn(active && ROW_MARK)}>
-                  <SidebarMenuButton isActive={active} onClick={() => notify(`Abre ${page.title}`)} className={cn('min-w-0', ROW)}>
+                  <SidebarMenuButton isActive={active} onClick={() => notify(`Abre ${page.title}`, undefined, 'info')} className={cn('min-w-0', ROW)}>
                     {page.icon ? <NavIcon icon={page.icon} active={active} /> : null}
                     <span className="min-w-0 flex-1 truncate">{page.title}</span>
                   </SidebarMenuButton>
@@ -255,7 +255,7 @@ function History({ c, names }: SidebarPartProps) {
               >
                 <SidebarMenuButton
                   isActive={active}
-                  onClick={() => notify(`Abre «${chat.title}»`)}
+                  onClick={() => notify(`Abre «${chat.title}»`, undefined, 'info')}
                   className={cn('min-w-0', ROW, 'h-13! px-1.5!', dotRegion && 'overflow-visible!')}
                 >
                   {/* Como ChatRow de la barra real (auditoría, 5 oct): 8px del punto al título, fecha sangrada 20px (12 del
@@ -340,7 +340,7 @@ export function OpenSidebar(props: SidebarPartProps) {
                 data-region="Nueva conversación"
                 size="lg"
                 className={cn(newChat.button, 'w-full rounded-full! font-medium')}
-                onClick={() => notify('Empieza una conversación nueva')}
+                onClick={() => notify('Empieza una conversación nueva', undefined, 'info')}
               >
                 Nueva conversación
               </Button>
@@ -361,7 +361,7 @@ export function OpenSidebar(props: SidebarPartProps) {
                 <SidebarGroupContent>
                   <SidebarMenu>
                     <SidebarMenuItem data-region="Inicio">
-                      <SidebarMenuButton onClick={() => notify(`Abre ${nav.home.title}`)} className={cn('min-w-0', ROW)}>
+                      <SidebarMenuButton onClick={() => notify(`Abre ${nav.home.title}`, undefined, 'info')} className={cn('min-w-0', ROW)}>
                         <NavIcon icon={nav.home.icon} active={false} />
                         <span className="min-w-0 flex-1 truncate">{nav.home.title}</span>
                       </SidebarMenuButton>

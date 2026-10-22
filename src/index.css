@@ -180,6 +180,12 @@
      en 3,1–3,4:1. El botón sí cumple: blanco sobre azul da 5,8:1. */
   --primary: oklch(0.52 0.233 261.971);
   --primary-foreground: oklch(0.97 0.014 254.604);
+  /* El azul de los TEXTOS en oscuro (war room del 13-oct, regla «azules-modo-oscuro»; Carlos se lo asignó a Cristian).
+     El botón sigue con el azul de marca de arriba (texto claro sobre azul, 5,4:1), pero ese azul como texto daba 3,4:1
+     sobre el fondo y 1,8:1 sobre la fila resaltada. Este (#7fb0ff) da 9:1 sobre el fondo, 8,2:1 sobre la tarjeta, 6,9:1
+     sobre el menú, 4,7:1 sobre la fila resaltada (#404040) y 5,8:1 sobre los tintes azules al 20%. Lo usan las reglas de
+     «Texto azul en oscuro», más abajo. */
+  --primary-texto: oklch(0.76 0.14 262);
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -197,7 +203,9 @@
   --premium-foreground: oklch(0.2 0.06 296);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.52 0.233 261.971);
+  /* El borde de foco en oscuro (13-oct): con el azul de marca daba 2,6:1 sobre el menú; este (#427ff7) da 5,3:1 sobre el
+     fondo, 4,8:1 sobre la tarjeta y 4:1 sobre el menú (el mínimo de un borde es 3:1). */
+  --ring: oklch(0.62 0.19 262);
   --chart-1: oklch(0.785 0.128 266.043);
   --chart-2: oklch(0.585 0.259 266.043);
   --chart-3: oklch(0.511 0.291 266.043);
@@ -214,6 +222,36 @@
   --focus: oklch(0.52 0.233 261.971);
   --focus-foreground: oklch(0.97 0.014 254.604);
 }
+/* Texto azul en oscuro (war room del 13-oct, regla «azules-modo-oscuro»). El azul de marca sirve de fondo (botón, casilla
+   marcada, burbuja) pero no como texto sobre lo oscuro: los enlaces, los nombres azules de las tablas, la pestaña activa
+   y los botones e insignias de tipo enlace usan `--primary-texto`. Va sin capa, así le gana a la utilidad `text-primary`
+   (que vive en la capa de utilidades) y, con la misma especificidad y después, a la regla de la librería. */
+.dark .text-primary,
+.dark .hover\:text-primary:hover,
+.dark .data-\[state\=active\]\:text-primary[data-state='active'],
+.dark .data-\[state\=completed\]\:text-primary[data-state='completed'],
+.style-vega.dark .cn-button-variant-link,
+.style-vega.dark .cn-badge-variant-link {
+  color: var(--primary-texto);
+}
+/* Lo mismo para el azul forzado con «!» (el elemento activo de la barra lateral, 16-oct). La utilidad lleva !important
+   y vive en la capa de utilidades; un !important sin capa pierde contra uno con capa, así que esta va en la misma capa
+   y gana por especificidad. */
+@layer utilities {
+  .dark .text-primary\!,
+  .dark .data-active\:text-primary\![data-active]:not([data-active='false']),
+  .dark .data-active\:text-primary\![data-state='active'] {
+    color: var(--primary-texto) !important;
+  }
+}
+
+/* Barras de avance con punta redondeada (war room del 13-oct, regla «avance-punta-redonda»; Cristian lo autorizó en la
+   zona protegida el 16-oct). La librería redondea el riel gris pero no la parte de color, que termina recta; aquí las
+   dos van redondeadas, en todas las barras (Progress) a la vez. Con la misma especificidad que la librería y después. */
+.style-vega .cn-progress-indicator {
+  border-radius: 9999px;
+}
+
 /* Alto de los campos (22 sep, pedido de UX): 40px en vez de los 36 que trae la librería.
    Es una de las reglas del proyecto que le cambian la apariencia a un componente de flux-ui (las otras, más abajo), y por eso está
    documentada en Design system › Marco › Ajustes propios («Campos de 40px»). Afecta a todo el playground:

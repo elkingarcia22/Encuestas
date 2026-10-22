@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Cancel01Icon, CenterFocusIcon, MinusSignIcon, PlusSignIcon, RotateLeft01Icon } from '@hugeicons/core-free-icons'
-import { Badge, Button, ButtonGroup, ButtonGroupText } from '@ubits/flux-ui'
+import { Button, ButtonGroupText } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { Hint } from '@/shared/components/Hint'
 import { companyIdOfNode, type AlignmentGraph, type AlignmentNode, type ObjectiveRef } from '../../../../modelo/constructor/alignmentGraph'
 import type { OpcionEmpresa } from '../opciones-empresa'
@@ -279,21 +280,27 @@ export function Lienzo({ grafo, opciones, posicionesIniciales, onPosiciones, sel
         })}
       </div>
 
-      <ButtonGroup aria-label="Zoom del mapa" className="absolute bottom-3 left-3" onPointerDown={(evento) => evento.stopPropagation()}>
-        <ControlZoom etiqueta="Alejar" icono={MinusSignIcon} onClick={() => zoomCentro(1 / 1.25)} />
-        <ButtonGroupText className="min-w-14 justify-center tabular-nums">{Math.round(vista.k * 100)} %</ButtonGroupText>
-        <ControlZoom etiqueta="Acercar" icono={PlusSignIcon} onClick={() => zoomCentro(1.25)} />
-        <ControlZoom etiqueta="Ajustar a la pantalla" icono={CenterFocusIcon} onClick={ajustar} />
-        <ControlZoom
-          etiqueta="Reorganizar tarjetas"
-          icono={RotateLeft01Icon}
-          onClick={() => {
-            setPosiciones({})
-            onPosiciones({})
-            requestAnimationFrame(() => ajustarActual.current())
-          }}
-        />
-      </ButtonGroup>
+      {/* Cada botón lleva su Hint, y el envoltorio rompe la unión del ButtonGroup: quedaban casi pegados (20-oct). Van
+          sueltos con aire: alejar, el % y acercar juntos; ajustar y reorganizar, un poco más aparte. */}
+      <div role="group" aria-label="Zoom del mapa" className="absolute bottom-3 left-3 flex items-center gap-3" onPointerDown={(evento) => evento.stopPropagation()}>
+        <div className="flex items-center gap-1.5">
+          <ControlZoom etiqueta="Alejar" icono={MinusSignIcon} onClick={() => zoomCentro(1 / 1.25)} />
+          <ButtonGroupText className="min-w-14 justify-center tabular-nums">{Math.round(vista.k * 100)} %</ButtonGroupText>
+          <ControlZoom etiqueta="Acercar" icono={PlusSignIcon} onClick={() => zoomCentro(1.25)} />
+        </div>
+        <div className="flex items-center gap-1.5">
+          <ControlZoom etiqueta="Ajustar a la pantalla" icono={CenterFocusIcon} onClick={ajustar} />
+          <ControlZoom
+            etiqueta="Reorganizar tarjetas"
+            icono={RotateLeft01Icon}
+            onClick={() => {
+              setPosiciones({})
+              onPosiciones({})
+              requestAnimationFrame(() => ajustarActual.current())
+            }}
+          />
+        </div>
+      </div>
     </div>
   )
 }

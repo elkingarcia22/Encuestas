@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { PlayIcon } from '@hugeicons/core-free-icons'
 import { Button, Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle, Text, cn } from '@ubits/flux-ui'
@@ -21,24 +22,26 @@ import { ExampleModals } from './components/example-modals'
 import { VENTANA_CASES, ventanaParts, type VentanaConfig } from './components/ventana-config'
 import { VentanaDePrueba, VentanaPreview } from './components/ventana-parts'
 import { VerEnAccion } from '../patrones/piezas'
+import { BotonSalirCreacion } from '../navegacion/boton-salir-creacion'
+import { notify } from '@/shared/components/notify'
 
 // «completo»: ocupa toda la fila de abajo (es una regla de cómo se comporta, no de cuándo usar la ventana).
 const GUIDE: { title: string; text: string; completo?: boolean }[] = [
   {
     title: 'Usa ActionDialog para',
-    text: 'lo que tiene contenido y no puede esperar: 2 o 3 campos, una lista para elegir, una vista previa, un detalle o un ajuste.',
+    text: 'lo que tiene contenido y no puede esperar: 2 o 3 campos, una lista para elegir, una vista previa, un detalle o un ajuste corto.',
   },
   {
     title: 'Para confirmar, la otra ventana',
-    text: 'eliminar, salir sin guardar, activar, descartar o enviar van en DialogoConfirmar (Estados › Confirmaciones), aunque muestren lo que se pierde.',
+    text: 'eliminar, activar, descartar o enviar van en DialogoConfirmar (Estados › Confirmaciones), también cuando afecta a muchas personas: la tarjeta RegistroConfirmar dice qué se toca y a cuántas llega (regla del 13-oct). Salir de una creación tiene su propia ventana, la de arriba.',
   },
   {
     title: 'Que no se cierre sola cuando',
-    text: 'perder lo escrito costaría: formularios largos, pasos, salir sin guardar. Con `dismissible={false}` el clic afuera no cierra; la X y Esc sí.',
+    text: 'perder lo escrito costaría: una nota, un ajuste. Con `dismissible={false}` el clic afuera no cierra; la X y Esc sí.',
   },
   {
-    title: 'Mejor una página cuando',
-    text: 'se crea o se edita algo con muchos campos: título fijo, formulario y barra de guardado abajo. Un drawer, para ver un registro sin perder la lista.',
+    title: 'Crear y editar, en una página',
+    text: 'se crea o se edita algo: ni en una ventana ni en un panel, sino en una página con título fijo, formulario y barra de guardado abajo (regla del 6-oct; 13-oct: tampoco asistentes por pasos en una ventana). Un drawer, para ver un registro sin perder la lista.',
   },
   {
     title: 'Mejor un aviso cuando',
@@ -51,7 +54,7 @@ const GUIDE: { title: string; text: string; completo?: boolean }[] = [
   },
   {
     title: 'Al confirmar',
-    text: 'el botón dice qué está pasando («Moviendo…», «Guardando…») con su spinner mientras la acción corre (`pendingLabel`), y la ventana no se cierra ni se confirma dos veces. Después se cierra sola.',
+    text: 'el botón dice qué está pasando («Asignando…», «Guardando…») con su spinner mientras la acción corre (`pendingLabel`), y la ventana no se cierra ni se confirma dos veces. Después se cierra sola y el aviso lleva su tipo.',
     completo: true,
   },
 ]
@@ -66,6 +69,61 @@ const TOUR = [
   'Avanza solo cada 6 s y se detiene con el cursor o el foco encima, con la pausa o con «reducir movimiento».',
   'Pie: pausa, «Paso n de 4», «Saltar el tour» y «Siguiente» («Empezar» en el último).',
 ]
+
+// Las tres ventanas del sistema con su nombre de diseño (war room del 13-oct: Carlos buscó aquí la ventana de salir y solo
+// encontró nombres de código). Preguntar antes de hacer algo, salir de una creación y cualquier otra ventana; la de salir
+// se prueba aquí mismo, con borrador y sin él.
+function TresVentanas() {
+  const navigate = useNavigate()
+  return (
+    <section className="flex flex-col gap-3" aria-labelledby="tres-ventanas">
+      <div role="heading" aria-level={2} id="tres-ventanas" className={KICKER}>
+        Qué ventana usar
+      </div>
+      <div className="grid gap-4 @min-[54rem]:grid-cols-3">
+        <Card size="sm">
+          <CardHeader>
+            <CardTitle>Preguntar antes de hacer algo</CardTitle>
+            <CardDescription>Eliminar, activar, enviar o descartar. Título en pregunta, una bajada y dos botones; rojo si borra algo. Pieza: DialogoConfirmar.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" size="sm" onClick={() => navigate('/design-system/estados')}>
+              Ver en Estados y avisos
+            </Button>
+          </CardContent>
+        </Card>
+        <Card size="sm">
+          <CardHeader>
+            <CardTitle>Ventana de salir de una creación</CardTitle>
+            <CardDescription>
+              La de Crear contenido, en todas las creaciones: «¿Salir de la creación?», «Seguir aquí» y «Salir de la creación». Sin tarjeta ni
+              «Guardar y salir». El botón de salir va en azul: el rojo es solo para eliminar. Pieza: BotonSalirCreacion (con VentanaSalir).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <BotonSalirCreacion onClick={() => notify('Saliste de la creación', 'No quedó nada guardado.', 'info')} salida={{ conCambios: true }} />
+            <BotonSalirCreacion
+              texto="Salir de la edición"
+              onClick={() => notify('Saliste de la edición', undefined, 'info')}
+              salida={{ conCambios: true, retomarEn: 'Contenidos', alGuardarYSalir: () => notify('Borrador guardado', 'Lo retomas desde Contenidos.', 'success') }}
+            />
+          </CardContent>
+        </Card>
+        <Card size="sm">
+          <CardHeader>
+            <CardTitle>Cualquier otra ventana</CardTitle>
+            <CardDescription>Lo que tiene contenido y no puede esperar: dos o tres campos, una lista para elegir, una vista previa. Pieza: ActionDialog, la de abajo.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" size="sm" onClick={() => document.getElementById('casos-ventana')?.scrollIntoView({ behavior: 'smooth' })}>
+              Ir a los casos de uso
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  )
+}
 
 // Design system › Modales: la ventana con contenido, ActionDialog (ConfiguredModal se retiró el 5-oct). Confirmar es de
 // DialogoConfirmar, en Estados › Confirmaciones (acuerdo del 6-oct). Se elige un caso de uso y se prende o apaga lo que la pieza permite: tamaño, icono,
@@ -99,9 +157,9 @@ export function Component() {
   return (
     <PageShell width="default">
       <PageHeader
-        kicker="Design system · Patrones"
+        kicker="Design system · Componentes"
         title="Ventanas"
-        description="ActionDialog es la ventana para todo lo que tiene contenido; para confirmar algo está DialogoConfirmar, en Estados › Confirmaciones. Arma una pieza por pieza: lo azul con nombre es parte de la ventana y se ve igual en todas; lo gris rayado es el cuerpo, un slot donde va el contenido de cada caso."
+        description="Tres ventanas: preguntar antes de hacer algo (DialogoConfirmar), salir de una creación (BotonSalirCreacion) y cualquier otra con contenido (ActionDialog), que es la que se arma aquí pieza por pieza: lo azul con nombre es parte de la ventana y se ve igual en todas; lo gris rayado es el cuerpo, un slot donde va el contenido de cada caso."
         actions={
           <>
             <VerEnAccion pagina="modales" />
@@ -114,10 +172,12 @@ export function Component() {
       />
 
       <PageContent className="@container gap-6">
+        <TresVentanas />
+
         <AnatomyLegend names={names} onNamesChange={setNames} />
 
         <section className="flex flex-col gap-3">
-          <div role="heading" aria-level={2} className={KICKER}>
+          <div role="heading" aria-level={2} id="casos-ventana" className={KICKER}>
             Casos de uso
           </div>
           <CasePicker cases={VENTANA_CASES} value={caseId} onPick={pick} />
@@ -148,7 +208,7 @@ export function Component() {
               <span className={NOTE}>
                 {config.size === 'full'
                   ? 'Ocupa casi toda la pantalla, con 16 px de aire alrededor.'
-                  : 'Sale a 120 px del borde de arriba. 448 para algo corto (confirmar con una lista), 620 con contenido, 736 para formularios largos.'}
+                  : 'Sale a 120 px del borde de arriba. 448 para algo muy corto, 620 con contenido, 736 para listas o vistas con dos columnas. Un formulario largo no va aquí: va en una página.'}
               </span>
             </ControlSection>
 
@@ -177,7 +237,6 @@ export function Component() {
                 options={[
                   { value: 'none', label: 'Nada' },
                   { value: 'tabs', label: 'Pestañas' },
-                  { value: 'steps', label: 'Pasos' },
                 ]}
               />
               <SwitchRow label="Contenido (children)" checked={config.body} onChange={set('body')} />

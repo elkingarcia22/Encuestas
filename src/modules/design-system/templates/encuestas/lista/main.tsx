@@ -21,7 +21,6 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardAction,
@@ -45,11 +44,13 @@ import {
   Tabs,
   TabsContent,
   Text,
-  toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify, notifyAction } from '@/shared/components/notify'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
 
 import { SIN_ARRASTRE } from '../../../data-grid/casos/sin-arrastre'
 import { DialogoConfirmar } from '../../../estados/confirmaciones'
@@ -219,12 +220,12 @@ function TablaEncuestas() {
     setEncuestas((todas) => [...copias, ...todas])
     setLimpiarSeleccion({})
     // Se deshace con un clic: se duplica sin preguntar y el aviso trae «Deshacer».
-    toast.add({
-      type: 'success',
-      title: copias.length === 1 ? 'Encuesta duplicada' : `${copias.length} encuestas duplicadas`,
-      description: 'Las copias quedan en borrador y sin participantes.',
-      actionProps: { children: 'Deshacer', onClick: () => setEncuestas((todas) => todas.filter((e) => !copias.some((c) => c.id === e.id))) },
-    })
+    notifyAction(
+      copias.length === 1 ? 'Encuesta duplicada' : `${copias.length} encuestas duplicadas`,
+      'Las copias quedan en borrador y sin participantes.',
+      { label: 'Deshacer', onClick: () => setEncuestas((todas) => todas.filter((e) => !copias.some((c) => c.id === e.id))) },
+      'success',
+    )
   }
 
   const config: DataGridListConfig<Fila> = {
@@ -270,29 +271,25 @@ function TablaEncuestas() {
             setCambiandoCierre(fila)
             return
           }
-          toast.add({
-            type: 'info',
-            title: 'Esta encuesta ya terminó',
-            description: 'Duplícala para usarla como base de una nueva.',
-          })
+          notify('Esta encuesta ya terminó', 'Duplícala para usarla como base de una nueva.', 'info')
         },
       },
       { id: 'duplicar', label: 'Duplicar', icon: icono(Copy01Icon), visibility: 'always', onClick: duplicar },
       { id: 'eliminar', label: 'Eliminar', icon: icono(Delete02Icon), variant: 'destructive', visibility: 'always', onClick: setEliminando },
     ],
+    // Sin resultados con la ilustración glass del sistema y «Limpiar» (13-oct, I-182).
     emptyState: {
       type: 'no-results',
-      title: 'No se encontraron resultados',
-      description: 'Prueba con otro nombre o quita alguno de los filtros.',
-      action: {
-        id: 'limpiar',
-        label: 'Limpiar filtros',
-        variant: 'outline',
-        onClick: () => {
-          setBusqueda('')
-          setFiltros([])
-        },
-      },
+      customComponent: (
+        <SinResultados
+          busqueda={busqueda}
+          filtrosActivos={filtros.filter((f) => Array.isArray(f.value) && f.value.length > 0).length}
+          onLimpiar={() => {
+            setBusqueda('')
+            setFiltros([])
+          }}
+        />
+      ),
     },
     // Cabecera como Vacantes (5-oct): sin título dentro del marco y sin `layout`, para que salga como todas las tablas,
     // con encabezados de 40 px y el asidero de cada columna.
@@ -344,7 +341,7 @@ function TablaEncuestas() {
         onGuardar={(encuesta, cierre) => {
           const iso = `${cierre.getFullYear()}-${String(cierre.getMonth() + 1).padStart(2, '0')}-${String(cierre.getDate()).padStart(2, '0')}`
           setEncuestas((todas) => todas.map((e) => (e.id === encuesta.id ? { ...e, cierre: iso, tocado: Date.now() } : e)))
-          toast.add({ type: 'success', title: 'Fecha de cierre actualizada', description: `«${encuesta.nombre}» cierra el ${fechaCorta(iso)}.` })
+          notify('Fecha de cierre actualizada', `«${encuesta.nombre}» cierra el ${fechaCorta(iso)}.`, 'success')
         }}
       />
 
@@ -365,7 +362,7 @@ function TablaEncuestas() {
         onConfirmar={() => {
           const ids = new Set(eliminando.map((e) => e.id))
           setEncuestas((todas) => todas.filter((e) => !ids.has(e.id)))
-          toast.add({ type: 'success', title: ids.size === 1 ? 'Encuesta eliminada' : `${ids.size} encuestas eliminadas` })
+          notify(ids.size === 1 ? 'Encuesta eliminada' : `${ids.size} encuestas eliminadas`, undefined, 'success')
           setEliminando([])
           setLimpiarSeleccion({})
         }}
@@ -382,7 +379,7 @@ function TablaEncuestas() {
         onConfirmar={() => {
           setRecordadas(sinResponder)
           setRecordando(false)
-          toast.add({ type: 'success', title: 'Recordatorio enviado', description: `Va en camino a ${sinResponder.toLocaleString('es-CO')} personas.` })
+          notify('Recordatorio enviado', `Va en camino a ${sinResponder.toLocaleString('es-CO')} personas.`, 'success')
         }}
       />
     </div>
@@ -444,7 +441,7 @@ function Demograficos() {
         onAbiertoChange={setCargando}
         onListo={() => {
           setDemograficos(true)
-          toast.add({ type: 'success', title: 'Datos demográficos guardados', description: 'Ya puedes segmentar los resultados por edad, antigüedad y sede.' })
+          notify('Datos demográficos guardados', 'Ya puedes segmentar los resultados por edad, antigüedad y sede.', 'success')
         }}
       />
     </>

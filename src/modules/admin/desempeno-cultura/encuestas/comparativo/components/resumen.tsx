@@ -103,6 +103,8 @@ function Evolucion({ comparativo }: { comparativo: Comparativo }) {
         <FrameTitle>Evolución por medición</FrameTitle>
         <FrameDescription>Cada medición con su diferencia frente a la base.</FrameDescription>
       </FrameHeader>
+      {/* p-0!: la tabla llega al borde del panel, y al panel no se le quita el relleno con p-0 (ficha
+          frame-panel-relleno-no-se-quita en ai-tools/flux-ui/diferencias.json). */}
       <FramePanel className="p-0!">
         <Table>
           <TableHeader>

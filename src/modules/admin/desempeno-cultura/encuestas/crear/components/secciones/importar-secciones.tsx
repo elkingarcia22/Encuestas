@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { File01Icon, Logout01Icon } from '@hugeicons/core-free-icons'
+import { File01Icon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Checkbox,
@@ -16,7 +16,7 @@ import { FilasSeparadas, MarcoLista } from '../../../components/marco-lista'
 import { ListaDatos } from '@/modules/admin/seleccion/vacantes/crear/components/piezas-resumen'
 import { EncabezadoPaso } from '../../../components/pasos-drawer'
 import { AdjuntoCsv } from '@/modules/design-system/estados/procesos'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { DialogoSalir } from '@/modules/design-system/estados/confirmaciones'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { PILL } from '@/modules/design-system/drawers/components/drawer-styles'
 import { EXTENSIONES_SECCIONES, importedToSections, parseSectionFile } from '../../../modelo/sectionFileImport'
@@ -27,7 +27,7 @@ import { TextoCompleto } from '@/shared/components/TextoCompleto'
 
 // «Importar con IA» del paso de secciones, con el mismo recorrido y el mismo panel lateral que el de participantes:
 // se elige el archivo (.md, .txt, .csv o .xlsx), se lee, y se revisa lo que trae —cada sección con sus subsecciones
-// y preguntas—. Todo llega marcado; se desmarca lo que no se quiera y «Importar» lo añade al final de la encuesta,
+// y preguntas—. Todo llega marcado; se desmarca lo que no se quiera y «Importar» lo agrega al final de la encuesta,
 // sin reemplazar lo que ya había. En Markdown: # sección, ## subsección, ### sub-subsección, una viñeta por
 // pregunta y sus opciones indentadas debajo; la etiqueta final marca el tipo. En planilla: columnas seccion,
 // subseccion, subsubseccion, pregunta, tipo y opciones (separadas por |).
@@ -72,12 +72,12 @@ export function ImportarSecciones({
     if (esta !== lectura.current) return
     setAnalizando(null)
     if (resultado.status === 'rejected') {
-      notify('Archivo no válido', `No pudimos leer «${archivo.name}».`)
+      notify('Archivo no válido', `No pudimos leer «${archivo.name}».`, 'error')
       return
     }
     const secciones = importedToSections(resultado.value)
     if (secciones.length === 0) {
-      notify('No se detectaron secciones', `«${archivo.name}» se leyó, pero no trae una estructura de secciones y preguntas.`)
+      notify('No se detectaron secciones', `«${archivo.name}» se leyó, pero no trae una estructura de secciones y preguntas.`, 'error')
       return
     }
     setRevision({ archivo: archivo.name, secciones })
@@ -117,7 +117,8 @@ export function ImportarSecciones({
     // Se cuenta lo que entró (lo que pasa de tres niveles se recorta), no lo que traía el archivo.
     notify(
       `${elegidasLista.length === 1 ? 'Se importó' : 'Se importaron'} ${plural(elegidasLista.length, 'sección', 'secciones')} y ${plural(preguntasElegidas, 'pregunta', 'preguntas')}.`,
-      'Se añadieron al final de la encuesta.',
+      'Se agregaron al final de la encuesta.',
+      'success',
     )
     salirDelTodo()
   }
@@ -153,13 +154,13 @@ export function ImportarSecciones({
       ) : !revision ? (
         <div className="flex flex-col gap-6">
           <section className="flex flex-col gap-3">
-            <EncabezadoPaso titulo="¿De qué archivo las traemos?" descripcion="Leemos las secciones y sus preguntas. Después eliges cuáles añadir al final de la encuesta." />
+            <EncabezadoPaso titulo="¿De qué archivo las traemos?" descripcion="Leemos las secciones y sus preguntas. Después eliges cuáles agregar al final de la encuesta." />
           <ZonaArchivo
             descripcion="Markdown, texto, CSV o Excel · hasta 5 MB"
             extensiones={EXTENSIONES_SECCIONES}
             maximoBytes={MAXIMO}
             onArchivo={(archivo) => void leer(archivo)}
-            onRechazo={(rechazo) => notify(rechazo.titulo, rechazo.detalle)}
+            onRechazo={(rechazo) => notify(rechazo.titulo, rechazo.detalle, 'error')}
           />
           </section>
           {/* Qué lee del archivo, igual que en «Importar con IA» de participantes: una fila por dato. */}
@@ -178,6 +179,7 @@ export function ImportarSecciones({
         </div>
       ) : (
         <div className="flex flex-col gap-4">
+          {/* «!»: el adjunto mide lo que su nombre y no se estira sin forzarlo (diferencias.json › attachment-ancho-y-arrastre). */}
           <AdjuntoCsv
             estado="done"
             className="w-full!"
@@ -194,6 +196,8 @@ export function ImportarSecciones({
             titulo="Lo que encontramos"
             descripcion={<span aria-live="polite">{`${elegidas.size} de ${plural(revision.secciones.length, 'sección', 'secciones')} para importar · ${plural(preguntasElegidas, 'pregunta', 'preguntas')}`}</span>}
           >
+            {/* «!»: el panel del marco no deja cambiar su relleno con una clase normal (diferencias.json › frame-panel-relleno-no-se-quita),
+                ni las filas quitar el suyo para quedar a ras (diferencias.json › instalacion-estilos-sin-capa). */}
             <FramePanel className="py-1!">
               <FilasSeparadas>
                 <Item size="sm" className="gap-3 px-0!" render={<label />}>
@@ -206,6 +210,7 @@ export function ImportarSecciones({
               const subsecciones = countDescendants(seccion)
               const preguntas = countQuestions([seccion])
               return (
+                  // «!»: la fila a ras del panel, sin su relleno (diferencias.json › instalacion-estilos-sin-capa).
                   <Item key={seccion.id} size="sm" className="gap-3 px-0!">
                     <Checkbox checked={elegidas.has(seccion.id)} onCheckedChange={() => alternar(seccion.id)} aria-label={`Importar la sección ${seccion.title || indice + 1}`} />
                     <ItemContent>
@@ -223,15 +228,13 @@ export function ImportarSecciones({
         </div>
       )}
     </DrawerShell>
-    <DialogoConfirmar
+    {/* La ventana de salir del sistema (DialogoSalir): «¿Salir de la importación?», «Seguir aquí» y «Salir de la importación». */}
+    <DialogoSalir
       abierto={confirmarSalida}
       onAbiertoChange={setConfirmarSalida}
-      icono={Logout01Icon}
-      titulo="¿Salir de la importación?"
+      salida="Salir de la importación"
       descripcion={`Se pierde lo que leímos de «${archivoActual ?? ''}» y no se agrega ninguna sección a la encuesta.`}
-      cancelar="Seguir aquí"
-      accion="Salir de la importación"
-      onConfirmar={salirDelTodo}
+      onSalir={salirDelTodo}
     />
     </>
   )

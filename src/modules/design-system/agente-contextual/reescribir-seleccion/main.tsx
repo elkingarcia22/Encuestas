@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { TextSelectionIcon } from '@hugeicons/core-free-icons'
+import { Calendar03Icon, TextSelectionIcon } from '@hugeicons/core-free-icons'
 import { Badge, Button, cn } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { WS } from '../../drawers/components/drawer-styles'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../../navegacion/components/case-frame'
 import {
   AgentCard,
@@ -43,6 +44,8 @@ export function Component() {
   const [paragraphs, setParagraphs] = useState(PARAGRAPHS)
   const [selected, setSelected] = useState<number | null>(null)
   const [job, setJob] = useState<Job | null>(null)
+  const [programando, setProgramando] = useState(false)
+  const [programado, setProgramado] = useState(false)
   const [pulse, setPulse] = useState<{ index: number; tick: number } | null>(null)
   const timer = useRef<number | undefined>(undefined)
   const articleRef = useRef<HTMLElement>(null)
@@ -202,7 +205,7 @@ export function Component() {
               <ProposalCard key={job.tick} className="mt-4" current={job.original} proposal={proposal} proposalLabel={label} anim="in" />
               <div className="mt-4 flex items-center gap-2.5">
                 {applied ? (
-                  <Button data-undo-focus="" variant="outline" className={PILL} onClick={() => notify('El cambio ya está en el aviso')}>
+                  <Button data-undo-focus="" variant="outline" className={PILL} onClick={() => notify('El cambio ya está en el aviso', undefined, 'info')}>
                     Reemplazado
                   </Button>
                 ) : (
@@ -234,7 +237,7 @@ export function Component() {
       hint="Selecciona un párrafo: barra flotante y antes / después en el panel"
       width="default"
       anatomy={false}
-      back={{ label: 'Casos de Orbit Flow', to: '/design-system/agente-contextual' }}
+      back={{ label: 'Casos de Orbit', to: '/design-system/agente-contextual' }}
     >
       <AgentStage state={panel} onOpen={() => setPanel('open')} pending={applied} panel={agentPanel}>
         <div className="px-8 py-6">
@@ -255,11 +258,12 @@ export function Component() {
               }
               actions={
                 <>
-                  <Button variant="outline" className={WS} onClick={() => notify('Vista previa del aviso')}>
+                  <Button variant="outline" className={WS} onClick={() => notify('Vista previa del aviso', undefined, 'info')}>
                     Vista previa
                   </Button>
-                  <Button className={WS} onClick={() => notify('Envío programado para el 1 de diciembre')}>
-                    Programar envío
+                  {/* Programar un envío a 1.240 personas pregunta antes (13-oct, regla «preguntar-antes»). */}
+                  <Button className={WS} disabled={programado} onClick={() => setProgramando(true)}>
+                    {programado ? 'Envío programado' : 'Programar envío'}
                   </Button>
                   {panel === 'closed' ? <ReopenAgentButton onClick={() => setPanel('open')} /> : null}
                 </>
@@ -313,6 +317,23 @@ export function Component() {
           </PageShell>
         </div>
       </AgentStage>
+
+      <DialogoConfirmar
+        abierto={programando}
+        onAbiertoChange={setProgramando}
+        icono={Calendar03Icon}
+        titulo="¿Programar el envío?"
+        descripcion="El aviso le llega por correo a todas las sedes el día programado. Hasta entonces puedes cambiarlo."
+        cancelar="Todavía no"
+        accion="Programar para 1.240 personas"
+        onConfirmar={() => {
+          setProgramando(false)
+          setProgramado(true)
+          notify('Envío programado', 'Sale el 1 de diciembre a las 8:00 a. m.', 'success')
+        }}
+      >
+        <RegistroConfirmar nombre="Horario de diciembre" detalle="Aviso interno · todas las sedes" estado="1 dic, 8:00 a. m." tono="neutro" icono={Calendar03Icon} />
+      </DialogoConfirmar>
     </CaseFrame>
   )
 }

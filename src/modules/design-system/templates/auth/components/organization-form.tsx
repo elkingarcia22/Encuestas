@@ -94,7 +94,7 @@ export function OrganizationForm({ onBackToLogin }: { onBackToLogin: () => void 
               onClick={onBackToLogin}
             >
               <HugeiconsIcon icon={ArrowLeft02Icon} size={16} aria-hidden="true" />
-              Ingresa con usuario y contraseña
+              Volver a iniciar sesión
             </Button>
           </CursorDeshabilitado>
         </div>

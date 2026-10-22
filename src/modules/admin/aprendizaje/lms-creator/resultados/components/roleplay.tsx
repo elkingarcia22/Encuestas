@@ -47,7 +47,6 @@ export function Roleplay({ resultados }: { resultados: Resultados }) {
   const abierto = resultados.intentos.find((uno) => uno.id === idAbierto) ?? null
 
   const logrados = (uno: IntentoRoleplay) => uno.objetivos.filter((objetivo) => objetivo.alcanzado).length
-  const aprobados = intentos.filter((uno) => uno.aprobado).length
   const personas = new Set(intentos.map((uno) => uno.email)).size
   // **Por persona, no por intento**: lo que se quiere saber es si acabaron lográndolo, no cuántas veces fallaron por
   // el camino. Quien aprueba al tercer intento aprobó (Dave, 14-oct).
@@ -169,19 +168,15 @@ export function Roleplay({ resultados }: { resultados: Resultados }) {
         // Sin «Baja», «Regular» ni «Buena»: poner nota aquí es juzgar el roleplay con un corte que nadie acordó.
         pie={`${numero(personasAprobadas)} de ${numero(personas)} ${personas === 1 ? 'persona' : 'personas'}`}
         grafico={<AnilloAvance valor={tasaPersonas} color="var(--primary)" etiqueta="Personas que aprobaron" tamano={48} />}
-        tituloReparto="Resultado de los intentos"
-        totalReparto={`${numero(intentos.length)} ${intentos.length === 1 ? 'intento' : 'intentos'}`}
-        reparto={[
-          { id: 'aprobados', etiqueta: 'Aprobados', porcentaje: intentos.length === 0 ? 0 : (aprobados / intentos.length) * 100, color: 'var(--chart-1)', cantidad: numero(aprobados) },
-          { id: 'noAprobados', etiqueta: 'No aprobados', porcentaje: intentos.length === 0 ? 0 : ((intentos.length - aprobados) / intentos.length) * 100, color: 'var(--chart-4)', cantidad: numero(intentos.length - aprobados) },
-        ]}
+        // Sin «Resultado de los intentos» (Dave, 15-oct): repartir los intentos en aprobados y no aprobados decía lo
+        // mismo que la cifra de al lado, que ya cuenta por persona y es la lectura que importa.
         // Cuántas vueltas le dio cada quien: es lo que dice si el roleplay está bien calibrado.
         tercera={<ColumnaIntentos intentos={porPersona} />}
       />
 
       <PageSection
         title="Intentos"
-        description="Una fila por intento: quien repitió sale varias veces. Abre un nombre para ver sus objetivos y la conversación."
+        description="Una fila por intento: quien repitió aparece varias veces. Selecciona una persona para ver sus objetivos y la conversación."
       >
         <TablaDatos
           key={version}

@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Cancel01Icon, PencilEdit02Icon, Search01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Field,
   FieldContent,
@@ -24,6 +23,7 @@ import {
   RadioGroupItem,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { BADGE_ESTADO, totalPersonas, type Plan } from './planes'
 import { fechaCorta, plural } from '@/modules/design-system/patrones/formato'
@@ -93,7 +93,7 @@ export function PasoPlan({ planes, conAssessment, planId, onPlan, nombre, onNomb
         <InputGroupInput aria-label="Buscar planes" placeholder="Buscar planes" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
         {busqueda ? (
           <InputGroupAddon align="inline-end">
-            <InputGroupButton size="icon-xs" aria-label="Borrar la búsqueda" onClick={() => setBusqueda('')}>
+            <InputGroupButton size="icon-xs" aria-label="Limpiar la búsqueda" onClick={() => setBusqueda('')}>
               <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
             </InputGroupButton>
           </InputGroupAddon>
@@ -211,6 +211,8 @@ export function PasoPlan({ planes, conAssessment, planId, onPlan, nombre, onNomb
         onOpenChange={setEligiendo}
         title="Elegir plan de formación"
         description="Solo planes de competencias. Los que ya tienen assessment o no tienen competencias salen deshabilitados."
+        // 13-oct (I-009): con un plan marcado distinto del puesto, no se cierra al tocar fuera y pregunta antes de descartar.
+        conCambios={marcado !== planId}
         // «Confirmar», no «Cerrar»: aquí se está eligiendo algo, y el botón es el que lo aplica. Apagado hasta que
         // haya un plan marcado, porque sin plan no hay nada que confirmar. Para salirse sin elegir está la X.
         footer={

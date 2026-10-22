@@ -1,4 +1,4 @@
-import { Badge } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 
 // Las unidades de la diferencia frente a la base: los porcentajes se leen en puntos porcentuales (pp) y el eNPS en
 // puntos (pts): un 70% que pasa a 72% no «sube 2%», sube 2 puntos. La insignia de la comparación ya no vive aquí: desde

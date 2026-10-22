@@ -15,14 +15,16 @@ import { fallaEnQA } from './modelo/surveyCasos'
 import { fileStamp, saveBlob } from './modelo/descargas/libro'
 import type { SurveyListItem } from './modelo/types'
 import { PanelRiesgos } from './components/riesgos/panel-riesgos'
-import type { Solucion } from './components/riesgos/drawer-riesgo'
+import type { Solucion } from './components/riesgos/soluciones'
 import type { SurveyRisk } from './modelo/riesgos'
 import { AgenteEncuestas } from './components/agente-encuestas'
 import { ReopenAgentButton } from '@/modules/design-system/agente-contextual/components/agent-kit'
 import { useAgente } from '@/modules/admin/aprendizaje/planes-de-formacion/components/agente-aprendizaje'
 import { PestanaDemograficos } from './components/demograficos/pestana-demograficos'
 import { actualizarEncuesta, duplicarEncuestas, eliminarEncuestas, useEncuestas } from './components/almacen'
-import type { AccionEncuesta } from './components/acciones'
+import { enlaceDeEncuesta, type AccionEncuesta } from './components/acciones'
+import { descargarQrPng } from './modelo/descargas/qr'
+import { slugify } from './modelo/descargas/libro'
 import type { ModoFecha } from './components/celda-fecha'
 import { DialogoEliminar, DialogoFinalizar } from './components/dialogos'
 import { CatalogoPlantillas } from './components/plantillas/catalogo-plantillas'
@@ -97,24 +99,32 @@ export function Component() {
   const ejecutar = (accion: AccionEncuesta, encuesta: SurveyListItem) => {
     if (accion === 'vistaPrevia') {
       const borrador = encuesta.draft ?? createPublishedSurveyDraft(encuesta)
-      return canPreview(borrador) ? setVistaPrevia({ abierta: true, borrador }) : notify('Añade al menos una pregunta o un dato demográfico visible para ver la vista previa.')
+      return canPreview(borrador) ? setVistaPrevia({ abierta: true, borrador }) : notify('Agrega al menos una pregunta o un dato demográfico visible para ver la vista previa.', undefined, 'warning')
     }
     if (accion === 'resultados') return navigate(`${RUTA}/${encuesta.id}/resultados`)
     if (accion === 'editar') return navigate(`${RUTA}/${encuesta.id}/editar`)
     if (accion === 'editarParticipantes') return navigate(`${RUTA}/${encuesta.id}/editar`, { state: { paso: 'participants' } })
     if (accion === 'duplicar') {
       duplicarEncuestas([encuesta.id])
-      return notify(`${encuesta.name} duplicada`, 'La copia quedó justo debajo, como borrador y sin respuestas.')
+      return notify(`${encuesta.name} duplicada`, 'La copia quedó justo debajo, como borrador y sin respuestas.', 'success')
     }
     if (accion === 'finalizar') return setPorFinalizar(encuesta)
     if (accion === 'editarFechas') return setEdicion({ id: encuesta.id, modo: 'cierre' })
     if (accion === 'reabrir') return setEdicion({ id: encuesta.id, modo: 'reabrir' })
     if (accion === 'eliminar') return setPorEliminar({ encuestas: [encuesta] })
     if (accion === 'compartirEnlace') {
-      void navigator.clipboard?.writeText(`${window.location.origin}/encuestas/${encuesta.id}`).catch(() => undefined)
-      return notify(`Enlace de ${encuesta.name} copiado al portapapeles`)
+      if (!navigator.clipboard) return notify('No pudimos copiar el enlace', 'Tu navegador no deja copiar desde aquí. Inténtalo con otro navegador.', 'error')
+      return void navigator.clipboard.writeText(enlaceDeEncuesta(encuesta.id)).then(
+        () => notify('Enlace copiado', `Pégalo donde quieras compartir ${encuesta.name}.`, 'success'),
+        () => notify('No pudimos copiar el enlace', 'Tu navegador no dio permiso para copiar. Inténtalo de nuevo.', 'error'),
+      )
     }
-    if (accion === 'descargarQr') return notify(`Código QR de ${encuesta.name} descargado`)
+    if (accion === 'descargarQr') {
+      return void descargarQrPng(enlaceDeEncuesta(encuesta.id), `qr-${slugify(encuesta.name)}.png`).then(
+        () => notify('QR descargado', `Imprímelo o compártelo para que respondan ${encuesta.name}.`, 'success'),
+        () => notify('No pudimos crear el QR', 'Inténtalo de nuevo en un momento.', 'error'),
+      )
+    }
     if (accion === 'reintentarCarga' && encuesta.uploadTaskId !== undefined) return carga.reintentar(encuesta.uploadTaskId)
   }
 
@@ -126,10 +136,10 @@ export function Component() {
       if (solucion.accion === 'editar' && solucion.paso) return navigate(`${RUTA}/${riesgo.survey.id}/editar`, { state: { paso: solucion.paso } })
       return ejecutar(solucion.accion, riesgo.survey)
     }
-    if (solucion.tipo === 'lista') return solucion.aviso ? notify(riesgo.survey.name, solucion.aviso) : undefined
+    if (solucion.tipo === 'lista') return solucion.aviso ? notify(riesgo.survey.name, solucion.aviso, 'success') : undefined
     if (solucion.tipo === 'planes') return navigate('/admin/tareas', { state: { nuevos: solucion.nuevos, elegido: solucion.elegido } })
     actualizarEncuesta(riesgo.survey.id, { endDate: solucion.nuevoCierre })
-    notify(riesgo.survey.name, `Ahora cierra el ${solucion.nuevoCierre}`)
+    notify(riesgo.survey.name, `Ahora cierra el ${solucion.nuevoCierre}`, 'success')
   }
 
   // Lo que ya se lanzó abre sus resultados: una medición en campo tiene resultados parciales que
@@ -141,13 +151,13 @@ export function Component() {
     const texto = formatSurveyDate(fecha)
     if (modo === 'reabrir') {
       actualizarEncuesta(id, { status: 'En progreso', statusVariant: 'info', endDate: texto })
-      notify(`${nombreDe(id)} vuelve a estar en curso hasta el ${texto}`)
+      notify(`${nombreDe(id)} vuelve a estar en curso hasta el ${texto}`, undefined, 'success')
     } else if (modo === 'inicio') {
       actualizarEncuesta(id, { startDate: texto })
-      notify(`${nombreDe(id)} ahora inicia el ${texto}`)
+      notify(`${nombreDe(id)} ahora inicia el ${texto}`, undefined, 'success')
     } else {
       actualizarEncuesta(id, { endDate: texto })
-      notify(`${nombreDe(id)} ahora cierra el ${texto}`)
+      notify(`${nombreDe(id)} ahora cierra el ${texto}`, undefined, 'success')
     }
     setEdicion(null)
   }
@@ -156,14 +166,14 @@ export function Component() {
   const finalizar = (encuesta: SurveyListItem) => {
     actualizarEncuesta(encuesta.id, { status: 'Finalizado', statusVariant: 'positive', progress: 100, endDate: formatSurveyDate(startOfToday()) })
     setPorFinalizar(null)
-    notify(`${encuesta.name} finalizada`)
+    notify(`${encuesta.name} finalizada`, undefined, 'success')
   }
 
   const eliminar = (lista: readonly SurveyListItem[]) => {
     eliminarEncuestas(lista.map((encuesta) => encuesta.id))
     porEliminar.limpiar?.()
     setPorEliminar({ encuestas: [] })
-    notify(lista.length === 1 ? `${lista[0].name} eliminada` : `${lista.length} encuestas eliminadas`)
+    notify(lista.length === 1 ? `${lista[0].name} eliminada` : `${lista.length} encuestas eliminadas`, undefined, 'success')
   }
 
   return (
@@ -243,7 +253,7 @@ export function Component() {
               onAbrir={abrir}
               onDuplicarVarias={(ids) => {
                 duplicarEncuestas(ids)
-                notify(`${ids.length} encuestas duplicadas`, 'Cada copia quedó debajo de su original, como borrador.')
+                notify(`${ids.length} encuestas duplicadas`, 'Cada copia quedó debajo de su original, como borrador.', 'success')
               }}
               onExportarVarias={(ids) => exportarEncuestas(encuestas.filter((encuesta) => ids.includes(encuesta.id)))}
               onCompararVarias={(ids) => {

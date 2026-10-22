@@ -6,7 +6,6 @@ import {
   LayoutTwoColumnIcon,
   LookTopIcon,
   Maximize01Icon,
-  WorkflowSquare10Icon,
 } from '@hugeicons/core-free-icons'
 import type { PartInfo } from '../../components/anatomy/anatomy-kit'
 
@@ -102,28 +101,30 @@ const MUESTRA: VentanaMuestra = {
 
 export const VENTANA_CASES: CasoVentana[] = [
   {
-    id: 'confirmar',
-    title: 'Confirmar',
-    summary: 'Pedir un sí mostrando a quiénes afecta: la lista va en el cuerpo, por eso es ActionDialog. Sin lista, es la ventana de confirmar (Estados › Confirmaciones).',
+    // 13-oct: «confirmar con la lista de a quiénes afecta» pasó a DialogoConfirmar con RegistroConfirmar (regla
+    // «dos-ventanas»); aquí queda la lista para elegir, que sí tiene contenido para trabajar.
+    id: 'elegir',
+    title: 'Elegir de una lista',
+    summary: 'Marcar a quiénes llega algo antes de seguir: la lista para elegir va en el cuerpo, por eso es ActionDialog. Si solo hay que confirmar (aunque afecte a muchas personas), es DialogoConfirmar con RegistroConfirmar (Estados › Confirmaciones).',
     icon: CheckListIcon,
-    config: { ...BASE, size: 'sm', lead: true, note: true },
+    config: { ...BASE, lead: true, note: true },
     sample: {
       ...MUESTRA,
-      title: 'Mover candidatos',
-      sub: 'Se les avisa por correo y el líder ve la nueva etapa.',
-      lead: { titulo: 'Analista de datos', detalle: '3 candidatos pasan a Entrevistas' },
-      slot: 'A quiénes afecta: las personas que se van a mover.',
-      note: 'Puedes deshacerlo desde la vacante',
-      confirm: 'Mover candidatos',
-      pending: 'Moviendo…',
+      title: 'Asignar contenido',
+      sub: 'Quienes marques lo ven en su Zona de estudio desde hoy.',
+      lead: { titulo: 'Onboarding comercial Q3', detalle: 'Curso · 8 páginas' },
+      slot: 'La lista de personas para marcar.',
+      note: 'Puedes quitarlo después desde el plan',
+      confirm: 'Asignar',
+      pending: 'Asignando…',
     },
   },
   {
     id: 'formulario',
-    title: 'Formulario',
-    summary: 'Pedir dos o tres datos sin sacar a la persona de la página. Ancho normal.',
+    title: 'Formulario corto',
+    summary: 'Pedir dos o tres datos sin sacar a la persona de la página, como una nota. Ancho normal; el clic afuera no cierra, para que un clic perdido no borre lo escrito. Crear o editar algo largo no va aquí: va en una página.',
     icon: Edit02Icon,
-    config: { ...BASE, lead: true },
+    config: { ...BASE, lead: true, dismissible: false },
     sample: {
       ...MUESTRA,
       title: 'Nueva nota',
@@ -135,18 +136,21 @@ export const VENTANA_CASES: CasoVentana[] = [
     },
   },
   {
-    id: 'formulario-ancho',
-    title: 'Formulario ancho',
-    summary: 'Un formulario largo o en dos columnas. Ventana ancha y el clic afuera no cierra: un clic perdido no borra lo escrito.',
+    // 13-oct: los casos «Formulario ancho» (Editar datos de la vacante, 6 campos) y «Con pasos» (Configurar evaluación)
+    // eran crear o editar dentro de una ventana, que la regla «crear-en-pagina» manda a una página. Este los reemplaza
+    // con un ajuste de verdad corto.
+    id: 'ajuste',
+    title: 'Ajuste corto',
+    summary: 'Un ajuste de pocas opciones, como las preferencias de avisos. El clic afuera no cierra. Lo largo, o crear algo, va en una página: nunca en una ventana.',
     icon: LayoutTwoColumnIcon,
-    config: { ...BASE, size: 'wide', lead: true, note: true, dismissible: false },
+    config: { ...BASE, lead: true, note: true, dismissible: false },
     sample: {
       ...MUESTRA,
-      title: 'Editar datos de la vacante',
-      sub: 'Los cambios se ven en el portal de empleo al guardar.',
+      title: 'Preferencias de avisos',
+      sub: 'Elige cuándo te escribimos sobre esta vacante.',
       lead: { titulo: 'Analista de datos', detalle: 'Publicada · 48 postulaciones' },
-      slot: 'Los campos en dos columnas.',
-      note: 'Los candidatos no reciben aviso',
+      slot: 'Dos o tres interruptores.',
+      note: 'Solo cambia tus avisos, no los del equipo',
       confirm: 'Guardar cambios',
       pending: 'Guardando…',
     },
@@ -170,21 +174,6 @@ export const VENTANA_CASES: CasoVentana[] = [
     },
   },
   {
-    id: 'pasos',
-    title: 'Con pasos',
-    summary: 'Algo corto pero en partes: los pasos abren el cuerpo, la flecha vuelve al anterior y el pie avanza. Si es largo, es una página.',
-    icon: WorkflowSquare10Icon,
-    config: { ...BASE, back: true, under: 'steps', footer: 'propio', dismissible: false },
-    sample: {
-      ...MUESTRA,
-      title: 'Configurar evaluación',
-      sub: 'Se guarda al terminar cada paso.',
-      steps: ['Datos', 'Preguntas', 'Publicación'],
-      slot: 'Los campos del paso actual.',
-      propio: ['Atrás', 'Siguiente'],
-    },
-  },
-  {
     id: 'pestanas',
     title: 'Con pestañas',
     summary: 'Separar lo que se muestra en partes sin abrir otra ventana: pestañas subrayadas al empezar el cuerpo.',
@@ -194,7 +183,7 @@ export const VENTANA_CASES: CasoVentana[] = [
       ...MUESTRA,
       title: 'Detalle de la postulación',
       sub: 'Lo que respondió y lo que se evaluó en cada etapa.',
-      lead: { titulo: 'Laura Méndez', detalle: 'Analista de datos · se postuló el 3 sep 2026' },
+      lead: { titulo: 'Laura Méndez', detalle: 'Analista de datos · se postuló el 3 sept 2026' },
       tabs: ['Respuestas', 'Evaluaciones', 'Historial'],
       slot: 'Lo de la pestaña elegida, con su propio scroll.',
       confirm: 'Pasar a Entrevistas',
@@ -264,7 +253,7 @@ export function ventanaParts(c: VentanaConfig): PartInfo[] {
       text:
         c.size === 'full'
           ? 'Para editores y vistas previas: casi toda la pantalla, con 16 px de aire.'
-          : 'Sale a 120 px del borde de arriba con un rebote suave. sm para algo corto (confirmar con una lista), default para una ventana con contenido, wide para formularios largos o dos columnas.',
+          : 'Sale a 120 px del borde de arriba con un rebote suave. sm para algo muy corto, default para una ventana con contenido, wide para listas o vistas con dos columnas. Un formulario largo no va aquí: va en una página.',
     },
   ]
   const names: string[] = []

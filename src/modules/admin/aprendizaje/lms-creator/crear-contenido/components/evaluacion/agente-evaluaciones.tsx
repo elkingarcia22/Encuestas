@@ -14,7 +14,6 @@ import {
   AttachmentContent,
   AttachmentMedia,
   AttachmentTitle,
-  Badge,
   Button,
   Field,
   FieldLabel,
@@ -30,6 +29,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { BotonIa } from '@/shared/components/BotonIa'
 import { Composer } from '@/modules/admin/suite-ai/shared/composer'
@@ -41,8 +41,10 @@ import type { TipoBanco } from '../banco-preguntas'
 import { COSTO, actualizarPagina, gastarTokens, getBorrador, setBorrador, useBorrador } from '../borrador'
 import { ETIQUETA_DIFICULTAD, TEMA_IA, type Dificultad } from './logica'
 import { TokenBadge, TokenCost } from '../tokens'
+import { plural } from '@/modules/design-system/patrones/formato'
+import { AvisoOrbit } from '@/modules/design-system/ia/aviso-orbit'
 
-// «Orbit Flow» en una evaluación (antes «Agente de evaluaciones»): la conversación guiada que arma una evaluación con IA. Dos caminos (configuración estándar
+// «Orbit» en una evaluación (antes «Agente de evaluaciones»): la conversación guiada que arma una evaluación con IA. Dos caminos (configuración estándar
 // o desde cero), el material del tema, los tipos de pregunta y la confirmación, que gasta los tokens y le pasa el
 // pedido al editor para que genere. Cada vez que se abre empieza de cero.
 
@@ -125,7 +127,7 @@ export function AgenteEvaluaciones({ abierto, onAbiertoChange, sesion, paginaId,
   const empezar = () => {
     if (getBorrador().tokens < COSTO_IA) {
       estado.current.paso = 'sin_tokens'
-      notify(`No tienes suficientes tokens (${COSTO_IA} requeridos).`)
+      notify(`No tienes suficientes tokens (${COSTO_IA} requeridos).`, undefined, 'warning')
       decir(
         `Se agotaron tus tokens para generar la evaluación con IA. Necesitas al menos ${COSTO_IA} tokens para continuar. Recarga saldo cuando esté disponible o vuelve a intentarlo más tarde.`,
       )
@@ -187,9 +189,9 @@ export function AgenteEvaluaciones({ abierto, onAbiertoChange, sesion, paginaId,
     }))
 
     const resumen =
-      `Configuración seleccionada:\n✓ ${aprobacion}% mínimo` +
+      `Configuración seleccionada:\n✓ ${aprobacion} % mínimo` +
       (tiempo ? ` · ${tiempo} min` : '') +
-      ` · ${total} preguntas · ${ETIQUETA_DIFICULTAD[dificultad]}`
+      ` · ${total} ${plural(total, 'pregunta', 'preguntas')} · ${ETIQUETA_DIFICULTAD[dificultad]}`
     conPensando(() => {
       decir(resumen)
       luego(() => decir('Ahora cuéntame sobre el tema de la evaluación. Escribe el contenido o adjunta un archivo.'), 400)
@@ -219,7 +221,7 @@ export function AgenteEvaluaciones({ abierto, onAbiertoChange, sesion, paginaId,
   const generar = () => {
     if (estado.current.paso === 'generando') return false
     if (!gastarTokens(COSTO_IA)) {
-      notify(`No tienes suficientes tokens (${COSTO_IA} requeridos).`)
+      notify(`No tienes suficientes tokens (${COSTO_IA} requeridos).`, undefined, 'warning')
       return false
     }
     estado.current.paso = 'generando'
@@ -293,7 +295,7 @@ export function AgenteEvaluaciones({ abierto, onAbiertoChange, sesion, paginaId,
     reset()
     setBorradorTexto('')
     setArchivo(null)
-    push('agent', <Mensaje>¡Hola! Soy Orbit Flow. Voy a ayudarte a crear preguntas sobre el tema de tu contenido.</Mensaje>)
+    push('agent', <Mensaje>¡Hola! Soy Orbit. Voy a ayudarte a crear preguntas sobre el tema de tu contenido.</Mensaje>)
     luego(empezar, 400)
     // Solo al cambiar de sesión: `empezar` y los demás leen su estado por referencia.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -312,8 +314,8 @@ export function AgenteEvaluaciones({ abierto, onAbiertoChange, sesion, paginaId,
       modal={!junto}
       disablePointerDismissal={junto}
       ai
-      // El panel del agente contextual se llama como él, «Orbit Flow» (decisión 9 de la auditoría, 5-oct).
-      title="Orbit Flow"
+      // El panel del agente contextual se llama como él, «Orbit» (decisión 9 de la auditoría, 5-oct).
+      title="Orbit"
       badge={<TokenBadge tokens={tokens} />}
       // Desde 640 px manda el ancho «md» del panel (30rem); por debajo, el panel ocupa todo el ancho de la pantalla
       // (la librería lo deja en 75 %, que en el celular no alcanza para conversar).
@@ -370,9 +372,7 @@ export function AgenteEvaluaciones({ abierto, onAbiertoChange, sesion, paginaId,
               e.target.value = ''
             }}
           />
-          <Text as="p" size="xs" variant="muted" className="text-center">
-            El agente puede cometer errores. Revisa las preguntas antes de publicar.
-          </Text>
+          <AvisoOrbit />
         </div>
       }
     >
@@ -401,7 +401,7 @@ function OpcionesCamino({ onElegir }: { onElegir: (camino: 'estandar' | 'cero', 
       valor: 'estandar' as const,
       icono: FlashIcon,
       titulo: 'Configuración estándar',
-      descripcion: '70% para aprobar, sin límite de tiempo ni de intentos.',
+      descripcion: '70 % para aprobar, sin límite de tiempo ni de intentos.',
     },
     {
       valor: 'cero' as const,
@@ -443,7 +443,7 @@ type PasoConfig = { pregunta: string; opciones: string[]; libre: string | false 
 const PASOS: PasoConfig[] = [
   {
     pregunta: '¿Puntaje mínimo de aprobación?',
-    opciones: ['60% — Aprobación básica', '70% — Estándar recomendado', '80% — Nivel intermedio', '90% — Alto desempeño'],
+    opciones: ['60 % — Aprobación básica', '70 % — Estándar recomendado', '80 % — Nivel intermedio', '90 % — Alto desempeño'],
     libre: 'Otro',
   },
   {
@@ -589,7 +589,7 @@ function Confirmacion({ cantidad, onGenerar }: { cantidad: number; onGenerar: ()
       <Text as="p" size="sm">
         Voy a generar{' '}
         <Text as="span" size="sm" weight="semibold">
-          {cantidad} preguntas
+          {cantidad} {plural(cantidad, 'pregunta', 'preguntas')}
         </Text>{' '}
         sobre el tema{' '}
         <Text as="span" size="sm" weight="semibold">

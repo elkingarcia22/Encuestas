@@ -31,7 +31,7 @@ export function PantallaReal({
   ruta: string
   // Panel a toda la altura a la derecha, junto al header (actividad del agente en el chat de Orbit).
   panel?: ReactNode
-  // Orbit Flow: a la derecha, debajo del header. El header no se mueve al abrirlo (8 oct).
+  // Orbit: a la derecha, debajo del header. El header no se mueve al abrirlo (8 oct).
   agente?: ReactNode
   children: ReactNode
 }) {
@@ -51,7 +51,7 @@ export function PantallaReal({
                 <PageAmbience />
                 <div className="flex h-full min-h-0 flex-1 flex-col p-6">
                   {children}
-                  <AppFooter />
+                  <AppFooter siempre />
                 </div>
               </div>
               {agente}

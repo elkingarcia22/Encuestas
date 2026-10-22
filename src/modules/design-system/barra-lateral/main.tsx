@@ -23,7 +23,7 @@ const NOTE = 'text-[13px] leading-snug text-muted-foreground'
 
 const GUIDE = [
   { title: 'Abierta o plegada', text: 'Abierta (288px) para moverse con los nombres a la vista; plegada en riel (72px) para ganar espacio en tablas y editores. Cada persona elige y la app lo recuerda.' },
-  { title: 'Hasta tres niveles', text: 'Producto › página en la misma barra. Si una sección tiene sus propias páginas, abre un panel con Volver. Si hace falta más, el menú del producto va arriba (ver Navegación).' },
+  { title: 'Hasta tres niveles', text: 'Producto › página en la misma barra. Si una sección tiene sus propias páginas, abre un panel con Volver. Si hace falta más, el menú del producto va arriba (ver Estructura de página).' },
   { title: 'En Orbit', text: 'La barra se vuelve historial: nueva conversación arriba y las conversaciones con su estado. Sin tarjeta del pie ni feedback.' },
 ]
 
@@ -74,7 +74,7 @@ export function ConfiguradorBarraLateral({ conCabecera = false }: { conCabecera?
     <>
       {conCabecera ? (
         <PageHeader
-        kicker="Design system · Patrones"
+        kicker="Design system · Patrones · Marco"
         title="Barra lateral"
         description="La navegación de la izquierda, pieza por pieza. Lo azul con nombre es parte de la barra y se ve igual en todas las pantallas; lo gris rayado es un slot, un espacio donde el contenido cambia."
         actions={

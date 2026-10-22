@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft01Icon, ArrowRight01Icon, Logout01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { Logout01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Stepper,
@@ -16,9 +16,9 @@ import {
   cn,
 } from '@ubits/flux-ui'
 import { STEP_INDICATOR, STEP_LINE } from '@/modules/design-system/drawers/components/drawer-styles'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { VentanaSalir } from '@/modules/design-system/navegacion/boton-salir-creacion'
 import { notify } from '@/shared/components/notify'
-import { PageActionBar, PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
+import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { PLANES, totalPersonas, type Plan } from './planes'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { ChipGuardado, useGuardadoSimulado } from '@/shared/components/ChipGuardado'
@@ -42,6 +42,7 @@ import {
 } from './programacion'
 import { ResumenAssessment } from './resumen-assessment'
 import { cambiarAssessments, nombreOcupado, planesConAssessment, useAssessments } from './sesion'
+import { BarraPasos } from '@/modules/design-system/navegacion/barra-pasos'
 
 // Diagnóstico › Crear assessment: el asistente de siempre del admin (el de Crear contenido y Crear plan) —pasos arriba,
 // el trabajo a la izquierda, «Así va el assessment» a la derecha y la barra de acciones abajo—. Usa los servicios que ya
@@ -374,20 +375,15 @@ export function CrearAssessment() {
                 </StepperContent>
               </Stepper>
 
-              <PageActionBar className="mb-1">
-                {/* El estado del guardado aparece en cuanto hay algo que guardar, también en el paso 1. */}
-                {esBorrador ? <ChipGuardado estado={estadoGuardado} /> : <span />}
-                <div className="ml-auto flex items-center gap-2">
-                  <Button variant="outline" disabled={paso === 1} onClick={() => irAlPaso((paso - 1) as Paso)}>
-                    <HugeiconsIcon icon={ArrowLeft01Icon} size={16} aria-hidden="true" />
-                    Atrás
-                  </Button>
-                  <Button onClick={avanzar}>
-                    {ultimo ? 'Crear assessment' : 'Continuar'}
-                    {ultimo ? null : <HugeiconsIcon icon={ArrowRight01Icon} size={16} aria-hidden="true" />}
-                  </Button>
-                </div>
-              </PageActionBar>
+              {/* La barra de los pasos del sistema (BarraPasos, 13-oct). El estado del guardado aparece en cuanto hay
+                  algo que guardar, también en el paso 1. */}
+              <BarraPasos
+                className="mb-1"
+                inicio={esBorrador ? <ChipGuardado estado={estadoGuardado} /> : null}
+                paso={paso}
+                onAtras={() => irAlPaso((paso - 1) as Paso)}
+                principal={{ texto: ultimo ? 'Crear assessment' : undefined, onClick: avanzar }}
+              />
           </>
         </PageContent>
 
@@ -395,15 +391,12 @@ export function CrearAssessment() {
             nada que perder. Está para evitar el clic por error y para contarle dónde quedó. Solo aparece si se eligió
             o escribió algo; si no, se sale de una. Idéntica a la de Crear contenido, sin tarjeta del registro en el
             cuerpo (Carlos, 1-oct; el jefe de Dave, 13-oct: todas las salidas de la creación, iguales). */}
-        <DialogoConfirmar
+        <VentanaSalir
           abierto={saliendo}
           onAbiertoChange={setSaliendo}
-          icono={Logout01Icon}
-          titulo="¿Salir de la creación?"
-          descripcion="El assessment queda guardado como borrador. Puedes retomarlo cuando quieras desde Diagnóstico."
-          cancelar="Seguir aquí"
-          accion="Salir de la creación"
-          onConfirmar={() => {
+          borrador
+          mensaje="El assessment queda guardado como borrador. Puedes retomarlo cuando quieras desde Diagnóstico."
+          onSalir={() => {
             setSaliendo(false)
             salir()
           }}

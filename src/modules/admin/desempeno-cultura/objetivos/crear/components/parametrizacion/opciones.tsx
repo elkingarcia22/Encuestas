@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
-import { Badge, Field, FieldContent, FieldDescription, FieldError, FieldLabel, FieldLegend, FieldSet, FieldTitle, IconTile, RadioGroup, RadioGroupItem, cn } from '@ubits/flux-ui'
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel, FieldLegend, FieldSet, FieldTitle, IconTile, RadioGroup, RadioGroupItem, cn } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { TEXTO_POR_TONO } from '../../../../encuestas/components/tonos'
 import type { Tone } from '../../../../encuestas/modelo/tone'
 
@@ -39,6 +40,7 @@ export function TarjetasOpcion<T extends string>({
   columnas = 2,
   invalido,
   onEnfocar,
+  deshabilitado = false,
 }: {
   nombre: string
   opciones: readonly Opcion<T>[]
@@ -48,9 +50,11 @@ export function TarjetasOpcion<T extends string>({
   invalido?: boolean
   /** Al pasar el cursor o el foco por una opción (la vista previa del modelo lo usa); null al salir. */
   onEnfocar?: (valor: T | null) => void
+  /** Todas las tarjetas apagadas (la duración de un ciclo en curso): se ve lo elegido, no se cambia. */
+  deshabilitado?: boolean
 }) {
   return (
-    <RadioGroup value={valor ?? ''} onValueChange={(nuevo) => onValor(nuevo as T)} className={cn('grid gap-3', COLUMNAS[columnas] ?? COLUMNAS[2])} aria-invalid={invalido || undefined}>
+    <RadioGroup disabled={deshabilitado} value={valor ?? ''} onValueChange={(nuevo) => onValor(nuevo as T)} className={cn('grid gap-3', COLUMNAS[columnas] ?? COLUMNAS[2])} aria-invalid={invalido || undefined}>
       {opciones.map((opcion) => {
         const id = `${nombre}-${opcion.valor}`
         return (
@@ -62,6 +66,7 @@ export function TarjetasOpcion<T extends string>({
             onFocus={onEnfocar ? () => onEnfocar(opcion.valor) : undefined}
             onBlur={onEnfocar ? () => onEnfocar(null) : undefined}
           >
+            {/* Alineación de la fila: el tema la fija y la clase sola no le gana (diferencias.json › instalacion-estilos-sin-capa). */}
             <Field orientation="horizontal" className="items-start!">
               <RadioGroupItem value={opcion.valor} id={id} />
               {opcion.icono ? (

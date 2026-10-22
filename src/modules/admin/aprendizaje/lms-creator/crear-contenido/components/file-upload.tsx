@@ -30,7 +30,7 @@ type Props = {
   compacta?: boolean
 }
 
-export const formatoPeso = (bytes: number) => formatBytes(bytes, 1)
+export const formatoPeso = (bytes: number) => formatBytes(bytes, 1).replace('.', ',')
 
 /** Los formatos para el mensaje de error: solo las extensiones («.pdf», «.zip»). */
 const extensiones = (acepta: string) =>

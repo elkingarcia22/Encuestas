@@ -3,6 +3,7 @@ import { pendienteEtapa } from '../vacantes/crear/components/etapas'
 import { creacionDesdeVacante } from './desde-creacion'
 import { HOY } from './creditos'
 import type { VacanteUI } from './datos'
+import { fechaCorta } from '@/modules/design-system/patrones/formato'
 
 // Lo que le falta a una vacante para poder publicarla, con las mismas reglas de la creación por pasos: los obligatorios
 // del paso 1, las secciones de la descripción del paso 2 y las etapas sin configurar del paso 3 (IN-04). Publicar desde
@@ -25,14 +26,13 @@ export function faltaParaPublicar(vacante: VacanteUI): Falta[] {
 // El paso donde está lo primero que falta (para abrir la creación ahí, IN-23).
 export const pasoPendiente = (vacante: VacanteUI) => faltaParaPublicar(vacante)[0]?.paso ?? 3
 
-const FECHA = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'long' })
 const DIA = 24 * 60 * 60 * 1000
 
-// «3 de septiembre»: la fecha de hoy en la maqueta, o de hace unos días.
-export const fechaHace = (dias: number) => FECHA.format(new Date(HOY.getTime() - dias * DIA))
-// La misma fecha en corto («7 de sept»), para una celda de tabla.
-const FECHA_CORTA = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short' })
-export const fechaCortaHace = (dias: number) => FECHA_CORTA.format(new Date(HOY.getTime() - dias * DIA))
+// «3 sept 2026»: la fecha de hoy en la maqueta, o de hace unos días, con la utilidad de fechas del sistema (13-oct: antes era «3 de septiembre»).
+// `en-CA` da «2026-09-03» en la hora local: así el día no se corre por pasar por UTC.
+export const fechaHace = (dias: number) => fechaCorta(new Date(HOY.getTime() - dias * DIA).toLocaleDateString('en-CA'))
+// La misma fecha para una celda de tabla.
+export const fechaCortaHace = fechaHace
 
 // Cómo terminó una vacante al cerrarla (IN-09). Se guarda en `desenlace` con la misma forma de las cerradas de ejemplo:
 // «Cerrada el 3 de septiembre · se contrató a Marcela Ríos».

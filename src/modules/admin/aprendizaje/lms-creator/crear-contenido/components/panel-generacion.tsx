@@ -193,7 +193,7 @@ function PanelGeneracion({
             const pagina = buscarPagina(borrador, t.paginaId)?.pagina
             const listo = t.estado === 'listo'
             const subtitulo =
-              t.estado === 'error' ? 'Se eliminó el recurso' : listo ? 'Listo · Haz clic para ver' : t.tipo === 'video' ? `Generando ${t.progreso}%` : 'Generando...'
+              t.estado === 'error' ? 'Se eliminó el recurso' : listo ? 'Listo · Haz clic para ver' : t.tipo === 'video' ? `Generando ${t.progreso} %` : 'Generando...'
             return (
               <Item
                 key={t.id}

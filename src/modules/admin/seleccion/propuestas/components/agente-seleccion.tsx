@@ -20,7 +20,7 @@ import { afinesEnLaBase, normalizar } from '../agente-vacante'
 import { coincideTexto, posiblesDuplicados, type PersonaViva } from '../base'
 import { QUIEN_MUEVE } from '../movimientos'
 
-// Orbit Flow fuera de una vacante (OF-58, OF-59): en el inicio de Vacantes responde sobre todas las vacantes y en «Mis
+// Orbit fuera de una vacante (OF-58, OF-59): en el inicio de Vacantes responde sobre todas las vacantes y en «Mis
 // candidatos» sobre la base. Es el mismo panel, con las mismas acciones del mensaje, y lo que encuentra se abre o se
 // filtra en la pantalla de trabajo. No cambia nada por su cuenta.
 
@@ -29,7 +29,7 @@ const plural = (n: number, uno: string, varios: string) => (n === 1 ? `1 ${uno}`
 const tiene = (texto: string, patron: RegExp) => patron.test(normalizar(texto))
 
 // Preguntas que no se responden aquí tampoco (OF-51).
-const SENSIBLE = /\b(edad|cuantos anos tiene|hijos?|embaraz|casad[oa]|solter[oa]|estado civil|religion|orientacion sexual|raza|etnia|mujeres|hombres|nacionalidad)\b/
+export const SENSIBLE = /\b(edad|cuantos anos tiene|hijos?|embaraz|casad[oa]|solter[oa]|estado civil|religion|orientacion sexual|raza|etnia|mujeres|hombres|nacionalidad)\b/
 
 function Respuesta({ fuentes = [], seguir = [], onSeguir, children }: { fuentes?: ReplySource[]; seguir?: string[]; onSeguir: (texto: string) => void; children: ReactNode }) {
   const mensaje = useMensajeAgente()
@@ -80,7 +80,7 @@ export function AgenteInicio({ vacantes, onClose, onAbrir }: { vacantes: Vacante
   const hilo = useAgentThread([], { clave: 'seleccion:inicio' })
   const filas = filasDe(vacantes)
   const publicadas = filas.filter((fila) => fila.vacante.estado === 'Publicada')
-  const fuente: ReplySource = { label: 'Tus vacantes', detail: `${vacantes.length} vacantes · al día`, icon: Briefcase06Icon }
+  const fuente: ReplySource = { label: 'Tus vacantes', detail: `${plural(vacantes.length, 'vacante', 'vacantes')} · al día`, icon: Briefcase06Icon }
 
   const responder = (texto: string): ReactNode => {
     const r = (contenido: ReactNode, seguir: string[] = []) => (
@@ -96,7 +96,7 @@ export function AgenteInicio({ vacantes, onClose, onAbrir }: { vacantes: Vacante
       return r(
         <>
           <AgentNote>{plural(atascadas.length, 'vacante se ve atascada', 'vacantes se ven atascadas')}: tienen gente esperando una respuesta tuya o llevan más de 30 días abiertas.</AgentNote>
-          <ListaVacantes filas={atascadas.slice(0, 6)} onAbrir={onAbrir} detalle={(fila) => `${plural(fila.esperan, 'espera', 'esperan')} · ${fila.vacante.diasAbierta} días abierta`} />
+          <ListaVacantes filas={atascadas.slice(0, 6)} onAbrir={onAbrir} detalle={(fila) => `${plural(fila.esperan, 'espera', 'esperan')} · ${plural(fila.vacante.diasAbierta, 'día', 'días')} abierta`} />
         </>,
         ['¿Dónde tengo más gente esperando?'],
       )
@@ -120,7 +120,7 @@ export function AgenteInicio({ vacantes, onClose, onAbrir }: { vacantes: Vacante
       return r(
         <>
           <AgentNote>{plural(secas.length, 'vacante publicada no recibió', 'vacantes publicadas no recibieron')} aplicaciones esta semana. Revisa su descripción o compártela otra vez.</AgentNote>
-          <ListaVacantes filas={secas.slice(0, 6)} onAbrir={onAbrir} detalle={(fila) => `${fila.vacante.diasAbierta} días abierta · ${fila.vacante.aplicaciones} aplicaciones en total`} />
+          <ListaVacantes filas={secas.slice(0, 6)} onAbrir={onAbrir} detalle={(fila) => `${plural(fila.vacante.diasAbierta, 'día', 'días')} abierta · ${plural(fila.vacante.aplicaciones, 'aplicación', 'aplicaciones')} en total`} />
         </>,
       )
     }
@@ -193,7 +193,9 @@ export function AgenteInicio({ vacantes, onClose, onAbrir }: { vacantes: Vacante
 
 /* Mis candidatos (OF-59) --------------------------------------------------------------------------------------- */
 
-const SUGERENCIAS_BASE = ['Busca analistas con Power BI en Bogotá', '¿A quién de la base invito a Analista de datos?', '¿Hay duplicados en la base?', '¿Quién pidió no recibir correos?']
+// 13 oct (reunión con la PM y el TL): «Comparar con una vacante» salió de la tabla y vive aquí, en el chat: se elige la
+// vacante y Orbit Flow arma la búsqueda con lo que ella pide, sin volver a escribir los requisitos.
+const SUGERENCIAS_BASE = ['Busca candidatos para una de mis vacantes', 'Busca analistas con Power BI en Bogotá', '¿Hay duplicados en la base?', '¿Quién pidió no recibir correos?']
 const RELLENO = new Set(['busca', 'buscame', 'encuentra', 'quien', 'quienes', 'hay', 'personas', 'gente', 'con', 'en', 'de', 'que', 'sepan', 'sepa', 'tengan', 'a', 'los', 'las', 'el', 'la', 'y', 'mi', 'base'])
 
 function ListaPersonasBase({ personas, detalle, onAbrir }: { personas: PersonaViva[]; detalle: (persona: PersonaViva) => string; onAbrir: (id: string) => void }) {
@@ -237,7 +239,7 @@ export function AgenteBase({
   onCompararCon: (vacanteId: string) => void
 }) {
   const hilo = useAgentThread([], { clave: 'seleccion:base' })
-  const fuente: ReplySource = { label: 'Mis candidatos', detail: `${personas.length} personas en la base`, icon: Database01Icon }
+  const fuente: ReplySource = { label: 'Mis candidatos', detail: `${plural(personas.length, 'persona', 'personas')} en la base`, icon: Database01Icon }
 
   const responder = (texto: string): ReactNode => {
     const r = (contenido: ReactNode, seguir: string[] = []) => (
@@ -272,6 +274,22 @@ export function AgenteBase({
       )
     }
     const vacante = vacantes.find((una) => una.estado !== 'Cerrada' && normalizar(texto).includes(normalizar(una.titulo)))
+    // Sin decir cuál: se elige de las abiertas y se busca con lo que pide.
+    if (!vacante && tiene(texto, /para una (de mis )?vacante/)) {
+      const abiertas = vacantes.filter((una) => una.estado === 'Publicada').slice(0, 8)
+      return r(
+        <>
+          <AgentNote>¿Para cuál? Leo lo que pide y busco en tu base a quien encaja, sin que tengas que escribir los requisitos.</AgentNote>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {abiertas.map((una) => (
+              <Button key={una.id} variant="outline" className={PILL_XS} onClick={() => escribir(`Busca candidatos para ${una.titulo}`)}>
+                {una.titulo}
+              </Button>
+            ))}
+          </div>
+        </>,
+      )
+    }
     if (vacante && tiene(texto, /(invit|postul|sirve|encaja|para|agrega)/)) {
       const ctx = { vacante, dentro: CANDIDATURAS.filter((c) => c.vacante.id === vacante.id), rechazadas: [] }
       const afines = afinesEnLaBase(ctx, personas, 6)
@@ -279,13 +297,13 @@ export function AgenteBase({
         <>
           <AgentNote>
             {afines.length
-              ? `${plural(afines.length, 'persona de tu base comparte', 'personas de tu base comparten')} lo que pide ${vacante.titulo} y no ${afines.length === 1 ? 'está' : 'están'} en ella.`
+              ? `Leí lo que pide ${vacante.titulo}: ${plural(afines.length, 'persona de tu base encaja', 'personas de tu base encajan')} y no ${afines.length === 1 ? 'está' : 'están'} en ella.`
               : `No encontré en tu base a nadie que comparta lo que pide ${vacante.titulo}.`}
           </AgentNote>
           {afines.length ? <ListaPersonasBase personas={afines.map((una) => una.persona as PersonaViva)} onAbrir={onAbrir} detalle={(persona) => `${persona.cargo} · ${persona.ciudad}`} /> : null}
           <div className="mt-3 flex flex-wrap gap-1.5">
             <Button variant="outline" className={PILL_XS} onClick={() => onCompararCon(vacante.id)}>
-              Comparar la base con {vacante.titulo} en la tabla
+              Verlas en la tabla, de la que más encaja a la que menos
             </Button>
           </div>
         </>,
@@ -333,7 +351,7 @@ export function AgenteBase({
     <ContextPanel
       context={
         <>
-          <span className="text-foreground">Mis candidatos</span> · {personas.length} personas
+          <span className="text-foreground">Mis candidatos</span> · {plural(personas.length, 'persona', 'personas')}
         </>
       }
       contextIcon={UserGroupIcon}
@@ -345,7 +363,7 @@ export function AgenteBase({
       dictar
     >
       <AgentNote>
-        Hola, {QUIEN_MUEVE.split(' ')[0]}. Estoy mirando tu base: {personas.length} personas. Búscame a alguien por lo que sabe hacer o pregúntame a quién invitar a una
+        Hola, {QUIEN_MUEVE.split(' ')[0]}. Estoy mirando tu base: {plural(personas.length, 'persona', 'personas')}. Búscame a alguien por lo que sabe hacer o pregúntame a quién invitar a una
         vacante.
       </AgentNote>
       <AgentSuggestions title="Sobre tu base" className="mt-6" items={SUGERENCIAS_BASE.map((pedido) => ({ label: pedido, onClick: () => escribir(pedido) }))} />

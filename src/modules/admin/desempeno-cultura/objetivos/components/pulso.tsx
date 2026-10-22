@@ -38,13 +38,13 @@ export function PulsoObjetivos({ ciclos }: { ciclos: readonly Ciclo[] }) {
     <FilaIndicadores etiqueta="Pulso de objetivos">
       <Lectura
         titulo="Avance promedio"
-        ayuda="Promedio del avance de los objetivos de cada ciclo en curso o finalizado. Un ciclo que supera su meta cuenta por encima del 100%. La insignia compara con el promedio de sus ciclos anteriores."
+        ayuda="Promedio del avance de los objetivos de cada ciclo en curso o finalizado. Un ciclo que supera su meta cuenta por encima del 100 %. La insignia compara con el promedio de sus ciclos anteriores."
         metrica={pulso.avance}
         grafico={<AnilloAvance valor={pulso.avance.valor ?? 0} color="var(--primary)" etiqueta="Avance promedio" tamano={48} />}
       />
       <Lectura
         titulo="Objetivos cumplidos promedio"
-        ayuda={`Qué parte de los objetivos de cada ciclo ya llegó a su meta, en promedio. La curva sigue cada ciclo, del que cerró antes al más reciente, y la línea punteada es la meta del ${META_CUMPLIDOS}%.`}
+        ayuda={`Qué parte de los objetivos de cada ciclo ya llegó a su meta, en promedio. La curva sigue cada ciclo, del que cerró antes al más reciente, y la línea punteada es la meta del ${META_CUMPLIDOS} %.`}
         metrica={pulso.cumplidos}
         grafico={
           <div className="h-9 w-24 xl:w-28">
@@ -54,7 +54,7 @@ export function PulsoObjetivos({ ciclos }: { ciclos: readonly Ciclo[] }) {
       />
       <Lectura
         titulo="Personas reportando promedio"
-        ayuda={`Qué parte de las personas de cada ciclo reportó avance en el último corte, en promedio. El anillo cuenta a las personas de los ciclos en curso. Por debajo del ${META_REPORTE}%, el ciclo aparece en «Para atender».`}
+        ayuda={`Qué parte de las personas de cada ciclo reportó avance en el último corte, en promedio. El anillo cuenta a las personas de los ciclos en curso. Por debajo del ${META_REPORTE} %, el ciclo aparece en «Para atender».`}
         metrica={pulso.reportando}
         grafico={
           <AnilloAvance

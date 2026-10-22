@@ -3,14 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { MoreHorizontalIcon,
   Add01Icon,
-  Analytics01Icon,
   Calendar03Icon,
   Delete02Icon,
   PlayIcon,
-  ViewIcon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Frame,
   FramePanel,
@@ -24,12 +21,16 @@ import {
   Progress,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { CalendarioFecha } from '@/modules/admin/tareas/components/piezas'
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import type { DataGridListConfig } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
+import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { plural } from '@/modules/design-system/patrones/formato'
+import { TextoCompleto } from '@/shared/components/TextoCompleto'
 import { MetricasDestacadas, type Metrica } from '@/shared/components/MetricasDestacadas'
 import { PrimeraVez, demoVacia } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
@@ -66,18 +67,22 @@ const COLUMNAS: DataGridListConfig<Assessment>['columns'] = [
   {
     accessorKey: 'nombre',
     header: 'Assessment',
-    size: 320,
+    // 13-oct (I-070): las columnas suman 1.086 px y caben en los 1.104 del marco; el nombre se corta con «…» y se lee
+    // entero en el globo.
+    size: 300,
     ...SIN_ARRASTRE,
     cell: ({ row }) => (
-      <Text as="span" size="sm" weight="medium" className="line-clamp-1">
-        {row.original.nombre}
-      </Text>
+      <TextoCompleto texto={row.original.nombre}>
+        <Text as="span" size="sm" weight="medium" tabIndex={0} className="block truncate">
+          {row.original.nombre}
+        </Text>
+      </TextoCompleto>
     ),
   },
   {
     accessorKey: 'tipo',
     header: 'Tipo',
-    size: 170,
+    size: 130,
     ...SIN_ARRASTRE,
     cell: ({ row }) => (
       <Text as="span" size="sm" className="block truncate">
@@ -110,12 +115,12 @@ const COLUMNAS: DataGridListConfig<Assessment>['columns'] = [
   {
     accessorKey: 'participacion',
     header: 'Participación',
-    size: 190,
+    size: 170,
     ...SIN_ARRASTRE,
     // Cuánta gente respondió, sobre la convocada.
     cell: ({ row }) => (
       <div className="flex items-center gap-2.5">
-        <Progress value={porcentaje(row.original)} aria-label={`Participación en ${row.original.nombre}`} className="w-20 **:data-[slot=progress-track]:h-1.5" />
+        <Progress value={porcentaje(row.original)} aria-label={`Participación en ${row.original.nombre}`} className="w-16 **:data-[slot=progress-track]:h-1.5" />
         <span className="text-sm text-muted-foreground tabular-nums">
           {row.original.respondieron}/{row.original.convocados}
         </span>
@@ -154,8 +159,22 @@ const sinTildes = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLo
 
 // El menú de cada prueba. Una programada puede adelantarse para que abra hoy, y una inactiva (creada sin fechas) se
 // activa desde aquí; el resto del tiempo el estado lo manda el calendario, no el menú.
-function Acciones({ assessment, onActivar }: { assessment: Assessment; onActivar: (a: Assessment) => void }) {
+// 13-oct (I-006, I-007): «Ver detalle» se quitó mientras no exista esa pantalla; «Editar fechas» abre su ventana con el
+// calendario y «Eliminar» pregunta y quita la fila.
+function Acciones({
+  assessment,
+  onActivar,
+  onEditarFechas,
+  onEliminar,
+}: {
+  assessment: Assessment
+  onActivar: (a: Assessment) => void
+  onEditarFechas: (a: Assessment) => void
+  onEliminar: (a: Assessment) => void
+}) {
   const puedeActivarse = assessment.estado === 'Planeado' || assessment.estado === 'Inactivo'
+  // Las fechas se mueven mientras la prueba no cierre; una cerrada ya no cambia.
+  const puedeEditarFechas = assessment.estado === 'Planeado' || assessment.estado === 'Vigente'
 
   return (
     <div onClick={(event) => event.stopPropagation()}>
@@ -172,17 +191,15 @@ function Acciones({ assessment, onActivar }: { assessment: Assessment; onActivar
                 Activar
               </DropdownMenuItem>
             ) : null}
-            <DropdownMenuItem onClick={() => notify(`Detalle de ${assessment.nombre} · ${assessment.tipo}`)}>
-              <HugeiconsIcon icon={ViewIcon} size={16} />
-              Ver detalle
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => notify(`Editar fechas de ${assessment.nombre}`)}>
-              <HugeiconsIcon icon={Calendar03Icon} size={16} />
-              Editar fechas
-            </DropdownMenuItem>
+            {puedeEditarFechas ? (
+              <DropdownMenuItem onClick={() => onEditarFechas(assessment)}>
+                <HugeiconsIcon icon={Calendar03Icon} size={16} />
+                Editar fechas
+              </DropdownMenuItem>
+            ) : null}
           </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onClick={() => notify(`Eliminar ${assessment.nombre}`)}>
+          {puedeActivarse || puedeEditarFechas ? <DropdownMenuSeparator /> : null}
+          <DropdownMenuItem variant="destructive" onClick={() => onEliminar(assessment)}>
             <HugeiconsIcon icon={Delete02Icon} size={16} />
             Eliminar
           </DropdownMenuItem>
@@ -205,6 +222,9 @@ export function Component() {
   const setAssessments = cambiarAssessments
   const [porActivar, setPorActivar] = useState<Assessment | null>(null)
   const [nuevoFin, setNuevoFin] = useState<Date | undefined>(undefined)
+  const [porEditar, setPorEditar] = useState<Assessment | null>(null)
+  const [finEditado, setFinEditado] = useState<Date | undefined>(undefined)
+  const [porEliminar, setPorEliminar] = useState<Assessment | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [tipo, setTipo] = useState<Tipo | ''>('')
   const [estado, setEstado] = useState<Estado | ''>('')
@@ -280,8 +300,33 @@ export function Component() {
         a.id === porActivar.id ? { ...a, estado: 'Vigente' as Estado, inicio: hoyIso(), fin } : a,
       ),
     )
-    notify(`${porActivar.nombre} · ${porActivar.tipo} quedó vigente hasta el ${fechaCorta(fin)}`)
+    notify(`${porActivar.nombre} · ${porActivar.tipo} quedó vigente hasta el ${fechaCorta(fin)}`, undefined, 'success')
     cerrarActivar()
+  }
+
+  const cerrarEditar = () => {
+    setPorEditar(null)
+    setFinEditado(undefined)
+  }
+
+  // Editar fechas mueve el cierre; el inicio queda como estaba. Antes de que abra, el cierre no puede quedar antes del inicio.
+  const finIso = finEditado ? finEditado.toISOString().slice(0, 10) : null
+  const finAntesDelInicio = Boolean(finIso && porEditar?.inicio && finIso < porEditar.inicio)
+
+  const confirmarEditar = () => {
+    if (!porEditar || !finIso || finAntesDelInicio) return
+    setAssessments((lista) => lista.map((a) => (a.id === porEditar.id ? { ...a, fin: finIso } : a)))
+    notify('Fechas actualizadas', `${porEditar.nombre} · ${porEditar.tipo} cierra el ${fechaCorta(finIso)}.`, 'success')
+    cerrarEditar()
+  }
+
+  // Eliminar quita la prueba de la lista, y con ella lo que las personas ya respondieron.
+  const confirmarEliminar = () => {
+    if (!porEliminar) return
+    const quitada = porEliminar
+    setAssessments((lista) => lista.filter((a) => a.id !== quitada.id))
+    setPorEliminar(null)
+    notify('Assessment eliminado', `${quitada.nombre} · ${quitada.tipo} ya no está en la lista.`, 'success')
   }
 
   const limpiar = () => {
@@ -297,16 +342,11 @@ export function Component() {
         title="Diagnóstico"
         description="Mide el nivel de tus colaboradores antes y después de cada plan de formación."
         actions={
-          <>
-            <Button variant="outline" onClick={() => notify('Métricas de assessment')}>
-              <HugeiconsIcon icon={Analytics01Icon} size={16} />
-              Métricas
-            </Button>
-            <Button onClick={() => navigate('/admin/aprendizaje/diagnostico/crear')}>
-              <HugeiconsIcon icon={Add01Icon} size={16} />
-              Crear assessment
-            </Button>
-          </>
+          // 13-oct (I-008): el botón «Métricas» se quitó; las del assessment no están maquetadas y no hay a dónde llevarlo.
+          <Button onClick={() => navigate('/admin/aprendizaje/diagnostico/crear')}>
+            <HugeiconsIcon icon={Add01Icon} size={16} />
+            Crear assessment
+          </Button>
         }
       />
 
@@ -337,6 +377,7 @@ export function Component() {
                 id: 'acciones',
                 header: 'Acciones',
                 size: 96,
+                enableResizing: false,
                 ...SIN_ARRASTRE,
                 cell: ({ row }) => (
                   <Acciones
@@ -345,6 +386,11 @@ export function Component() {
                       setPorActivar(sel)
                       setNuevoFin(sel.fin ? new Date(`${sel.fin}T00:00:00`) : undefined)
                     }}
+                    onEditarFechas={(sel) => {
+                      setPorEditar(sel)
+                      setFinEditado(sel.fin ? new Date(`${sel.fin}T00:00:00`) : undefined)
+                    }}
+                    onEliminar={setPorEliminar}
                   />
                 ),
               },
@@ -379,6 +425,8 @@ export function Component() {
               resultCount: () => `${filtrados.length.toLocaleString('es-CO')} de ${assessments.length.toLocaleString('es-CO')} assessments`,
             },
             globalTotal: filtrados.length,
+            // Las columnas ya suman lo que mide el marco: sin cambio de ancho para que no se salgan de él.
+            layout: { resizable: false },
           }}
         />
         )}
@@ -430,6 +478,80 @@ export function Component() {
           </div>
         </div>
       </ActionDialog>
+
+      {/* Editar fechas: la misma ventana con calendario de «Activar», pero solo mueve el cierre (13-oct, I-007). */}
+      <ActionDialog
+        open={Boolean(porEditar)}
+        onOpenChange={(abierto) => !abierto && cerrarEditar()}
+        size="sm"
+        title="Editar fechas"
+        sub={porEditar ? `Las ${porEditar.convocados} personas convocadas verán la nueva fecha de cierre.` : undefined}
+        lead={
+          porEditar ? (
+            <>
+              <Heading as="h3" level={6}>
+                {porEditar.nombre}
+              </Heading>
+              <Text as="span" variant="muted" size="sm">
+                {porEditar.tipo}
+              </Text>
+            </>
+          ) : null
+        }
+        confirmLabel="Guardar cambios"
+        confirmDisabled={!finEditado || finAntesDelInicio}
+        onConfirm={confirmarEditar}
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3 rounded-lg border px-4 py-3">
+            <Text as="span" size="sm" className="text-muted-foreground">
+              Fecha de inicio
+            </Text>
+            <Text as="span" size="sm" weight="medium" className="tabular-nums">
+              {porEditar ? fechaCorta(porEditar.inicio) : ''}
+            </Text>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Text as="span" size="sm" className="text-muted-foreground">
+              Fecha de finalización
+            </Text>
+            <CalendarioFecha elegida={finEditado} onElegir={setFinEditado} />
+            <Text as="span" size="xs" className={finAntesDelInicio ? 'text-destructive' : 'text-muted-foreground'}>
+              {finAntesDelInicio ? 'El cierre no puede ser antes del inicio.' : 'Puedes alargar o acortar el plazo de respuesta.'}
+            </Text>
+          </div>
+        </div>
+      </ActionDialog>
+
+      {/* Eliminar pregunta antes y de verdad quita la fila (13-oct, I-006): como «Eliminar» en Contenidos del LMS. */}
+      <DialogoConfirmar
+        abierto={Boolean(porEliminar)}
+        onAbiertoChange={(abierto) => !abierto && setPorEliminar(null)}
+        size="sm"
+        icono={Delete02Icon}
+        titulo="¿Eliminar el assessment?"
+        descripcion={
+          porEliminar
+            ? porEliminar.convocados
+              ? `Afecta a ${porEliminar.convocados.toLocaleString('es-CO')} ${plural(porEliminar.convocados, 'persona convocada', 'personas convocadas')}${porEliminar.respondieron ? ` y ${plural(porEliminar.respondieron, 'se pierde', 'se pierden')} ${porEliminar.respondieron.toLocaleString('es-CO')} ${plural(porEliminar.respondieron, 'respuesta', 'respuestas')}` : ''}. No se puede recuperar.`
+              : 'Todavía no tiene personas convocadas. No se puede recuperar.'
+            : ''
+        }
+        accion="Eliminar assessment"
+        destructiva
+        onConfirmar={confirmarEliminar}
+      >
+        {porEliminar ? (
+          <RegistroConfirmar
+            nombre={porEliminar.nombre}
+            detalle={`${porEliminar.tipo} · ${porEliminar.respondieron.toLocaleString('es-CO')}/${porEliminar.convocados.toLocaleString('es-CO')} respondieron`}
+            estado={porEliminar.estado}
+            tono="neutro"
+            icono={Calendar03Icon}
+          />
+        ) : null}
+      </DialogoConfirmar>
     </PageShell>
   )
 }

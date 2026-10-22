@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Alert02Icon, ArrowLeft01Icon, CheckmarkCircle02Icon, GitForkIcon, UserGroupIcon, UserIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Frame,
   FrameDescription,
@@ -24,7 +23,7 @@ import {
   ItemTitle,
   Text,
 } from '@ubits/flux-ui'
-import { BotonIcono } from '@/shared/components/BotonIcono'
+import { Badge } from '@/shared/components/Badge'
 import { Hint } from '@/shared/components/Hint'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { TOTAL_WEIGHT } from '../../../modelo/constructor/cicloBuilderTypes'
@@ -36,6 +35,8 @@ import type { WeightSharesController } from '../../../modelo/constructor/weightS
 // entra con «Repartir el peso» y de la que se sale con «Volver». Se organiza por caso, no por persona: la gente que
 // comparte las mismas vías comparte un solo reparto, así que hay una tarjeta por combinación. Junto a una vía grupal
 // que comparten muchos, la salida barata: «Sacarla de aquí» (solo cuando el caso es de una persona).
+// El volver es «← Volver», flecha y palabra (regla «panel-volver-arriba», 13-oct): en el panel lo pone DrawerShell con
+// onVolver; en el paso, esta vista lo pinta arriba cuando recibe `onVolver`.
 
 export function VistaConflicto({
   control,
@@ -46,17 +47,23 @@ export function VistaConflicto({
   control: WeightSharesController
   /** Cuánta gente está en esto: lo dice la cabecera. */
   afectadas: number
-  onVolver: () => void
+  /** Solo en el paso: dentro del panel el «← Volver» lo pone DrawerShell. */
+  onVolver?: () => void
   /** Saca a esta persona de esa asignación grupal sin tocar al resto del grupo. */
   onSacar?: (setId: string, personId: string) => void
 }) {
   return (
     <section className="flex flex-col gap-4" aria-label="Repartir el peso del ciclo">
+      {onVolver ? (
+        <div>
+          <Button variant="ghost" size="sm" onClick={onVolver}>
+            <HugeiconsIcon icon={ArrowLeft01Icon} aria-hidden="true" />
+            Volver
+          </Button>
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-2">
-          <BotonIcono aria-label="Volver" onClick={onVolver}>
-            <HugeiconsIcon icon={ArrowLeft01Icon} aria-hidden="true" />
-          </BotonIcono>
           <div className="flex min-w-0 flex-col gap-1">
             <Heading as="h3" level={6}>
               Repartir el peso del ciclo
@@ -92,6 +99,8 @@ function TarjetaCaso({ grupo, control, onSacar }: { grupo: ConflictGroup; contro
 
   return (
     <Frame>
+      {/* La cabecera en fila (título a la izquierda, insignia a la derecha): el tema de FrameHeader la apila y la clase
+          sola no le gana (diferencias.json › instalacion-estilos-sin-capa). */}
       <FrameHeader className="flex-row! items-center! justify-between! gap-3!">
         <div className="flex min-w-0 flex-col">
           <FrameTitle className="truncate">{una ? personas[0].name : `${personas.length} personas`}</FrameTitle>
@@ -103,6 +112,8 @@ function TarjetaCaso({ grupo, control, onSacar }: { grupo: ConflictGroup; contro
         </Badge>
       </FrameHeader>
       <FramePanel>
+        {/* Filas pegadas, separadas por ItemSeparator (regla caja-o-divisor): el gap del tema de ItemGroup no se quita sin
+            «!» (diferencias.json › instalacion-estilos-sin-capa). */}
         <ItemGroup className="gap-0!">
           {grupo.sources.map((via, indice) => (
             <div key={via.setId}>

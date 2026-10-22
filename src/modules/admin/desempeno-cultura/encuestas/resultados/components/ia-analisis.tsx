@@ -6,7 +6,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Frame,
   FrameDescription,
@@ -24,6 +23,7 @@ import {
 } from '@ubits/flux-ui'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { AiThinking } from '@/shared/components/AiThinking'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { AnilloAvance } from '../../components/graficos'
@@ -249,7 +249,7 @@ export function AnalisisIa({ borrador, resultados, onIr }: Props) {
         titulo="Lecturas de la IA"
         ayuda="Cuántas lecturas hizo la IA sobre esta medición y de qué tipo. Cada una viaja con la cifra que la sostiene: alta viene de un número de la medición; media es una interpretación razonable; baja es un indicio que conviene confirmar."
         cifra={numero(total)}
-                pie={`${solidas}% con confiabilidad alta`}
+                pie={`${formatPercent(solidas)} con confiabilidad alta`}
         tituloAnillos="Qué contiene la lectura"
         totalAnillos={`${numero(total)} en total`}
         anillos={KINDS.map((tipo) => ({
@@ -268,6 +268,7 @@ export function AnalisisIa({ borrador, resultados, onIr }: Props) {
 
       {/* Como Favorabilidad › Secciones: un marco con sus controles y, sobre el gris, el resumen y los bloques plegables. */}
       <Frame spacing="sm" className="[--frame-gap:0px]">
+        {/* Cabecera del marco en fila (título a la izquierda, controles a la derecha): con el tema sin capa solo obedece con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
         <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
           <div>
             <div className="flex items-center gap-2">

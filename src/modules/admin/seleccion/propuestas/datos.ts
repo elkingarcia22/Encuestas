@@ -208,7 +208,7 @@ const SIN_PROCESO: VacanteUI[] = [
     ultimaSemana: 0,
     equipo: [{ nombre: 'Sara Gómez', iniciales: 'SG', correo: 'sara@ubits.com', permiso: 'Dueña del proceso' }],
     etapas: etapasDe('operativo-de-tienda'),
-    desenlace: 'Cerrada el 3 de septiembre · se contrató a Marcela Ríos',
+    desenlace: 'Cerrada el 3 sept 2026 · se contrató a Marcela Ríos',
   },
 ]
 
@@ -241,10 +241,10 @@ const CARTERA: {
   { titulo: 'Ingeniero de datos', area: 'Analítica y BI', sede: 'Remoto', modalidad: 'Remoto', estado: 'Borrador', dias: 0, aplicaciones: 0, semana: 0, etiquetas: ['Nuevo cargo'], quien: 'laura' },
   { titulo: 'Practicante de mercadeo', area: 'Mercadeo', sede: 'Bogotá · Torre Calle 100', modalidad: 'Híbrido', estado: 'Borrador', dias: 0, aplicaciones: 0, semana: 0, etiquetas: ['Practicantes'], quien: 'andres' },
   { titulo: 'Analista de compensación', area: 'Administración', sede: 'Bogotá · Torre Calle 100', modalidad: 'Híbrido', estado: 'Borrador', dias: 0, aplicaciones: 0, semana: 0, etiquetas: [], quien: 'laura' },
-  { titulo: 'Supervisor de turno noche', area: 'Operaciones', sede: 'Planta Funza', modalidad: 'Presencial', estado: 'Cerrada', dias: 71, aplicaciones: 38, semana: 0, etiquetas: ['Reemplazo'], quien: 'sara', desenlace: 'Cerrada el 28 de agosto · se contrató a Wilmer Ospina' },
-  { titulo: 'Asesor de servicio', area: 'Ventas', sede: 'Barranquilla', modalidad: 'Presencial', estado: 'Cerrada', dias: 54, aplicaciones: 96, semana: 0, etiquetas: ['Contratación masiva', 'Temporada fin de año'], quien: 'andres', desenlace: 'Cerrada el 12 de agosto · se contrataron 3 personas' },
-  { titulo: 'QA automatizador', area: 'Tecnología', sede: 'Remoto', modalidad: 'Remoto', estado: 'Cerrada', dias: 45, aplicaciones: 64, semana: 0, etiquetas: [], quien: 'laura', desenlace: 'Cerrada el 30 de julio · la vacante se congeló' },
-  { titulo: 'Coordinador de bienestar', area: 'Administración', sede: 'Medellín', modalidad: 'Híbrido', estado: 'Cerrada', dias: 61, aplicaciones: 22, semana: 0, etiquetas: [], quien: 'sara', desenlace: 'Cerrada el 5 de agosto · se contrató a Diana Peña' },
+  { titulo: 'Supervisor de turno noche', area: 'Operaciones', sede: 'Planta Funza', modalidad: 'Presencial', estado: 'Cerrada', dias: 71, aplicaciones: 38, semana: 0, etiquetas: ['Reemplazo'], quien: 'sara', desenlace: 'Cerrada el 28 ago 2026 · se contrató a Wilmer Ospina' },
+  { titulo: 'Asesor de servicio', area: 'Ventas', sede: 'Barranquilla', modalidad: 'Presencial', estado: 'Cerrada', dias: 54, aplicaciones: 96, semana: 0, etiquetas: ['Contratación masiva', 'Temporada fin de año'], quien: 'andres', desenlace: 'Cerrada el 12 ago 2026 · se contrataron 3 personas' },
+  { titulo: 'QA automatizador', area: 'Tecnología', sede: 'Remoto', modalidad: 'Remoto', estado: 'Cerrada', dias: 45, aplicaciones: 64, semana: 0, etiquetas: [], quien: 'laura', desenlace: 'Cerrada el 30 jul 2026 · la vacante se congeló' },
+  { titulo: 'Coordinador de bienestar', area: 'Administración', sede: 'Medellín', modalidad: 'Híbrido', estado: 'Cerrada', dias: 61, aplicaciones: 22, semana: 0, etiquetas: [], quien: 'sara', desenlace: 'Cerrada el 5 ago 2026 · se contrató a Diana Peña' },
 ]
 
 const RECLUTADORES = {
@@ -327,10 +327,10 @@ export type Lote = {
 export const LOTES_DE: Record<string, Lote[]> = {
   'analista-de-datos': [
     { id: 'L-4821', nombre: 'Referidos equipo de datos.zip', fecha: 'Hoy, 9:12 a. m.', quien: 'Laura Martínez', total: 14, listos: 9, dudosos: 3, repetidos: 1, fallidos: 1, origen: 'referido' },
-    { id: 'L-4770', nombre: 'Feria de empleo Uniandes.zip', fecha: '14 de septiembre', quien: 'Laura Martínez', total: 38, listos: 31, dudosos: 4, repetidos: 3, fallidos: 0, origen: 'feria' },
+    { id: 'L-4770', nombre: 'Feria de empleo Uniandes.zip', fecha: '14 sept 2026', quien: 'Laura Martínez', total: 38, listos: 31, dudosos: 4, repetidos: 3, fallidos: 0, origen: 'feria' },
   ],
   'disenadora-de-producto': [
-    { id: 'L-4795', nombre: 'Portafolios Behance.zip', fecha: '16 de septiembre', quien: 'Andrés Pardo', total: 9, listos: 6, dudosos: 2, repetidos: 0, fallidos: 1, origen: 'correo' },
+    { id: 'L-4795', nombre: 'Portafolios Behance.zip', fecha: '16 sept 2026', quien: 'Andrés Pardo', total: 9, listos: 6, dudosos: 2, repetidos: 0, fallidos: 1, origen: 'correo' },
   ],
   'coordinador-de-turno': [],
 }
@@ -819,6 +819,19 @@ export const OTRAS_DE = (personaId: string, salvo: string) =>
 
 // Lo que espera una respuesta del equipo: lo que mueve el trabajo del día.
 export const ESPERA_RESPUESTA = (c: Candidatura) => Boolean(c.candidato.accion)
+
+// Lo que espera algo de la persona y no del equipo (13 oct, PM: «cuáles candidatos todavía no han presentado la entrevista
+// de Serena o cuáles están pendientes de hacer la psicométrica»): una etapa con IA que todavía no hizo. Es «En proceso»
+// en el tablero, la otra cara de «Esperando acción».
+export const ESPERA_AL_CANDIDATO = (c: Candidatura) => {
+  if (c.candidato.accion) return /^No ha /.test(c.candidato.accion)
+  const etapa = etapaDe(c.vacante.etapas, c.etapa)
+  return Boolean(etapa?.ia) && !(c.etapa === 'serena' && c.candidato.serena !== undefined)
+}
+
+// «Esperando acción»: lo que espera que alguien del equipo lo mueva. El mismo nombre en el tablero, en el inicio y en Mis
+// candidatos (13 oct, PM: «unifiquemos ese concepto… están esperando acción, en todas partes»).
+export const ESPERANDO_ACCION = (c: Candidatura) => ESPERA_RESPUESTA(c) && !ESPERA_AL_CANDIDATO(c)
 
 export const ORIGENES = [...new Set(CANDIDATURAS.map((c) => c.candidato.origen))]
 

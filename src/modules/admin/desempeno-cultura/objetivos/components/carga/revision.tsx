@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CheckmarkCircle02Icon, Delete02Icon } from '@hugeicons/core-free-icons'
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
   Alert,
   AlertDescription,
   Button,
@@ -22,21 +26,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Tabs,
-  TabsList,
-  TabsTrigger,
   Text,
 } from '@ubits/flux-ui'
 import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { FilasSeparadas } from '../../../encuestas/components/marco-lista'
 import type { Collaborator } from '../../../encuestas/modelo/collaborators'
+import { formatoAvance } from '../../modelo/ciclos'
 import { PESTANAS, erroresDe, erroresDelGrupo, pestanaDe, sumaPesos, type FilaObjetivo, type GrupoPersona, type Modo, type Pestana } from '../../modelo/carga/carga-objetivos'
 
-// La revisión de una carga de objetivos (9-oct, como el prototipo): lo que se leyó del archivo, agrupado por persona y
-// repartido en cuatro pestañas por lo que le falta a cada una para poder cargarse, en el orden en que se resuelve:
-// encontrar a la persona, confirmar la propuesta, corregir los datos y, al final, lo que ya está listo. Los datos se
-// corrigen en la misma fila y las reglas corren a cada tecla: al quedar bien, la persona pasa sola a «Listos».
+// La revisión de una carga de objetivos, con el armado del último paso de «Cargar encuestas»: un marco con un panel
+// por contenedor, cada uno un acordeón, y adentro las personas como filas planas con una línea entre fila y fila. Los
+// contenedores son lo que le falta a cada persona para poder cargarse, en el orden en que se resuelve: encontrarla,
+// confirmar la propuesta, corregir los datos y, al final, lo que ya está listo. Los datos se corrigen en la misma fila y
+// las reglas corren a cada tecla: al quedar bien, la persona pasa sola a «Listos».
 
 export type CambioGrupo = (identificador: string, cambio: (grupo: GrupoPersona) => GrupoPersona) => void
 
@@ -104,7 +109,7 @@ function TablaObjetivos({ grupo, modo, onCambio }: { grupo: GrupoPersona; modo: 
                 <>
                   <TableCell className="text-right align-top tabular-nums">
                     <Text as="span" size="sm" variant="muted">
-                      {objetivo.avanceActual ?? 0}%
+                      {formatoAvance(objetivo.avanceActual ?? 0)}
                     </Text>
                   </TableCell>
                   <TableCell className="align-top">
@@ -152,10 +157,8 @@ function ElegirPersona({ grupo, libres, onElegir }: { grupo: GrupoPersona; libre
   )
 }
 
-function TarjetaGrupo({ grupo, modo, libres, onCambio, onQuitar }: { grupo: GrupoPersona; modo: Modo; libres: readonly Collaborator[]; onCambio: CambioGrupo; onQuitar: (grupo: GrupoPersona) => void }) {
+function FilaPersona({ grupo, modo, libres, onCambio, onQuitar }: { grupo: GrupoPersona; modo: Modo; libres: readonly Collaborator[]; onCambio: CambioGrupo; onQuitar: (grupo: GrupoPersona) => void }) {
   const [eligiendo, setEligiendo] = useState(false)
-  const pestana = pestanaDe(grupo, modo)
-  const meta = PESTANAS.find((opcion) => opcion.id === pestana)
   const delGrupo = erroresDelGrupo(grupo, modo)
   const asignar = (persona: Collaborator) => {
     onCambio(grupo.identificador, (actual) => ({ ...actual, persona, coincidencia: 'exacta' }))
@@ -165,21 +168,21 @@ function TarjetaGrupo({ grupo, modo, libres, onCambio, onQuitar }: { grupo: Grup
     // Mientras no coincida exacto, lo que importa es cómo venía en el archivo: es lo que se compara con la propuesta.
     !grupo.persona ? 'No está entre las personas del ciclo' : grupo.persona.email === grupo.identificador ? grupo.persona.email : `En el archivo: ${grupo.identificador}`,
     `${grupo.objetivos.length} ${grupo.objetivos.length === 1 ? 'objetivo' : 'objetivos'}`,
-    modo === 'actualizar' ? null : `pesos ${Math.round(sumaPesos(grupo))}%`,
+    modo === 'actualizar' ? null : `pesos ${formatoAvance(Math.round(sumaPesos(grupo)))}`,
   ]
     .filter(Boolean)
     .join(' · ')
 
   return (
-    <Frame spacing="sm">
-      {/* «!»: la cabecera en fila (persona a la izquierda, lo que se resuelve a la derecha), como las cajas de Resultados. */}
-      <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3!">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <FrameTitle>{grupo.coincidencia === 'ninguna' ? grupo.identificador : (grupo.persona?.name ?? grupo.identificador)}</FrameTitle>
-            {meta ? <Badge variant={meta.tono}>{meta.etiqueta}</Badge> : null}
-          </div>
-          <FrameDescription>{detalle}</FrameDescription>
+    <div className="flex flex-col gap-3 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <Text as="span" size="sm" weight="semibold" className="truncate">
+            {grupo.coincidencia === 'ninguna' ? grupo.identificador : (grupo.persona?.name ?? grupo.identificador)}
+          </Text>
+          <Text as="span" size="xs" variant="muted">
+            {detalle}
+          </Text>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {grupo.coincidencia === 'sugerida' && !eligiendo ? (
@@ -190,7 +193,7 @@ function TarjetaGrupo({ grupo, modo, libres, onCambio, onQuitar }: { grupo: Grup
               <Button variant="outline" size="sm" onClick={() => setEligiendo(true)}>
                 Elegir otra
               </Button>
-              <Button size="sm" onClick={() => grupo.sugerida && asignar(grupo.sugerida)}>
+              <Button variant="secondary" size="sm" onClick={() => grupo.sugerida && asignar(grupo.sugerida)}>
                 <HugeiconsIcon icon={CheckmarkCircle02Icon} aria-hidden="true" />
                 Confirmar a {grupo.sugerida?.name.split(' ')[0]}
               </Button>
@@ -198,53 +201,76 @@ function TarjetaGrupo({ grupo, modo, libres, onCambio, onQuitar }: { grupo: Grup
           ) : null}
           {grupo.coincidencia === 'ninguna' || eligiendo ? <ElegirPersona grupo={grupo} libres={libres} onElegir={asignar} /> : null}
           <Hint label="Quitar a esta persona de la carga">
-            <BotonIcono aria-label={`Quitar ${grupo.persona?.name ?? grupo.identificador} de la carga`} onClick={() => onQuitar(grupo)}>
+            {/* «!»: BotonIcono en rojo para acciones destructivas (ver ai-tools/flux-ui/diferencias.json › button-ghost-tonos). */}
+            <BotonIcono aria-label={`Quitar ${grupo.persona?.name ?? grupo.identificador} de la carga`} className="text-destructive!" onClick={() => onQuitar(grupo)}>
               <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
             </BotonIcono>
           </Hint>
         </div>
-      </FrameHeader>
+      </div>
       {delGrupo.length ? (
         <Alert variant="destructive">
           <AlertDescription>{delGrupo.join(' ')}</AlertDescription>
         </Alert>
       ) : null}
-      <FramePanel className="[--frame-panel-px:0px] [--frame-panel-py:0px]">
-        <TablaObjetivos grupo={grupo} modo={modo} onCambio={onCambio} />
-      </FramePanel>
-    </Frame>
+      <TablaObjetivos grupo={grupo} modo={modo} onCambio={onCambio} />
+    </div>
   )
 }
 
-export function Revision({ grupos, modo, personas, pestana, onPestana, onCambio, onQuitar }: { grupos: readonly GrupoPersona[]; modo: Modo; personas: readonly Collaborator[]; pestana: Pestana; onPestana: (pestana: Pestana) => void; onCambio: CambioGrupo; onQuitar: (grupo: GrupoPersona) => void }) {
-  const cuenta = (id: Pestana) => grupos.filter((grupo) => pestanaDe(grupo, modo) === id).length
-  const visibles = grupos.filter((grupo) => pestanaDe(grupo, modo) === pestana)
+/** La primera sección con algo por resolver; si todo está bien, «Listos». */
+export const seccionAbierta = (grupos: readonly GrupoPersona[], modo: Modo): Pestana => PESTANAS.find((opcion) => grupos.some((grupo) => pestanaDe(grupo, modo) === opcion.id))?.id ?? 'listos'
+
+export function Revision({ grupos, modo, personas, onCambio, onQuitar }: { grupos: readonly GrupoPersona[]; modo: Modo; personas: readonly Collaborator[]; onCambio: CambioGrupo; onQuitar: (grupo: GrupoPersona) => void }) {
   // A cada persona del archivo le toca una persona distinta del ciclo: las ya asignadas no se ofrecen otra vez.
   const usadas = new Set(grupos.map((grupo) => grupo.persona?.username).filter(Boolean))
   const libres = personas.filter((persona) => !usadas.has(persona.username))
-  const vacio = PESTANAS.find((opcion) => opcion.id === pestana)?.vacio
+  const abierta = seccionAbierta(grupos, modo)
 
   return (
-    <div className="flex flex-col gap-4">
-      <Tabs value={pestana} onValueChange={(valor) => onPestana(valor as Pestana)}>
-        <TabsList variant="line" className="w-full justify-start overflow-x-auto">
-          {PESTANAS.map((opcion) => (
-            <TabsTrigger key={opcion.id} value={opcion.id} className="flex-none gap-1.5">
-              {opcion.etiqueta}
-              <Badge variant={cuenta(opcion.id) ? opcion.tono : 'outline'} className="tabular-nums">
-                {cuenta(opcion.id)}
-              </Badge>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-      {visibles.length === 0 ? (
-        <Text as="p" size="sm" variant="muted" className="py-8 text-center">
-          {vacio}
-        </Text>
-      ) : (
-        visibles.map((grupo) => <TarjetaGrupo key={grupo.identificador} grupo={grupo} modo={modo} libres={libres} onCambio={onCambio} onQuitar={onQuitar} />)
-      )}
-    </div>
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>Personas del archivo</FrameTitle>
+        <FrameDescription>Abre una sección para ver a sus personas y corregir sus datos.</FrameDescription>
+      </FrameHeader>
+      {/* Cada sección en su propio panel, un acordeón por contenedor, y adentro las personas como filas planas. */}
+      {PESTANAS.map((opcion) => {
+        const visibles = grupos.filter((grupo) => pestanaDe(grupo, modo) === opcion.id)
+        return (
+          // Menos relleno en el panel: el acordeón ya trae el suyo (diferencias.json › frame-panel-relleno-no-se-quita).
+          <FramePanel key={opcion.id} className="py-1!">
+            <Accordion defaultValue={opcion.id === abierta ? [opcion.id] : []}>
+              <AccordionItem value={opcion.id}>
+                <AccordionTrigger>
+                  <div className="flex items-center gap-2">
+                    {opcion.etiqueta}
+                    <Badge variant={visibles.length ? opcion.tono : 'outline'} className="tabular-nums">
+                      {visibles.length}
+                    </Badge>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-2">
+                  {visibles.length === 0 ? (
+                    // El vacío de cada sección con la pieza del sistema y su ilustración glass, no una línea suelta.
+                    <PrimeraVez
+                      icono={opcion.id === 'listos' ? 'glass-document' : 'glass-tick'}
+                      titulo={opcion.id === 'listos' ? 'Todavía no hay nada listo' : 'Nada por resolver aquí'}
+                      descripcion={opcion.vacio}
+                      className="py-6"
+                    />
+                  ) : (
+                    <FilasSeparadas>
+                      {visibles.map((grupo) => (
+                        <FilaPersona key={grupo.identificador} grupo={grupo} modo={modo} libres={libres} onCambio={onCambio} onQuitar={onQuitar} />
+                      ))}
+                    </FilasSeparadas>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </FramePanel>
+        )
+      })}
+    </Frame>
   )
 }

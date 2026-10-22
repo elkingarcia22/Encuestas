@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
-import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Drawer,
@@ -40,6 +40,9 @@ type DrawerShellProps = {
   ai?: boolean
   // Fila de navegación sobre la cabecera: volver o pasar entre registros.
   navigation?: ReactNode
+  // «← Volver» arriba, sobre el título (regla «panel-volver-arriba», 13-oct): el paso anterior de un panel con pasos.
+  // Así el pie queda para el principal y el secundario.
+  onVolver?: () => void
   // Franja bajo la cabecera (pestañas, pasos, contexto).
   headerExtra?: ReactNode
   footer?: ReactNode
@@ -51,6 +54,10 @@ type DrawerShellProps = {
   // sin cerrarse al tocar fuera y corrido a la izquierda del otro panel (posición, no apariencia).
   modal?: boolean
   disablePointerDismissal?: boolean
+  // Hay algo escrito o elegido (regla «panel-con-datos», 8-oct; ampliada el 13-oct en la auditoría): el panel no se
+  // cierra al tocar fuera y, al cerrarlo con la X, Escape o el «Cancelar» de quien lo usa (llamando a onOpenChange(false)
+  // a través de `pedirCierre`), pregunta «Seguir editando · Descartar» dentro del mismo panel.
+  conCambios?: boolean
   style?: CSSProperties
   children: ReactNode
 }
@@ -99,6 +106,7 @@ function PanelPropio({
   media,
   ai = false,
   navigation,
+  onVolver,
   headerExtra,
   footer,
   footerClassName,
@@ -106,10 +114,14 @@ function PanelPropio({
   snapPoints,
   modal,
   disablePointerDismissal,
+  conCambios = false,
   style,
   children,
 }: DrawerShellProps) {
   const side = direction === 'right' || direction === 'left'
+  // Cerrar con cambios pregunta primero (ver `conCambios`).
+  const [preguntando, setPreguntando] = useState(false)
+  const pedirCierre = () => (conCambios ? setPreguntando(true) : onOpenChange(false))
 
   // Las vistas abiertas dentro, de la más vieja a la de arriba.
   const [vistas, setVistas] = useState<Vista[]>([])
@@ -122,11 +134,12 @@ function PanelPropio({
   // Escape, tocar fuera o deslizar con una vista abierta: vuelve al panel, no lo cierra entero.
   const cambiar = (abrir: boolean) => {
     if (!abrir && arriba) return arriba.cerrar()
+    if (!abrir) return pedirCierre()
     onOpenChange(abrir)
   }
-  const alDia = useRef(onOpenChange)
+  const alDia = useRef(pedirCierre)
   useEffect(() => {
-    alDia.current = onOpenChange
+    alDia.current = pedirCierre
   })
   const panel = useMemo<PanelActual>(
     () => ({
@@ -135,7 +148,7 @@ function PanelPropio({
       capa,
       registrar,
       arriba: arriba?.id,
-      cerrarPanel: () => alDia.current(false),
+      cerrarPanel: () => alDia.current(),
     }),
     [title, size, capa, registrar, arriba?.id],
   )
@@ -150,13 +163,21 @@ function PanelPropio({
       snapPoints={snapPoints}
       showSwipeHandle={!side}
       modal={modal}
-      disablePointerDismissal={disablePointerDismissal}
+      disablePointerDismissal={disablePointerDismissal ?? conCambios}
     >
       <DrawerContent className={cn(SHAPE[direction], side && WIDTH[ancho])} style={style}>
         <ContextoPanel.Provider value={panel}>
           <div className="relative flex min-h-0 flex-1 flex-col">
             {/* Con una vista abierta, lo de abajo no se ve ni recibe el foco. */}
             <div className="flex min-h-0 flex-1 flex-col" inert={vistas.length > 0}>
+              {onVolver ? (
+                <div className="flex items-center border-b px-3 py-1.5">
+                  <Button data-region="Volver" variant="ghost" size="sm" className="text-muted-foreground!" onClick={onVolver}>
+                    <HugeiconsIcon icon={ArrowLeft01Icon} size={16} aria-hidden="true" />
+                    Volver
+                  </Button>
+                </div>
+              ) : null}
               {navigation}
               <Cabecera
                 visual={<Visual media={media} ai={ai} icon={icon} />}
@@ -177,7 +198,7 @@ function PanelPropio({
                 cerrar={
                   // La X estándar de ventanas y tarjetas (auditoría, 5 oct): círculo claro de 32px con filo fino.
                   <span data-region="Cerrar" className="flex shrink-0">
-                    <CloseButton label="Cerrar" onClick={() => onOpenChange(false)} />
+                    <CloseButton label="Cerrar" onClick={pedirCierre} />
                   </span>
                 }
               />
@@ -188,6 +209,33 @@ function PanelPropio({
             </div>
             {/* Aquí se dibujan las vistas abiertas desde este panel, encima de todo lo anterior. */}
             <div ref={setCapa} />
+            {/* La pregunta de cerrar con cambios: una vista del mismo panel, como DialogoConfirmar dentro de un drawer. */}
+            <VistaDelPanel
+              open={preguntando}
+              onOpenChange={setPreguntando}
+              icon={Alert02Icon}
+              title="¿Descartar los cambios?"
+              description="Si cierras ahora, se pierde lo que escribiste o elegiste en este panel."
+              padre={panel}
+              footer={
+                <>
+                  <Button variant="outline" onClick={() => setPreguntando(false)}>
+                    Seguir editando
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setPreguntando(false)
+                      onOpenChange(false)
+                    }}
+                  >
+                    Descartar
+                  </Button>
+                </>
+              }
+            >
+              {null}
+            </VistaDelPanel>
           </div>
         </ContextoPanel.Provider>
       </DrawerContent>
@@ -264,7 +312,8 @@ function VistaDelPanel({
             onClick={() => onOpenChange(false)}
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={16} aria-hidden="true" />
-            <span className="truncate">{padre.titulo}</span>
+            {/* «← Volver», como en todos los paneles (13-oct); a dónde vuelve lo dice su nombre accesible. */}
+            Volver
           </Button>
         </div>
         {navigation}

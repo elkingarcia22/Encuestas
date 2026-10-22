@@ -183,6 +183,7 @@ export function Component() {
     irA(f.modo, 'registrada')
     // RN-04: en el producto el correo llega cuando el archivo esté listo; el aviso no trae botón. Solo en el prototipo,
     // al cerrarse el aviso se abre la vista previa de ese correo, para ver cómo le llegará.
+    // 13-oct: queda con toast.add a propósito: notify todavía no admite onRemove (para ingeniería).
     toast.add({ type: 'success', title: 'Solicitud registrada', description: 'Revisa tu correo en unos minutos.', onRemove: () => abrirCorreo(f) })
   }
 

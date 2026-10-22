@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Alert02Icon, ArrowTurnBackwardIcon, Mail01Icon, NextIcon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, ArrowTurnBackwardIcon, NextIcon } from '@hugeicons/core-free-icons'
 import {
   Alert,
+  AlertAction,
   AlertDescription,
   AlertTitle,
+  Button,
   Checkbox,
   Field,
   FieldContent,
@@ -52,18 +55,26 @@ import {
 
 // La ventana de «Mover a otra etapa»: la misma en las tres exploraciones, para una persona o para varias. Se abre
 // cuando se pide a propósito («Mover a otra etapa…») y cuando el cambio trae algo que decir antes de hacerlo: se salta
-// etapas, vuelve atrás, deja una entrevista de IA sin terminar, vuelve a una que ya hizo o llega a la última.
+// etapas, vuelve atrás, deja una entrevista de IA sin terminar, entra a una etapa con IA o llega a la última.
+//
+// Entrar a una etapa con IA (13 oct, PM: «está la opción de solo moverlo de etapa o de ejecutar el agente en esa etapa…
+// entender, ok, va a costar tantos créditos»): se elige entre que la IA le escriba, con lo que cuesta y lo que queda, o
+// solo moverla, sin invitación y sin gastar.
 //
 // De arriba abajo: a qué etapa, qué pasa con eso (en avisos con nombre), si se le escribe a la persona y un comentario
 // para el equipo. Todo lo que se decide aquí queda en la pestaña «Etapas» de la ficha.
 
 export type Cambio = { candidatura: Candidatura; destino: string }
 
+const RUTA_CREDITOS = '/admin/seleccion/creditos/uno'
+
 export type DecisionMover = {
   cambios: Cambio[]
   comentario: string
   // Qué hacer con quien vuelve a una etapa de IA que ya presentó.
   ia: 'conservar' | 'repetir'
+  // Con quien entra por primera vez a una etapa con IA: si la IA le escribe (y aparta los créditos) o solo se mueve.
+  invitar: boolean
   aviso: { plantilla: string; texto: string } | null
   cerrarVacante: boolean
 }
@@ -75,12 +86,18 @@ export type PedidoMover = { id: number; candidaturas: Candidatura[]; destinos: R
 type ConLoQuePasa = Cambio & { pasa: Consecuencias }
 
 // Qué le pasa a cada una, en pocas palabras y con su tono, para la lista de varias.
-function situacion(cambio: ConLoQuePasa | undefined, candidatura: Candidatura): { texto: string; tono: 'warning-light' | 'info-light' | 'secondary' } {
+function situacion(
+  cambio: ConLoQuePasa | undefined,
+  candidatura: Candidatura,
+  invitar: boolean,
+): { texto: string; tono: 'warning-light' | 'info-light' | 'secondary' } {
   if (!cambio) return { texto: `Ya está en ${tituloEtapa(candidatura.etapa)}`, tono: 'secondary' }
   const { pasa, destino } = cambio
   if (pasa.deja) return { texto: pasa.deja.entrevista.tipo === 'a-medias' ? 'Se cancela su entrevista' : 'Se cancela su invitación', tono: 'warning-light' }
   if (pasa.saltadas.length) return { texto: `Se salta ${plural(pasa.saltadas.length, '1 etapa', `${pasa.saltadas.length} etapas`)}`, tono: 'warning-light' }
   if (pasa.atras) return { texto: `Vuelve a ${tituloEtapa(destino)}`, tono: 'info-light' }
+  if (pasa.entra && pasa.entra.hecha === undefined)
+    return invitar ? { texto: `Le escribe ${pasa.entra.etapa.titulo}`, tono: 'info-light' } : { texto: 'Entra sin invitación', tono: 'secondary' }
   return { texto: `Pasa a ${tituloEtapa(destino)}`, tono: 'secondary' }
 }
 
@@ -108,6 +125,8 @@ export function DialogoMover({
     destinos ? (cadaUna ? null : (Object.values(destinos)[0] ?? null)) : una ? siguienteEtapaDe(vacante.etapas, una.etapa) : null,
   )
   const [ia, setIa] = useState<'conservar' | 'repetir'>('conservar')
+  const [invitar, setInvitar] = useState(true)
+  const navegar = useNavigate()
   const [escribir, setEscribir] = useState(false)
   // Sin tocar, la plantilla y su texto siguen a la etapa elegida.
   const [plantilla, setPlantilla] = useState<string | null>(null)
@@ -127,7 +146,17 @@ export function DialogoMover({
   const vuelven = cambios.filter(({ pasa }) => pasa.atras)
   const dejan = cambios.filter(({ pasa }) => pasa.deja)
   const yaLaHicieron = cambios.filter(({ pasa }) => pasa.entra?.hecha !== undefined)
-  const invitadas = cambios.filter(({ pasa }) => pasa.entra && (pasa.entra.hecha === undefined || ia === 'repetir'))
+  // Quienes entran por primera vez a una etapa con IA: aquí se decide si la IA les escribe.
+  const entran = cambios.filter(({ pasa }) => pasa.entra && pasa.entra.hecha === undefined)
+  // Sin nada libre en el agente no sale ninguna invitación: esa opción se apaga y se dice por qué.
+  const libreEntrar = entran.length ? costoDeEtapa(entran[0].destino) : null
+  const libreRepetir = yaLaHicieron.length ? costoDeEtapa(yaLaHicieron[0].destino) : null
+  const borrador = vacante.estado === 'Borrador'
+  const sinCupoEntrar = Boolean(libreEntrar && !borrador && libreEntrar.alcanzaPara === 0)
+  const sinCupoRepetir = Boolean(libreRepetir && !borrador && libreRepetir.alcanzaPara === 0)
+  const invitarA = invitar && !sinCupoEntrar
+  const iaA = sinCupoRepetir ? 'conservar' : ia
+  const invitadas = cambios.filter(({ pasa }) => pasa.entra && (pasa.entra.hecha === undefined ? invitarA : iaA === 'repetir'))
   const llegan = cambios.filter(({ pasa }) => pasa.ultima)
   // A quien le escribe la IA no se le escribe además a mano: le llegarían dos correos.
   // Quien pidió no recibir correos tampoco recibe el de mover (CA-05).
@@ -137,11 +166,15 @@ export function DialogoMover({
 
   const ultima = vacante.etapas[vacante.etapas.length - 1]
   const etapaIA = [...yaLaHicieron, ...invitadas][0]?.pasa.entra?.etapa
-  // Lo que cuesta en créditos invitar a quienes entran a una etapa con IA que cobra (VA-09).
+  const etapaEntran = entran[0]?.pasa.entra?.etapa
+  // Lo que cuesta en créditos invitar a quienes entran a una etapa con IA que cobra (VA-09). Cada opción dice lo suyo
+  // aunque no esté elegida; el aviso de que no alcanza, solo con lo que de verdad se va a invitar.
   const costo = invitadas.length ? costoDeEtapa(invitadas[0].destino, invitadas.length) : null
+  const costoEntrar = entran.length ? costoDeEtapa(entran[0].destino, entran.length) : null
+  const costoRepetir = yaLaHicieron.length ? costoDeEtapa(yaLaHicieron[0].destino, yaLaHicieron.length) : null
   const idPlantilla = plantilla ?? (cambios[0] ? plantillaSugerida(cambios[0].destino, vacante.etapas, cambios[0].pasa.atras) : 'sigue')
   const textoPlantilla = texto ?? PLANTILLAS_MOVER.find((p) => p.id === idPlantilla)?.texto ?? ''
-  const nada = n > 0 && !saltan.length && !vuelven.length && !dejan.length && !yaLaHicieron.length && !invitadas.length && !llegan.length
+  const nada = n > 0 && !saltan.length && !vuelven.length && !dejan.length && !yaLaHicieron.length && !entran.length && !llegan.length
 
   const posicion = una ? vacante.etapas.findIndex((etapa) => etapa.id === una.etapa) : -1
   const etapasDistintas = new Set(candidaturas.map((c) => c.etapa))
@@ -150,7 +183,8 @@ export function DialogoMover({
     onConfirmar({
       cambios: cambios.map(({ candidatura, destino: hacia }) => ({ candidatura, destino: hacia })),
       comentario,
-      ia,
+      ia: iaA,
+      invitar: invitarA,
       aviso: escribir && escribibles.length ? { plantilla: PLANTILLAS_MOVER.find((p) => p.id === idPlantilla)?.titulo ?? '', texto: textoPlantilla } : null,
       cerrarVacante: llegan.length > 0 && cerrar,
     })
@@ -246,6 +280,7 @@ export function DialogoMover({
               const { texto: dice, tono } = situacion(
                 cambios.find((cambio) => cambio.candidatura.id === candidatura.id),
                 candidatura,
+                invitarA,
               )
               return (
                 <Item key={candidatura.id} size="xs" variant="outline">
@@ -333,7 +368,7 @@ export function DialogoMover({
               ? `Ya presentó la entrevista con ${etapaIA.titulo} (${yaLaHicieron[0].pasa.entra?.hecha}/100)`
               : `${personasTexto(yaLaHicieron.length)} ya ${yaLaHicieron.length === 1 ? 'presentó' : 'presentaron'} la entrevista con ${etapaIA.titulo}`}
           </FieldLabel>
-          <RadioGroup value={ia} onValueChange={(valor) => setIa(valor as 'conservar' | 'repetir')} className="grid gap-2">
+          <RadioGroup value={iaA} onValueChange={(valor) => setIa(valor as 'conservar' | 'repetir')} className="grid gap-2">
             <FieldLabel htmlFor="mover-ia-conservar">
               <Field orientation="horizontal">
                 <FieldContent>
@@ -344,32 +379,83 @@ export function DialogoMover({
               </Field>
             </FieldLabel>
             <FieldLabel htmlFor="mover-ia-repetir">
-              <Field orientation="horizontal">
+              <Field orientation="horizontal" data-disabled={sinCupoRepetir}>
                 <FieldContent>
                   <FieldTitle>Pedirle que la repita</FieldTitle>
-                  <FieldDescription>Le llega una invitación nueva. El resultado anterior queda en su historial.</FieldDescription>
+                  <FieldDescription>
+                    {una ? 'Le llega' : 'Les llega'} una invitación nueva. El resultado anterior queda en su historial.
+                    {costoRepetir
+                      ? sinCupoRepetir
+                        ? ` No se puede: ${costoRepetir.agente.nombre} no tiene créditos libres.`
+                        : ` Cuesta ${creditos(costoRepetir.total)} créditos de ${costoRepetir.agente.nombre}.`
+                      : ''}
+                  </FieldDescription>
                 </FieldContent>
-                <RadioGroupItem value="repetir" id="mover-ia-repetir" />
+                <RadioGroupItem value="repetir" id="mover-ia-repetir" disabled={sinCupoRepetir} />
               </Field>
             </FieldLabel>
           </RadioGroup>
         </Field>
       ) : null}
 
-      {invitadas.some(({ pasa }) => pasa.entra?.hecha === undefined) ? (
-        <Alert variant="info">
-          <HugeiconsIcon icon={Mail01Icon} size={16} />
-          <AlertTitle className="flex items-center gap-1.5">
+      {entran.length && etapaEntran ? (
+        <Field>
+          <FieldLabel className="flex items-center gap-1.5">
             <IconoIA />
-            {una ? `${invitadas[0].pasa.entra?.etapa.titulo} le escribe` : `A ${personasTexto(invitadas.length)} les escribe ${etapaIA?.titulo ?? 'la IA'}`}
-          </AlertTitle>
+            {una
+              ? `Entra a ${etapaEntran.titulo}`
+              : `${personasTexto(entran.length)} ${entran.length === 1 ? 'entra' : 'entran'} a ${etapaEntran.titulo}`}
+          </FieldLabel>
+          <RadioGroup value={invitarA ? 'invitar' : 'solo'} onValueChange={(valor) => setInvitar(valor === 'invitar')} className="grid gap-2">
+            <FieldLabel htmlFor="mover-entra-invitar">
+              <Field orientation="horizontal" data-disabled={sinCupoEntrar}>
+                <FieldContent>
+                  <FieldTitle>
+                    Que {etapaEntran.titulo} {una ? 'le' : 'les'} escriba
+                  </FieldTitle>
+                  <FieldDescription>
+                    {/* En un borrador la invitación espera: no le llega nada de una vacante que todavía no existe afuera (VA-45). */}
+                    {borrador
+                      ? `La invitación a la entrevista sale cuando publiques la vacante, no antes.`
+                      : `${una ? 'Le llega' : 'Les llega'} la invitación a la entrevista unos segundos después de ${una ? 'moverla' : 'moverlas'}.`}
+                    {costoEntrar
+                      ? ` Cuesta ${creditos(costoEntrar.total)} créditos de ${costoEntrar.agente.nombre}; quedan ${creditos(costoEntrar.libre)} libres.`
+                      : ' No usa créditos.'}
+                  </FieldDescription>
+                </FieldContent>
+                <RadioGroupItem value="invitar" id="mover-entra-invitar" disabled={sinCupoEntrar} />
+              </Field>
+            </FieldLabel>
+            <FieldLabel htmlFor="mover-entra-solo">
+              <Field orientation="horizontal">
+                <FieldContent>
+                  <FieldTitle>Solo {una ? 'moverla' : 'moverlas'}</FieldTitle>
+                  <FieldDescription>
+                    {una ? 'Queda' : 'Quedan'} en {etapaEntran.titulo} sin invitación y no se usan créditos. {una ? 'Queda' : 'Quedan'} en «Esperando
+                    acción»: la invitación se envía después desde {una ? 'su tarjeta o su ficha' : 'la tarjeta o la ficha de cada una'}.
+                  </FieldDescription>
+                </FieldContent>
+                <RadioGroupItem value="solo" id="mover-entra-solo" />
+              </Field>
+            </FieldLabel>
+          </RadioGroup>
+        </Field>
+      ) : null}
+
+      {/* Sin nada libre en el agente: se mueve sin invitación y se dice dónde conseguir los créditos (VA-09). */}
+      {(sinCupoEntrar || sinCupoRepetir) && (libreEntrar ?? libreRepetir) ? (
+        <Alert variant="warning">
+          <HugeiconsIcon icon={Alert02Icon} size={16} />
+          <AlertTitle>{(libreEntrar ?? libreRepetir)!.agente.nombre} no tiene créditos libres</AlertTitle>
           <AlertDescription>
-            {/* En un borrador la invitación espera: no le llega nada de una vacante que todavía no existe afuera (VA-45). */}
-            {vacante.estado === 'Borrador'
-              ? `La vacante está en borrador: ${una ? 'le llega' : 'les llega'} la invitación a la entrevista cuando la publiques, no antes.`
-              : `${una ? 'Le llega' : 'Les llega'} la invitación a la entrevista unos segundos después de moverla. Si deshaces a tiempo, no sale.`}
-            {costo ? ` Cuesta ${creditos(costo.total)} créditos de ${costo.agente.nombre}; quedan ${creditos(costo.libre)} libres.` : ''}
+            Cuesta {creditos((libreEntrar ?? libreRepetir)!.total)} por persona. Puedes {una ? 'moverla' : 'moverlas'} sin invitación y enviarla cuando
+            repartas créditos.
           </AlertDescription>
+          <AlertAction>
+            <Button variant="outline" size="sm" onClick={() => navegar(RUTA_CREDITOS)}>
+              Ir a Créditos
+            </Button>
+          </AlertAction>
         </Alert>
       ) : null}
 
@@ -382,7 +468,8 @@ export function DialogoMover({
             {costo.alcanzaPara
               ? `Alcanzan para ${personasTexto(costo.alcanzaPara)} de ${personasTexto(invitadas.length)}.`
               : 'No queda nada libre.'}{' '}
-            Quien no alcance queda en la etapa esperando, sin invitación, hasta que haya créditos. Pídelos o repártelos en Créditos.
+            Quien no alcance entra sin invitación y queda en «Esperando acción» hasta que haya créditos. Pídelos o repártelos en
+            Créditos.
           </AlertDescription>
         </Alert>
       ) : null}

@@ -12,7 +12,6 @@ import {
   ViewIcon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -23,12 +22,13 @@ import {
   ProgressLabel,
   ProgressValue,
   Text,
-  toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { BotonIcono } from '@/shared/components/BotonIcono'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { notify } from '@/shared/components/notify'
+import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
 
 import { CasoUbits } from '../../patrones/piezas'
 import { diasDesde, fechaCorta, fechaSinAnio, plural } from '../../patrones/formato'
@@ -237,8 +237,9 @@ const COLUMNAS: DataGridListConfig<Evaluacion>['columns'] = [
   },
   {
     id: 'acciones',
-    header: '',
-    size: 56,
+    // 13-oct: lleva su encabezado «Acciones» (regla de la columna de acciones), con el ancho para que se lea.
+    header: 'Acciones',
+    size: 100,
     enableSorting: false,
     enableResizing: false,
     ...SIN_ARRASTRE,
@@ -282,7 +283,7 @@ function resolver(filas: Evaluacion[], busqueda: string, filtros: Filtro[], orde
   return resultado
 }
 
-type Pendiente = { tipo: 'eliminar' | 'finalizar'; evaluacion: Evaluacion }
+type Pendiente = { tipo: 'eliminar' | 'finalizar' | 'recordar'; evaluacion: Evaluacion }
 
 function textoEliminar(evaluacion: Evaluacion) {
   if (evaluacion.estado === 'Borrador') return 'Se pierde la configuración que llevas. No se puede deshacer.'
@@ -309,19 +310,20 @@ export function CasoEvaluaciones360() {
   const hayFiltros = busqueda.trim() !== '' || filtros.length > 0
 
   const ejecutar = (accion: Accion, evaluacion: Evaluacion) => {
-    if (accion === 'eliminar' || accion === 'finalizar') {
+    // Eliminar, finalizar y recordar afectan a otras personas o no se revierten: preguntan antes (13-oct, regla
+    // «preguntar-antes»; el recordatorio se enviaba sin preguntar).
+    if (accion === 'eliminar' || accion === 'finalizar' || accion === 'recordar') {
       setPendiente({ tipo: accion, evaluacion })
       setDialogoAbierto(true)
       return
     }
-    const avisos: Record<Exclude<Accion, 'eliminar' | 'finalizar'>, string> = {
+    const avisos: Record<Exclude<Accion, 'eliminar' | 'finalizar' | 'recordar'>, string> = {
       continuar: 'Se abre el hub de creación con lo que ya llenaste',
       avance: 'Se abre el avance de respuestas por evaluado',
-      recordar: `Recordatorio enviado a quienes no han respondido`,
       resultados: 'Se abren los resultados generales',
       descargar: 'Reporte descargado',
     }
-    toast.add({ type: accion === 'descargar' || accion === 'recordar' ? 'success' : 'info', title: avisos[accion], description: evaluacion.nombre })
+    notify(avisos[accion], evaluacion.nombre, accion === 'descargar' ? 'success' : 'info')
   }
 
   const confirmar = () => {
@@ -330,16 +332,14 @@ export function CasoEvaluaciones360() {
 
     if (tipo === 'eliminar') {
       setEvaluaciones((actuales) => actuales.filter((e) => e.id !== evaluacion.id))
-      toast.add({ type: 'success', title: 'Evaluación eliminada', description: evaluacion.nombre })
+      notify('Evaluación eliminada', evaluacion.nombre, 'success')
+    } else if (tipo === 'recordar') {
+      notify('Recordatorio enviado', `Les llegó a las ${evaluacion.esperadas - evaluacion.respuestas} personas que no han respondido.`, 'success')
     } else {
       setEvaluaciones((actuales) =>
         actuales.map((e) => (e.id === evaluacion.id ? { ...e, estado: 'Finalizada', cierre: '2026-09-11' } : e)),
       )
-      toast.add({
-        type: 'success',
-        title: 'Evaluación finalizada',
-        description: 'Los resultados ya se pueden consultar.',
-      })
+      notify('Evaluación finalizada', 'Los resultados ya se pueden consultar.', 'success')
     }
     setDialogoAbierto(false)
   }
@@ -364,12 +364,7 @@ export function CasoEvaluaciones360() {
         id: 'crear',
         label: 'Crear evaluación 360°',
         icon: <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />,
-        onClick: () =>
-          toast.add({
-            type: 'info',
-            title: 'Se abre el hub de creación',
-            description: 'Míralo en Formularios › Secciones que se desbloquean.',
-          }),
+        onClick: () => notify('Se abre el hub de creación', 'Míralo en Formularios › Secciones que se desbloquean.', 'info'),
       },
     },
     emptyState: hayFiltros
@@ -401,6 +396,7 @@ export function CasoEvaluaciones360() {
   }
 
   const eliminando = pendiente?.tipo === 'eliminar'
+  const recordando = pendiente?.tipo === 'recordar'
 
   return (
     <CasoUbits
@@ -423,19 +419,30 @@ export function CasoEvaluaciones360() {
       <DialogoConfirmar
         abierto={dialogoAbierto}
         onAbiertoChange={setDialogoAbierto}
-        icono={eliminando ? Delete02Icon : CheckmarkBadge01Icon}
-        titulo={eliminando ? `¿Eliminar «${pendiente?.evaluacion.nombre}»?` : '¿Finalizar la evaluación?'}
+        icono={eliminando ? Delete02Icon : recordando ? Mail01Icon : CheckmarkBadge01Icon}
+        titulo={eliminando ? `¿Eliminar «${pendiente?.evaluacion.nombre}»?` : recordando ? '¿Enviar el recordatorio?' : '¿Finalizar la evaluación?'}
         descripcion={
           pendiente
             ? eliminando
               ? textoEliminar(pendiente.evaluacion)
-              : `Quienes no respondieron ya no podrán hacerlo. Faltan ${pendiente.evaluacion.esperadas - pendiente.evaluacion.respuestas} respuestas de ${pendiente.evaluacion.esperadas}.`
+              : recordando
+                ? `Les llega por correo a las ${pendiente.evaluacion.esperadas - pendiente.evaluacion.respuestas} personas que no han respondido. Un correo enviado no se puede recoger.`
+                : `Quienes no respondieron ya no podrán hacerlo. Faltan ${pendiente.evaluacion.esperadas - pendiente.evaluacion.respuestas} respuestas de ${pendiente.evaluacion.esperadas}.`
             : null
         }
-        accion={eliminando ? 'Eliminar evaluación' : 'Finalizar ahora'}
+        cancelar={recordando ? 'Todavía no' : undefined}
+        accion={eliminando ? 'Eliminar evaluación' : recordando ? 'Enviar recordatorio' : 'Finalizar ahora'}
         destructiva={eliminando}
         onConfirmar={confirmar}
-      />
+      >
+        {recordando && pendiente ? (
+          <RegistroConfirmar
+            nombre={pendiente.evaluacion.nombre}
+            detalle={`Evaluación 360° · ${pendiente.evaluacion.respuestas} de ${pendiente.evaluacion.esperadas} respuestas`}
+            estado={`${pendiente.evaluacion.esperadas - pendiente.evaluacion.respuestas} personas`}
+          />
+        ) : null}
+      </DialogoConfirmar>
     </CasoUbits>
   )
 }

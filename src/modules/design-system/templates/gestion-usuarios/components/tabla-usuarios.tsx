@@ -2,7 +2,6 @@ import { createContext, useContext } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Edit02Icon, LockPasswordIcon, MoreHorizontalIcon, UserBlock01Icon, UserCheck01Icon, ViewIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -12,6 +11,7 @@ import {
   Text,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 
 import { Persona } from '../../../data-grid/casos/seguimiento'

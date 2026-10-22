@@ -10,6 +10,7 @@ import { PanelAgente } from './panel-agente'
 import { PanelEntrevista } from './panel-entrevista'
 import { PanelPruebas } from './panel-pruebas'
 import { CATALOGO, FLUJO_RECOMENDADO, etapaDelCatalogo, etapaPropia, type EtapaCatalogo, type EtapaFlujo } from './etapas'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 type Props = {
   nombreVacante: string
@@ -91,7 +92,7 @@ export function PasoProceso({ nombreVacante, etapas, onEtapas, mostrarErrores, o
       return catalogo ? [etapaDelCatalogo(catalogo)] : []
     })
     onEtapas(nuevas)
-    notify('Pusimos el flujo recomendado', `${nuevas.length} etapas; ajústalas a esta vacante.`, 'success')
+    notify('Pusimos el flujo recomendado', `${nuevas.length} ${plural(nuevas.length, 'etapa', 'etapas')}; ajústalas a esta vacante.`, 'success')
   }
 
   // La etapa creada entra al flujo de una vez (queda al final, como el resto de las que se agregan) y

@@ -14,7 +14,6 @@ import {
   Tick02Icon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Breadcrumb,
   BreadcrumbEllipsis,
   BreadcrumbItem,
@@ -53,6 +52,7 @@ import {
   cn,
   navigationMenuTriggerStyle,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { FiltroChip } from '@/modules/design-system/navegacion/filtro-chip'
 import { PiePaginacion } from '@/modules/admin/seleccion/propuestas/components/paginacion'
 import { BotonIcono } from '@/shared/components/BotonIcono'
@@ -82,7 +82,7 @@ export function PreviewBreadcrumbs({ config: c, sample: s }: Props) {
     <Breadcrumb data-region="Migas de pan">
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink render={<button type="button" />} aria-label={c.crumbHome ? all[0] : undefined} onClick={() => notify(all[0])}>
+          <BreadcrumbLink render={<button type="button" />} aria-label={c.crumbHome ? all[0] : undefined} onClick={() => notify(all[0], undefined, 'info')}>
             {c.crumbHome ? <HugeiconsIcon icon={Home03Icon} size={16} /> : all[0]}
           </BreadcrumbLink>
         </BreadcrumbItem>
@@ -98,7 +98,7 @@ export function PreviewBreadcrumbs({ config: c, sample: s }: Props) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-48">
                     {hidden.map((label) => (
-                      <DropdownMenuItem key={label} onClick={() => notify(label)}>
+                      <DropdownMenuItem key={label} onClick={() => notify(label, undefined, 'info')}>
                         {label}
                       </DropdownMenuItem>
                     ))}
@@ -112,7 +112,7 @@ export function PreviewBreadcrumbs({ config: c, sample: s }: Props) {
           <Fragment key={label}>
             {separator()}
             <BreadcrumbItem>
-              <BreadcrumbLink render={<button type="button" />} onClick={() => notify(label)}>
+              <BreadcrumbLink render={<button type="button" />} onClick={() => notify(label, undefined, 'info')}>
                 {label}
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -130,7 +130,7 @@ export function PreviewBreadcrumbs({ config: c, sample: s }: Props) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-56">
                     {s.siblings.map((label) => (
-                      <DropdownMenuItem key={label} onClick={() => notify(label)}>
+                      <DropdownMenuItem key={label} onClick={() => notify(label, undefined, 'info')}>
                         {label}
                         {label === last ? <HugeiconsIcon icon={Tick02Icon} size={16} className="ml-auto" /> : null}
                       </DropdownMenuItem>
@@ -157,7 +157,7 @@ export function BackWithCrumbs(props: Props) {
         <BotonIcono
           className="-my-1.5 text-muted-foreground!"
           aria-label={`Volver a ${props.sample.back}`}
-          onClick={() => notify(`Volver a ${props.sample.back}`)}
+          onClick={() => notify(`Volver a ${props.sample.back}`, undefined, 'info')}
         >
           <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
         </BotonIcono>
@@ -175,10 +175,10 @@ export function RecordNav({ counter }: { counter: boolean }) {
     <div data-region="Anterior / siguiente" className="flex min-w-28 items-center justify-end gap-2.5">
       {counter ? <span className="text-sm text-muted-foreground tabular-nums">2 de 12</span> : null}
       <ButtonGroup>
-        <Button variant="outline" size="icon-sm" aria-label="Registro anterior" onClick={() => notify('Registro anterior')}>
+        <Button variant="outline" size="icon-sm" aria-label="Registro anterior" onClick={() => notify('Registro anterior', undefined, 'info')}>
           <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
         </Button>
-        <Button variant="outline" size="icon-sm" aria-label="Registro siguiente" onClick={() => notify('Registro siguiente')}>
+        <Button variant="outline" size="icon-sm" aria-label="Registro siguiente" onClick={() => notify('Registro siguiente', undefined, 'info')}>
           <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
         </Button>
       </ButtonGroup>
@@ -230,7 +230,7 @@ export function PreviewTabs({ config: c, sample: s }: Props) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-44">
                 {MORE_TABS.map((label) => (
-                  <DropdownMenuItem key={label} onClick={() => notify(label)}>
+                  <DropdownMenuItem key={label} onClick={() => notify(label, undefined, 'info')}>
                     {label}
                   </DropdownMenuItem>
                 ))}
@@ -291,7 +291,7 @@ export function ProductMenu({ config: c, sample: s }: Props) {
                           render={<button type="button" />}
                           onClick={() => {
                             setActive(label)
-                            notify(link.title)
+                            notify(link.title, undefined, 'info')
                           }}
                           className="flex w-full cursor-pointer items-start gap-3 text-left"
                         >

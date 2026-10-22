@@ -1,6 +1,6 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Calendar03Icon, Search01Icon } from '@hugeicons/core-free-icons'
+import { Calendar03Icon, Cancel01Icon, Search01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarFallback,
@@ -20,6 +20,7 @@ import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShel
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { WS } from '../../drawers/components/drawer-styles'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../components/case-frame'
 import { REQUESTS, STATUS_LABEL, initials, type RequestStatus } from './components/data'
 import { RequestDetail } from './components/request-detail'
@@ -38,6 +39,7 @@ export function Component() {
   const [items, setItems] = useState(REQUESTS)
   const [filter, setFilter] = useState<Filter>('pendiente')
   const [query, setQuery] = useState('')
+  const [pidiendo, setPidiendo] = useState<'aprobada' | 'rechazada' | null>(null)
   const [selectedId, setSelectedId] = useState(REQUESTS[0].id)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -76,7 +78,7 @@ export function Component() {
     const others = visible.filter((r) => r.status === 'pendiente' && r.id !== selected.id)
     const nextPending = others.find((r) => visible.indexOf(r) > index) ?? others[0]
     setItems((list) => list.map((r) => (r.id === selected.id ? { ...r, status } : r)))
-    notify(`${status === 'aprobada' ? 'Aprobaste' : 'Rechazaste'} la solicitud de ${selected.name}`)
+    notify(`${status === 'aprobada' ? 'Aprobaste' : 'Rechazaste'} la solicitud de ${selected.name}`, 'Se le avisó por correo.', 'success')
     if (nextPending) select(nextPending.id)
   }
 
@@ -97,7 +99,7 @@ export function Component() {
           description="Revisa y responde las solicitudes de tu equipo sin salir de la lista."
           actions={
             <>
-              <Button variant="outline" className={WS} onClick={() => notify('Calendario del equipo')}>
+              <Button variant="outline" className={WS} onClick={() => notify('Calendario del equipo', undefined, 'info')}>
                 <HugeiconsIcon icon={Calendar03Icon} size={16} />
                 Calendario del equipo
               </Button>
@@ -224,7 +226,7 @@ export function Component() {
                     canNext={index !== -1 && index < visible.length - 1}
                     onPrev={() => move(-1)}
                     onNext={() => move(1)}
-                    onRespond={respond}
+                    onRespond={setPidiendo}
                     onUndo={() => setItems((list) => list.map((r) => (r.id === selected.id ? { ...r, status: 'pendiente' } : r)))}
                   />
                 ) : null}
@@ -232,6 +234,32 @@ export function Component() {
             </ResizablePanelGroup>
           </div>
         </PageContent>
+
+        {/* Aprobar o rechazar le llega a la persona: pregunta antes (13-oct, regla «preguntar-antes»), con DialogoConfirmar y
+            la tarjeta de lo que se toca. */}
+        <DialogoConfirmar
+          abierto={pidiendo !== null}
+          onAbiertoChange={(abrir) => {
+            if (!abrir) setPidiendo(null)
+          }}
+          icono={pidiendo === 'rechazada' ? Cancel01Icon : Tick02Icon}
+          titulo={pidiendo === 'rechazada' ? '¿Rechazar la solicitud?' : '¿Aprobar la solicitud?'}
+          descripcion={
+            pidiendo === 'rechazada'
+              ? 'Se le avisa por correo a la persona y la solicitud sale de los pendientes.'
+              : 'Se le avisa por correo a la persona y el equipo ve la ausencia en el calendario.'
+          }
+          cancelar="Todavía no"
+          accion={pidiendo === 'rechazada' ? 'Rechazar solicitud' : 'Aprobar solicitud'}
+          destructiva={pidiendo === 'rechazada'}
+          onConfirmar={() => {
+            const respuesta = pidiendo
+            setPidiendo(null)
+            if (respuesta) respond(respuesta)
+          }}
+        >
+          {selected ? <RegistroConfirmar nombre={selected.name} detalle={`${selected.type} · ${selected.dates}`} estado="Pendiente" /> : null}
+        </DialogoConfirmar>
       </PageShell>
     </CaseFrame>
   )

@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { NoteAddIcon, NoteIcon } from '@hugeicons/core-free-icons'
+import { NoteAddIcon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarFallback,
@@ -32,6 +31,7 @@ import { iniciales } from '@/modules/design-system/patrones/formato'
 import { EtiquetaIA } from '@/modules/design-system/ia/etiqueta-ia'
 import { Orb } from '@/shared/components/Orb'
 import { NOMBRE_ETAPA, type EtapaId, type Nota } from '../../components/data'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 // Notas del equipo de selección. Cada una puede ir atada a una etapa (las observaciones de Serena, los
 // comentarios de quienes evalúan el Roleplay) o quedar como nota general del candidato.
@@ -54,8 +54,8 @@ export function ListaNotas({
     return (
       <Empty>
         <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <HugeiconsIcon icon={NoteIcon} aria-hidden="true" />
+          <EmptyMedia variant="default">
+            <ImagenGlass nombre="glass-edit" tamano={56} />
           </EmptyMedia>
           <EmptyTitle>{vacia}</EmptyTitle>
         </EmptyHeader>

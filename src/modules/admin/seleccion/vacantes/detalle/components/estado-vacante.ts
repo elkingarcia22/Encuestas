@@ -49,5 +49,5 @@ export const hoy = () => `Hoy, ${hora()}`
 export function notaDelResumen(candidato: Candidato, id: number): Nota {
   const fortalezas = candidato.fortalezas.map((f) => f.texto.replace(/\.$/, '')).join('; ')
   const riesgos = candidato.riesgos.length ? candidato.riesgos.map((r) => r.texto.replace(/\.$/, '')).join('; ') : 'sin riesgos a la vista'
-  return { id, autor: 'Orbit Flow', fecha: hoy(), texto: `Ajuste ${candidato.ajuste}%. Fortalezas: ${fortalezas}. Riesgos: ${riesgos}.`, agente: true }
+  return { id, autor: 'Orbit', fecha: hoy(), texto: `Ajuste ${candidato.ajuste} %. Fortalezas: ${fortalezas}. Riesgos: ${riesgos}.`, agente: true }
 }

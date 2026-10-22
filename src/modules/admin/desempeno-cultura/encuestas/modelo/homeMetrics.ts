@@ -37,12 +37,12 @@ export const METRIC_PRESETS: readonly MetricPreset[] = [
   {
     id: "low",
     label: "Participación baja",
-    hint: "Encuestas en curso con menos del 50% de participación hoy.",
+    hint: "Encuestas en curso con menos del 50 % de participación hoy.",
     tone: "negative",
     filters: {
       ...NO_FILTERS,
       status: [OPEN_STATUS],
-      progress: ["Menos de 50%"],
+      progress: ["Menos de 50 %"],
     },
   },
 ];

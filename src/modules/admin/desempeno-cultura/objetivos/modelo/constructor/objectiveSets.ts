@@ -436,7 +436,7 @@ export function alignmentCounts(
   let unaligned = 0;
   sets.forEach((set) => {
     set.objectives.forEach((objective) => {
-      if (objective.alignedTo !== null) aligned += 1;
+      if (objective.alignedTo.length > 0) aligned += 1;
       else unaligned += 1;
     });
   });
@@ -478,10 +478,26 @@ export function alignObjectives(
     return {
       ...set,
       objectives: set.objectives.map((objective) =>
-        wanted.has(objective.id) ? { ...objective, alignedTo: companyObjectiveId } : objective
+        // Un objetivo puede contribuir a varios (22-oct): alinear suma el destino; `null` lo suelta de todos.
+        wanted.has(objective.id) ? { ...objective, alignedTo: companyObjectiveId === null ? [] : objective.alignedTo.includes(companyObjectiveId) ? objective.alignedTo : [...objective.alignedTo, companyObjectiveId] } : objective
       ),
     };
   });
+}
+
+/** Suelta un lote de objetivos de UN destino, dejando los demás a los que contribuyen (22-oct). */
+export function unalignObjectives(
+  sets: readonly ObjectiveSet[],
+  addresses: readonly ObjectiveAddress[],
+  companyObjectiveId: string
+): readonly ObjectiveSet[] {
+  const wanted = new Set(addresses.map(({ setId, objectiveId }) => `${setId}:${objectiveId}`));
+  return sets.map((set) => ({
+    ...set,
+    objectives: set.objectives.map((objective) =>
+      wanted.has(`${set.id}:${objective.id}`) ? { ...objective, alignedTo: objective.alignedTo.filter((destino) => destino !== companyObjectiveId) } : objective
+    ),
+  }));
 }
 
 /** Drops a company objective's alignment everywhere it was pointed at. */
@@ -492,6 +508,6 @@ export const unalignFromCompanyObjective = (
   sets.map((set) => ({
     ...set,
     objectives: set.objectives.map((objective) =>
-      objective.alignedTo === companyObjectiveId ? { ...objective, alignedTo: null } : objective
+      objective.alignedTo.includes(companyObjectiveId) ? { ...objective, alignedTo: objective.alignedTo.filter((destino) => destino !== companyObjectiveId) } : objective
     ),
   }));

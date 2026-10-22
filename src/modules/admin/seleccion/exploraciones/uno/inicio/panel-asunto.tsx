@@ -20,7 +20,7 @@ import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { BloqueResumen, ListaDatos } from '../../../vacantes/crear/components/piezas-resumen'
 import { claveDe, estadoInicio, useEstadoInicio } from './estado'
-import { ListaAsuntos, MediaGrupo, TarjetaSugerencia as TarjetaSugerenciaComun } from '../../../propuestas/components/tablero-atencion'
+import { ListaAsuntos, MediaGrupo, TarjetaSugerencia as TarjetaSugerenciaComun } from '@/modules/design-system/metricas/tablero-atencion'
 import { etiquetaSugerencia, grupoDe, hechoDe, type Asunto, type Elemento, type Grupo } from './atencion'
 
 // El panel lateral de un grupo del tablero, como el de Riesgos que Elkin armó en Encuestas: primero la lista de sus

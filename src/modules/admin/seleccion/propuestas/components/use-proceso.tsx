@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { toast } from '@ubits/flux-ui'
 import { notify, notifyAction } from '@/shared/components/notify'
 import { CANDIDATURAS, RECHAZADAS, esUltimaEtapa, tituloEtapa, type Candidatura, type Rechazada, type VacanteUI } from '../datos'
 import {
   QUIEN_MUEVE,
+  accionSinInvitacion,
   consecuenciasDe,
   entradasA,
   entrevistaDe,
@@ -14,9 +14,12 @@ import {
   personasTexto,
   pideDecision,
   registroDeMovimientos,
+  sinInvitacionEn,
   type Consecuencias,
   type Movimiento,
 } from '../movimientos'
+import { creditosDeCambios, cupoDeInvitaciones, enviarInvitacion, textoReserva } from '../invitaciones'
+import { DialogoInvitar } from './invitar-a-etapa'
 import { fallaAlGuardar, otraLaMovioAntes } from '../simular'
 import { DialogoMover, type Cambio, type DecisionMover, type PedidoMover } from './dialogo-mover'
 import { PLANTILLAS_RECHAZO, fallaAlRechazar, plantillaDeRechazo, quienDe } from '../rechazos'
@@ -40,8 +43,11 @@ import { avisoDeError } from '../simular'
 // - **Mover o cambiar de etapa, completo** (25 sep, Nicolás: «hazlos todos en las 3 exploraciones»): lo simple se mueve
 //   en el acto (avanzar un paso, arrastrar a la columna de al lado). Lo que trae algo que decidir abre la ventana de
 //   `dialogo-mover.tsx`: saltarse etapas, volver atrás, dejar una entrevista de IA sin terminar, volver a una que ya
-//   hizo y llegar a la última. «Mover a otra etapa…» la abre siempre, para elegir, escribirle y comentar. Las reglas
-//   están en `movimientos.ts`, y cada cambio queda en la pestaña «Etapas» de la ficha.
+//   hizo, entrar a una etapa con IA y llegar a la última. «Mover a otra etapa…» la abre siempre, para elegir, escribirle
+//   y comentar. Las reglas están en `movimientos.ts`, y cada cambio queda en la pestaña «Etapas» de la ficha.
+// - **Créditos** (13 oct, PM): entrar a una etapa con IA pregunta si la IA le escribe o solo se mueve. Cada invitación
+//   aparta sus créditos y una entrevista cancelada los devuelve (`invitaciones.ts`); quien entra sin invitación queda
+//   «Esperando acción» y la recibe después con «Enviar la invitación».
 // - **Vacante cerrada**: nadie cambia de etapa (ni se rechaza) hasta reabrirla; el aviso trae el botón.
 // - **Cuando no se guarda**: la persona se queda donde estaba, la fila lo dice y el aviso trae «Reintentar».
 // - **Rechazar** lleva motivo y el correo no se retira (decisión 4). Quien se rechaza no desaparece: queda al pie de
@@ -77,7 +83,7 @@ const PASANDO_MS = 900
 const PASO_MS = 4000
 const FALLO_MS = 8000
 
-const SIN_DECISION: Omit<DecisionMover, 'cambios'> = { comentario: '', ia: 'conservar', aviso: null, cerrarVacante: false }
+const SIN_DECISION: Omit<DecisionMover, 'cambios'> = { comentario: '', ia: 'conservar', invitar: true, aviso: null, cerrarVacante: false }
 
 export type ConLoQuePasa = Cambio & { pasa: Consecuencias }
 
@@ -92,12 +98,15 @@ export function detalleDe(nuevos: Movimiento[], quedaron?: number) {
   const escritas = de((m) => Boolean(m.aviso))
   const canceladas = de((m) => Boolean(m.cancelada))
   const enEspera = de((m) => m.ia === 'en-espera')
+  const sinInvitar = de((m) => m.ia === 'sin-invitar')
   const saltan = de((m) => m.saltadas.length > 0)
   const conservan = de((m) => m.ia === 'conservada')
   const principal = invitadas.length
-    ? una
-      ? `Le llega la invitación a «${tituloEtapa(invitadas[0].hacia)}».`
-      : `${personasTexto(invitadas.length)} reciben la invitación a «${tituloEtapa(invitadas[0].hacia)}».`
+    ? `${
+        una
+          ? `Le llega la invitación a «${tituloEtapa(invitadas[0].hacia)}».`
+          : `${personasTexto(invitadas.length)} reciben la invitación a «${tituloEtapa(invitadas[0].hacia)}».`
+      }${sinInvitar.length ? ` ${personasTexto(sinInvitar.length)} sin invitación: no alcanzaron los créditos.` : ` ${textoReserva(invitadas)}`}`.trim()
     : escritas.length
       ? una
         ? `Le llega tu correo «${escritas[0].aviso}».`
@@ -108,6 +117,10 @@ export function detalleDe(nuevos: Movimiento[], quedaron?: number) {
           : `Se cancelaron ${canceladas.length} entrevistas sin terminar.`
         : enEspera.length
           ? 'La invitación sale cuando publiques la vacante.'
+          : sinInvitar.length
+            ? una
+              ? 'Entró sin invitación: no usó créditos.'
+              : `${personasTexto(sinInvitar.length)} entraron sin invitación: no se usaron créditos.`
           : saltan.length
             ? una
               ? `Se saltó ${nombreDeLista(saltan[0].saltadas.map(tituloEtapa))}.`
@@ -117,7 +130,15 @@ export function detalleDe(nuevos: Movimiento[], quedaron?: number) {
                 ? 'Conserva su entrevista.'
                 : `${personasTexto(conservan.length)} conservan su entrevista.`
               : 'Nadie recibe correo.'
-  return quedaron ? `${principal} ${personasTexto(quedaron)} ya ${quedaron === 1 ? 'estaba' : 'estaban'} en la última etapa.` : principal
+  // Si lo principal fue otra cosa (un correo, una entrevista cancelada), también se dice que entró sin invitación.
+  const sinInvitarTambien =
+    sinInvitar.length && !invitadas.length && (escritas.length || canceladas.length)
+      ? una
+        ? ' Entró sin invitación.'
+        : ` ${personasTexto(sinInvitar.length)} sin invitación.`
+      : ''
+  const linea = `${principal}${sinInvitarTambien}`
+  return quedaron ? `${linea} ${personasTexto(quedaron)} ya ${quedaron === 1 ? 'estaba' : 'estaban'} en la última etapa.` : linea
 }
 
 export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial<VacanteUI>) => void) {
@@ -255,6 +276,9 @@ export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial
   // Reabrir la vuelve a publicar en el portal: se confirma como cualquier publicación y el aviso trae «Deshacer», que
   // la deja cerrada con su resultado de antes (VA-18).
   const [reabriendo, setReabriendo] = useState(false)
+  // Enviar la invitación a quien entró sin ella: a quién, y si la ventana está abierta.
+  const [invitando, setInvitando] = useState<Candidatura | null>(null)
+  const [invitandoAbierta, setInvitandoAbierta] = useState(false)
   const reabrir = () => setReabriendo(true)
   const confirmarReabrir = () => {
     setReabriendo(false)
@@ -292,13 +316,10 @@ export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial
   // agente) termina aquí.
   const bloqueada = () => {
     if (!bloqueo) return false
-    toast.add({
-      type: 'warning',
-      title: bloqueo.titulo,
-      // El texto largo vive en el aviso del tablero; aquí, solo la salida.
-      description: bloqueo.onReabrir ? undefined : `${pedirA} ${vacante.estado === 'Cerrada' ? 'que la reabra' : 'acceso'}.`,
-      ...(bloqueo.onReabrir ? { actionProps: { children: 'Reabrir la vacante', onClick: bloqueo.onReabrir } } : {}),
-    })
+    // El texto largo vive en el aviso del tablero; aquí, solo la salida. Con notify, como todo aviso (regla
+    // «avisos-con-tipo»): antes era un toast.add suelto.
+    if (bloqueo.onReabrir) notifyAction(bloqueo.titulo, undefined, { label: 'Reabrir la vacante', onClick: bloqueo.onReabrir }, 'warning')
+    else notify(bloqueo.titulo, `${pedirA} ${vacante.estado === 'Cerrada' ? 'que la reabra' : 'acceso'}.`, 'warning')
     return true
   }
 
@@ -379,17 +400,26 @@ export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial
       )
       const destinos = new Map(hechos.map(({ candidatura, destino }) => [candidatura.id, destino]))
       const cuando = Date.now()
+      // Las invitaciones que alcanzan con lo libre de cada agente; quien no alcance entra sin invitación (VA-09).
+      const alcanza = cupoDeInvitaciones()
       // El rastro: cada cambio queda en la pestaña «Etapas» de la ficha.
       const nuevos: Movimiento[] = hechos.map(({ candidatura, destino, pasa }) => {
         // En borrador la IA espera a la publicación: no le llega nada a nadie de una vacante que no existe afuera (VA-45).
+        // Con «Solo moverla» entra sin invitación y no gasta (13 oct, PM).
         const ia = pasa.entra
-          ? vacante.estado === 'Borrador'
-            ? 'en-espera'
-            : pasa.entra.hecha === undefined
-              ? 'invitada'
-              : decision.ia === 'repetir'
-                ? 'reinvitada'
-                : 'conservada'
+          ? pasa.entra.hecha === undefined && !decision.invitar
+            ? 'sin-invitar'
+            : vacante.estado === 'Borrador'
+              ? 'en-espera'
+              : pasa.entra.hecha === undefined
+                ? alcanza(destino)
+                  ? 'invitada'
+                  : 'sin-invitar'
+                : decision.ia === 'repetir'
+                  ? alcanza(destino)
+                    ? 'reinvitada'
+                    : 'sin-invitar'
+                  : 'conservada'
           : undefined
         const entrevista = pasa.deja?.entrevista
         return {
@@ -415,12 +445,22 @@ export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial
         }
       })
       registroDeMovimientos.agregar(nuevos)
+      // Lo que apartan las invitaciones y lo que vuelve de las entrevistas canceladas, en Créditos.
+      const deshacerCreditos = creditosDeCambios(nuevos, new Map(hechos.map(({ candidatura }) => [candidatura.id, candidatura.candidato.nombre])))
+      // Quien entró sin invitación espera que alguien del equipo se la envíe: «Esperando acción».
+      const sinInvitar = new Set(nuevos.filter((m) => m.ia === 'sin-invitar').map((m) => m.candidaturaId))
 
       // Moverla es responderle: lo que esperaba del equipo en la etapa anterior deja de estar pendiente.
       setLista((actual) =>
         actual.map((c) =>
           destinos.has(c.id)
-            ? { ...c, etapa: destinos.get(c.id)!, dias: 0, aplico: diasDesdeQueAplico(c), candidato: { ...c.candidato, accion: undefined } }
+            ? {
+                ...c,
+                etapa: destinos.get(c.id)!,
+                dias: 0,
+                aplico: diasDesdeQueAplico(c),
+                candidato: { ...c.candidato, accion: sinInvitar.has(c.id) ? accionSinInvitacion(tituloEtapa(destinos.get(c.id)!)) : undefined },
+              }
             : c,
         ),
       )
@@ -446,6 +486,7 @@ export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial
           setLista((actual) => actual.map((c) => (antes.has(c.id) ? { ...c, ...antes.get(c.id)! } : c)))
           setRecien(quitarDe(ids))
           registroDeMovimientos.quitar(nuevos.map((m) => m.id))
+          deshacerCreditos()
           opciones.alDeshacer?.()
         },
       }, 'success')
@@ -790,9 +831,11 @@ export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial
     // En un borrador la invitación espera a que se publique (VA-45).
     const entradas = entradasA(nuevasCandidaturas, vacante.etapas, QUIEN_MUEVE, vacante.estado === 'Borrador')
     if (entradas.length) registroDeMovimientos.agregar(entradas)
+    // Cada invitación aparta sus créditos en Créditos, como al moverla.
+    creditosDeCambios(entradas, new Map(nuevasCandidaturas.map((c) => [c.id, c.candidato.nombre])))
     const invitadas = entradas.filter((movimiento) => movimiento.ia === 'invitada')
     if (invitadas.length)
-      detalle = `${invitadas.length === nuevasCandidaturas.length ? (invitadas.length === 1 ? 'Le' : 'Les') : `A ${personasTexto(invitadas.length)} les`} llega la invitación a «${tituloEtapa(invitadas[0].hacia)}».`
+      detalle = `${invitadas.length === nuevasCandidaturas.length ? (invitadas.length === 1 ? 'Le' : 'Les') : `A ${personasTexto(invitadas.length)} les`} llega la invitación a «${tituloEtapa(invitadas[0].hacia)}». ${textoReserva(invitadas)}`.trim()
     const enEspera = entradas.filter((movimiento) => movimiento.ia === 'en-espera')
     if (enEspera.length) detalle = 'La invitación sale cuando publiques la vacante.'
     setLista((actual) => [...nuevasCandidaturas, ...actual])
@@ -810,8 +853,38 @@ export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial
     )
   }
 
+  // «Enviar la invitación…» (tarjeta o ficha): a quien entró a una etapa con IA sin ella. La ventana dice lo que cuesta.
+  const pedirInvitacion = (candidatura: Candidatura) => {
+    if (bloqueada()) return
+    if (!sinInvitacionEn(candidatura, vacante.etapas, movimientosDe(candidatura.id))) return
+    setInvitando(candidatura)
+    setInvitandoAbierta(true)
+  }
+  const confirmarInvitacion = () => {
+    const candidatura = invitando && lista.find((c) => c.id === invitando.id)
+    const etapa = candidatura ? sinInvitacionEn(candidatura, vacante.etapas, movimientosDe(candidatura.id)) : null
+    if (!candidatura || !etapa) return
+    const antes = candidatura.candidato
+    enviarInvitacion(candidatura, etapa, {
+      borrador: vacante.estado === 'Borrador',
+      // Ya no espera al equipo: ahora espera a la persona («En proceso»).
+      alEnviar: () => setLista((actual) => actual.map((c) => (c.id === candidatura.id ? { ...c, candidato: { ...c.candidato, accion: undefined } } : c))),
+      alDeshacer: () => setLista((actual) => actual.map((c) => (c.id === candidatura.id ? { ...c, candidato: antes } : c))),
+    })
+  }
+
   const dialogos = (
     <>
+      {invitando ? (
+        <DialogoInvitar
+          key={invitando.id}
+          abierto={invitandoAbierta}
+          onOpenChange={setInvitandoAbierta}
+          candidatura={invitando}
+          borrador={vacante.estado === 'Borrador'}
+          onConfirmar={confirmarInvitacion}
+        />
+      ) : null}
       <DialogoConfirmar
         abierto={reabriendo}
         onAbiertoChange={setReabriendo}
@@ -856,9 +929,17 @@ export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial
     </>
   )
 
+  // Eliminarla de la vacante (13 oct, PM: «eliminar de la vacante; eliminar candidato es de la base, desde Mis
+  // candidatos»): sale de este proceso sin correo y sigue en la base y en sus otras vacantes.
+  const quitar = (candidatura: Candidatura) => {
+    setLista((actual) => actual.filter((c) => c.id !== candidatura.id))
+    notify(`Sacaste a ${candidatura.candidato.nombre} de ${vacante.titulo}`, 'Sigue en tu base y en sus otras vacantes. No le llega ningún correo.', 'success')
+  }
+
   return {
     lista,
     setLista,
+    quitar,
     dentro,
     rechazadas: rechazadasAqui,
     nuevas,
@@ -866,6 +947,7 @@ export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial
     recien,
     transitoDe,
     pedirMover,
+    pedirInvitacion,
     elegirEtapa,
     pedirRechazo,
     reconsiderar,
@@ -876,13 +958,14 @@ export function useProceso(vacante: VacanteUI, onCambioVacante: (cambio: Partial
     escribirRechazo,
     // Hay una ventana del proceso abierta (rechazar, volver a considerar, mover o reabrir): los atajos de la pantalla
     // esperan, y la pantalla sabe si dibujarla dentro de la ficha (8 oct: desde un panel no se abre una ventana encima).
-    ocupado: rechazando || reconsiderandoAbierto || pidiendo || reabriendo,
+    ocupado: rechazando || reconsiderandoAbierto || pidiendo || reabriendo || invitandoAbierta,
     // Se cerró la ficha desde la que se pidió: la ventana se va con ella.
     cerrarVentanas: () => {
       setRechazando(false)
       setReconsiderandoAbierto(false)
       setPidiendo(false)
       setReabriendo(false)
+      setInvitandoAbierta(false)
     },
   }
 }

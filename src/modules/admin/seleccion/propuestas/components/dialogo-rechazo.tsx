@@ -41,7 +41,7 @@ import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { tituloEtapa, type Candidatura, type VacanteUI } from '../datos'
 import { entrevistaDe, movimientosDe, nombreDeLista, personasTexto } from '../movimientos'
-import { useAccion } from './carga'
+import { useAccion } from '@/modules/design-system/estados/carga'
 import { areasDeMejora } from '../perfil-candidato'
 import {
   OTRO_MOTIVO,

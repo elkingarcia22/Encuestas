@@ -33,7 +33,7 @@ export type AgentResult = 'none' | 'field' | 'card' | 'plan' | 'metrics' | 'slot
 // Todo lo que se puede prender o apagar en el agente contextual.
 export type AgentConfig = {
   state: 'open' | 'closed'
-  // Con el panel cerrado: pastilla «Orbit Flow» completa o solo el orbe.
+  // Con el panel cerrado: pastilla «Orbit» completa o solo el orbe.
   reopen: 'full' | 'orb'
   // Cabecera y contexto.
   close: boolean
@@ -58,7 +58,7 @@ export type AgentConfig = {
 export type AgentSample = {
   // Qué hay en la pantalla que el agente acompaña (texto del slot grande).
   screen: string
-  // Botones propios de la pantalla (secundario y primario), que se ven con el panel cerrado; «Orbit Flow» va después de
+  // Botones propios de la pantalla (secundario y primario), que se ven con el panel cerrado; «Orbit» va después de
   // los dos, al final de la fila («⋯» · terciario · secundario · primario · IA).
   screenActions: [string, string]
   contextName: string
@@ -109,17 +109,17 @@ const BASE: AgentConfig = {
 }
 
 const SRC = {
-  cv: { label: 'Hoja de vida.pdf', detail: 'Subida el 2 sep · 2 páginas', icon: File01Icon },
-  entrevista: { label: 'Entrevista técnica', detail: 'Notas de Carlos Peña · 9 sep', icon: Comment01Icon },
-  sql: { label: 'Prueba de SQL', detail: '92 de 100 · 5 sep', icon: TaskDone01Icon },
+  cv: { label: 'Hoja de vida.pdf', detail: 'Subida el 2 sept · 2 páginas', icon: File01Icon },
+  entrevista: { label: 'Entrevista técnica', detail: 'Notas de Carlos Peña · 9 sept', icon: Comment01Icon },
+  sql: { label: 'Prueba de SQL', detail: '92 de 100 · 5 sept', icon: TaskDone01Icon },
   salida: { label: 'Encuesta de salida', detail: 'Marzo · 17 de 19 respondieron', icon: ChartAverageIcon },
   nomina: { label: 'Nómina · marzo', detail: 'Retiros de Logística · solo tu alcance', icon: Database01Icon },
-  pruebas: { label: 'Pruebas técnicas', detail: '3 finalistas · del 5 al 9 sep', icon: TaskDone01Icon },
+  pruebas: { label: 'Pruebas técnicas', detail: '3 finalistas · del 5 al 9 sept', icon: TaskDone01Icon },
   entrevistas: { label: 'Entrevistas', detail: 'Notas del panel · 3 entrevistas', icon: Comment01Icon },
-  catalogo: { label: 'Catálogo de cursos', detail: 'Actualizado el 10 sep · 214 cursos', icon: File01Icon },
-  estructura: { label: 'Estructura organizacional', detail: 'Actualizada el 1 sep · 1.630 colaboradores', icon: UserGroupIcon },
+  catalogo: { label: 'Catálogo de cursos', detail: 'Actualizado el 10 sept · 214 cursos', icon: File01Icon },
+  estructura: { label: 'Estructura organizacional', detail: 'Actualizada el 1 sept · 1.630 colaboradores', icon: UserGroupIcon },
   aviso: { label: 'Aviso «Horario de diciembre»', detail: 'Borrador · editado hace 5 min', icon: File01Icon },
-  politica: { label: 'Política de vacaciones v3', detail: 'Borrador del 12 sep', icon: File01Icon },
+  politica: { label: 'Política de vacaciones v3', detail: 'Borrador del 12 sept', icon: File01Icon },
   eval360: { label: 'Evaluaciones 360', detail: 'Ciclo 2026-1 · 312 evaluados', icon: File01Icon },
 } satisfies Record<string, ReplySource>
 
@@ -216,12 +216,12 @@ export const AGENT_CASES: AgentCase[] = [
       contextDetail: 'marzo',
       request: '¿Por qué subió la rotación en marzo?',
       answer:
-        'Pasó de 4,1% a 7,3%. Casi todo viene del turno de noche en Planta Funza: 14 de las 19 salidas. En la encuesta de salida se repiten tres razones: horario, transporte y salario.',
+        'Pasó de 4,1 % a 7,3 %. Casi todo viene del turno de noche en Planta Funza: 14 de las 19 salidas. En la encuesta de salida se repiten tres razones: horario, transporte y salario.',
       details: {
         sources: [SRC.salida, SRC.nomina],
         followups: ['¿Cómo va contra el año pasado?', 'Arma un plan para el turno de noche'],
         alternates: [
-          'La rotación de Logística saltó a 7,3% en marzo. El turno de noche de Planta Funza explica 14 de las 19 salidas, y en la encuesta de salida pesan el horario, el transporte y el salario.',
+          'La rotación de Logística saltó a 7,3 % en marzo. El turno de noche de Planta Funza explica 14 de las 19 salidas, y en la encuesta de salida pesan el horario, el transporte y el salario.',
         ],
       },
       shortcuts: ['Ver solo el turno de noche', '¿Qué área le sigue?'],
@@ -404,7 +404,7 @@ export const AGENT_CASES: AgentCase[] = [
 export const PART = {
   screen: 'Pantalla de trabajo',
   screenActions: 'Botones de la pantalla',
-  reopen: 'Orbit Flow',
+  reopen: 'Orbit',
   panel: 'Panel · 452px',
   header: 'Cabecera',
   orb: 'Orbe',
@@ -435,11 +435,11 @@ export const PART = {
 
 const TEXT: Record<string, string> = {
   [PART.screen]: 'La pantalla que el agente acompaña. No es parte del componente: sigue viva y se puede seguir usando.',
-  [PART.screenActions]: 'Los botones propios de la pantalla. No son del agente, pero deciden cómo va «Orbit Flow».',
+  [PART.screenActions]: 'Los botones propios de la pantalla. No son del agente, pero deciden cómo va «Orbit».',
   [PART.panel]: 'El panel pegado al borde derecho, debajo del header, que no se mueve ni se acorta. Corre la pantalla de trabajo, no la tapa.',
-  [PART.header]: 'Franja de 58px con el orbe, el nombre «Orbit Flow» y el botón de cerrar.',
+  [PART.header]: 'Franja de 58px con el orbe, el nombre «Orbit» y el botón de cerrar.',
   [PART.orb]: 'La marca del agente: la misma del chat de Orbit.',
-  [PART.close]: 'Cierra el panel; Esc también, con el foco dentro. La conversación sigue: al volver a abrirlo está todo. En la pantalla queda «Orbit Flow» para volver a abrirlo.',
+  [PART.close]: 'Cierra el panel; Esc también, con el foco dentro. La conversación sigue: al volver a abrirlo está todo. En la pantalla queda «Orbit» para volver a abrirlo.',
   [PART.context]: 'Franja gris que dice qué está mirando el agente: el registro y, si aplica, la parte elegida.',
   [PART.request]: 'Lo que pidió la persona, en burbuja gris a la derecha. Al pasar el cursor se copia o se edita; al editarlo, el agente responde de nuevo desde ahí.',
   [PART.answer]: 'Lo que responde el agente, con el orbe al lado y sin burbuja. Es el mismo mensaje del chat de Orbit.',
@@ -466,7 +466,7 @@ const TEXT: Record<string, string> = {
 
 const REOPEN_TEXT: Record<AgentConfig['reopen'], string> = {
   full: 'Con el panel cerrado, la pastilla con el orbe lo vuelve a abrir. Va al final de la fila de acciones, a la derecha del botón primario de la pantalla. Si el agente tiene algo urgente que contar, trae un punto azul hasta abrirlo.',
-  orb: 'Solo el orbe, porque la pantalla ya viene muy cargada (cabecera larga o botones con mucho texto). El nombre «Orbit Flow» sale al pasar el cursor.',
+  orb: 'Solo el orbe, porque la pantalla ya viene muy cargada (cabecera larga o botones con mucho texto). El nombre «Orbit» sale al pasar el cursor.',
 }
 
 // Nombre de la forma del resultado en la anatomía (la propuesta del editor y el slot tienen partes propias).

@@ -582,7 +582,7 @@
             "src/modules/design-system/navegacion/components/page-config.ts",
             "src/modules/design-system/navegacion/components/page-preview.tsx"
           ],
-          "que": "Salida única «Salir de la creación» (BotonSalirCreacion real) sin flecha junto al título; barra de acciones con ChipGuardado a la izquierda y sin «Cancelar»; salir con cambios en DialogoConfirmar de tres salidas."
+          "que": "Salida única «Salir de la creación» (BotonSalirCreacion real) sin flecha junto al título; barra de acciones con ChipGuardado a la izquierda y sin «Cancelar»; salir con cambios en VentanaSalir (dos botones, la de Crear contenido; 13-oct); la barra de los pasos es BarraPasos."
         },
         {
           "ruta": "/design-system/componentes (fichas) (Marco de flujo a pantalla completa, Indicador de guardado)",
@@ -643,6 +643,39 @@
         "Filas por página",
         "Viendo",
         "Personalizar columnas"
+      ]
+    },
+    {
+      "id": "partes-tabla",
+      "nombre": "Las partes de tabla que TablaDatos no trae: ordenar desde un encabezado de la librería, carpetas de la fila, anterior y siguiente, filas que entran, cifra que sube y el campo de un filtro",
+      "fuentes": [
+        "src/modules/design-system/data-grid/partes-tabla.tsx",
+        "src/modules/design-system/data-grid/abrir-al-tocar.ts",
+        "src/modules/design-system/data-grid/movimiento.ts",
+        "src/modules/design-system/metricas/cifra-animada.tsx",
+        "src/modules/design-system/navegacion/campo-filtro.tsx"
+      ],
+      "importa": [
+        "EncabezadoOrdenable",
+        "CarpetasDeFila",
+        "NavegarRegistros",
+        "abrirAlTocar",
+        "FilaAnimada",
+        "CifraAnimada",
+        "CampoFiltro"
+      ],
+      "designSystem": [
+        {
+          "ruta": "/design-system/data-grid",
+          "relacion": "reutiliza",
+          "archivos": [
+            "src/modules/design-system/data-grid/main.tsx"
+          ],
+          "que": "La página de Tablas (TablaDatos). Desde el 16-oct Vacantes y Mis candidatos son TablaDatos y la pestaña «Tabla completa» se fue: estas partes las usan las pantallas dentro de TablaDatos o en tablas de resultados (Encuestas). Si una vuelve a hacer falta en la tabla del sistema, se documenta en esta página."
+        }
+      ],
+      "palabras": [
+        "Tócala para invertir"
       ]
     },
     {

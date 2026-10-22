@@ -3,6 +3,7 @@ import { UserMultiple02Icon } from '@hugeicons/core-free-icons'
 import { Avatar, AvatarFallback, AvatarImage, Button, Text, type DataGridListConfig } from '@ubits/flux-ui'
 import { BD_MASTER_COLABORADORES } from '@/shared/bd'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
+import { BotonCancelarPanel, mismaSeleccion } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { iniciales } from '@/modules/design-system/patrones/formato'
 import { TablaSeleccion, type Filtro } from '../../../planes-de-formacion/components/tabla-seleccion'
@@ -110,12 +111,12 @@ export function DrawerColaboradores({ abierto, onCerrar, seleccionados, onGuarda
       icon={UserMultiple02Icon}
       title={editando ? 'Editar selección' : 'Seleccionar colaboradores'}
       description="Solo los colaboradores seleccionados verán el contenido."
+      // 13-oct (I-041): con la selección cambiada, no se cierra al tocar fuera y pregunta antes de descartar.
+      conCambios={!mismaSeleccion(marcados, seleccionados)}
       footer={
         <>
-          <Button variant="outline" onClick={onCerrar}>
-            Cancelar
-          </Button>
-          <Button onClick={guardar}>{editando ? 'Guardar' : 'Agregar'}</Button>
+          <BotonCancelarPanel alCerrar={onCerrar} />
+          <Button onClick={guardar}>{editando ? 'Guardar cambios' : 'Agregar'}</Button>
         </>
       }
     >

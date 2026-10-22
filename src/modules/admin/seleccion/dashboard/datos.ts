@@ -2,6 +2,7 @@ import { HOY } from '../propuestas/creditos'
 import { CANDIDATURAS, ESPERA_RESPUESTA, RECHAZADAS, VACANTES_UI, tituloEtapa, type VacanteUI } from '../propuestas/datos'
 import { simulado } from '../propuestas/simular'
 import { ETAPAS } from '../vacantes/detalle/components/data'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Las cuentas del Dashboard de Selección (7 oct, Nicolás: «hoy es así… eso está horrible, hagamos algo bien top»). Todo
 // sale de las mismas vacantes que muestran Vacantes y Mis candidatos, para que las cifras cuadren entre pantallas: las
@@ -9,7 +10,7 @@ import { ETAPAS } from '../vacantes/detalle/components/data'
 //
 // La maqueta no tiene el día a día de cada vacante, así que se reconstruye con lo que sí tiene:
 // - cuántas aplicaciones recibió, cuántas en los últimos 7 días y cuántos días lleva (o llevó) abierta;
-// - cuándo cerró y a cuántas personas contrató, leído de su desenlace («Cerrada el 3 de septiembre · se contrató a…»).
+// - cuándo cerró y a cuántas personas contrató, leído de su desenlace («Cerrada el 3 sept 2026 · se contrató a…»).
 // Las aplicaciones se reparten en los días que estuvo abierta, con menos los fines de semana. En el producto sale del
 // histórico de cada candidatura.
 
@@ -92,7 +93,8 @@ export const cuantosFiltros = (filtros: FiltrosDashboard) =>
 
 // ── Cuándo cerró y a quién contrató cada vacante cerrada ──
 
-const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+// Los meses como los escribe la utilidad de fechas del sistema («3 sept 2026»).
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic']
 const DIA = 24 * 60 * 60 * 1000
 
 export type Cierre = { haceDias: number; contratados: number; como: string }
@@ -100,7 +102,7 @@ export type Cierre = { haceDias: number; contratados: number; como: string }
 function cierreDe(vacante: VacanteUI): Cierre | null {
   if (vacante.estado !== 'Cerrada' || !vacante.desenlace) return null
   const [fecha, como = ''] = vacante.desenlace.split(' · ')
-  const partes = /(\d+) de (\w+)/.exec(fecha)
+  const partes = /(\d+) (\w+)/.exec(fecha)
   const mes = partes ? MESES.indexOf(partes[2]) : -1
   const cuando = partes && mes >= 0 ? new Date(HOY.getFullYear(), mes, Number(partes[1])) : HOY
   const varias = /se contrataron (\d+)/.exec(como)
@@ -209,7 +211,7 @@ const redondearRepartido = (valores: number[], total: number) => {
 }
 
 // «12 sep» y «vie 25», sin el «de» ni el punto que pone el formato del navegador.
-const MES_CORTO = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+const MES_CORTO = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic']
 const DIA_CORTO = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb']
 const fechaHace = (dias: number) => new Date(HOY.getTime() - dias * DIA)
 const fechaCorta = (fecha: Date) => `${fecha.getDate()} ${MES_CORTO[fecha.getMonth()]}`
@@ -353,7 +355,7 @@ export function leer(resumen: Resumen): Lectura[] {
     lecturas.push({
       id: 'vacante',
       tema: 'En las vacantes',
-      titulo: `${quieta.titulo} lleva ${quieta.diasAbierta} días abierta`,
+      titulo: `${quieta.titulo} lleva ${quieta.diasAbierta} ${plural(quieta.diasAbierta, 'día', 'días')} abierta`,
       detalle: `Es la que más lleva y ${
         quieta.aplicaciones === 0
           ? 'todavía no le llega nadie'
@@ -361,7 +363,7 @@ export function leer(resumen: Resumen): Lectura[] {
             ? 'esta semana no le llegó nadie'
             : quieta.ultimaSemana === 1
               ? 'esta semana solo le llegó 1 persona'
-              : `esta semana solo le llegaron ${quieta.ultimaSemana} personas`
+              : `esta semana solo ${plural(quieta.ultimaSemana, 'le llegó', 'le llegaron')} ${quieta.ultimaSemana} ${plural(quieta.ultimaSemana, 'persona', 'personas')}`
       }. Revisa la publicación o compártela con tu red.`,
       accion: { texto: 'Abrir la vacante', ruta: `/admin/seleccion/exploraciones/uno/${quieta.id}` },
     })

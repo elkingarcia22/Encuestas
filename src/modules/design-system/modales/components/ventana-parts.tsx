@@ -107,7 +107,7 @@ function BotonesPropios({ s, onDone }: { s: VentanaMuestra; onDone: () => void }
             variant={ultimo ? (s.destructiva ? 'destructive' : 'default') : 'outline'}
             onClick={() => {
               // El primero es la salida segura: solo cierra.
-              if (indice > 0) notify(etiqueta)
+              if (indice > 0) notify(etiqueta, undefined, 'info')
               onDone()
             }}
           >
@@ -168,7 +168,7 @@ export function VentanaPreview({ config: c, sample: s }: { config: VentanaConfig
         <div className="flex items-start gap-4 px-6 pt-5.5 pb-4">
           {c.back ? (
             <span data-region="Volver" className="-ml-2 flex shrink-0">
-              <BotonIcono className="text-muted-foreground!" aria-label="Volver" onClick={() => notify('Vuelve al paso anterior')}>
+              <BotonIcono className="text-muted-foreground!" aria-label="Volver" onClick={() => notify('Vuelve al paso anterior', undefined, 'info')}>
                 <HugeiconsIcon icon={ArrowLeft01Icon} size={18} aria-hidden="true" />
               </BotonIcono>
             </span>
@@ -198,7 +198,7 @@ export function VentanaPreview({ config: c, sample: s }: { config: VentanaConfig
             </div>
           ) : null}
           <span data-region="Cerrar" className="flex shrink-0">
-            <CloseButton label="Cerrar" onClick={() => notify('La ventana se cierra')} />
+            <CloseButton label="Cerrar" onClick={() => notify('La ventana se cierra', undefined, 'info')} />
           </span>
         </div>
 
@@ -228,7 +228,7 @@ export function VentanaPreview({ config: c, sample: s }: { config: VentanaConfig
               <>
                 <Button variant="outline">{s.cancel}</Button>
                 <span data-region="Acción" className="flex">
-                  <Button onClick={() => notify(s.confirm)}>{s.confirm}</Button>
+                  <Button onClick={() => notify(s.confirm, undefined, 'success')}>{s.confirm}</Button>
                 </span>
               </>
             )}
@@ -270,14 +270,14 @@ export function VentanaDePrueba({
       title={s.title}
       sub={c.sub ? s.sub : undefined}
       media={c.media !== 'none' ? <MediaVentana c={c} /> : undefined}
-      onBack={c.back ? () => notify('Vuelve al paso anterior') : undefined}
+      onBack={c.back ? () => notify('Vuelve al paso anterior', undefined, 'info') : undefined}
       headerActions={c.headerActions ? <Badge variant="secondary">{s.headerAction}</Badge> : undefined}
       lead={c.lead ? <RegistroVentana s={s} /> : undefined}
       note={c.note ? s.note : undefined}
       cancelLabel={s.cancel}
       confirmLabel={s.confirm}
       pendingLabel={c.pending ? s.pending : undefined}
-      onConfirm={() => notify(s.confirm)}
+      onConfirm={() => notify(s.confirm, undefined, 'success')}
       dismissible={c.dismissible}
       hideFooter={c.footer === 'ninguno'}
       footer={c.footer === 'propio' ? <BotonesPropios s={s} onDone={cerrar} /> : undefined}

@@ -2,7 +2,6 @@ import { Fragment, useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowDown01Icon, LockIcon, Message01Icon, RotateLeft01Icon, Target02Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   cn,
   Frame,
@@ -18,6 +17,7 @@ import {
   TableRow,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { FAVORABILITY_SCALE_LEGEND, bandForScore, formatScore, type ScaleTone } from '../../modelo/favorabilityScale'
@@ -27,6 +27,7 @@ import { COLOR_POR_TONO, numero, FONDO_ESCALA, TEXTO_ESCALA } from './escala'
 import { nivelDe, type FiltrosResultados, type Nivel } from './filtros'
 import { BotonPantallaCompleta } from './pantalla-completa'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Favorabilidad › Mapa de calor. Arranca colapsado a las secciones de nivel 1, salvo la primera,
 // que se abre entera como ejemplo. La primera columna se queda fija al desplazarse de lado: sin
@@ -104,7 +105,7 @@ function Celda({ celda, oculta, gris, grupo, fila, escala }: { celda: HeatmapCel
       <Hint
         label={
           <>
-            {sinRespuestas ? 'Sin respuestas' : 'Reservado'} · {numero(celda.n)} respuestas · {numero(celda.participants)} participantes
+            {sinRespuestas ? 'Sin respuestas' : 'Reservado'} · {numero(celda.n)} {plural(celda.n, 'respuesta', 'respuestas')} · {numero(celda.participants)} {plural(celda.participants, 'participante', 'participantes')}
             <br />
             {sinRespuestas ? 'Todavía nadie de este grupo ha respondido.' : 'Por debajo del mínimo para mostrar resultados de este grupo.'}
           </>
@@ -125,7 +126,7 @@ function Celda({ celda, oculta, gris, grupo, fila, escala }: { celda: HeatmapCel
   const banda = escala.banda(celda.score ?? 0)
   return (
     <Hint
-      label={`${banda.label} · ${numero(celda.n)} respuestas · ${numero(celda.participants)} participantes`}
+      label={`${banda.label} · ${numero(celda.n)} ${plural(celda.n, 'respuesta', 'respuestas')} · ${numero(celda.participants)} ${plural(celda.participants, 'participante', 'participantes')}`}
     >
       <Badge variant={gris ? 'secondary' : 'outline'} className="h-full min-h-8 w-full m-0 justify-center tabular-nums rounded-sm !border-0" style={gris ? undefined : { backgroundColor: FONDO_ESCALA[banda.tone], color: TEXTO_ESCALA[banda.tone] }}>
         {escala.formato(celda.score ?? 0)}
@@ -277,7 +278,10 @@ export function MapaCalor({ resultados, segmentos, segmento, estado, escala = ES
     <Frame spacing="sm" className="[--frame-gap:0px]">
       {/* En pantalla completa la cabecera de la caja no se pinta: el título, el conteo y los controles van en la ventana. */}
       {enPantallaCompleta ? null : (
-      <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
+      <FrameHeader
+        // Cabecera del marco en fila (título a la izquierda, controles a la derecha): con el tema sin capa solo obedece con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa.
+        className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]"
+      >
         <div>
           <FrameTitle>
             {escala.titulo} por {segmento.label.toLowerCase()}
@@ -308,6 +312,7 @@ export function MapaCalor({ resultados, segmentos, segmento, estado, escala = ES
           ) : null}
         </FramePanel>
       ) : null}
+      {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
       <FramePanel className="p-0!">
         {mapa.rows.length === 0 ? (
           <PrimeraVez icono="glass-chart" titulo="Sin secciones con resultados" descripcion="Esta encuesta no tiene secciones ni preguntas en la escala de 1 a 5." />

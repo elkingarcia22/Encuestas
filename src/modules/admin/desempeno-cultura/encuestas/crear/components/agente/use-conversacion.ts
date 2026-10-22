@@ -383,7 +383,7 @@ export function useConversacion(sesion: Sesion) {
     if (criterio === 'focuses') {
       const unido = mergeBrief(pedido, { focuses: [...new Set([...pedido.focuses, opcion.value])] })
       setPedido(unido)
-      return despues(280, () => decir(`Añadí ${focusLabel(opcion.value)}. ¿Otro tema o seguimos?`, { opciones: opcionesPara('focuses', unido) }))
+      return despues(280, () => decir(`Agregué ${focusLabel(opcion.value)}. ¿Otro tema o seguimos?`, { opciones: opcionesPara('focuses', unido) }))
     }
     const cambio: Partial<AiSectionsBrief> =
       criterio === 'style' ? { questionStyle: opcion.value as AiQuestionStyle } : (sizePresets('survey').find((preset) => preset.value === opcion.value)?.sizes ?? {})

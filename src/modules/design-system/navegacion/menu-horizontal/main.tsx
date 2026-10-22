@@ -55,7 +55,7 @@ export function Component() {
           title="Aprendizaje"
           description="Cursos, planes de formación y certificados de Meta Colombia."
           actions={
-            <Button variant="outline" className={WS} onClick={() => notify('Vista del colaborador')}>
+            <Button variant="outline" className={WS} onClick={() => notify('Vista del colaborador', undefined, 'info')}>
               <HugeiconsIcon icon={ViewIcon} size={16} />
               Ver como colaborador
             </Button>
@@ -117,7 +117,7 @@ export function Component() {
             title={leaf.title}
             description={summary.description}
             actions={
-              <Button className={WS} onClick={() => notify(summary.cta)}>
+              <Button className={WS} onClick={() => notify(summary.cta, undefined, 'info')}>
                 <HugeiconsIcon icon={Add01Icon} size={16} />
                 {summary.cta}
               </Button>
@@ -138,7 +138,7 @@ export function Component() {
                     // El botón de la librería como superficie de la fila: se le quitan alto, filo y relleno propios
                     // para que la fila mida lo que pide su contenido. 12px de la baldosa al texto, como en el resto.
                     className="h-auto! w-full items-center! justify-start! gap-3! rounded-none! border-0! px-5! py-3.5! text-left font-normal! whitespace-normal! hover:bg-muted/60!"
-                    onClick={() => notify(`Abrir «${row.title}»`)}
+                    onClick={() => notify(`Abrir «${row.title}»`, undefined, 'info')}
                   >
                     <IconTile variant="soft" size="sm">
                       {leaf.icon === ICONO_IA ? <Orb className="size-4" /> : <HugeiconsIcon icon={leaf.icon} />}

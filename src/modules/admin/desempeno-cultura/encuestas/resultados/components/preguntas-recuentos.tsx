@@ -1,7 +1,8 @@
 import { Fragment, useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowDown01Icon, Message01Icon, UserGroupIcon } from '@hugeicons/core-free-icons'
-import { Badge, Button, cn, Progress, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { Button, cn, Progress, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { EncabezadoOrdenable } from '../../components/tabla-piezas'
@@ -11,12 +12,13 @@ import { ArbolResultados, contarPreguntas } from './arbol-resultados'
 import { TotalOculto } from './controles'
 import { numero } from './escala'
 import { nivelDe, type Nivel } from './filtros'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Preguntas › Secciones: cuántas personas eligieron cada opción de cada pregunta, sobre el árbol de
 // la encuesta. Tocar una opción lleva a «Por persona» con la lista acotada a esa gente; una pregunta
 // abierta lleva a «Comentarios» filtrado a ella.
 
-const porcentaje = (valor: number) => `${valor.toFixed(1).replace(/\.0$/, '').replace('.', ',')}%`
+const porcentaje = (valor: number) => `${valor.toFixed(1).replace(/\.0$/, '').replace('.', ',')} %`
 
 const respuestasDe = (seccion: SectionResult) =>
   flattenResultSections([seccion]).reduce((suma, nodo) => suma + nodo.questions.reduce((total, pregunta) => total + pregunta.n + pregunta.nsnr, 0), 0)
@@ -46,7 +48,7 @@ function Recuentos({ recuento, onPersonas }: { recuento: QuestionBreakdown; onPe
           <Text as="span" size="xs" variant="muted" className="w-12 text-right tabular-nums">
             {porcentaje(opcion.percentage)}
           </Text>
-          <Hint label={opcion.count > 0 ? `Ver las ${numero(opcion.count)} personas que respondieron «${opcion.shortLabel}»` : 'Nadie eligió esta opción'}>
+          <Hint label={opcion.count > 0 ? `${plural(opcion.count, 'Ver a la persona que respondió', `Ver las ${numero(opcion.count)} personas que respondieron`)} «${opcion.shortLabel}»` : 'Nadie eligió esta opción'}>
             <span>
               <BotonIcono size="icon-xs" aria-label={`Ver las personas que respondieron ${opcion.shortLabel}`} disabled={opcion.count === 0} onClick={() => onPersonas(opcion.id)}>
                 <HugeiconsIcon icon={UserGroupIcon} aria-hidden="true" />
@@ -57,7 +59,7 @@ function Recuentos({ recuento, onPersonas }: { recuento: QuestionBreakdown; onPe
       ))}
       {recuento.multiSelect ? (
         <Text as="p" size="xs" variant="muted">
-          Pregunta de múltiples respuestas: los porcentajes son sobre personas, así que suman más de 100%.
+          Pregunta de múltiples respuestas: los porcentajes son sobre personas, así que suman más de 100 %.
         </Text>
       ) : null}
     </div>
@@ -125,6 +127,7 @@ function TablaRecuentos({
                     {indice + 1}
                   </Text>
                 </TableCell>
+                {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                 <TableCell className="whitespace-normal!">
                   <div className="flex flex-col gap-0.5">
                     <Text as="span" size="sm" weight="medium">
@@ -167,12 +170,13 @@ function TablaRecuentos({
               </TableRow>
               {abierta ? (
                 <TableRow>
+                  {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                   <TableCell colSpan={conNsnr ? 5 : 4} className="whitespace-normal!">
                     <div className="ps-10 pe-2 pb-2">
                       {abiertaTexto ? (
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <Text size="sm" variant="muted">
-                            {numero(recuento?.commentCount ?? 0)} personas escribieron una respuesta. El sentimiento y el tema de cada una están en Comentarios.
+                            {numero(recuento?.commentCount ?? 0)} {plural(recuento?.commentCount ?? 0, 'persona escribió', 'personas escribieron')} una respuesta. El sentimiento y el tema de cada una están en Comentarios.
                           </Text>
                           <Button variant="outline" size="sm" onClick={() => onComentarios(pregunta.id)}>
                             <HugeiconsIcon icon={Message01Icon} aria-hidden="true" />
@@ -207,13 +211,13 @@ export function PreguntasRecuentos({ secciones, recuentos, niveles, onPersonas, 
   return (
     <ArbolResultados
       secciones={secciones}
-      subtitulo={(seccion) => `${contarPreguntas(seccion)} preguntas · ${numero(respuestasDe(seccion))} respuestas`}
+      subtitulo={(seccion) => `${contarPreguntas(seccion)} ${plural(contarPreguntas(seccion), 'pregunta', 'preguntas')} · ${numero(respuestasDe(seccion))} ${plural(respuestasDe(seccion), 'respuesta', 'respuestas')}`}
       metrica={(seccion) => {
         if (!niveles.has(nivelDe(seccion.depth))) return <TotalOculto />
         const respuestas = respuestasDe(seccion)
         const preguntas = contarPreguntas(seccion)
         return (
-          <Hint label={`${numero(respuestas)} respuestas en ${preguntas} preguntas · ${numero(preguntas > 0 ? respuestas / preguntas : 0)} por pregunta en promedio`}>
+          <Hint label={`${numero(respuestas)} ${plural(respuestas, 'respuesta', 'respuestas')} en ${preguntas} ${plural(preguntas, 'pregunta', 'preguntas')} · ${numero(preguntas > 0 ? respuestas / preguntas : 0)} por pregunta en promedio`}>
             <Badge variant="outline" className="tabular-nums">
               {numero(respuestas)} resp.
             </Badge>

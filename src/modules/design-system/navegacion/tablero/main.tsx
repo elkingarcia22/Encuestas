@@ -9,7 +9,8 @@ import {
   KanbanIcon,
   ListViewIcon,
 } from '@hugeicons/core-free-icons'
-import { Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger, Tabs, TabsList, TabsTrigger, ToggleGroup, ToggleGroupItem } from '@ubits/flux-ui'
+import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger, Tabs, TabsList, TabsTrigger, ToggleGroup, ToggleGroupItem } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
@@ -94,13 +95,13 @@ export function Component() {
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button data-region="Botón secundario" variant="outline" className={WS} onClick={() => notify('Exportando onboarding a Excel')}>
+              <Button data-region="Botón secundario" variant="outline" className={WS} onClick={() => notify('Exportando onboarding a Excel', undefined, 'info')}>
                 <HugeiconsIcon icon={Download04Icon} size={16} />
                 Exportar
               </Button>
-              <Button data-region="Botón primario" className={WS} onClick={() => notify('Nuevo ingreso')}>
+              <Button data-region="Botón primario" className={WS} onClick={() => notify('Agregar ingreso', undefined, 'info')}>
                 <HugeiconsIcon icon={Add01Icon} size={16} />
-                Nuevo ingreso
+                Agregar ingreso
               </Button>
             </>
           }
@@ -123,7 +124,7 @@ export function Component() {
                   variant="ghost"
                   size="sm"
                   className="mb-1 ml-1 text-muted-foreground!"
-                  onClick={() => notify('Guardar los filtros actuales como vista')}
+                  onClick={() => notify('Guardar los filtros actuales como vista', undefined, 'info')}
                 >
                   <HugeiconsIcon icon={Add01Icon} size={14} />
                   Vista

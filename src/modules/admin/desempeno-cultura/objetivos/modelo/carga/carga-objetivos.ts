@@ -89,12 +89,17 @@ export interface GrupoPersona {
   objetivos: readonly FilaObjetivo[]
 }
 
+export interface DatosCargaCiclo {
+  archivo: string
+  grupos: GrupoPersona[]
+}
+
 export type Pestana = 'sin-alinear' | 'sugeridas' | 'errores' | 'listos'
 
 export const PESTANAS: readonly { id: Pestana; etiqueta: string; vacio: string; tono: 'info-light' | 'warning-light' | 'destructive-light' | 'success-light' }[] = [
   { id: 'sin-alinear', etiqueta: 'Personas sin encontrar', vacio: 'Cada identificador del archivo apunta a una persona de UBITS.', tono: 'info-light' },
   { id: 'sugeridas', etiqueta: 'Por confirmar', vacio: 'Todos los identificadores coincidieron exacto: no hay propuestas por confirmar.', tono: 'warning-light' },
-  { id: 'errores', etiqueta: 'Con errores', vacio: 'Ningún dato por corregir: los pesos suman 100% y las metas están bien escritas.', tono: 'destructive-light' },
+  { id: 'errores', etiqueta: 'Con errores', vacio: 'Ningún dato por corregir: los pesos suman 100 % y las metas están bien escritas.', tono: 'destructive-light' },
   { id: 'listos', etiqueta: 'Listos para cargar', vacio: 'Todavía no hay nada listo. Resuelve las otras pestañas.', tono: 'success-light' },
 ]
 
@@ -105,7 +110,7 @@ export function erroresDe(objetivo: FilaObjetivo, modo: Modo): string[] {
   const titulo = (modo === 'editar' ? objetivo.tituloNuevo : objetivo.titulo)?.trim() ?? ''
   if (!titulo) errores.push('Falta el nombre del objetivo.')
   else if (titulo.length > 150) errores.push('El nombre pasa de 150 caracteres.')
-  if (!(objetivo.peso >= 1)) errores.push('El peso tiene que ser de 1% o más.')
+  if (!(objetivo.peso >= 1)) errores.push('El peso tiene que ser de 1 % o más.')
   if (objetivo.meta === objetivo.inicial) errores.push('La meta no puede ser igual al valor inicial.')
   else if (objetivo.sentido === 'aumentar' && objetivo.meta < objetivo.inicial) errores.push('Para aumentar, la meta tiene que ser mayor al valor inicial.')
   else if (objetivo.sentido === 'reducir' && objetivo.meta > objetivo.inicial) errores.push('Para reducir, la meta tiene que ser menor al valor inicial.')
@@ -115,7 +120,7 @@ export function erroresDe(objetivo: FilaObjetivo, modo: Modo): string[] {
 export const sumaPesos = (grupo: GrupoPersona) => grupo.objetivos.reduce((s, objetivo) => s + (Number.isFinite(objetivo.peso) ? objetivo.peso : 0), 0)
 
 /** Lo que impide cargar a la persona entera: hoy, que sus pesos no sumen 100 (al actualizar el peso no se toca). */
-export const erroresDelGrupo = (grupo: GrupoPersona, modo: Modo): string[] => (modo !== 'actualizar' && Math.round(sumaPesos(grupo)) !== 100 ? [`Los pesos suman ${Math.round(sumaPesos(grupo))}%: tienen que sumar 100%.`] : [])
+export const erroresDelGrupo = (grupo: GrupoPersona, modo: Modo): string[] => (modo !== 'actualizar' && Math.round(sumaPesos(grupo)) !== 100 ? [`Los pesos suman ${Math.round(sumaPesos(grupo))} %: tienen que sumar 100 %.`] : [])
 
 export function pestanaDe(grupo: GrupoPersona, modo: Modo): Pestana {
   if (grupo.coincidencia === 'ninguna' || !grupo.persona) return 'sin-alinear'

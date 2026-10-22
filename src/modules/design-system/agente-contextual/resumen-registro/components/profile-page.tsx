@@ -94,10 +94,10 @@ export function ProfilePage({ tab, onTabChange, flash, notes, agentClosed, onOpe
         }
         actions={
           <>
-            <Button variant="outline" className={WS} onClick={() => notify('Mover de etapa')}>
+            <Button variant="outline" className={WS} onClick={() => notify('Mover de etapa', undefined, 'info')}>
               Mover de etapa
             </Button>
-            <Button className={WS} onClick={() => notify('Agendar segunda entrevista')}>
+            <Button className={WS} onClick={() => notify('Agendar segunda entrevista', undefined, 'info')}>
               Agendar entrevista
             </Button>
             {agentClosed ? <ReopenAgentButton onClick={onOpenAgent} compact /> : null}
@@ -184,7 +184,7 @@ export function ProfilePage({ tab, onTabChange, flash, notes, agentClosed, onOpe
             <Section
               id="entrevista-tecnica"
               flash={flash}
-              title="Entrevista técnica · 12 sep"
+              title="Entrevista técnica · 12 sept"
               description="Panel: Andrés Pardo (líder de analítica) y Sara Gómez (gestión humana)"
             >
               <div className="flex flex-col gap-3.5">
@@ -233,7 +233,7 @@ export function ProfilePage({ tab, onTabChange, flash, notes, agentClosed, onOpe
         ) : null}
 
         {tab === 'pruebas' ? (
-          <Section id="prueba-sql" flash={flash} title="Prueba de SQL" description="Enviada el 9 sep · resuelta en 38 de 60 minutos">
+          <Section id="prueba-sql" flash={flash} title="Prueba de SQL" description="Enviada el 9 sept · resuelta en 38 de 60 minutos">
             <div className="flex items-end gap-3">
               <span className="text-4xl font-light tabular-nums">9/10</span>
               <span className="pb-1.5 text-sm text-muted-foreground">consultas correctas</span>

@@ -32,7 +32,7 @@ import {
   Text,
   Textarea,
 } from '@ubits/flux-ui'
-import { useAccion } from './carga'
+import { useAccion } from '@/modules/design-system/estados/carga'
 import { Badge } from '@/shared/components/Badge'
 import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
@@ -488,9 +488,11 @@ export function DialogoCorreo({
   )
 }
 
-/* Eliminar sus datos ------------------------------------------------------------------------------------------- */
+/* Eliminar candidato ------------------------------------------------------------------------------------------- */
 
-// Derecho de supresión (Ley 1581): se dice de qué procesos sale y qué se borra. Con muchas, se escribe ELIMINAR.
+// Derecho de supresión (Ley 1581): se dice de qué procesos sale y qué se borra. Siempre se escribe «eliminar» y no tiene
+// «Deshacer» (13 oct, PM: «eliminar un candidato necesita una súper acción de confirmación, porque una vez eliminado no
+// hay vuelta atrás»), como eliminar una vacante. Queda el rastro de quién lo hizo.
 export function DialogoEliminar({
   personas,
   onOpenChange,
@@ -503,7 +505,6 @@ export function DialogoEliminar({
   const [motivo, setMotivo] = useState(MOTIVOS_ELIMINAR[0])
   const [otro, setOtro] = useState('')
   const [escrito, setEscrito] = useState('')
-  const pideEscribir = personas.length >= 10
   const vivos = personas.flatMap((persona) => persona.vivos.filter((proceso) => proceso.estado === 'En proceso').map((proceso) => ({ persona, proceso })))
   const una = personas.length === 1 ? personas[0] : null
 
@@ -513,9 +514,9 @@ export function DialogoEliminar({
     <VentanaDeAccion
       open
       onOpenChange={onOpenChange}
-      title={una ? `Eliminar los datos de ${una.nombre}` : `Eliminar los datos de ${personasTexto(personas.length)}`}
-      sub="Se borran de la base y de las vacantes donde estén: su ficha, su CV, sus documentos y las notas del equipo."
-      note="El aviso trae «Deshacer» unos segundos; después se borran para siempre."
+      title={una ? 'Eliminar candidato' : 'Eliminar candidatos'}
+      sub={`${una ? una.nombre : personasTexto(personas.length)}: se ${una ? 'borra' : 'borran'} de la base y de las vacantes donde ${una ? 'esté' : 'estén'}, con su CV, sus documentos y las notas del equipo.`}
+      note="No se puede deshacer. Queda registrado quién lo eliminó y cuándo."
       footer={
         <>
           <Button variant="outline" disabled={accion.enCurso} onClick={() => onOpenChange(false)}>
@@ -523,11 +524,11 @@ export function DialogoEliminar({
           </Button>
           <Button
             variant="destructive"
-            disabled={(motivo === 'Otro motivo' && !otro.trim()) || (pideEscribir && escrito.trim().toUpperCase() !== 'ELIMINAR') || accion.enCurso}
+            disabled={(motivo === 'Otro motivo' && !otro.trim()) || escrito.trim().toLowerCase() !== 'eliminar' || accion.enCurso}
             onClick={() => accion.correr(() => onConfirmar(motivo === 'Otro motivo' ? otro.trim() : motivo))}
           >
             {accion.enCurso ? <Spinner /> : <HugeiconsIcon icon={Delete02Icon} size={16} />}
-            {accion.enCurso ? 'Eliminando…' : una ? 'Eliminar sus datos' : `Eliminar ${personasTexto(personas.length)}`}
+            {accion.enCurso ? 'Eliminando…' : una ? 'Eliminar candidato' : `Eliminar ${personasTexto(personas.length)}`}
           </Button>
         </>
       }
@@ -560,12 +561,10 @@ export function DialogoEliminar({
         {motivo === 'Otro motivo' ? <Input value={otro} onChange={(evento) => setOtro(evento.target.value)} placeholder="Escribe el motivo" /> : null}
         <FieldDescription>Queda en el registro de la empresa; la persona no lo ve.</FieldDescription>
       </Field>
-      {pideEscribir ? (
-        <Field>
-          <FieldLabel>Escribe ELIMINAR para confirmar</FieldLabel>
-          <Input value={escrito} onChange={(evento) => setEscrito(evento.target.value)} placeholder="ELIMINAR" />
-        </Field>
-      ) : null}
+      <Field>
+        <FieldLabel htmlFor="eliminar-escrito">Escribe «eliminar» para confirmar</FieldLabel>
+        <Input id="eliminar-escrito" value={escrito} autoComplete="off" onChange={(evento) => setEscrito(evento.target.value)} />
+      </Field>
     </VentanaDeAccion>
   )
 }

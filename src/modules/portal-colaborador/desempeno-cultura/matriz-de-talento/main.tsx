@@ -1,3 +1,4 @@
-import { createPage } from '@/shared/pages/createPage'
+import { crearProximamente } from '@/modules/design-system/estados/pantalla-proximamente'
 
-export const { Component } = createPage('Matriz de talento', '/portal-colaborador/desempeno-cultura/matriz-de-talento', 'PortalColaboradorDesempenoCulturaMatrizDeTalentoPage')
+// Sin maquetar todavía: sigue en el menú con «Próximamente» y abre la espera del sistema (regla «pantallas-pendientes», 13-oct).
+export const { Component } = crearProximamente('Matriz de talento', undefined, undefined, 'PortalColaboradorDesempenoCulturaMatrizDeTalentoPage')

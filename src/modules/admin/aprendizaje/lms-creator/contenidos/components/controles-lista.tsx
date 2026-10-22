@@ -2,7 +2,6 @@ import type { MouseEvent, ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Cancel01Icon, FilterIcon, Search01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Field,
   FieldLabel,
@@ -31,10 +30,12 @@ import {
   TabsList,
   TabsTrigger,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import type { PaginacionTabla } from '@/modules/design-system/data-grid/tabla-datos'
 import { PiePaginacion } from '@/modules/admin/seleccion/propuestas/components/paginacion'
 import { POR_PAGINA, listaPaginas } from './vista'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Los controles de la lista de contenidos de LMS Creator › Contenidos: la barra (buscador, Filtrar con el número de
 // criterios y contador), los chips de filtros aplicados, el modal de filtros y el pie de paginación. Salieron de esa
@@ -82,7 +83,7 @@ export function BarraLista({
       <Button
         variant={criteriosActivos ? 'secondary' : 'outline'}
         onClick={onFiltrar}
-        aria-label={criteriosActivos ? `Filtrar, ${criteriosActivos} criterios aplicados` : 'Filtrar'}
+        aria-label={criteriosActivos ? `Filtrar, ${criteriosActivos} ${plural(criteriosActivos, 'criterio aplicado', 'criterios aplicados')}` : 'Filtrar'}
       >
         <HugeiconsIcon icon={FilterIcon} size={16} />
         Filtrar
@@ -110,7 +111,7 @@ export function BarraLista({
  * `ConfiguredModal`, que se retiró; al traer esta pantalla de vuelta se migró en vez de resucitarla (Dave, 9-oct).
  *
  * Los dos botones van por su `footer`, que es como el equipo pone acciones propias en esa ventana (Cristian lo usa
- * así en el directorio de participantes de Encuestas). Así «Borrar filtros» queda donde estaba, en el pie, sin
+ * así en el directorio de participantes de Encuestas). Así «Limpiar filtros» queda donde estaba, en el pie, sin
  * inventarse un botón suelto dentro del cuerpo.
  */
 /** Modal de filtros: los criterios juntos, se aplican de una vez (modal del equipo, Design system › Modales). */
@@ -140,7 +141,7 @@ export function ModalFiltros<K extends string>({
       footer={
         <>
           <Button variant="outline" onClick={onBorrar}>
-            Borrar filtros
+            Limpiar filtros
           </Button>
           <Button onClick={onAplicar}>Aplicar</Button>
         </>
@@ -270,7 +271,7 @@ export function MarcoCuadricula({
             />
             {busqueda ? (
               <InputGroupAddon align="inline-end">
-                <InputGroupButton size="icon-xs" aria-label="Borrar la búsqueda" onClick={() => onBuscar('')}>
+                <InputGroupButton size="icon-xs" aria-label="Limpiar la búsqueda" onClick={() => onBuscar('')}>
                   <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
                 </InputGroupButton>
               </InputGroupAddon>
@@ -340,9 +341,12 @@ export function PieContenidos({
 
       <Pagination className="mx-0 w-auto">
         <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" text="Anterior" aria-label="Página anterior" aria-disabled={actual === 1} onClick={irA(actual - 1)} />
-          </PaginationItem>
+          {/* Con una sola página, sin «Anterior» ni «Siguiente» (regla «paginador-una-pagina», 13-oct). */}
+          {paginas > 1 ? (
+            <PaginationItem>
+              <PaginationPrevious href="#" text="Anterior" aria-label="Página anterior" aria-disabled={actual === 1} onClick={irA(actual - 1)} />
+            </PaginationItem>
+          ) : null}
           {listaPaginas(actual, paginas).map((item, i) =>
             item === 'salto' ? (
               <PaginationItem key={`salto-${i}`}>
@@ -356,9 +360,11 @@ export function PieContenidos({
               </PaginationItem>
             ),
           )}
-          <PaginationItem>
-            <PaginationNext href="#" text="Siguiente" aria-label="Página siguiente" aria-disabled={actual === paginas} onClick={irA(actual + 1)} />
-          </PaginationItem>
+          {paginas > 1 ? (
+            <PaginationItem>
+              <PaginationNext href="#" text="Siguiente" aria-label="Página siguiente" aria-disabled={actual === paginas} onClick={irA(actual + 1)} />
+            </PaginationItem>
+          ) : null}
         </PaginationContent>
       </Pagination>
     </div>

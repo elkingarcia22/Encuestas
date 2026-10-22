@@ -83,7 +83,7 @@ export function usePasos({
   useEffect(() => {
     if (!pendientes.current.alineacion || !alineacion) return
     pendientes.current = { ...pendientes.current, alineacion: false }
-    onCambio({ alignedTo: null })
+    onCambio({ alignedTo: [] })
   }, [alineacion, onCambio])
 
   return { medida, valores, rango, peso, alineacion, acciones, prueba: sePuedeProbar, salida, rangoContestado, elegirRango }

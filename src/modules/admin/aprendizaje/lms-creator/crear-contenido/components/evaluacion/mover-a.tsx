@@ -1,7 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { FolderExportIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -10,6 +9,7 @@ import {
   DropdownMenuTrigger,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import type { EntradaSeccion } from './secciones'

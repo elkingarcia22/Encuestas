@@ -15,14 +15,22 @@ reglas **reemplazan** a las que se marcan como reemplazadas más abajo.
 - **Un solo paginador: `PiePaginacion`** («Filas por página» 10/20/50, «Viendo 1–10 de 84 …», «Anterior / Siguiente»
   dentro del marco). Encuestas deja su 5/10/25.
 - **Dos ventanas, cada una con su trabajo (6 oct, reemplaza la «ventana única» del 5 oct).** Preguntar antes de hacer
-  algo (eliminar, salir sin guardar, activar, descartar, enviar) va en `DialogoConfirmar`, también cuando muestra lo que
+  algo (eliminar, activar, descartar, enviar) va en `DialogoConfirmar`, también cuando muestra lo que
   se pierde; `ConfirmarEliminar` va por dentro en él. Todo lo que tiene contenido (formularios, listas para elegir,
   vistas previas, detalles, ajustes), y confirmar con la lista de a quiénes afecta, va en `ActionDialog`.
   `ConfiguredModal` se retiró. **Forma (6 oct, lienzo «Ventana de confirmar»):** en las dos ventanas el icono va
   arriba del título y todo alineado a la izquierda; en `DialogoConfirmar` lo que se toca va en `RegistroConfirmar`
   (tarjeta con nombre, detalle e insignia de estado; condensada en la chica).
-  **Con tres salidas** (seguir editando · salir sin guardar · guardar y salir) `DialogoConfirmar` lleva `otra` y va en
-  su tamaño normal (`size` sin poner), no en `sm`: en el chico los tres botones no caben en una fila.
+- **Salir de algo: una sola ventana, `DialogoSalir` (13 oct, Nicolás: «si tenemos algún salir de algo debemos usar
+  ese modal»; reemplaza las tres salidas).** Es la de Crear contenido: icono de salir, el título repite el botón que la
+  abre («¿Salir de la creación?»), una línea que dice qué pasa y dos salidas, «Seguir aquí» y la salida en azul. Sin
+  tarjeta del registro y sin tercera salida. Con borrador, salir lo guarda y la línea dice dónde queda; sin borrador,
+  dice qué se pierde. Pregunta solo si hay algo escrito o cambiado. Vive en `estados/confirmaciones.tsx` y se documenta
+  en `/design-system/estados` › Confirmaciones, caso 2. Aplicado en todas las creaciones y ediciones (Selección, LMS
+  Creator, Diagnóstico, Planes, Avisos, Encuestas, Objetivos, Tareas) y en las plantillas del DS. El botón de salir va
+  siempre en azul, también sin borrador (war room del 15-oct: el rojo es solo para eliminar). `BotonSalirCreacion` con
+  `salida` la trae armada: `VentanaSalir` arma la línea según haya borrador y usa `DialogoSalir` por dentro (16-oct,
+  al unir los PR de Nicolás y Cristian, que habían hecho la misma ventana).
 - **Crear y editar en una página** con `PageActionBar` y el estado de guardado; nunca en ventana ni panel. El caso
   «Formulario por pasos» de Drawers queda solo como referencia de la pieza, marcado «no usar para crear».
 - **Asistentes por pasos como `/admin/seleccion/exploraciones/uno/crear`**: un solo botón «Salir de la creación» a la
@@ -35,7 +43,7 @@ reglas **reemplazan** a las que se marcan como reemplazadas más abajo.
   editores de tres columnas, para que la acción principal quede en el mismo sitio que en el setup.
   Aplicado en: los pasos y flujos hijos de LMS Creator (Crear contenido, video, presentación, asistencia, roleplay).
   Documentado en: `/design-system/navegacion` (partes «Volver» y «Barra de acciones»; el caso Asistente por pasos usa
-  `BotonSalirCreacion` real y pregunta la salida con `DialogoConfirmar` de tres salidas) y Ajustes propios › «Marco de
+  `BotonSalirCreacion` real y pregunta la salida con `DialogoSalir`) y Ajustes propios › «Marco de
   flujo a pantalla completa» (con la salida y la barra reales) e «Indicador de guardado».
 - **Roleplay de LMS unificado (5–6 oct):** el MVP y el MLP son un solo «Evaluador roleplay» (`/agregar-roleplay`; la
   dirección `-mvp` solo redirige). Sus ventanas de entrada (elegir roleplay o presentación) van en `ActionDialog`.
@@ -158,28 +166,48 @@ reglas **reemplazan** a las que se marcan como reemplazadas más abajo.
   tamaño por defecto de la librería (12 px, alto 20 px): sin `size="xs"` ni `size="sm"` (se quitaron 158 en 58 archivos).
   El `Badge` de `src/shared/components/Badge.tsx` sigue subiendo a 10.5 px los tamaños chicos que queden en otras pantallas.
 
-## AI Insights son insights (8 oct)
-- VP de producto: «no sería llamarlo dashboard, sino AI Insights». Nicolás (8 oct, después): «lo de arriba + algo más
-  creativo que realmente se vea wow de AI Insights, recuerda son insights»; pedirle dashboards a la IA y guardarlos «es
-  para el futuro» (Suite AI Pro). Sin «Lo que viene» (Nicolás: «quita esta sección»).
-- **Una sola pieza, «Lo que ve la IA»** (8 oct tarde, Nicolás: la lectura del periodo «podría ser primero… el texto un poco
-  más grande y más cosas, que se cambie de un insight a otro»; «Lo que ve la IA hoy» y «Lo que encontró la IA» «son como lo
-  mismo»). Una tarjeta con el halo suave de la IA:
-  - arriba, **una lectura a la vez en grande** (`TextoResaltado size="2xl"`, lo de la IA con el degradado): qué tema es, si
-    es «Para resolver hoy», por qué lo dice, un botón a donde se resuelve y, al lado, el dato que la respalda (curva de
-    llegadas o barras con `Progress`);
-  - **pasa sola a la siguiente cada 9 segundos**, como historias; se detiene al pasar el cursor o el foco, con «Pausar», y
-    arranca en pausa si el equipo pidió menos movimiento;
-  - abajo, **el índice de las siete lecturas** con su cifra (periodo, respuestas, embudo, vacantes, ritmo, tiempo,
-    reparto); la barra de cada una avanza mientras está a la vista. En el teléfono se desliza de lado.
-  - Las siete van apiladas en el mismo sitio: la tarjeta toma el alto de la más larga y nada salta al cambiar.
-- **Debajo, tres bloques de lo que encontró la IA** (8 oct tarde, Nicolás: «¿qué más podríamos agregar abajo? Está muy
-  vacío»), cada uno con su frase y a dónde ir, sin repetir las lecturas de arriba: «Candidatos que la IA destaca» (cumplen
-  casi todo y siguen al principio, sin que nadie los mueva), «Qué vacantes atraen a la gente indicada» (qué parte de los que
-  llegan cumple todo) y «Dónde espera más la gente» (días por etapa, la más lenta señalada). `dashboard/hallazgos.tsx`.
-- Las cifras salen del mismo resumen que Vacantes; ninguna lectura repite a otra.
-  Aplicado en: `/admin/seleccion/ai-insights` (`seleccion/dashboard/main.tsx` y `lecturas.tsx`). `TextoResaltado` suma
-  el tamaño `2xl` (Fundamentos › Tipografía › Texto resaltado › «Grande»).
+## Orbit Data: AI Insights pasa a ser una conversación con Orbit (16 oct)
+- VP de producto: «se entiende tal vez el AI Insights, no es la palabra… es el mismo suite de AI que vamos a tener, pero que
+  tú puedas hablar con tu data. Y es en selección donde queremos probar… antes de mandarlo a una suite de AI Pro… que sea muy
+  conversacional. Y ahí es donde entra… la UI generativa, que genera sus propios dashboards». Reemplaza lo del 8 oct
+  («son insights», una lectura grande que pasaba sola): Nicolás, 16 oct: «creo que la hicimos mal».
+- **«Orbit Data»** en el menú de Selección (`/admin/seleccion/orbit-data`; `tus-datos`, `ai-insights`, `dashboard` y
+  `onboarding` llevan ahí). El nombre lo eligió Nicolás entre opciones cercanas a la VP: el mismo Orbit, con el foco en
+  los datos (como «Orbit Flow»); antes se llamó «Habla con tus datos». Se ve **como el chat de Orbit** porque es el
+  mismo, solo con los datos de Selección: sin cabecera de página ni pastilla de créditos, conversación en su propia zona con
+  scroll y la caja de escribir fija abajo, todo en la columna del chat (768 px; mensajes con 32 px de margen). Hilo con
+  `useAgentThread` + `AgentThread` y respuestas con `AgentMessage`. Nicolás, 16 oct: «se ve horrible así de ancho», «se
+  debería respetar el padding así como en Orbit», «¿por qué no tiene el mismo ancho del chat?».
+- Vacía: el orbe, el saludo y sugerencias en la caja de escribir (sin lecturas fijas: «¿para qué esto?»). **«Tus
+  tableros»** y «Nueva conversación» van dentro de la caja, en su fila de abajo.
+- Cada respuesta es una frase hecha con los datos y, debajo, **lo que Orbit arma**, del mismo ancho que la caja de escribir
+  (`AgentMessage wide` y se mide contra la columna) y acomodado a ese ancho con `@container`: `FilaIndicadores
+  segunContenedor` (las cifras de a dos hasta 896 px de contenedor), el embudo de a tres hasta 768 px y la tabla con solo
+  vacante, candidatos y avance:
+  las cifras, el embudo, cuántos aplican, las vacantes con más gente (`TablaDatos`), a quién mirar, dónde espera la gente,
+  qué vacantes atraen a la gente indicada, o una lista de quién espera respuesta.
+- **Tableros pedidos con palabras** («arma un tablero de…»): se ajustan conversando («agrégale el embudo», «solo los
+  últimos 30 días»: cada ajuste es una versión) y se guardan en **«Tus tableros»** (botón en la cabecera; se actualizan
+  todos los días a las 7:00 a. m.). Quitar uno pregunta con `DialogoConfirmar` y trae «Deshacer».
+- No responde lo sensible (edad, hijos, estado civil, origen) ni el canal por el que llega cada persona (no se sabe).
+- Código: `seleccion/dashboard/main.tsx` (la página), `conversacion.tsx` (las respuestas), `insights.ts` (los tableros).
+
+## Una sola tabla, también en Vacantes y Mis candidatos (16 oct)
+Nicolás: «no veo aún que en vacantes o candidatos estén las tablas como deben ser». Decide la pregunta `tabla-del-sistema`:
+la tabla del sistema es `TablaDatos`, también ahí (regla `tabla-del-sistema` en reglas.json).
+- Vacantes (`exploraciones/uno/inicio/tabla-vacantes.tsx`) y Mis candidatos (`exploraciones/dos/mis-candidatos.tsx`):
+  conteo a la izquierda; buscador, «Personalizar columnas» y lo secundario («Carpetas») a la derecha; orden y filtro en el
+  encabezado de cada columna; las acciones con las elegidas junto al buscador; el «⋯» en «Acciones». Lo que la tabla no
+  dice con sus controles (una carpeta, un lote, la vacante que compara Orbit Flow) va en la línea del conteo y se quita con
+  un botón junto al buscador.
+- La vacante tiene el cambio Lista/Tablero de «Tablero con vistas» (`propuestas/components/lista-candidatos.tsx`): el
+  título «Candidatos», las vistas y el cambio arriba, fuera del marco; debajo el tablero o `TablaDatos`.
+- La pestaña «Tabla completa» de `/design-system/data-grid` y sus casos se borraron, con `FranjaElegirTodas`,
+  `BarraElegidas`, `AvisoOcultas` y `BarraBase`. En `data-grid/partes-tabla.tsx` quedan `EncabezadoOrdenable`
+  (tablas de resultados de Encuestas), `CarpetasDeFila` y `NavegarRegistros`.
+- Las tablas llevan su título en lo gris sobre el conteo (`titulo` de `TablaDatos`; Nicolás: «no me les quites los títulos
+  a las tablas»). Créditos («Agentes con IA») y la tabla que arma Orbit en «Orbit Data» también son `TablaDatos`; `MarcoTabla`
+  ya no se usa en ninguna pantalla y su archivo se borró.
 
 ## Carpetas = etiquetas, y viven en la tabla (8 oct)
 - Nicolás: «carpetas es lo que yo te dije que era etiquetas, no una u otra»; la VP de producto: «las carpetas sí son
@@ -317,8 +345,8 @@ Documentado en: `/design-system/espacio` (sección «Ritmo dentro de un bloque»
   12» y «Seguir»; terminado, «5 por confirmar · 1 falló» y «Revisar» (abre la revisión) o «Ver» (la gente que entró).
   Documentado en: `/design-system/marco/header` (texto de la parte «Centro de procesos» y nota bajo su interruptor) y
   `/design-system/marco/capturas` (regla «Procesos en vivo» de la barra superior).
-- **Sin botón en el header, vacío propio y ejemplos solo en el design system** (7 oct, al unir el PR de Elkin): el
-  centro se abre desde Notificaciones (y desde las pantallas que publican procesos). Si nadie publicó nada, muestra el
+- **Vacío propio y ejemplos solo en el design system** (7 oct, al unir el PR de Elkin; el botón del header volvió el
+  13 oct): el centro se abre desde su botón, desde Notificaciones (y desde las pantallas que publican procesos). Si nadie publicó nada, muestra el
   vacío `PrimeraVez` («No hay nada en proceso»); los tres procesos de ejemplo solo salen con `ejemplos`, que usa el
   design system. Lo terminado se queda como «procesado» (baldosa verde con el visto) y suma al resumen. «Historial» abre
   lo que registre la pantalla con `setProcessHistory` (p. ej., las descargas de una encuesta); sin eso, solo avisa.
@@ -429,7 +457,15 @@ Documentado en: `/design-system/espacio` (sección «Ritmo dentro de un bloque»
   Pendiente: documentarlo como caso en `/design-system/modales` si Nicolás lo pide.
 
 ## Paneles del header
-- **Sin botones de Centro de ayuda ni de Centro de procesos** (1 oct, Charlie). A la derecha quedan Novedades,
+- **El Centro de procesos vuelve a tener su botón** (13 oct, Charlie; reemplaza la mitad de la regla del 1 oct): botón
+  cuadrado con `Queue02Icon` a la derecha de Notificaciones, en azul mientras el centro está abierto. El panel se ubica
+  como Notificaciones y Perfil: 8px debajo de su botón y alineado a su borde derecho (`ProcessCenter` con `ancla`).
+  Sigue abriéndose también desde Notificaciones. A la derecha quedan Novedades, Notificaciones, Centro de procesos y
+  Perfil; el buscador reserva 2 × 251 + 28 = 530px (360px con solo iconos).
+  Documentado en: `/design-system/header` (interruptor y parte «Centro de procesos»), `/design-system/marco` (texto de
+  las acciones y demo).
+- ~~**Sin botones de Centro de ayuda ni de Centro de procesos** (1 oct, Charlie).~~ Lo de Centro de procesos queda
+  reemplazado el 13 oct (arriba); lo de Centro de ayuda sigue vigente. A la derecha quedan Novedades,
   Notificaciones y Perfil. «Centro de ayuda» pasa al menú de perfil, justo debajo de «Portal colaborador». El Centro de
   procesos sigue existiendo y se abre desde Notificaciones (y desde las pantallas que publican procesos). Con el espacio
   libre, el buscador reserva 2 × 207 + 28 = 442px (272px con solo iconos).
@@ -876,9 +912,20 @@ eso de minimizar y ampliar ¿para qué?».
   eran 20px con `pl-5!`/`pr-5!`).
 
 ## Tarjeta de invitación a la IA («Crear un curso»)
-- **Variante «Halo»** (18 sep, elegida por Nicolás entre tres): el color va **difuminado en las esquinas**, no rellenando
-  la tarjeta, y el texto siempre queda sobre fondo liso. El botón lleva el degradado de marca de «Nueva conversación».
-  Al pasar el cursor el halo crece desde su esquina: se mueve el fondo, no la tarjeta.
+- **Un solo halo de IA** (15 oct, Carlos, con la referencia del login de ClickUp; reemplaza la forma «en las esquinas»
+  del 18 sep): cuatro manchas de luz pastel a lo ancho del borde de arriba —azul, morado, rosa y naranja, el orden de la
+  marca— que se apagan antes de llegar al texto. Es `.vars` + `.halo` de `tarjeta-ia.module.css` y es el mismo en la
+  tarjeta IA, «Crear contenido» del Inicio, el panel de AI Insights y el aura del chat de Orbit. Se quitaron las
+  variantes «suave» (sin uso) y «lineal» (quedó igual a esta). Los colores de la IA salen siempre de `.vars`, nunca del
+  tema: el chat usaba el rojo de error como naranja.
+- **El borde del chat da una vuelta y se queda** (15 oct, Carlos): al enfocar la caja de mensajes, un haz con los cuatro
+  colores de la IA da una sola vuelta de 1,4 s y se apaga; el borde se queda con el degradado de la IA, quieto y con sus colores enteros (sin transparencia),
+  mientras la caja siga enfocada. Antes giraba sin parar (4 s por vuelta). Con «reducir movimiento», el borde quieto
+  aparece de una.
+- ~~**Variante «Halo»** (18 sep, elegida por Nicolás entre tres): el color va **difuminado en las esquinas**~~ (forma
+  reemplazada el 15 oct, arriba). Sigue vigente: no rellena la tarjeta, el texto siempre queda sobre fondo liso, el
+  botón lleva el degradado de marca de «Nueva conversación» y al pasar el cursor el halo crece: se mueve el fondo, no la
+  tarjeta.
   Sustituye al degradado saturado de borde a borde que había antes (una imagen, `degradado-ia.png`).
 - **Una por pantalla.** Es una invitación, no un banner. Si la pantalla ya tiene otra pieza de IA con color, esta va
   **sin halo** (interruptor «Halo» del configurador).
@@ -1000,9 +1047,8 @@ Revisión del equipo sobre Selección. Reglas:
 - Toda confirmación va en `DialogoConfirmar` (con `children` para alertas o campos). Nunca `AlertDialog` suelto.
 - Toda confirmación va en `DialogoConfirmar` (el 5 oct pasó a `ActionDialog`; **se volvió a esta regla el 6 oct**).
   Nunca `AlertDialog` suelto.
-  Si hay dos formas de seguir (salir de una edición guardando o sin guardar), `otra` suma la tercera salida entre
-  cancelar y la acción (1 oct: salir de la creación/edición de vacantes; documentado en `/design-system/estados`, caso 2).
-  1 oct: la creación de vacantes quedó toda en piezas del DS (salir → `DialogoConfirmar`; «Crear/Editar etapa» y
+  Si hay dos formas de seguir, `otra` suma una tercera salida entre cancelar y la acción. Salir de algo no la usa: va en
+  `DialogoSalir` (13 oct). 1 oct: la creación de vacantes quedó toda en piezas del DS (salir → `DialogoSalir`; «Crear/Editar etapa» y
   «Crear desde archivo» → `ActionDialog`, sin el ancho a mano).
 - `AiCard` dentro de un marco que ya pone borde (el `Frame` del Inicio) usa `inFrame`, no `border-0!`.
 - Nada de pintar componentes desde fuera: los enlaces son azules, las barras de avance llevan su letra, las filas

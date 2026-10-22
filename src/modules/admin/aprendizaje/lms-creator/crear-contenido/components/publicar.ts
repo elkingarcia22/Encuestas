@@ -74,6 +74,10 @@ export function empezarDeCero(clase: ClaseCreacion = 'contenido') {
  *
  * Lo que se recupera es la ficha —título, portada, descripción y los datos técnicos—. Las páginas no: en la lista
  * no viajan, y el prototipo no guarda su contenido entre pantallas.
+ *
+ * Con `relleno` se parte de otro borrador en vez de uno vacío, y entonces la ficha de este contenido se monta sobre
+ * **sus** páginas. Es lo que usa la vista previa desde Resultados: sin páginas, la vista del colaborador enseñaba
+ * solo la portada y el cierre, que no es la vista previa de nada (Dave, 14-oct).
  */
 export function retomarBorrador(contenido: {
   titulo: string
@@ -84,8 +88,8 @@ export function retomarBorrador(contenido: {
   categoriaId?: string
   idioma?: string
   minutos?: number
-}) {
-  const base = borradorVacio('contenido')
+}, relleno?: Borrador) {
+  const base = relleno ?? borradorVacio('contenido')
   const horas = (contenido.minutos ?? 0) >= 60 && (contenido.minutos ?? 0) % 60 === 0
   reemplazarBorrador({
     ...base,

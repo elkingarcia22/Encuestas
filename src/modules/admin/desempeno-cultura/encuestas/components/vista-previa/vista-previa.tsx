@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, Cancel01Icon, LeftToRightListBulletIcon } from '@hugeicons/core-free-icons'
-import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger, Text, cn } from '@ubits/flux-ui'
-import { BotonIcono } from '@/shared/components/BotonIcono'
+import { ArrowDown01Icon, ArrowLeft01Icon, ArrowRight01Icon, LeftToRightListBulletIcon } from '@hugeicons/core-free-icons'
+import { Button, Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger, Text, cn } from '@ubits/flux-ui'
 import { PAGE_WIDTH } from '@/shared/components/page-width'
 import ambienteAzul from '@/shared/assets/ambiente-azul.png'
 import { buildPreviewOutline, buildPreviewPages, pageQuestionIds, previewSummary, toPreviewQuestion, type PreviewPage } from '../../modelo/previewModel'
@@ -13,20 +12,20 @@ import { PaginaBienvenida } from './pagina-bienvenida'
 import { PaginaCierre } from './pagina-cierre'
 import { PaginaPreguntas } from './pagina-preguntas'
 import { PanelAvance, Ubicacion } from './panel-avance'
+import { PantallaCompleta } from '@/modules/design-system/marco/pantalla-completa'
 
 // La vista previa: un ensayo del recorrido, página a página, como lo vería quien responde. Lee el
 // borrador en vivo (se cierra, se cambia una pregunta, se abre y el cambio está ahí) y las
 // respuestas se tiran al cerrar: cada apertura empieza de cero, en la primera página.
 //
-// Es un modal de pantalla completa, pero el formulario no se estira: va en la columna de 720 px de
+// Es la plantilla de pantalla completa del sistema (PantallaCompleta), pero el formulario no se estira: va en la columna de 720 px de
 // los formularios y, a su derecha, el panel de avance con el progreso y el índice navegable. Los
 // dos se centran juntos; en la bienvenida y el cierre no hay panel y el contenido queda solo en el centro.
 // Detrás va el mismo brillo azul que corona el Inicio y el resto del Workspace, pegado a la barra de
 // arriba; las páginas son marcos grises con paneles blancos, como las tarjetas del Inicio.
-// Abajo, sin línea divisoria, los botones van al ancho del contenido —el formulario y el panel, o solo el
-// formulario donde no hay panel—: Anterior a la izquierda y el botón principal a la derecha, que dice «Comenzar encuesta», «Siguiente»,
+// Abajo, sin línea divisoria, los botones van al ancho del formulario: Anterior a la izquierda y el botón principal a la derecha, que dice «Comenzar encuesta», «Siguiente»,
 // «Enviar y finalizar» antes del cierre o «Cerrar vista previa» en la última.
-// En pantallas sin espacio para el panel, el índice se abre desde «Contenido» en la barra de arriba.
+// En pantallas sin espacio para el panel, el índice se abre desde «Contenido», junto a la X.
 
 const MAX_PAGINAS_CON_NUMERO = 14
 
@@ -45,8 +44,6 @@ type Props = { borrador: SurveyDraft; open: boolean; onOpenChange: (open: boolea
 const FILA = 'flex justify-center gap-6'
 const FORMULARIO = cn('w-full min-w-0', PAGE_WIDTH.narrow)
 const ANCHO_PANEL = 'w-68 shrink-0'
-// El ancho de la fila de contenido cuando el panel cabe a la derecha: el formulario (45rem), el hueco (1.5rem) y el panel (17rem).
-const ANCHO_CONTENIDO_CON_PANEL = 'xl:max-w-254'
 
 export function VistaPrevia({ borrador, open, onOpenChange }: Props) {
   const paginas = useMemo(() => buildPreviewPages(borrador), [borrador])
@@ -79,8 +76,8 @@ export function VistaPrevia({ borrador, open, onOpenChange }: Props) {
 
   const arriba = useRef<HTMLSpanElement>(null)
   useEffect(() => {
-    // Al cambiar de página se vuelve arriba del todo, con el margen del panel incluido.
-    arriba.current?.parentElement?.scrollTo({ top: 0 })
+    // Al cambiar de página se vuelve arriba del todo: quien se desplaza es el cuerpo de la plantilla, el padre del bloque.
+    arriba.current?.parentElement?.parentElement?.scrollTo({ top: 0 })
   }, [actual])
 
   const ir = (destino: number) => {
@@ -132,17 +129,14 @@ export function VistaPrevia({ borrador, open, onOpenChange }: Props) {
   const conPanel = pagina?.kind !== 'welcome' && pagina?.kind !== 'closing'
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="flex! h-[calc(100svh-2rem)] max-h-[calc(100svh-2rem)] flex-col! gap-0! overflow-hidden rounded-2xl! p-0! sm:max-w-[calc(100%-2rem)]!">
-        <DialogTitle className="sr-only">Vista previa · {borrador.name.trim() || 'Encuesta sin título'}</DialogTitle>
-        <DialogDescription className="sr-only">Recorrido de la encuesta página a página, como lo vería quien responde.</DialogDescription>
-
-        <img src={ambienteAzul} alt="" aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[22rem] w-full opacity-25 select-none dark:opacity-30" />
-
-        <div className="relative flex shrink-0 items-center gap-3 border-b px-4 py-2.5">
-          <div className="min-w-0 flex-1">
-            <Ubicacion pagina={pagina} />
-          </div>
+    <PantallaCompleta
+      abierta={open}
+      onCerrar={() => onOpenChange(false)}
+      titulo="Vista previa"
+      descripcion={borrador.name.trim() || 'Encuesta sin título'}
+      etiquetaCerrar="Cerrar vista previa"
+      acciones={
+        <>
           <Text as="span" size="xs" variant="muted" weight="semibold" className="hidden tabular-nums sm:inline">
             {paginas.length > MAX_PAGINAS_CON_NUMERO ? `Pág. ${actual + 1} de ${paginas.length}` : `${actual + 1} / ${paginas.length}`}
           </Text>
@@ -167,33 +161,37 @@ export function VistaPrevia({ borrador, open, onOpenChange }: Props) {
               </PopoverContent>
             </Popover>
           </div>
-          <BotonIcono aria-label="Cerrar vista previa" onClick={() => onOpenChange(false)}>
-            <HugeiconsIcon icon={Cancel01Icon} className="size-4" />
-          </BotonIcono>
-        </div>
+        </>
+      }
+    >
+      {/* Dentro del cuerpo de la plantilla, que es el que se desplaza: el contenido llena el alto y la barra de botones queda
+          pegada abajo. */}
+      <div className="relative flex min-h-full flex-col">
+        <span ref={arriba} aria-hidden="true" />
+        <img src={ambienteAzul} alt="" aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[22rem] w-full opacity-25 select-none dark:opacity-30" />
 
-        <div className="relative min-h-0 flex-1 overflow-y-auto">
-          <span ref={arriba} aria-hidden="true" />
-          <div className={cn(FILA, 'px-4 py-6 sm:px-8')}>
-            <div className={FORMULARIO}>
-              {pagina?.kind === 'welcome' ? (
-                <PaginaBienvenida borrador={borrador} resumen={resumen} paginas={paginas} indice={indice} avance={avance} onIr={irA} />
-              ) : pagina?.kind === 'section' || pagina?.kind === 'demographics' ? (
-                <PaginaPreguntas key={pagina.id} pagina={pagina} respuestas={respuestas} seguimientos={seguimientos} senaladas={senaladas} onResponder={responder} onSeguimiento={seguir} />
-              ) : pagina?.kind === 'closing' ? (
-                <PaginaCierre mensaje={borrador.closingDescription} resumen={resumen} respondidas={totales.answered} onReiniciar={reiniciar} />
-              ) : null}
-            </div>
-            {conPanel ? (
-              <aside aria-label="Avance de la vista previa" className={cn(ANCHO_PANEL, 'sticky top-0 hidden self-start xl:block')}>
-                <PanelAvance borrador={borrador} paginas={paginas} activa={pagina} avance={avance} totales={totales} porcentaje={porcentaje} onIr={irA} />
-              </aside>
+        <div className={cn(FILA, 'relative flex-1')}>
+          <div className={cn(FORMULARIO, 'flex flex-col gap-4')}>
+            <Ubicacion pagina={pagina} />
+            {pagina?.kind === 'welcome' ? (
+              <PaginaBienvenida borrador={borrador} resumen={resumen} paginas={paginas} indice={indice} avance={avance} onIr={irA} />
+            ) : pagina?.kind === 'section' || pagina?.kind === 'demographics' ? (
+              <PaginaPreguntas key={pagina.id} pagina={pagina} respuestas={respuestas} seguimientos={seguimientos} senaladas={senaladas} onResponder={responder} onSeguimiento={seguir} />
+            ) : pagina?.kind === 'closing' ? (
+              <PaginaCierre mensaje={borrador.closingDescription} resumen={resumen} respondidas={totales.answered} onReiniciar={reiniciar} />
             ) : null}
           </div>
+          {conPanel ? (
+            <aside aria-label="Avance de la vista previa" className={cn(ANCHO_PANEL, 'sticky top-0 hidden self-start xl:block')}>
+              <PanelAvance borrador={borrador} paginas={paginas} activa={pagina} avance={avance} totales={totales} porcentaje={porcentaje} onIr={irA} />
+            </aside>
+          ) : null}
         </div>
 
-        <div className="shrink-0 px-4 py-3 sm:px-8">
-          <div className={cn('mx-auto flex w-full items-center justify-between gap-2', PAGE_WIDTH.narrow, conPanel && ANCHO_CONTENIDO_CON_PANEL)}>
+        {/* La barra repite la fila de arriba (el formulario y el hueco del panel), así los botones van al ancho del
+            formulario sin una medida a mano. */}
+        <div className={cn(FILA, 'sticky bottom-0 -mx-5 -mb-5 mt-6 bg-background px-5 py-3')}>
+          <div className={cn(FORMULARIO, 'flex items-center justify-between gap-2')}>
             {actual > 0 ? (
               <Button variant="outline" onClick={() => ir(actual - 1)}>
                 <HugeiconsIcon icon={ArrowLeft01Icon} aria-hidden="true" />
@@ -207,8 +205,9 @@ export function VistaPrevia({ borrador, open, onOpenChange }: Props) {
               {esUltima || antesDelCierre ? null : <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />}
             </Button>
           </div>
+          {conPanel ? <div aria-hidden="true" className={cn(ANCHO_PANEL, 'hidden xl:block')} /> : null}
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </PantallaCompleta>
   )
 }

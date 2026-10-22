@@ -32,9 +32,10 @@ export const designSystemModule: AppModule = {
               path: 'grafo',
               lazy: () => import('./grafo/main'),
             },
+            // Flujo de trabajo se juntó con Cómo usar el sistema (13-oct): repetían reglas y pasos.
             {
               path: 'flujo-de-trabajo',
-              lazy: () => import('./flujo-de-trabajo/main'),
+              loader: () => redirect('/design-system/get-started#una-pantalla-nueva'),
             },
             {
               path: 'manifiesto',

@@ -14,7 +14,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -59,8 +58,10 @@ import {
   TabsContent,
   Text,
   Textarea,
-  toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { Link } from 'react-router'
+import { notify, notifyAction } from '@/shared/components/notify'
 import { Demo, EncabezadoPatron, PestanasDePatron, SectionIntro, VerEnAccion } from '../patrones/piezas'
 import { FormularioAsignacion, SelectorMultiple } from './asignacion'
 import { COMPETENCIAS } from './asignacion-datos'
@@ -79,6 +80,14 @@ import {
   type Borrador,
   type Errores,
 } from './validacion'
+
+// Lleva el foco al campo de un problema (el campo de número guarda su input dentro de su grupo, y el de área es un
+// botón de selección).
+function irAlCampo(campo: keyof Borrador) {
+  const raiz = document.getElementById(`v-${campo}`)
+  const destino = raiz?.matches('input, textarea, button') ? raiz : raiz?.querySelector<HTMLElement>('input, button')
+  destino?.focus()
+}
 
 /* -------------------------------------------------------------- anatomía */
 
@@ -347,23 +356,38 @@ function Validacion() {
     setErrores(encontrados)
     setEnviado(true)
 
-    const campos = Object.keys(encontrados) as (keyof Borrador)[]
+    const campos = Object.keys(encontrados).filter((campo) => encontrados[campo as keyof Borrador]) as (keyof Borrador)[]
 
     if (campos.length === 0) {
       setExito(true)
-      toast.add({ type: 'success', title: 'Vacante creada', description: 'Ya está publicada.' })
+      notify('Vacante creada', 'Ya está publicada.', 'success')
       return
     }
 
     setTocados(Object.fromEntries(campos.map((campo) => [campo, true])))
+    // Al enviar con problemas, el foco va al primer campo que lo tiene (el resumen de arriba también lleva a cada uno).
+    window.requestAnimationFrame(() => irAlCampo(campos[0]))
   }
 
+  // «Empezar de nuevo» vacía todo, pero se puede deshacer: va directo y el aviso trae «Deshacer» (13-oct, regla
+  // «preguntar-antes»: lo que se revierte con un clic no pregunta).
   const limpiar = () => {
+    const antes = { borrador, tocados, errores, enviado, exito }
     setBorrador(BORRADOR_VACIO)
     setTocados({})
     setErrores({})
     setEnviado(false)
     setExito(false)
+    notifyAction('Formulario vacío', 'Se borró lo que habías escrito.', {
+      label: 'Deshacer',
+      onClick: () => {
+        setBorrador(antes.borrador)
+        setTocados(antes.tocados)
+        setErrores(antes.errores)
+        setEnviado(antes.enviado)
+        setExito(antes.exito)
+      },
+    }, 'info')
   }
 
   const errorDe = (campo: keyof Borrador) => (tocados[campo] ? errores[campo] : undefined)
@@ -426,7 +450,18 @@ function Validacion() {
                 <ul className="ml-4 flex list-disc flex-col gap-1">
                   {listaErrores.map((campo) => (
                     <li key={campo}>
-                      {ETIQUETAS[campo]}: {errores[campo]}
+                      {/* El resumen lleva a cada problema: un clic enfoca el campo (13-oct; antes era texto sin enlaces). */}
+                      <a
+                        href={`#v-${campo}`}
+                        className="underline underline-offset-2"
+                        onClick={(evento) => {
+                          evento.preventDefault()
+                          irAlCampo(campo)
+                        }}
+                      >
+                        {ETIQUETAS[campo]}
+                      </a>
+                      : {errores[campo]}
                     </li>
                   ))}
                 </ul>
@@ -643,8 +678,14 @@ function PorPasos() {
     <div className="flex flex-col gap-6">
       <SectionIntro
         title="Formulario por pasos"
-        description="Se parte cuando son muchos campos. Cada paso valida lo suyo antes de dejar avanzar, y siempre se puede volver atrás sin perder lo escrito."
+        description="Se parte cuando son muchos campos. Cada paso valida lo suyo antes de dejar avanzar, y siempre se puede volver atrás sin perder lo escrito. Aquí solo se prueba cómo valida cada paso; crear algo por pasos es una página completa (encabezado con BotonSalirCreacion, ChipGuardado y barra de acciones abajo)."
       />
+      <div>
+        <Button variant="outline" nativeButton={false} render={<Link to="/design-system/navegacion/pasos" />}>
+          Ver el patrón en Navegación › Asistente por pasos
+          <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} aria-hidden="true" data-icon="inline-end" />
+        </Button>
+      </div>
 
       <Card>
         <CardContent className="flex flex-col gap-8">
@@ -763,17 +804,7 @@ function PorPasos() {
                 <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} aria-hidden="true" />
               </Button>
             ) : (
-              <Button
-                onClick={() =>
-                  toast.add({
-                    type: 'success',
-                    title: 'Vacante publicada',
-                    description: cargo || 'Sin nombre',
-                  })
-                }
-              >
-                Publicar
-              </Button>
+              <Button onClick={() => notify('Vacante publicada', cargo || 'Sin nombre', 'success')}>Publicar</Button>
             )}
           </div>
         </CardContent>
@@ -787,9 +818,7 @@ function PorPasos() {
         <AlertDescription>
           <p>
             Los pasos que faltan salen en gris con su número; el actual, en azul; y los que ya
-            completaste, en azul con el visto. Antes los tres salían del mismo azul porque el tema
-            pisaba el gris de la librería con el color principal; eso ya se corrigió, también en la
-            opción resaltada de los desplegables.
+            completaste, en azul con el visto.
           </p>
         </AlertDescription>
       </Alert>
@@ -817,9 +846,9 @@ export function Component() {
     <>
       <div className="flex flex-col gap-6">
         <EncabezadoPatron titulo="Formularios" acciones={<VerEnAccion pagina="formularios" />}>
-          Cómo se arma un campo, cuándo avisar de un error y cómo organizar formularios largos: por
-          pasos, por secciones, con campos que aparecen según lo elegido y con un resumen antes de
-          enviar. Los ejemplos funcionan y las tres últimas pestañas son formularios reales de UBITS.
+          Cómo se arma un campo (los de flux-ui con su etiqueta, ayuda y error), cuándo avisar de un error y cómo
+          organizar formularios largos: por pasos, por secciones, con campos que aparecen según lo elegido y con un
+          resumen antes de enviar. Los ejemplos funcionan y las tres últimas pestañas son formularios reales de UBITS.
         </EncabezadoPatron>
 
         <Tabs defaultValue="anatomia">

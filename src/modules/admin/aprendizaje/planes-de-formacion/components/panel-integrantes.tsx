@@ -1,15 +1,9 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Search01Icon, UserAdd01Icon, UserCheck01Icon } from '@hugeicons/core-free-icons'
+import { Search01Icon, UserAdd01Icon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Checkbox,
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
@@ -27,7 +21,10 @@ import {
   TabsTrigger,
   Text,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
 import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
+import { BotonCancelarPanel } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { AREAS } from '@/modules/design-system/templates/gestion-usuarios/components/datos'
@@ -155,6 +152,8 @@ export function PanelIntegrantes({
       title={titulo}
       description={descripcion ?? (grupo ? `Para «${grupo}».` : 'Quienes forman el grupo. Puedes cambiarlo cuando quieras.')}
       headerExtra={barra}
+      // 13-oct (I-009): con personas sumadas o quitadas, no se cierra al tocar fuera y pregunta antes de descartar.
+      conCambios={nuevos > 0 || quitados > 0}
       footerClassName="justify-between! flex-wrap"
       footer={
         <>
@@ -181,9 +180,7 @@ export function PanelIntegrantes({
             )}
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" onClick={() => onAbiertoChange(false)}>
-              Cancelar
-            </Button>
+            <BotonCancelarPanel alCerrar={() => onAbiertoChange(false)} />
             <Button disabled={!nuevos && !quitados} onClick={() => onGuardar(marcados)}>
               {accion}
             </Button>
@@ -216,35 +213,16 @@ export function PanelIntegrantes({
           ) : null}
         </div>
       ) : vista === 'elegidos' && !marcados.length ? (
-        <Empty className="py-12">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <HugeiconsIcon icon={UserCheck01Icon} size={20} aria-hidden="true" />
-            </EmptyMedia>
-            <EmptyTitle>Todavía no has elegido a nadie</EmptyTitle>
-            <EmptyDescription>Marca a las personas en «Todos» y aquí las revisas antes de guardar.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button variant="outline" onClick={() => setVista('todos')}>
-              Ver a todos
-            </Button>
-          </EmptyContent>
-        </Empty>
+        // Vacíos con su ilustración glass (13-oct).
+        <PrimeraVez
+          className="py-12"
+          icono="glass-profile"
+          titulo="Todavía no has elegido a nadie"
+          descripcion="Marca a las personas en «Todos» y aquí las revisas antes de guardar."
+          accion={{ texto: 'Ver a todos', onClick: () => setVista('todos') }}
+        />
       ) : (
-        <Empty className="py-12">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <HugeiconsIcon icon={Search01Icon} size={20} aria-hidden="true" />
-            </EmptyMedia>
-            <EmptyTitle>No se encontraron colaboradores</EmptyTitle>
-            <EmptyDescription>Revisa la ortografía o busca por otro dato: usuario o cargo.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button variant="outline" onClick={limpiar}>
-              Limpiar búsqueda
-            </Button>
-          </EmptyContent>
-        </Empty>
+        <SinResultados busqueda={busqueda} filtrosActivos={(area !== 'todas' ? 1 : 0) + (vista === 'elegidos' ? 1 : 0)} onLimpiar={limpiar} />
       )}
     </DrawerShell>
   )

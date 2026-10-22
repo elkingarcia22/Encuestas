@@ -5,7 +5,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Field,
   Frame,
   FrameDescription,
@@ -18,6 +17,7 @@ import {
   Text,
   cn,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { RangoDeFechas } from '@/modules/design-system/formularios/rango-de-fechas'
 import { diaBloqueado, FECHA_COMPLETA, problemaDe, type Medida } from './programacion'
 

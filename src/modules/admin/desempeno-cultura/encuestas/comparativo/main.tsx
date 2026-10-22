@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { useLocation, useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Download04Icon, GitCompareIcon, InformationCircleIcon, RotateLeft01Icon } from '@hugeicons/core-free-icons'
-import { Alert, AlertDescription, AlertTitle, Button, Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle, Spinner, Tabs, TabsContent, TabsList, TabsTrigger } from '@ubits/flux-ui'
+import { Alert, AlertDescription, AlertTitle, Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { useEncuestas } from '../components/almacen'
@@ -21,7 +21,7 @@ import { ResumenComparativo } from './components/resumen'
 // tipo contra una base: el resumen ejecutivo arriba y, en pestañas, las secciones, los comentarios y
 // la lectura de la IA. Lo que se cruzó vive en la dirección (base y comparadas), así que se puede
 // recargar o volver sin perderlo. Sin barra flotante: cambiar encuestas y descargar van en la cabecera.
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
 
 const RUTA = '/admin/desempeno-cultura/encuestas'
 type Pestana = 'secciones' | 'comentarios' | 'insights'
@@ -47,40 +47,26 @@ function textoFaltantes(faltantes: readonly string[]): { titulo: string; descrip
   return { titulo, descripcion: `Se ${nombres.length === 1 ? 'eliminó' : 'eliminaron'} ${citar(nombres)} mientras armabas el comparativo. ${cierre}` }
 }
 
-/** Sin base o sin ninguna comparada que siga en la lista (COM-031): el vacío del sistema con las dos salidas. */
+/**
+ * Sin base o sin ninguna comparada que siga en la lista (COM-031): el vacío del sistema. «Cambiar encuestas» es su
+ * acción; volver a Encuestas ya lo da la miga de la cabecera.
+ */
 function SinComparativo({ faltantes, onCambiar }: { faltantes: readonly string[]; onCambiar: () => void }) {
-  const navigate = useNavigate()
   const { titulo, descripcion } = textoFaltantes(faltantes)
   return (
     <PageShell>
       <PageHeader back={{ label: 'Encuestas', to: RUTA }} title="Comparativo de encuestas" />
       <PageContent>
-        <Empty className="py-16">
-          <EmptyHeader>
-            <EmptyMedia variant="default">
-              <ImagenGlass nombre="glass-close-square" />
-            </EmptyMedia>
-            <EmptyTitle>{titulo}</EmptyTitle>
-            <EmptyDescription>{descripcion}</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent className="flex-row justify-center gap-2">
-            <Button variant="outline" onClick={() => navigate(RUTA)}>
-              Ir a Encuestas
-            </Button>
-            <Button onClick={onCambiar}>
-              <HugeiconsIcon icon={GitCompareIcon} aria-hidden="true" />
-              Cambiar encuestas
-            </Button>
-          </EmptyContent>
-        </Empty>
+        <PrimeraVez className="py-16" icono="glass-close-square" titulo={titulo} descripcion={descripcion} accion={{ texto: 'Cambiar encuestas', icono: GitCompareIcon, onClick: onCambiar }} />
       </PageContent>
     </PageShell>
   )
 }
 
 /**
- * El cruce falló al generarlo (COM-028): el vacío del sistema en lugar de la lectura, con «Reintentar» y «Cambiar
- * encuestas», que vuelve al asistente con lo elegido. Con la encuesta de prueba que falla, reintentar falla siempre.
+ * El cruce falló al generarlo (COM-028): el error del sistema (glass-danger y «Reintentar») en lugar de la lectura.
+ * «Cambiar encuestas», que vuelve al asistente con lo elegido, va en la cabecera como en la lectura. Con la encuesta de
+ * prueba que falla, reintentar falla siempre.
  */
 function NoSeGenero({ onCambiar }: { onCambiar: () => void }) {
   const [reintentando, setReintentando] = useState(false)
@@ -91,27 +77,25 @@ function NoSeGenero({ onCambiar }: { onCambiar: () => void }) {
   }, [reintentando])
   return (
     <PageShell>
-      <PageHeader back={{ label: 'Encuestas', to: RUTA }} title="Comparativo de encuestas" />
+      <PageHeader
+        back={{ label: 'Encuestas', to: RUTA }}
+        title="Comparativo de encuestas"
+        actions={
+          <Button variant="outline" onClick={onCambiar} disabled={reintentando}>
+            <HugeiconsIcon icon={GitCompareIcon} aria-hidden="true" />
+            Cambiar encuestas
+          </Button>
+        }
+      />
       <PageContent>
-        <Empty className="py-16">
-          <EmptyHeader>
-            <EmptyMedia variant="default">
-              <ImagenGlass nombre="glass-danger" />
-            </EmptyMedia>
-            <EmptyTitle>No pudimos generar el comparativo</EmptyTitle>
-            <EmptyDescription>No logramos cruzar las mediciones que elegiste. Tu selección sigue guardada: vuelve a intentarlo o cambia las encuestas.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent className="flex-row justify-center gap-2">
-            <Button variant="outline" onClick={onCambiar} disabled={reintentando}>
-              <HugeiconsIcon icon={GitCompareIcon} aria-hidden="true" />
-              Cambiar encuestas
-            </Button>
-            <Button onClick={() => setReintentando(true)} disabled={reintentando}>
-              {reintentando ? <Spinner /> : <HugeiconsIcon icon={RotateLeft01Icon} aria-hidden="true" />}
-              {reintentando ? 'Reintentando' : 'Reintentar'}
-            </Button>
-          </EmptyContent>
-        </Empty>
+        {/* Mientras reintenta no hay botón que pulsar dos veces: la línea dice que se está cruzando otra vez. */}
+        <PrimeraVez
+          className="py-16"
+          icono="glass-danger"
+          titulo="No pudimos generar el comparativo"
+          descripcion={reintentando ? 'Estamos cruzando otra vez las mediciones que elegiste.' : 'No logramos cruzar las mediciones que elegiste. Tu selección sigue guardada: vuelve a intentarlo o cambia las encuestas.'}
+          accion={reintentando ? undefined : { texto: 'Reintentar', icono: RotateLeft01Icon, onClick: () => setReintentando(true) }}
+        />
       </PageContent>
     </PageShell>
   )
@@ -168,7 +152,7 @@ export function Component() {
       // Caso COM-096: con la encuesta que falla en QA el archivo no se puede generar.
       if (fallaEnQA(...comparativo.columnas.map((columna) => columna.id))) throw new Error('Encuesta de casos de error')
       const nombre = descargarComparativo(comparativo)
-      notify('Comparativo descargado', nombre)
+      notify('Comparativo descargado', nombre, 'success')
     } catch (error) {
       console.error('No se pudo generar el Excel del comparativo', error)
       notify('No se pudo descargar el comparativo', 'Vuelve a intentarlo en un momento.', 'error')

@@ -7,6 +7,7 @@ import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
 import { BIBLIOTECA_COMPLETA, BIBLIOTECA_RECIENTES, TANDA_BIBLIOTECA, numero, type ItemBiblioteca } from './datos'
 import { PestanaVideo } from './piezas'
 import type { VideoReciente } from '../borrador'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Tab «Video con IA» del modal: la invitación a crear un video por escenas y «Tus videos recientes», con su vista
 // completa «Tus videos» (carga de a 20 al bajar). Los que el usuario creó en esta sesión van delante de los de ejemplo.
@@ -108,7 +109,7 @@ export function PanelTodos({ propios, onElegir }: { propios: VideoReciente[]; on
   return (
     <div className="mx-auto flex w-full min-w-0 flex-col gap-4 overflow-x-clip pt-2">
       <Text size="sm" variant="muted">
-        {numero(todos.length)} videos en tu biblioteca
+        {numero(todos.length)} {plural(todos.length, 'video', 'videos')} en tu biblioteca
       </Text>
       <Grilla items={todos.slice(0, visibles)} onElegir={onElegir} />
       {hayMas ? (

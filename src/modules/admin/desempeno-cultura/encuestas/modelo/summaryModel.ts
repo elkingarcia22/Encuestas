@@ -25,6 +25,7 @@ import {
 } from "./sectionTotals";
 import { FAVORABILITY_FLOOR, FAVORABILITY_TARGET } from "./favorabilityScale";
 import { SENTIMENT_ORDER, SENTIMENT_WEIGHT } from "./sentimiento";
+import { plural } from '@/modules/design-system/patrones/formato';
 
 /**
  * Everything the Resumen tab reads, derived from the same aggregate the other
@@ -242,7 +243,7 @@ export function findingsAtLevel(
           section.numbering,
           section.title,
           ancestor ??
-            `${countSectionQuestions(section)} preguntas · ${section.n.toLocaleString("es-CO")} respuestas`,
+            `${countSectionQuestions(section)} ${plural(countSectionQuestions(section), 'pregunta', 'preguntas')} · ${section.n.toLocaleString("es-CO")} ${plural(section.n, 'respuesta', 'respuestas')}`,
           section.favorability,
           section.n
         )
@@ -494,7 +495,7 @@ function priorityWhy(
   clauses.push(
     isLowest
       ? "Es el resultado más bajo de todo el alcance"
-      : `Está ${fmtPoints(FAVORABILITY_TARGET - finding.favorability)} por debajo del objetivo de ${FAVORABILITY_TARGET}%`
+      : `Está ${fmtPoints(FAVORABILITY_TARGET - finding.favorability)} por debajo del objetivo de ${FAVORABILITY_TARGET} %`
   );
 
   if (qual && qual.negativeShare >= QUAL_CONFIRM_SHARE) {
@@ -534,17 +535,17 @@ export function buildPriorities(
         evidence: [
           {
             label: "Distancia al objetivo",
-            detail: `${fmt(finding.favorability)} frente al objetivo de ${FAVORABILITY_TARGET}%`,
+            detail: `${fmt(finding.favorability)} frente al objetivo de ${FAVORABILITY_TARGET} %`,
           },
           {
             label: "Alcance",
-            detail: `${finding.n.toLocaleString("es-CO")} respuestas la sustentan`,
+            detail: `${finding.n.toLocaleString("es-CO")} ${plural(finding.n, 'respuesta la sustenta', 'respuestas la sustentan')}`,
           },
           {
             label: "Señal cualitativa",
             detail:
               qual && qual.negativeShare >= QUAL_CONFIRM_SHARE
-                ? `${qual.negative} de ${qual.mentions} comentarios sobre ${qual.topic.toLowerCase()} son negativos (${Math.round(qual.negativeShare)}%)`
+                ? `${qual.negative} de ${qual.mentions} comentarios sobre ${qual.topic.toLowerCase()} son negativos (${Math.round(qual.negativeShare)} %)`
                 : "Sin comentarios que confirmen la señal",
           },
           {
@@ -611,7 +612,7 @@ export function summaryVerdict(
   const concentration =
     weak.length > 0
       ? `Los problemas se concentran en ${worstNames}.`
-      : `El resultado se sostiene: ningún bloque queda por debajo del objetivo de ${FAVORABILITY_TARGET}%.`;
+      : `El resultado se sostiene: ningún bloque queda por debajo del objetivo de ${FAVORABILITY_TARGET} %.`;
 
   const best = [...findings].sort((a, b) => b.favorability - a.favorability)[0];
   const lever =
@@ -830,7 +831,7 @@ export function commentMatchesFilters(
 /* ------------------------------------------------------------------- formateo */
 
 const fmt = (value: number): string =>
-  `${value.toFixed(1).replace(/\.0$/, "").replace(".", ",")}%`;
+  `${value.toFixed(1).replace(/\.0$/, "").replace(".", ",")} %`;
 
 const fmtPoints = (value: number): string =>
   `${value.toFixed(1).replace(/\.0$/, "").replace(".", ",")} pp`;

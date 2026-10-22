@@ -18,6 +18,7 @@ import {
   ItemTitle,
   Text,
 } from '@ubits/flux-ui'
+import { Hint } from '@/shared/components/Hint'
 import { PantallaDeError } from '../estados/errores-sistema'
 import { registroQueNoExiste } from '../estados/errores-sistema-datos'
 import { ESTADO_AJUSTE, ajusteDe } from '../ajustes/main'
@@ -75,9 +76,12 @@ export function Component() {
         antetitulo="Design system · Componentes"
         titulo={ajuste.titulo}
         etiqueta={
-          <Badge variant={estado.badge} title={estado.ayuda}>
-            {estado.etiqueta}
-          </Badge>
+          // La ayuda sale en el globo oscuro de todas las ayudas (Hint), no en el texto gris del navegador (13-oct).
+          <Hint label={estado.ayuda}>
+            <span tabIndex={0} className="inline-flex">
+              <Badge variant={estado.badge}>{estado.etiqueta}</Badge>
+            </span>
+          </Hint>
         }
         acciones={
           <Button variant="outline" nativeButton={false} render={<Link to="/design-system/componentes" />}>

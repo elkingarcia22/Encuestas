@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { useBlocker, useNavigate } from 'react-router'
-import { LogoutSquare01Icon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Field,
@@ -23,12 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
-  toast,
 } from '@ubits/flux-ui'
-import { ChipGuardado, useGuardadoSimulado } from '@/shared/components/ChipGuardado'
+import { ChipGuardado } from '@/shared/components/ChipGuardado'
+import { notify } from '@/shared/components/notify'
 import { PageActionBar, PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
-import { BotonSalirCreacion } from '@/modules/design-system/navegacion/boton-salir-creacion'
-import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { BotonSalirCreacion, VentanaSalir } from '@/modules/design-system/navegacion/boton-salir-creacion'
 import { CONTENIDOS } from '@/modules/design-system/formularios/asignacion-datos'
 import { SelectorMultiple } from '@/modules/design-system/formularios/asignacion'
 import { CampoFecha } from '@/modules/design-system/formularios/rango-de-fechas'
@@ -66,9 +64,9 @@ export function Component() {
   const [plan, setPlan] = useState(SIN_PLAN)
   const [finaliza, setFinaliza] = useState<Date | undefined>(undefined)
   const [errores, setErrores] = useState<Errores>({})
-  const [guardado, avisarCambio] = useGuardadoSimulado()
+  // Sin borrador real (13-oct, «guardado-honesto»): la tarea no existe hasta que se crea, así que el chip dice «Cambios
+  // sin guardar» en cuanto se toca algo y nunca «Guardado».
   const [tocado, setTocado] = useState(false)
-  const [confirmarSalida, setConfirmarSalida] = useState(false)
   // Salida deliberada (confirmada o recién creada): el guardia no vuelve a preguntar.
   const saliendo = useRef(false)
 
@@ -79,12 +77,10 @@ export function Component() {
     saliendo.current = true
     navigate(RUTA_TAREAS)
   }
-  const pedirSalir = () => (tocado ? setConfirmarSalida(true) : salir())
 
-  // Cada cambio reinicia el guardado del borrador y borra el error de ese campo.
+  // Cada cambio marca que hay algo sin guardar y borra el error de ese campo.
   const cambio = (campo?: keyof Errores) => {
     setTocado(true)
-    avisarCambio()
     if (campo) setErrores((previos) => ({ ...previos, [campo]: undefined }))
   }
 
@@ -114,11 +110,7 @@ export function Component() {
       subtareas: [],
       historial: [],
     }))
-    toast.add({
-      type: 'success',
-      title: 'Tarea creada',
-      description: `«${titulo.trim()}» quedó asignada a ${asignados.length} ${plural(asignados.length, 'persona', 'personas')}.`,
-    })
+    notify('Tarea creada', `«${titulo.trim()}» quedó asignada a ${asignados.length} ${plural(asignados.length, 'persona', 'personas')}.`, 'success')
     saliendo.current = true
     navigate(RUTA_TAREAS, { state: { tareasNuevas: nuevas } })
   }
@@ -129,7 +121,7 @@ export function Component() {
         breadcrumbs={[{ label: 'Tareas', path: RUTA_TAREAS }, { label: 'Crear tarea' }]}
         title="Crear tarea"
         description="Asigna una tarea de seguimiento a una o varias personas y define su prioridad y su fecha de cierre."
-        actions={<BotonSalirCreacion onClick={pedirSalir} />}
+        actions={<BotonSalirCreacion onClick={salir} salida={{ conCambios: tocado }} />}
       />
 
       <PageContent className="pb-2">
@@ -317,42 +309,25 @@ export function Component() {
         </Frame>
 
         <PageActionBar className="mb-1">
-          {/* El estado del guardado aparece en cuanto hay algo que guardar. */}
-          {tocado ? <ChipGuardado estado={guardado} /> : <span />}
+          {/* Aparece en cuanto hay algo que guardar y dice «Cambios sin guardar» hasta que se crea la tarea. */}
+          {tocado ? <ChipGuardado estado="editando" /> : <span />}
           <Button className="ml-auto" onClick={crear}>
             Crear tarea
           </Button>
         </PageActionBar>
       </PageContent>
 
-      {/* Lo que se pierde, en la ventana de confirmar: el título fijo y la tarea en el cuerpo (Carlos, 1-oct). Sirve al
-          botón de salir y, con la misma pregunta, a las salidas que no pasan por él. */}
-      <DialogoConfirmar
-        abierto={confirmarSalida || salidaBloqueada !== null}
-        onAbiertoChange={(abierto) => {
-          if (abierto) return
-          setConfirmarSalida(false)
-          salidaBloqueada?.reset()
+      {/* El botón «Salir de la creación» trae su propia ventana (BotonSalirCreacion con `salida`). Esta es la misma ventana
+          para las salidas que no pasan por él (barra lateral, «atrás»). No hay borrador: lo que se lleva se pierde. */}
+      <VentanaSalir
+        abierto={salidaBloqueada !== null}
+        onAbiertoChange={(abierto) => (abierto ? undefined : salidaBloqueada?.reset())}
+        borrador={false}
+        onSalir={() => {
+          saliendo.current = true
+          salidaBloqueada?.proceed()
         }}
-        size="sm"
-        icono={LogoutSquare01Icon}
-        titulo="¿Salir sin guardar?"
-        descripcion="Lo que llevas se pierde: la tarea no se guarda al salir."
-        cancelar="Seguir editando"
-        accion="Salir sin guardar"
-        destructiva
-        onConfirmar={() => {
-          setConfirmarSalida(false)
-          if (salidaBloqueada) {
-            saliendo.current = true
-            salidaBloqueada.proceed()
-          } else {
-            salir()
-          }
-        }}
-      >
-        <RegistroConfirmar nombre={titulo.trim() || 'Tarea sin título'} detalle="Tarea de seguimiento" estado="Sin guardar" />
-      </DialogoConfirmar>
+      />
     </PageShell>
   )
 }

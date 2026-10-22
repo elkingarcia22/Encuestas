@@ -107,7 +107,7 @@ export function Component() {
           />
           {busqueda ? (
             <InputGroupAddon align="inline-end">
-              <InputGroupButton size="icon-xs" aria-label="Borrar búsqueda" onClick={() => setBusqueda('')}>
+              <InputGroupButton size="icon-xs" aria-label="Limpiar búsqueda" onClick={() => setBusqueda('')}>
                 <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
               </InputGroupButton>
             </InputGroupAddon>

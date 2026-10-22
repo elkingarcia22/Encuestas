@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { MoreHorizontalIcon, Notification01Icon, UserIcon } from '@hugeicons/core-free-icons'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger, Progress, Text, TooltipProvider, type BulkAction, type DataGridListConfig } from '@ubits/flux-ui'
+import { Download04Icon, Edit02Icon, MoreHorizontalIcon, Notification01Icon, UserIcon, UserRemove01Icon } from '@hugeicons/core-free-icons'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Progress, Text, TooltipProvider, type BulkAction, type DataGridListConfig } from '@ubits/flux-ui'
 import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
@@ -9,8 +9,8 @@ import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { formatoAvance } from '../../modelo/ciclos'
-import { NIVELES, type PersonaSeguida, type ResultadosCiclo } from '../../modelo/resultados/seguimiento'
-import { RIESGOS, TONO_NIVEL, TRAMOS_ACTUALIZACION, etiquetaNivel, filaDe, haceCuanto, ordenar, riesgoDePersona, tramoActualizacion, ultimaDe, type FilaPersona } from '../../modelo/resultados/personas'
+import type { PersonaSeguida, ResultadosCiclo } from '../../modelo/resultados/seguimiento'
+import { RIESGOS, TRAMOS_ACTUALIZACION, filaDe, haceCuanto, ordenar, riesgoDePersona, tramoActualizacion, ultimaDe, type FilaPersona } from '../../modelo/resultados/personas'
 
 // «Detalle por colaborador» (9-oct, como el prototipo): una fila por persona del ciclo con su avance, su estado, su
 // líder, su riesgo (solo con el ciclo abierto) y cuándo reportó por última vez. Se filtra por columna, se ordena, y el
@@ -24,13 +24,30 @@ const SIN_FILTROS: FiltrosColumna = { estado: [], riesgo: [], actualizacion: [] 
 
 function cumple(fila: FilaPersona, filtros: FiltrosColumna) {
   const { persona } = fila
-  if (filtros.estado.length && !filtros.estado.includes(etiquetaNivel(persona.nivel))) return false
+  if (filtros.estado.length && !filtros.estado.includes(persona.nivel.etiqueta)) return false
   if (filtros.riesgo.length && !filtros.riesgo.includes(riesgoDePersona(persona.riesgo).etiqueta)) return false
   if (filtros.actualizacion.length && !filtros.actualizacion.includes(tramoActualizacion(ultimaDe(persona)))) return false
   return true
 }
 
-export function Colaboradores({ resultados, onAbrir, onRecordar }: { resultados: ResultadosCiclo; onAbrir: (persona: PersonaSeguida) => void; onRecordar: (personas: readonly PersonaSeguida[], soltar?: () => void) => void }) {
+export function Colaboradores({
+  resultados,
+  editable,
+  onAbrir,
+  onRecordar,
+  onExportar,
+  onEditar,
+  onSacar,
+}: {
+  resultados: ResultadosCiclo
+  /** Un ciclo finalizado ya no cambia: ni se editan objetivos ni se saca a nadie. */
+  editable: boolean
+  onAbrir: (persona: PersonaSeguida) => void
+  onRecordar: (personas: readonly PersonaSeguida[], soltar?: () => void) => void
+  onExportar: (personas: readonly PersonaSeguida[]) => void
+  onEditar: (persona: PersonaSeguida) => void
+  onSacar: (personas: readonly PersonaSeguida[], soltar?: () => void) => void
+}) {
   const [busqueda, setBusqueda] = useState('')
   const [filtros, setFiltros] = useState<FiltrosColumna>(SIN_FILTROS)
   const [orden, setOrden] = useState<string | undefined>(undefined)
@@ -56,13 +73,14 @@ export function Colaboradores({ resultados, onAbrir, onRecordar }: { resultados:
     soltar()
   }
 
-  const recordar: BulkAction<FilaPersona> = {
-    id: 'recordar',
-    label: 'Recordar actualizar avance',
-    icon: <HugeiconsIcon icon={Notification01Icon} aria-hidden="true" />,
-    visibility: 'always',
-    onClick: (marcadas) => onRecordar(marcadas.map((fila) => fila.persona), soltar),
-  }
+  // Con personas marcadas (21-oct, del prototipo): recordar (con el ciclo abierto), exportar sus resultados y sacarlas del
+  // ciclo (mientras el ciclo cambie). Quien ya salió conservando su avance no entra a recordar ni a sacar otra vez.
+  const vigentes = (marcadas: readonly FilaPersona[]) => marcadas.map((fila) => fila.persona).filter((persona) => !persona.retirado)
+  const acciones: BulkAction<FilaPersona>[] = [
+    ...(abierto ? [{ id: 'recordar', label: 'Recordar actualizar avance', icon: <HugeiconsIcon icon={Notification01Icon} aria-hidden="true" />, visibility: 'always' as const, onClick: (marcadas: FilaPersona[]) => onRecordar(vigentes(marcadas), soltar) }] : []),
+    { id: 'exportar', label: 'Exportar seleccionados', icon: <HugeiconsIcon icon={Download04Icon} aria-hidden="true" />, visibility: 'always', onClick: (marcadas) => onExportar(marcadas.map((fila) => fila.persona)) },
+    ...(editable ? [{ id: 'sacar', label: 'Sacar del ciclo', icon: <HugeiconsIcon icon={UserRemove01Icon} aria-hidden="true" />, variant: 'destructive' as const, visibility: 'always' as const, onClick: (marcadas: FilaPersona[]) => onSacar(vigentes(marcadas), soltar) }] : []),
+  ]
 
   const config: DataGridListConfig<FilaPersona> = {
     columns: [
@@ -72,7 +90,11 @@ export function Colaboradores({ resultados, onAbrir, onRecordar }: { resultados:
         size: 220,
         cell: ({ row }) => (
           <div className="w-0 min-w-full">
-            <CeldaTitulo titulo={row.original.nombre} detalle={`${row.original.persona.colaborador.role} · ${row.original.persona.colaborador.area}`} onClick={() => onAbrir(row.original.persona)} />
+            <CeldaTitulo
+              titulo={row.original.nombre}
+              detalle={`${row.original.persona.retirado ? 'Salió del ciclo · su avance cuenta' : row.original.persona.colaborador.role} · ${row.original.persona.colaborador.area}`}
+              onClick={() => onAbrir(row.original.persona)}
+            />
           </div>
         ),
       },
@@ -99,7 +121,7 @@ export function Colaboradores({ resultados, onAbrir, onRecordar }: { resultados:
           )
         },
       },
-      { accessorKey: 'estado', header: 'Estado', size: 110, cell: ({ row }) => <Badge variant={TONO_NIVEL[row.original.persona.nivel]}>{row.original.estado}</Badge> },
+      { accessorKey: 'estado', header: 'Estado', size: 110, cell: ({ row }) => <Badge variant={row.original.persona.nivel.badge}>{row.original.estado}</Badge> },
       {
         accessorKey: 'lider',
         header: 'Líder',
@@ -152,20 +174,39 @@ export function Colaboradores({ resultados, onAbrir, onRecordar }: { resultados:
                   <HugeiconsIcon icon={UserIcon} aria-hidden="true" />
                   Ver objetivos
                 </DropdownMenuItem>
-                {abierto ? (
+                {editable && !row.original.persona.retirado ? (
+                  <DropdownMenuItem onClick={() => onEditar(row.original.persona)}>
+                    <HugeiconsIcon icon={Edit02Icon} aria-hidden="true" />
+                    Editar objetivos y peso
+                  </DropdownMenuItem>
+                ) : null}
+                {abierto && !row.original.persona.retirado ? (
                   <DropdownMenuItem onClick={() => onRecordar([row.original.persona])}>
                     <HugeiconsIcon icon={Notification01Icon} aria-hidden="true" />
                     Recordar actualizar avance
                   </DropdownMenuItem>
                 ) : null}
+                <DropdownMenuItem onClick={() => onExportar([row.original.persona])}>
+                  <HugeiconsIcon icon={Download04Icon} aria-hidden="true" />
+                  Exportar sus resultados
+                </DropdownMenuItem>
               </DropdownMenuGroup>
+              {editable && !row.original.persona.retirado ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem variant="destructive" onClick={() => onSacar([row.original.persona])}>
+                    <HugeiconsIcon icon={UserRemove01Icon} aria-hidden="true" />
+                    Sacar del ciclo
+                  </DropdownMenuItem>
+                </>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
       },
     ],
     columnFilters: [
-      { id: 'estado', label: 'Estado', type: 'select', options: NIVELES.map((nivel) => ({ label: nivel.etiqueta, value: nivel.etiqueta })), multiple: true },
+      { id: 'estado', label: 'Estado', type: 'select', options: resultados.niveles.map((nivel) => ({ label: nivel.etiqueta, value: nivel.etiqueta })), multiple: true },
       ...(abierto ? [{ id: 'riesgo', label: 'Riesgo', type: 'select' as const, options: RIESGOS.map((riesgo) => ({ label: riesgo.etiqueta, value: riesgo.etiqueta })), multiple: true }] : []),
       { id: 'actualizacion', label: 'Último reporte', type: 'select', options: TRAMOS_ACTUALIZACION.map((valor) => ({ label: valor, value: valor })), multiple: true },
     ],
@@ -187,8 +228,8 @@ export function Colaboradores({ resultados, onAbrir, onRecordar }: { resultados:
         setActual(1)
       },
     },
-    // Solo con el ciclo abierto hay a quién recordarle algo.
-    ...(abierto ? { selection: { onSelectionChange: () => undefined }, bulkActions: [recordar] } : {}),
+    selection: { onSelectionChange: () => undefined },
+    bulkActions: acciones,
     labels: { dragToReorder: 'Arrastrar para reordenar la columna' },
     emptyState: { type: 'no-results', customComponent: <SinResultados busqueda={busqueda} filtrosActivos={activos} onLimpiar={limpiar} /> },
     layout: { reorderable: true, resizable: false },
@@ -201,6 +242,7 @@ export function Colaboradores({ resultados, onAbrir, onRecordar }: { resultados:
         config={config}
         data={pagina}
         paginacion={{ pagina: actual, setPagina: setActual, porPagina, setPorPagina, total: filas.length }}
+        titulo="Colaboradores del ciclo"
         nombre="colaboradores"
         singular="colaborador"
         id="colaboradores-ciclo"

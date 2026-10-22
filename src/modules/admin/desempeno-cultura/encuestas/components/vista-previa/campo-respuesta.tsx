@@ -1,11 +1,13 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { AngryIcon, LaughingIcon, NeutralIcon, Sad01Icon, SmileIcon } from '@hugeicons/core-free-icons'
+import { useState } from 'react'
 import {
   Checkbox,
   Field,
   FieldContent,
   FieldLabel,
   FieldTitle,
+  Input,
   RadioGroup,
   RadioGroupItem,
   Rating,
@@ -20,7 +22,7 @@ import {
   cn,
   ToggleGroupItem,
 } from '@ubits/flux-ui'
-import { EMOJI_STEPS, LINEAR_STEPS, NPS_MAX, NPS_MIN, STAR_STEPS, likertSteps } from '../../modelo/questionCatalog'
+import { EMOJI_STEPS, LINEAR_STEPS, OTHER_OPTION_ID, OTHER_OPTION_LABEL, NPS_MAX, NPS_MIN, STAR_STEPS, likertSteps } from '../../modelo/questionCatalog'
 import type { QuestionOption, SurveyQuestion } from '../../modelo/surveyBuilderTypes'
 
 // Los controles que toca quien responde. Son de verdad: en la vista previa se puede contestar la
@@ -51,6 +53,14 @@ const ELEGIDO = 'data-pressed:border-primary! data-pressed:bg-primary/10! data-p
 const comoLista = (valor: Respuesta): readonly string[] => (Array.isArray(valor) ? valor : typeof valor === 'string' && valor ? [valor] : [])
 const comoTexto = (valor: Respuesta): string => (typeof valor === 'string' ? valor : '')
 const etiquetaDe = (opcion: QuestionOption, indice: number) => opcion.label.trim() || `Opción ${indice + 1}`
+// Con «Otro» encendido, la lista del participante termina con esa opción; la del autor no la trae.
+const conOtro = (pregunta: SurveyQuestion): readonly QuestionOption[] => (pregunta.allowOther ? [...pregunta.options, { id: OTHER_OPTION_ID, label: OTHER_OPTION_LABEL }] : pregunta.options)
+
+// El campo para escribir la opción propia: aparece solo al elegir «Otro». Lo escrito vive aquí, en la muestra; no se guarda.
+function CampoOtro() {
+  const [texto, setTexto] = useState('')
+  return <Input aria-label="Escribe tu opción" placeholder="Escribe tu opción" value={texto} onChange={(evento) => setTexto(evento.target.value)} />
+}
 
 type Props = {
   pregunta: SurveyQuestion
@@ -78,20 +88,22 @@ function SinOpciones() {
 
 function Desplegable({ pregunta, valor, onCambio }: { pregunta: SurveyQuestion; valor: string; onCambio: (valor: Respuesta) => void }) {
   if (pregunta.options.length === 0) return <SinOpciones />
+  const lista = conOtro(pregunta)
   return (
-    <div className="sm:w-1/2">
+    <div className="flex flex-col gap-3 sm:w-1/2">
       <Select value={valor || null} onValueChange={(elegido) => onCambio((elegido as string | null) || null)}>
         <SelectTrigger className="w-full" aria-label="Tu respuesta">
-          <SelectValue placeholder="Selecciona una opción">{(id: string | null) => pregunta.options.find((opcion) => opcion.id === id)?.label ?? 'Selecciona una opción'}</SelectValue>
+          <SelectValue placeholder="Selecciona una opción">{(id: string | null) => lista.find((opcion) => opcion.id === id)?.label ?? 'Selecciona una opción'}</SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {pregunta.options.map((opcion, indice) => (
+          {lista.map((opcion, indice) => (
             <SelectItem key={opcion.id} value={opcion.id}>
               {etiquetaDe(opcion, indice)}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
+      {valor === OTHER_OPTION_ID ? <CampoOtro /> : null}
     </div>
   )
 }
@@ -149,24 +161,35 @@ function Unica({
 function Opciones({ pregunta, elegidas, onCambio }: { pregunta: SurveyQuestion; elegidas: readonly string[]; onCambio: (valor: Respuesta) => void }) {
   if (pregunta.options.length === 0) return <SinOpciones />
   const base = `respuesta-${pregunta.id}`
-  const opciones = pregunta.options.map((opcion, indice) => ({ id: opcion.id, etiqueta: etiquetaDe(opcion, indice) }))
+  const opciones = conOtro(pregunta).map((opcion, indice) => ({ id: opcion.id, etiqueta: etiquetaDe(opcion, indice) }))
   const rejilla = rejillaDe(opciones.map((opcion) => opcion.etiqueta))
+  const otroElegida = elegidas.includes(OTHER_OPTION_ID)
 
-  if (pregunta.type === 'single') return <Unica base={base} opciones={opciones} valor={elegidas[0] ?? ''} onCambio={onCambio} rejilla={rejilla} />
+  if (pregunta.type === 'single') {
+    return (
+      <div className="flex flex-col gap-3">
+        <Unica base={base} opciones={opciones} valor={elegidas[0] ?? ''} onCambio={onCambio} rejilla={rejilla} />
+        {otroElegida ? <CampoOtro /> : null}
+      </div>
+    )
+  }
 
   const alternar = (id: string, marcada: boolean) => onCambio(marcada ? [...elegidas, id] : elegidas.filter((actual) => actual !== id))
   return (
-    <div className={rejilla}>
-      {opciones.map((opcion) => (
-        <FieldLabel key={opcion.id} htmlFor={`${base}-${opcion.id}`} className={HOVER_OPCION}>
-          <Field orientation="horizontal">
-            <Checkbox id={`${base}-${opcion.id}`} checked={elegidas.includes(opcion.id)} onCheckedChange={(marcada) => alternar(opcion.id, marcada === true)} />
-            <FieldContent>
-              <FieldTitle>{opcion.etiqueta}</FieldTitle>
-            </FieldContent>
-          </Field>
-        </FieldLabel>
-      ))}
+    <div className="flex flex-col gap-3">
+      <div className={rejilla}>
+        {opciones.map((opcion) => (
+          <FieldLabel key={opcion.id} htmlFor={`${base}-${opcion.id}`} className={HOVER_OPCION}>
+            <Field orientation="horizontal">
+              <Checkbox id={`${base}-${opcion.id}`} checked={elegidas.includes(opcion.id)} onCheckedChange={(marcada) => alternar(opcion.id, marcada === true)} />
+              <FieldContent>
+                <FieldTitle>{opcion.etiqueta}</FieldTitle>
+              </FieldContent>
+            </Field>
+          </FieldLabel>
+        ))}
+      </div>
+      {otroElegida ? <CampoOtro /> : null}
     </div>
   )
 }
@@ -244,7 +267,13 @@ function BarraLikert({ pasos, valor, onCambio }: { pasos: readonly string[]; val
       className="grid w-full grid-flow-col auto-cols-fr items-stretch"
     >
       {pasos.map((paso) => (
-        <ToggleGroupItem key={paso} value={paso} aria-label={paso} className={cn('h-auto! min-h-12 w-full min-w-0 self-stretch whitespace-normal px-2 py-2 text-center wrap-anywhere', ELEGIDO)}>
+        <ToggleGroupItem
+          key={paso}
+          value={paso}
+          aria-label={paso}
+          // h-auto!: la opción crece con su texto partido en renglones; el alto fijo del tema no se cambia con una clase normal
+          // (ficha instalacion-estilos-sin-capa en ai-tools/flux-ui/diferencias.json).
+          className={cn('h-auto! min-h-12 w-full min-w-0 self-stretch whitespace-normal px-2 py-2 text-center wrap-anywhere', ELEGIDO)}>
           {paso}
         </ToggleGroupItem>
       ))}

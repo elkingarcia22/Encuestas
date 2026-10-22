@@ -7,7 +7,6 @@ import {
   CONTENIDOS,
   nombreNivel,
 } from '@/shared/bd'
-import { notify } from '@/shared/components/notify'
 import metaLogo from '@/shared/assets/meta.png'
 
 // Datos de la Zona de estudio del colaborador (HU-APR-003, HU-APR-011) y de Progreso (HU-progreso). Todo sale de las
@@ -188,10 +187,6 @@ export function tarjetaEmpresa(c: ContenidoEmpresa, progreso = 0): Tarjeta {
   }
 }
 
-/** La experiencia de estudio todavía no existe en este playground. */
-export const abrirContenido = () =>
-  notify('Experiencia de estudio', 'Aquí se abre el contenido para estudiarlo. Esa pantalla aún no está en el playground.')
-
 /** Búsqueda de las listas: título, competencia, tipo y nivel (como en el prototipo). */
 export function filtrar<T extends Tarjeta>(lista: T[], busqueda: string): T[] {
   const q = busqueda.trim().toLowerCase()
@@ -242,9 +237,9 @@ export function minutosCompetencia(plan: Plan, id = USUARIO_ID) {
 
 /** «1 de 3 contenidos» o «45% de avance», lo que acompaña a cada plan en el selector. */
 export const metaPlan = (plan: Plan) => {
-  if (plan.tipo === 'competencias') return `${minutosCompetencia(plan).pct}% de avance`
+  if (plan.tipo === 'competencias') return `${minutosCompetencia(plan).pct} % de avance`
   const { hechos, total } = conteoContenidos(plan)
-  return `${hechos} de ${total} contenidos`
+  return `${hechos} de ${plural(total, 'contenido', 'contenidos')}`
 }
 
 export function tarjetasDelPlan(plan: Plan): Tarjeta[] {
@@ -268,7 +263,7 @@ export function tarjetasDeCompetencia(plan: Plan): Tarjeta[] {
 
 // ── Fechas ───────────────────────────────────────────────────────────────────────────────────────────────────────
 
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic']
 const DIA = 24 * 60 * 60 * 1000
 const fecha = (iso: string) => new Date(`${iso}T00:00:00`)
 export const fechaCorta = (iso?: string) => {
@@ -462,7 +457,7 @@ const HORA = new Intl.DateTimeFormat('es-CO', {
 export const horario = (s: Sesion) => `${HORA.format(s.inicio)} - ${HORA.format(s.fin)}`
 export const mesCorto = (f: Date) => new Intl.DateTimeFormat('es-CO', { month: 'short' }).format(f).replace('.', '').toUpperCase()
 
-// Añadir a mi calendario: Google y Outlook abren su formulario; Apple y «otro» descargan un .ics.
+// Agregar a mi calendario: Google y Outlook abren su formulario; Apple y «otro» descargan un .ics.
 const utc = (f: Date) =>
   f
     .toISOString()

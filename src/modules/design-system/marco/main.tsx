@@ -1,7 +1,7 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowRight01Icon, InformationCircleIcon, PartyIcon, Queue02Icon, Search01Icon } from '@hugeicons/core-free-icons'
+import { ArrowRight01Icon, InformationCircleIcon, PartyIcon, Queue02Icon } from '@hugeicons/core-free-icons'
 import {
   Alert,
   AlertDescription,
@@ -32,14 +32,14 @@ import { HeaderPreview } from '../header/components/header-preview'
 import { AccountPopover } from '@/shared/components/AccountPopover'
 import { ChangelogDialog } from '@/shared/components/Announcements'
 import { AppFooter } from '@/shared/components/AppFooter'
-import { CommandPalette } from '@/shared/components/CommandPalette'
 import { NotificationsPopover } from '@/shared/components/NotificationsPopover'
 import { ProcessCenter } from '@/shared/components/ProcessCenter'
 import { ProfilePopover } from '@/shared/components/ProfilePopover'
 
-// Fundamentos › Marco: la barra lateral, la barra superior y el pie que pone el marco general en cada
-// pantalla. Son capturas del marco real (Admin y Suite AI, 2026-09-15); la demo que prende y apaga cada
-// pieza es el «Shell básico» de Navegación. Las imágenes van dentro de tarjetas de flux-ui.
+// Patrones › Marco: la barra lateral, la barra superior y el pie que pone el marco general (el pie, solo en las páginas
+// de inicio: regla «footer-solo-home»). Son capturas del marco real (Admin y Suite AI, 2026-09-15); la demo que prende
+// y apaga cada pieza es el «Shell básico» de Navegación. Las imágenes van dentro de tarjetas de flux-ui.
+// 13-oct: el buscador ⌘K quedó fuera del rediseño (regla «sin-buscador-global»): ya no se documenta como pieza vigente.
 
 // Una sola página para todo el marco (decisión del 17-sep): los configuradores de la barra y del header, las capturas,
 // las medidas y lo que falta. Cada pestaña tiene su dirección. Los ajustes propios pasaron a las fichas de
@@ -63,8 +63,8 @@ const MEDIDAS: { grupo: string; filas: Medida[] }[] = [
       { pieza: 'Alto de la barra', libreria: 'No la trae', marco: '60 px, con línea abajo' },
       { pieza: 'Botones de icono (notificaciones)', libreria: '32 px, esquina 10 px', marco: '32 px, como la librería; icono gris y, con su menú abierto, azul con fondo al 10 %' },
       { pieza: 'Botón para abrir y cerrar el menú', libreria: '32 px', marco: '30 px' },
-      { pieza: 'Buscador', libreria: 'Botón de 32 px de alto', marco: '36 px de alto, hasta 340 px de ancho, siempre al centro' },
-      { pieza: 'Novedades', libreria: 'Botón de contorno gris', marco: 'Azul suave: fondo al 10 %, borde al 28 %, texto azul; 32 px de alto (ver Ajustes propios)' },
+      { pieza: 'Buscador (fuera del rediseño)', libreria: 'Botón de 32 px de alto', marco: 'Sigue en el encabezado actual (36 px de alto, hasta 340 px) hasta que ingeniería lo retire; no se amplía ni se suma a pantallas nuevas' },
+      { pieza: 'Novedades', libreria: 'Botón de contorno gris', marco: 'Azul suave: fondo al 10 %, borde al 28 %, texto azul; 32 px de alto (ver Componentes › Reglas globales)' },
       { pieza: 'Foto de perfil', libreria: 'Avatar de 32 px', marco: '34 px, sin borde; con su menú abierto la rodea un anillo azul. Es la única acción de la derecha que no mide 32' },
     ],
   },
@@ -109,7 +109,7 @@ const ACTIVO: Regla[] = [
 ]
 
 const REGLAS_BARRA_LATERAL: Regla[] = [
-  { titulo: 'La empresa arriba', detalle: 'Logo y nombre del cliente; al tocarlo abre el menú de empresa con licencias, créditos de IA y configuración.' },
+  { titulo: 'La empresa arriba', detalle: 'Logo y nombre del cliente; al tocarlo abre el menú de empresa con licencias, los créditos de cada producto y configuración.' },
   { titulo: 'Workspace o Orbit', detalle: 'Las pestañas cambian todo el menú. En Orbit el menú es el historial de conversaciones.' },
   { titulo: 'Grupos en gris, activo en azul', detalle: 'Cada grupo lleva su título en gris; la página abierta se marca en azul con una línea a la izquierda.' },
   { titulo: 'Tercer nivel con «volver»', detalle: 'Una sección con páginas propias (LMS Creator, Planes, Certificados) abre su panel con la ruta para regresar.' },
@@ -119,8 +119,8 @@ const REGLAS_BARRA_LATERAL: Regla[] = [
 
 const REGLAS_BARRA_SUPERIOR: Regla[] = [
   { titulo: 'Qué hay a la izquierda', detalle: 'El botón para abrir o cerrar el menú y, pegada a él, la miga de pan: dónde estás y cómo subir de nivel. Es su único sitio; nunca va encima del título de la pantalla.' },
-  { titulo: 'Buscador siempre al centro', detalle: 'Con ⌘K se va a una página, se abre un objeto o se le pregunta al agente. Si falta espacio queda como lupa.' },
-  { titulo: 'Acciones a la derecha', detalle: 'Novedades, Notificaciones y Perfil, en ese orden. Centro de ayuda va en el menú de perfil y el Centro de procesos se abre desde Notificaciones.' },
+  { titulo: 'Buscador: quedó fuera del rediseño', detalle: 'El buscador global (⌘K) se descartó por inviable (7-oct): no es una pieza vigente, no se suma a pantallas nuevas ni se amplía. Sigue en el encabezado actual hasta que ingeniería lo retire del marco.' },
+  { titulo: 'Acciones a la derecha', detalle: 'Novedades, Centro de procesos, Notificaciones y Perfil, en ese orden. Centro de ayuda va en el menú de perfil; el Centro de procesos también se abre desde Notificaciones.' },
   { titulo: 'Cada botón con su ayuda', detalle: 'Todos los iconos llevan su nombre en una ayuda flotante, la misma en todo el producto.' },
   { titulo: 'Iconos grises parejos', detalle: 'Mismo gris y mismo efecto al pasar el cursor en todos los botones. Solo Novedades va en azul suave.' },
   { titulo: 'Perfil aparte', detalle: 'La foto de la persona en círculo, separada de los demás botones, con su rol debajo del nombre.' },
@@ -138,7 +138,8 @@ const REGLAS_BARRA_SUPERIOR: Regla[] = [
 
 const REGLAS_PIE: Regla[] = [
   { titulo: 'Qué dice', detalle: '«Con la tecnología de UBITS» con el logo, Términos y condiciones de uso y Política de privacidad.' },
-  { titulo: 'Gris y centrado', detalle: 'Todo en gris, al final del contenido de cada pantalla; no queda fijo abajo.' },
+  { titulo: 'Solo en las páginas de inicio', detalle: 'No sale en las pantallas de creación, edición ni subvistas, para no competir con la barra de acciones fija (5-oct); desde el 9-oct tampoco en Selección ni en la creación del LMS Creator. Quitarlo del resto lo hace ingeniería: el marco es zona protegida.' },
+  { titulo: 'Gris y centrado', detalle: 'Todo en gris, al final del contenido de la página de inicio; no queda fijo abajo.' },
   { titulo: 'No va en Orbit', detalle: 'El chat y el modo voz ocupan toda la altura, así que ahí no hay pie.' },
   { titulo: 'Encuestas y Objetivos: solo en el inicio', detalle: 'Va en la pantalla que abre el menú, no en los procesos (crear, editar, cargar) ni en las vistas internas (resultados, comparativo, detalle).' },
   { titulo: 'Una sola excepción al marco', detalle: 'Toda pantalla va en PageShell con PageHeader (auditoría, 5-oct). La excepción es el modo voz de Orbit: a pantalla completa y oscuro, tapa la barra lateral y la superior y lleva su propio foco.' },
@@ -191,7 +192,7 @@ function BarraLateral() {
         </Demo>
       </div>
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
-        <Demo title="Menú de empresa" description="Licencias, créditos de IA, configuración y cambio de empresa.">
+        <Demo title="Menú de empresa" description="Licencias, créditos de cada producto, configuración y cambio de empresa.">
           <Abre>
             <AccountPopover />
           </Abre>
@@ -203,11 +204,9 @@ function BarraLateral() {
 }
 
 function BarraSuperior() {
-  const [buscador, setBuscador] = useState(false)
   const [novedades, setNovedades] = useState(false)
   const [procesos, setProcesos] = useState(false)
   const [procesosVacio, setProcesosVacio] = useState(false)
-  const volver = useRef<HTMLElement | null>(null)
   const general = HEADER_CASES[0]
 
   return (
@@ -216,22 +215,13 @@ function BarraSuperior() {
         title="Barra superior"
         description="60 px de alto, fija arriba del contenido. Ubica a la persona y reúne lo que sirve en cualquier pantalla."
       />
-      <Demo title="Completa" description="Menú y nombre de la página, buscador al centro y acciones a la derecha.">
+      <Demo title="Completa" description="Botón del menú y miga de pan a la izquierda, y las acciones a la derecha. El buscador del centro quedó fuera del rediseño.">
         <HeaderPreview config={general.config} sample={general.sample} names={false} onOpen={() => undefined} bare />
       </Demo>
-      <CommandPalette open={buscador} onOpenChange={setBuscador} returnFocus={volver} />
       <ChangelogDialog open={novedades} onOpenChange={setNovedades} />
       <ProcessCenter open={procesos} onOpenChange={setProcesos} ejemplos />
       <ProcessCenter open={procesosVacio} onOpenChange={setProcesosVacio} />
       <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Demo title="Buscador (⌘K)" description="Ir a una página, abrir un objeto o preguntarle al agente.">
-          <Abre>
-            <Button variant="outline" size="sm" onClick={() => setBuscador(true)}>
-              <HugeiconsIcon icon={Search01Icon} aria-hidden="true" data-icon="inline-start" />
-              Abrir el buscador
-            </Button>
-          </Abre>
-        </Demo>
         <Demo title="Novedades" description="Lo que cambió en la semana. Se publica los jueves.">
           <Abre>
             <Button variant="outline" size="sm" onClick={() => setNovedades(true)}>
@@ -245,7 +235,7 @@ function BarraSuperior() {
             <NotificationsPopover onOpenProcesses={() => setProcesos(true)} onOpenChangelog={() => setNovedades(true)} />
           </Abre>
         </Demo>
-        <Demo title="Centro de procesos" description="Lo que está corriendo y lo que quedó a medias. Sin botón en el header: se abre desde Notificaciones.">
+        <Demo title="Centro de procesos" description="Lo que está corriendo y lo que quedó a medias. Se abre con su botón del header, a la derecha de Notificaciones, y también desde ellas.">
           <Abre>
             <Button variant="outline" size="sm" onClick={() => setProcesos(true)}>
               <HugeiconsIcon icon={Queue02Icon} aria-hidden="true" data-icon="inline-start" />
@@ -279,6 +269,23 @@ function Medidas() {
         title="Medidas del marco"
         description="El marco no usa las medidas de la librería tal como vienen: tiene las suyas, calibradas sobre el prototipo. Esta es la especificación oficial."
       />
+
+      {/* Vivía en «Piezas en vivo», que no tiene medidas (13-oct). */}
+      <Alert variant="info">
+        <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
+        <AlertTitle>Solo para el marco</AlertTitle>
+        <AlertDescription>
+          <p>
+            Estas medidas se aplican encima del estilo «vega» de flux-ui, el que usa el proyecto. Valen para la barra lateral,
+            la barra superior, el pie y sus menús. Las pantallas no las copian: usan las piezas como vienen de la librería.
+            Cuando exista un estilo UBITS en la librería, estas medidas pasan a vivir ahí.
+          </p>
+          <p>
+            Qué cambia en cada pieza, por qué y cuándo usarla está en{' '}
+            la ficha de cada una, en <Link to="/design-system/componentes">Componentes › Todos los componentes</Link>.
+          </p>
+        </AlertDescription>
+      </Alert>
 
       {MEDIDAS.map((grupo) => (
         <Card key={grupo.grupo}>
@@ -368,9 +375,9 @@ function Medidas() {
 function Pie() {
   return (
     <div className="flex flex-col gap-6">
-      <SectionIntro title="Pie" description="Cierra cada pantalla del Workspace con la marca UBITS y los enlaces legales." />
-      <Demo title="Pie general" description="Al final del contenido, centrado y en gris.">
-        <AppFooter />
+      <SectionIntro title="Pie" description="Cierra las páginas de inicio del Workspace con la marca UBITS y los enlaces legales; no sale en creación ni en subvistas." />
+      <Demo title="Pie general" description="Al final del contenido de una página de inicio, centrado y en gris.">
+        <AppFooter siempre />
       </Demo>
       <Reglas titulo="Reglas del pie" reglas={REGLAS_PIE} />
     </div>
@@ -386,7 +393,7 @@ export function Component() {
     <div className="flex flex-col gap-6">
       <EncabezadoPatron
         titulo="Marco"
-        antetitulo="Design system · Fundamentos"
+        antetitulo="Design system · Patrones"
         etiqueta={<Badge variant="info-light">Igual en todo el producto</Badge>}
         acciones={
           <>
@@ -398,8 +405,9 @@ export function Component() {
           </>
         }
       >
-        Barra lateral, barra superior y pie: las tres piezas que rodean cada pantalla. Se ponen una sola vez en el
-        marco general, así que una pantalla nueva no las vuelve a armar; si cambia el logo, se cambia en un solo lugar.
+        Barra lateral, barra superior y pie: las tres piezas del marco (el pie, solo en las páginas de inicio). Se ponen
+        una sola vez en el marco general, así que una pantalla nueva no las vuelve a armar; si cambia el logo, se cambia
+        en un solo lugar.
       </EncabezadoPatron>
 
       <Tabs value={activa} onValueChange={(valor) => navigate(`/design-system/marco/${valor}`)}>
@@ -423,21 +431,6 @@ export function Component() {
                 </p>
               </AlertDescription>
             </Alert>
-            <Alert variant="info">
-                <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
-                      <AlertTitle>Solo para el marco</AlertTitle>
-                      <AlertDescription>
-                  <p>
-                    Estas medidas se aplican encima del estilo «vega» de flux-ui, el que usa el proyecto. Valen para la barra lateral,
-                    la barra superior, el pie y sus menús. Las pantallas no las copian: usan las piezas como vienen de la librería.
-                    Cuando exista un estilo UBITS en la librería, estas medidas pasan a vivir ahí.
-                  </p>
-                  <p>
-                    Qué cambia en cada pieza, por qué y cuándo usarla está en{' '}
-                    la ficha de cada una, en <Link to="/design-system/componentes">Componentes › Todos los componentes</Link>.
-                  </p>
-                </AlertDescription>
-                    </Alert>
             <BarraLateral />
             <BarraSuperior />
             <Pie />

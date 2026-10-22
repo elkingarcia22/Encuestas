@@ -54,12 +54,23 @@ const ARRIBA = [
   '[&[data-ending-style]:not([data-limited]):not([data-swipe-direction])]:[transform:translateY(-150%)]!',
 ].join(' ')
 
+// Forma (war room del 13-oct, regla «avisos-cortos»): la esquina de las tarjetas (la librería trae una más redonda) y,
+// con texto largo, más ancho para no pasar de dos líneas. A 384 px caben unos 45 caracteres por línea en el título y
+// 90 en dos líneas de detalle; si pasa de eso, el aviso usa el ancho entero del visor (576 px). Los cortos siguen de
+// 384 px, centrados.
+const texto = (valor: unknown) => (typeof valor === 'string' ? valor.length : 0)
+const esLargo = (titulo: unknown, detalle: unknown) => texto(titulo) > 45 || texto(detalle) > 90
+
 function ToastList() {
   const { toasts } = useToastManager()
   return toasts.map((item) => {
     const tipo = item.type ? ICONO[item.type] : undefined
+    const largo = esLargo(item.title, item.description)
+    // «!»: la esquina de las tarjetas y el centrado de los cortos le ganan al tema de la librería (rounded-2xl, pegado a
+    // la derecha). Documentado en Ajustes propios › «Avisos: esquina y ancho». El ancho va en `style`: no es de página.
+    const forma = `${ARRIBA} rounded-xl! ${largo ? '' : 'left-0! mx-auto!'}`
     return (
-      <Toast key={item.id} toast={item} swipeDirection={['up', 'right']} className={ARRIBA}>
+      <Toast key={item.id} toast={item} swipeDirection={['up', 'right']} className={forma} style={largo ? undefined : { maxWidth: '24rem' }}>
         <ToastContent>
           {tipo ? (
             <HugeiconsIcon icon={tipo.icono} size={16} aria-hidden="true" className={`shrink-0 ${tipo.clase}`} />
@@ -83,7 +94,7 @@ export function Toaster() {
         {/* z-60: por encima de los templates a pantalla completa (FullscreenTemplate, z-50), que se montan después.
             Arriba y centrados en todas las pantallas (decisión del 1-oct; antes, abajo): la librería los manda abajo a la
             derecha desde sm. */}
-        <ToastViewport aria-label="Avisos" className="top-4! bottom-auto! z-60 sm:left-4 sm:mx-auto">
+        <ToastViewport aria-label="Avisos" className="top-4! bottom-auto! z-60 sm:left-4 sm:mx-auto" style={{ maxWidth: '36rem' }}>
           <ToastList />
         </ToastViewport>
       </ToastPortal>

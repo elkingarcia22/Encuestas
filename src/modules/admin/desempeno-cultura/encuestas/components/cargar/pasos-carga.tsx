@@ -6,14 +6,7 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
   Field,
   FieldContent,
   FieldDescription,
@@ -47,6 +40,7 @@ import {
   Spinner,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { notify } from '@/shared/components/notify'
 import { RangoDeFechas } from '@/modules/design-system/formularios/rango-de-fechas'
 import { PUBLIC_VISIBILITY_BLOCK_MESSAGE, RECENT_UPLOADS, SURVEY_TYPE_OPTIONS, getImmediateValidationError, isAnonymityThresholdValid, isDateRangeValid, publicVisibilityBlock, type SurveyTypeOption } from '../../modelo/carga-historica'
@@ -59,7 +53,6 @@ import { TextoCompleto } from '@/shared/components/TextoCompleto'
 // Los pasos sencillos de la carga histórica: archivos, elegir una encuesta del lote, datos generales,
 // qué hacer después de lanzar una carga, la pestaña «Cargas» y los dos callejones sin salida
 // (archivo ilegible o sin datos de encuesta).
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 const EXTENSIONES = ['.xlsx', '.csv', '.pdf', '.png', '.jpg', '.jpeg']
 const MAXIMO_BYTES = 10 * 1024 * 1024
@@ -69,7 +62,7 @@ import { PrimeraVez } from '@/shared/components/PrimeraVez'
 export function PasoArchivos({ carga }: { carga: CargaHistorica }) {
   const agregar = (nuevos: File[]) => {
     const error = getImmediateValidationError(nuevos)
-    if (error) return notify('No pudimos usar ese archivo', error)
+    if (error) return notify('No pudimos usar ese archivo', error, 'error')
     carga.setArchivos([...carga.archivos.filter((previo) => !nuevos.some((nuevo) => nuevo.name === previo.name)), ...nuevos])
   }
   return (
@@ -85,7 +78,7 @@ export function PasoArchivos({ carga }: { carga: CargaHistorica }) {
           extensiones={EXTENSIONES}
           maximoBytes={MAXIMO_BYTES}
           onArchivos={agregar}
-          onRechazo={(rechazo) => notify(rechazo.titulo, rechazo.detalle)}
+          onRechazo={(rechazo) => notify(rechazo.titulo, rechazo.detalle, 'error')}
         />
         {carga.archivos.length > 0 ? (
           // Cada archivo elegido, con el mismo adjunto del design system en su estado listo.
@@ -94,6 +87,7 @@ export function PasoArchivos({ carga }: { carga: CargaHistorica }) {
               <AdjuntoCsv
                 key={archivo.name}
                 estado="done"
+                // w-full!: el adjunto no se estira al ancho del campo (ficha attachment-ancho-y-arrastre en diferencias.json).
                 className="w-full!"
                 icono={File01Icon}
                 vacio={{ titulo: '', descripcion: '' }}
@@ -276,11 +270,14 @@ export function PestanaCargas({ carga }: { carga: CargaHistorica }) {
             <FrameTitle>En esta sesión</FrameTitle>
             <FrameDescription>{enCurso > 0 ? 'Sigue cargando aunque cierres el panel.' : 'Todas las cargas terminaron.'}</FrameDescription>
           </FrameHeader>
+          {/* py-1!, gap-0! y px-0!: filas pegadas y a ras del panel, separadas por su línea; ni el panel ni la lista ceden con
+              clases normales (fichas frame-panel-relleno-no-se-quita e instalacion-estilos-sin-capa en diferencias.json). */}
           <FramePanel className="py-1!">
             <ItemGroup className="gap-0!">
               {carga.tareas.map((tarea, indice) => (
                 <Fragment key={tarea.id}>
                   {indice > 0 ? <ItemSeparator /> : null}
+                  {/* px-0!: a ras del panel (ficha instalacion-estilos-sin-capa). */}
                   <Item size="sm" className="px-0!">
                     <ItemMedia variant="icon">{tarea.status === 'loading' ? <Spinner /> : <HugeiconsIcon icon={tarea.status === 'failed' ? Alert02Icon : CheckmarkCircle02Icon} aria-hidden="true" />}</ItemMedia>
                     <ItemContent className="min-w-0">
@@ -289,7 +286,7 @@ export function PestanaCargas({ carga }: { carga: CargaHistorica }) {
                         <div className="flex items-center gap-2">
                           <Progress value={tarea.progress} aria-label={`Avance de ${tarea.name}`} className="flex-1" />
                           <Text as="span" size="xs" variant="muted" className="tabular-nums">
-                            {tarea.progress}%
+                            {tarea.progress} %
                           </Text>
                         </div>
                       ) : (
@@ -318,11 +315,14 @@ export function PestanaCargas({ carga }: { carga: CargaHistorica }) {
           <FrameTitle>Historial</FrameTitle>
           <FrameDescription>Las encuestas que cargaste en los últimos 7 días.</FrameDescription>
         </FrameHeader>
+        {/* py-1!, gap-0! y px-0!: como en «En esta sesión» (fichas frame-panel-relleno-no-se-quita e
+            instalacion-estilos-sin-capa). */}
         <FramePanel className="py-1!">
           <ItemGroup className="gap-0!">
             {RECENT_UPLOADS.map((reciente, indice) => (
               <Fragment key={reciente.id}>
                 {indice > 0 ? <ItemSeparator /> : null}
+                {/* px-0!: a ras del panel (ficha instalacion-estilos-sin-capa). */}
                 <Item size="sm" className="px-0!">
                   <ItemMedia variant="icon">
                     <HugeiconsIcon icon={File01Icon} aria-hidden="true" />
@@ -345,27 +345,21 @@ export function PestanaCargas({ carga }: { carga: CargaHistorica }) {
 
 export function SinSalida({ carga }: { carga: CargaHistorica }) {
   const vacio = carga.paso === 'empty'
+  // El vacío del sistema con su ilustración glass: el archivo sin datos y el error, cada uno con la suya. La salida es la
+  // misma en los dos: volver a elegir archivos.
   return (
-    <Empty className="py-12">
-      <EmptyHeader>
-        {/* Ilustración glass como los estados del design system: el archivo sin datos y el error, cada uno con la suya. */}
-        <EmptyMedia variant="default">
-          <ImagenGlass nombre={vacio ? 'glass-document' : 'glass-danger'} />
-        </EmptyMedia>
-        <EmptyTitle>{vacio ? 'No encontramos datos de encuesta' : (carga.error?.title ?? 'No pudimos continuar')}</EmptyTitle>
-        <EmptyDescription>{vacio ? 'El archivo no trae participación, secciones ni preguntas que podamos leer. Revisa que sea el reporte o la base de respuestas de la encuesta.' : carga.error?.detail}</EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>
-        <Button
-          variant="outline"
-          onClick={() => {
-            carga.setArchivos([])
-            carga.volverAArchivos()
-          }}
-        >
-          Subir otros archivos
-        </Button>
-      </EmptyContent>
-    </Empty>
+    <PrimeraVez
+      className="py-12"
+      icono={vacio ? 'glass-document' : 'glass-danger'}
+      titulo={vacio ? 'No encontramos datos de encuesta' : (carga.error?.title ?? 'No pudimos continuar')}
+      descripcion={vacio ? 'El archivo no trae participación, secciones ni preguntas que podamos leer. Revisa que sea el reporte o la base de respuestas de la encuesta.' : (carga.error?.detail ?? '')}
+      accion={{
+        texto: 'Subir otros archivos',
+        onClick: () => {
+          carga.setArchivos([])
+          carga.volverAArchivos()
+        },
+      }}
+    />
   )
 }

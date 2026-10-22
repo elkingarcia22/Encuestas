@@ -1,9 +1,8 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowRight01Icon, Delete02Icon, Edit02Icon, MoreHorizontalIcon, PlusSignIcon, ViewIcon } from '@hugeicons/core-free-icons'
+import { AlarmClockIcon, ArrowRight01Icon, Calendar03Icon, Delete02Icon, Edit02Icon, Loading03Icon, MoreHorizontalIcon, PlusSignIcon, ViewIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  FramePanel,
   Progress,
   Tabs,
   TabsList,
@@ -18,8 +18,12 @@ import {
   Text,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ReopenAgentButton } from '@/modules/design-system/agente-contextual/components/agent-kit'
+import { BloqueAtencion, type AlertaAtencion } from '@/shared/components/BloqueAtencion'
 import { BotonIcono } from '@/shared/components/BotonIcono'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
+import { MetricasDestacadas, type Metrica } from '@/shared/components/MetricasDestacadas'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { notify } from '@/shared/components/notify'
@@ -27,18 +31,22 @@ import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShel
 import { ConfirmarEliminar } from '@/modules/design-system/data-grid/casos/seguimiento'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
-import { fechaCorta, plural } from '@/modules/design-system/patrones/formato'
+import { Marco } from '@/modules/design-system/patrones/ficha'
+import { diasDesde, fechaCorta, fechaSinAnio, plural } from '@/modules/design-system/patrones/formato'
 import { AgentePlanes, useAgente } from './agente-aprendizaje'
 import {
   ALCANCES,
   BADGE_ESTADO,
   ESTADOS,
   NOMBRE_ALCANCE,
+  NOMBRE_ESTADO,
+  PERSONAS_EMPRESA,
   TIPOS,
   cambiarPlanes,
   marcadosEn,
   momentoDe,
   ordenarPor,
+  personasDelPlan,
   progresoDe,
   rutaPlan,
   totalPersonas,
@@ -47,7 +55,6 @@ import {
   type TipoPlan,
 } from './planes-datos'
 import { FILAS_CLICABLES, abrirAlTocarFila } from './filas'
-import { PanelPlan } from './panel-plan'
 
 // Aprendizaje › Planes de formación › Planes. Rediseño parcial de la lista de /creator/training-plan/content-plan
 // (HU-LMS-005): lo mismo que hoy —dos tipos de plan, estados, progreso y el menú según el estado—. La tabla es la del
@@ -72,19 +79,20 @@ function resumenDe(plan: Plan) {
 
 // Las columnas van fuera del componente (si no, el filtro se cierra al marcar); lo que necesitan de la pantalla —ver,
 // abrir, editar o eliminar el plan— les llega por contexto.
-type Acciones = Record<'onVer' | 'onAbrir' | 'onEditar' | 'onEliminar', (plan: Plan) => void>
+type Acciones = Record<'onAbrir' | 'onEditar' | 'onEliminar', (plan: Plan) => void>
 const nada = () => undefined
-const AccionesPlan = createContext<Acciones>({ onVer: nada, onAbrir: nada, onEditar: nada, onEliminar: nada })
+const AccionesPlan = createContext<Acciones>({ onAbrir: nada, onEditar: nada, onEliminar: nada })
 
-// Tocar un plan (el nombre o cualquier parte de su fila) lo abre en el panel «Ver plan», en cualquier estado. Desde
-// ahí se abre completo, se edita o se elimina; las mismas acciones están en el «⋯» de la columna «Acciones».
+// Tocar un plan (el nombre o cualquier parte de su fila) abre su página, en cualquier estado: con el plan corriendo,
+// en «Avance». Ya no hay panel «Ver plan» de por medio (15-oct: era un paso de más). Eliminar sigue en el «⋯» de la
+// fila y en el «⋯» de la página del plan.
 function CeldaNombre({ plan }: { plan: FilaPlan }) {
-  const { onVer } = useContext(AccionesPlan)
+  const { onAbrir } = useContext(AccionesPlan)
   return (
-    <div className="flex max-w-64 min-w-0 flex-col items-start gap-1">
+    <div className="flex w-full min-w-0 flex-col items-start gap-1">
       {/* Sin el relleno lateral del enlace (forzado: el del tema le gana a `px-0`), el nombre queda alineado con su
           resumen de abajo; con él se veía corrido (revisión de David, 30 sep). */}
-      <Button variant="link" size="sm" className="max-w-full px-0!" onClick={() => onVer(plan)}>
+      <Button variant="link" size="sm" className="max-w-full px-0!" onClick={() => onAbrir(plan)}>
         <span className="truncate">{plan.nombre}</span>
       </Button>
       <Text as="span" variant="muted" size="xs" className="max-w-full truncate">
@@ -95,9 +103,9 @@ function CeldaNombre({ plan }: { plan: FilaPlan }) {
 }
 
 // La columna «Acciones» (decisión 15 de la auditoría, 5-oct): antes todo se abría tocando la fila, algo que no se ve.
-// La fila sigue abriendo «Ver plan»; el «⋯» dice a la vista qué más se puede hacer.
+// La fila abre la página del plan; el «⋯» dice a la vista qué más se puede hacer.
 function MenuPlan({ plan }: { plan: FilaPlan }) {
-  const { onVer, onAbrir, onEditar, onEliminar } = useContext(AccionesPlan)
+  const { onAbrir, onEditar, onEliminar } = useContext(AccionesPlan)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<BotonIcono aria-label={`Acciones de ${plan.nombre}`} />}>
@@ -105,16 +113,10 @@ function MenuPlan({ plan }: { plan: FilaPlan }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => onVer(plan)}>
+          <DropdownMenuItem onClick={() => onAbrir(plan)}>
             <HugeiconsIcon icon={ViewIcon} aria-hidden="true" />
             Ver plan
           </DropdownMenuItem>
-          {plan.empezo ? (
-            <DropdownMenuItem onClick={() => onAbrir(plan)}>
-              <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />
-              Ver plan completo
-            </DropdownMenuItem>
-          ) : null}
           {plan.estado !== 'No vigente' ? (
             <DropdownMenuItem onClick={() => onEditar(plan)}>
               <HugeiconsIcon icon={Edit02Icon} aria-hidden="true" />
@@ -189,7 +191,7 @@ const columnas = (tipo: TipoPlan): DataGridListConfig<FilaPlan>['columns'] => [
     ...SIN_ARRASTRE,
     cell: ({ row }) => (
       <Badge variant={BADGE_ESTADO[row.original.estado]} size="sm">
-        {row.original.estado === 'Procesando' ? `Procesando ${row.original.procesando ?? 0} %` : row.original.estado}
+        {row.original.estado === 'Procesando' ? `Procesando ${row.original.procesando ?? 0} %` : NOMBRE_ESTADO[row.original.estado]}
       </Badge>
     ),
   },
@@ -198,9 +200,126 @@ const columnas = (tipo: TipoPlan): DataGridListConfig<FilaPlan>['columns'] => [
 const COLUMNAS: Record<TipoPlan, DataGridListConfig<FilaPlan>['columns']> = { contenidos: columnas('contenidos'), competencias: columnas('competencias') }
 
 const FILTROS: DataGridListConfig<FilaPlan>['columnFilters'] = [
-  { id: 'estado', label: 'Estado', type: 'select', multiple: true, options: ESTADOS.map((e) => ({ label: e, value: e })) },
+  { id: 'estado', label: 'Estado', type: 'select', multiple: true, options: ESTADOS.map((e) => ({ label: NOMBRE_ESTADO[e], value: e })) },
   { id: 'alcances', columnId: 'nombre', label: 'Asignación', type: 'select', multiple: true, options: ALCANCES.map((a) => ({ label: NOMBRE_ALCANCE[a.id], value: a.id })) },
 ]
+
+// «Crea algo nuevo», como en LMS Creator › Contenidos y Encuestas: las formas de empezar un plan, a la vista. Las dos
+// primeras abren «Crear plan» con su tipo; la del archivo abre el de contenidos, que es donde se sube el CSV (en el paso
+// de las asignaciones, «Desde archivo»).
+const CREAR: { id: string; titulo: string; descripcion: string; glass: string; tipo: TipoPlan }[] = [
+  { id: 'contenidos', titulo: 'Plan de contenidos', descripcion: 'Cursos y rutas para grupos o personas, con fechas de inicio y cierre.', glass: 'glass-document', tipo: 'contenidos' },
+  { id: 'competencias', titulo: 'Plan de competencias', descripcion: 'Una competencia con sus habilidades y las horas de estudio.', glass: 'glass-activity', tipo: 'competencias' },
+  { id: 'archivo', titulo: 'Desde un archivo', descripcion: 'Personas y contenidos en un CSV, para planes grandes.', glass: 'glass-folder', tipo: 'contenidos' },
+]
+
+const numero = (n: number) => n.toLocaleString('es-CO')
+const personas = (n: number) => `${numero(n)} ${plural(n, 'persona', 'personas')}`
+const porcentaje = (parte: number, total: number) => (total ? Math.round((parte / total) * 100) : 0)
+const enMinuscula = (texto: string) => texto.charAt(0).toLowerCase() + texto.slice(1)
+// Días hasta la fecha (0 = hoy; negativo = ya pasó).
+const diasPara = (iso: string) => -diasDesde(iso)
+
+// Las cuatro cifras de la lista, de los planes de la pestaña: cuántos corren, a cuánta gente le llegan, cuánta ya terminó y
+// cuántos cierran pronto. La misma fila de indicadores de Contenidos y Encuestas.
+function metricasDe(planes: Plan[]): Metrica[] {
+  const vigentes = planes.filter((p) => p.estado === 'Vigente')
+  const planeados = planes.filter((p) => p.estado === 'Planeado').length
+  const asignando = planes.filter((p) => p.estado === 'Procesando').length
+  const filas = vigentes.flatMap(personasDelPlan)
+  const conPlan = new Set(filas.map((f) => f.usuario)).size
+  const terminaron = filas.filter((f) => f.progreso === 100).length
+  const cierran = vigentes.filter((p) => diasPara(p.fin) >= 0 && diasPara(p.fin) <= 30).sort((a, b) => a.fin.localeCompare(b.fin))
+  return [
+    {
+      id: 'vigentes',
+      titulo: 'Planes vigentes',
+      valor: numero(vigentes.length),
+      ayuda: 'Planes dentro de sus fechas: lo que las personas estudian cuenta para el plan. Abajo, los que todavía no empiezan y los que se están asignando.',
+      detalle: `${numero(planeados)} ${plural(planeados, 'planeado', 'planeados')} · ${numero(asignando)} ${plural(asignando, 'se está asignando', 'se están asignando')}`,
+      anillo: porcentaje(vigentes.length, planes.length),
+      color: 'var(--color-success)',
+    },
+    {
+      id: 'personas',
+      titulo: 'Personas con un plan vigente',
+      valor: numero(conPlan),
+      ayuda: 'Personas distintas con al menos un plan vigente: quien está en dos planes cuenta una vez. El porcentaje es sobre las personas activas de la empresa.',
+      detalle: `${porcentaje(conPlan, PERSONAS_EMPRESA)} % de las personas activas`,
+      avance: porcentaje(conPlan, PERSONAS_EMPRESA),
+    },
+    {
+      id: 'terminaron',
+      titulo: 'Terminaron su plan',
+      valor: `${porcentaje(terminaron, filas.length)} %`,
+      ayuda: 'Quienes terminaron el 100 % de lo suyo en un plan vigente, no el promedio de avances. Quien está en dos planes cuenta en cada uno. Se actualiza cada 30 minutos.',
+      detalle: 'De quienes tienen un plan vigente',
+      avance: porcentaje(terminaron, filas.length),
+      color: 'var(--color-success)',
+    },
+    {
+      id: 'cierran',
+      titulo: 'Cierran este mes',
+      valor: numero(cierran.length),
+      ayuda: 'Planes vigentes que llegan a su fecha de cierre en los próximos 30 días. Lo que se estudie después ya no cuenta para el plan.',
+      detalle: cierran.length ? `El primero, el ${fechaSinAnio(cierran[0].fin)}` : 'Ninguno en los próximos 30 días',
+    },
+  ]
+}
+
+// Lo que necesita atención en la lista, en la franja del sistema (BloqueAtencion, la de Contenidos y Vacantes), de lo
+// más grave a lo menos. Sale de los planes de la pestaña, no está escrito, y cada «Ver» abre el plan, donde se actúa
+// (en su «Avance» se recuerda a quien falta):
+// - Planes vigentes que cierran en 15 días o menos con personas sin terminar.
+// - Planes planeados que empiezan en 7 días o menos: último momento para revisarlos.
+// - Planes que se están asignando (Procesando).
+function alertasDe(planes: Plan[], onAbrir: (plan: Plan) => void): AlertaAtencion[] {
+  const cierran = planes
+    .filter((p) => p.estado === 'Vigente' && diasPara(p.fin) >= 0 && diasPara(p.fin) <= 15)
+    .sort((a, b) => a.fin.localeCompare(b.fin))
+    .flatMap<AlertaAtencion>((plan) => {
+      const pendientes = personasDelPlan(plan).filter((f) => f.progreso < 100).length
+      if (!pendientes) return []
+      return [
+        {
+          id: `cierra-${plan.id}`,
+          icono: AlarmClockIcon,
+          tono: 'text-destructive',
+          titulo: `«${plan.nombre}» cierra con ${personas(pendientes)} sin terminar`,
+          detalle: `${momentoDe(plan)}, el ${fechaSinAnio(plan.fin)}. Desde su avance puedes recordarles lo que les falta.`,
+          resumen: `${plan.nombre}: ${numero(pendientes)} sin terminar`,
+          etiquetaAccion: 'Ver plan',
+          onVer: () => onAbrir(plan),
+        },
+      ]
+    })
+  const empiezan = planes
+    .filter((p) => p.estado === 'Planeado' && diasPara(p.inicio) >= 0 && diasPara(p.inicio) <= 7)
+    .sort((a, b) => a.inicio.localeCompare(b.inicio))
+    .map<AlertaAtencion>((plan) => ({
+      id: `empieza-${plan.id}`,
+      icono: Calendar03Icon,
+      tono: 'text-warning',
+      titulo: `«${plan.nombre}» ${enMinuscula(momentoDe(plan))}`,
+      detalle: `Le llega a ${personas(totalPersonas(plan))} el ${fechaSinAnio(plan.inicio)}. Es el último momento para revisar quién ve qué.`,
+      resumen: `${plan.nombre}: ${enMinuscula(momentoDe(plan))}`,
+      etiquetaAccion: 'Revisar el plan',
+      onVer: () => onAbrir(plan),
+    }))
+  const asignando = planes
+    .filter((p) => p.estado === 'Procesando')
+    .map<AlertaAtencion>((plan) => ({
+      id: `asignando-${plan.id}`,
+      icono: Loading03Icon,
+      tono: 'text-info',
+      titulo: `«${plan.nombre}» se está asignando (${plan.procesando ?? 0} %)`,
+      detalle: `En unos minutos le llega a ${personas(totalPersonas(plan))}.`,
+      resumen: `${plan.nombre}: asignando`,
+      etiquetaAccion: 'Ver plan',
+      onVer: () => onAbrir(plan),
+    }))
+  return [...cierran, ...empiezan, ...asignando]
+}
 
 export function ListaPlanes() {
   const navigate = useNavigate()
@@ -214,13 +333,12 @@ export function ListaPlanes() {
   const [porPagina, setPorPagina] = useState(10)
   const [version, setVersion] = useState(0)
   const [eliminando, setEliminando] = useState<Plan | null>(null)
-  // Un enlace viejo con ?editar=<id> abre el panel de ese plan; editar ya es una página (/planes/:id/editar).
-  const [viendo, setViendo] = useState<{ id: string; vez: number } | null>(() => {
-    const id = parametros.get('editar')
-    return id ? { id, vez: 0 } : null
-  })
-  const [cerrando, setCerrando] = useState(false)
-  const planVisto = viendo ? planes.find((p) => p.id === viendo.id) : undefined
+  // Un enlace viejo con ?editar=<id> lleva directo a la página de ese plan (antes abría el panel «Ver plan», que ya no existe).
+  const editarViejo = parametros.get('editar')
+  useEffect(() => {
+    if (editarViejo) navigate(rutaPlan(editarViejo), { replace: true })
+  }, [editarViejo, navigate])
+  const abrir = (plan: Plan) => navigate(rutaPlan(plan.id))
   const textos = TIPOS[tipo]
   const agente = useAgente()
   const verVacio = parametros.has('vacio')
@@ -264,6 +382,11 @@ export function ListaPlanes() {
     setVersion((v) => v + 1)
   }
   const crear = () => navigate(`${rutaPlan('crear')}?tipo=${tipo}`)
+
+  // Lo de arriba de la tabla sale de los planes de la pestaña (sin ?vacio: la lista vacía no tiene nada que contar).
+  const deLaPestana = useMemo(() => (verVacio ? [] : planes.filter((p) => p.tipo === tipo)), [planes, tipo, verVacio])
+  const metricas = useMemo(() => metricasDe(deLaPestana), [deLaPestana])
+  const alertas = alertasDe(deLaPestana, abrir)
 
   const config: DataGridListConfig<FilaPlan> = {
     columns: COLUMNAS[tipo],
@@ -340,14 +463,42 @@ export function ListaPlanes() {
       />
 
       <PageContent>
+        {/* La anatomía de los inicios de Contenidos y Encuestas: crear, lo que hay que atender, las cifras y la tabla. */}
+        <Marco titulo="Crea algo nuevo">
+          <FramePanel>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {CREAR.map((opcion) => (
+                <Button
+                  key={opcion.id}
+                  variant="outline"
+                  onClick={() => navigate(`${rutaPlan('crear')}?tipo=${opcion.tipo}`)}
+                  // Las mismas tarjetas de LMS Creator › Contenidos y Encuestas: `cursor-pointer` porque se leen como las del
+                  // catálogo. Los «!» son los de esas tarjetas: el tema del botón (sin capa, ver Design system › Diferencias)
+                  // le gana a `h-auto`, la alineación, el relleno y el salto de línea, y sin forzarlos el texto no cabe.
+                  className="group h-auto! cursor-pointer items-start! justify-start! gap-3! rounded-xl! p-3! text-left! whitespace-normal!"
+                >
+                  <ImagenGlass nombre={opcion.glass} tamano={44} className="shrink-0" />
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="flex items-center gap-1 text-sm font-medium">
+                      {opcion.titulo}
+                      <HugeiconsIcon icon={ArrowRight01Icon} size={14} className="opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                    </span>
+                    <span className="text-xs leading-snug font-normal text-muted-foreground">{opcion.descripcion}</span>
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </FramePanel>
+        </Marco>
+
+        <BloqueAtencion alertas={alertas} etiqueta={`Lo que necesita atención en ${textos.plural.toLowerCase()}`} />
+        {verVacio ? null : <MetricasDestacadas metricas={metricas} etiqueta={`Resumen de ${textos.plural.toLowerCase()}`} />}
+
         <AccionesPlan.Provider
           value={{
-            onVer: (plan) => {
-              setCerrando(false)
-              setViendo({ id: plan.id, vez: Date.now() })
-            },
-            onAbrir: (plan) => navigate(rutaPlan(plan.id)),
-            onEditar: (plan) => navigate(rutaPlan(`${plan.id}/editar`)),
+            onAbrir: abrir,
+            // El plan se edita en su página; «Editar» abre directo sus asignaciones.
+            onEditar: (plan) => navigate(`${rutaPlan(plan.id)}?tab=quien`),
             onEliminar: setEliminando,
           }}
         >
@@ -357,30 +508,6 @@ export function ListaPlanes() {
           </div>
         </AccionesPlan.Provider>
       </PageContent>
-
-      {/* «Ver plan»: el plan en un panel, sin salir de la lista; de ahí salen abrir completo, editar y eliminar. */}
-      {planVisto && viendo ? (
-        <PanelPlan
-          key={viendo.vez}
-          abierto={!cerrando}
-          onAbiertoChange={(abierto) => {
-            if (abierto) return
-            setCerrando(true)
-            // Si se abrió desde un enlace de editar, la dirección vuelve a ser la de la lista.
-            if (parametros.has('editar')) {
-              const siguientes = new URLSearchParams(parametros)
-              siguientes.delete('editar')
-              setParametros(siguientes, { replace: true })
-            }
-          }}
-          plan={planVisto}
-          onAbrir={() => navigate(rutaPlan(planVisto.id))}
-          onEliminar={() => {
-            setCerrando(true)
-            setEliminando(planVisto)
-          }}
-        />
-      ) : null}
 
       {/* RN-07: eliminar se confirma escribiendo «eliminar». */}
       <ConfirmarEliminar
@@ -399,7 +526,7 @@ export function ListaPlanes() {
           const nombre = eliminando?.nombre
           cambiarPlanes((todos) => todos.filter((p) => p.id !== eliminando?.id))
           setEliminando(null)
-          notify('Plan eliminado', `«${nombre}» ya no aparece en la Zona de estudio de nadie.`)
+          notify('Plan eliminado', `«${nombre}» ya no aparece en la Zona de estudio de nadie.`, 'success')
         }}
       />
       {agente.portal(
@@ -407,10 +534,7 @@ export function ListaPlanes() {
           pantalla="lista"
           planes={planes}
           onUsarBorrador={(borrador) => navigate(`${rutaPlan('crear')}?tipo=contenidos`, { state: { borrador } })}
-          onAbrir={(plan) => {
-            setCerrando(false)
-            setViendo({ id: plan.id, vez: Date.now() })
-          }}
+          onAbrir={abrir}
           onClose={agente.cerrar}
         />,
       )}

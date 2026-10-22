@@ -1,7 +1,8 @@
 import { Fragment, useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowDown01Icon, ArrowRight01Icon, Message01Icon } from '@hugeicons/core-free-icons'
-import { Badge, Button, cn, FramePanel, Item, ItemContent, ItemDescription, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { Button, cn, FramePanel, Item, ItemContent, ItemDescription, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { FAVORABILITY_TARGET, formatPercent, formatScore } from '../../modelo/favorabilityScale'
@@ -34,7 +35,7 @@ const enMayuscula = (texto: string) => texto.charAt(0).toUpperCase() + texto.sli
 function Confianza({ nivel, conPalabra = false }: { nivel: Nivel; conPalabra?: boolean }) {
   return (
     <Badge variant={VARIANTE_NIVEL[nivel]} size="sm">
-      {conPalabra ? `Confianza ${nivel}` : enMayuscula(nivel)}
+      {conPalabra ? `Confiabilidad ${nivel}` : enMayuscula(nivel)}
     </Badge>
   )
 }
@@ -105,6 +106,7 @@ export function FilaDesplegable({ abierta, onAlternar, celdas, detalle, columnas
       </TableRow>
       {abierta ? (
         <TableRow className="hover:bg-transparent">
+          {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
           <TableCell colSpan={columnas} className="whitespace-normal!">
             <div className="flex flex-col gap-3 pb-2">{detalle}</div>
           </TableCell>
@@ -179,6 +181,7 @@ export function GrupoLecturas({ id, numero: n, titulo, pregunta, lecturas }: { i
               celdas={
                 <>
                   <Numero n={indice + 1} />
+                  {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                   <TableCell className="whitespace-normal!">
                     <Text as="span" size="sm" weight="medium">
                       {lectura.title}
@@ -213,7 +216,7 @@ export function Prioridades({ numero: n, prioridades, onIr }: { numero: number; 
   return (
     <BloquePlegable id="prioridades" numero={String(n)} titulo="Prioridades de esta medición" subtitulo="Qué atender primero, y con qué respaldo" metrica={<Conteo texto={plural(prioridades.length, 'prioridad', 'prioridades')} niveles={niveles} />}>
       {prioridades.length === 0 ? (
-        <Vacio>Ningún bloque de la medición está por debajo del objetivo de {FAVORABILITY_TARGET}%. Sostener el resultado es la tarea de este periodo.</Vacio>
+        <Vacio>Ningún bloque de la medición está por debajo del objetivo de {FAVORABILITY_TARGET} %. Sostener el resultado es la tarea de este periodo.</Vacio>
       ) : (
         <Table>
           <TableHeader>
@@ -239,6 +242,7 @@ export function Prioridades({ numero: n, prioridades, onIr }: { numero: number; 
                 celdas={
                   <>
                     <Numero n={indice + 1} />
+                    {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                     <TableCell className="whitespace-normal!">
                       <div className="flex flex-col">
                         <Text as="span" size="sm" weight="medium">
@@ -279,7 +283,7 @@ export function Prioridades({ numero: n, prioridades, onIr }: { numero: number; 
                       {prioridad.qual ? (
                         <Badge variant="outline" size="sm">
                           <HugeiconsIcon icon={Message01Icon} aria-hidden="true" />
-                          {numero(prioridad.qual.mentions)} comentarios sobre {prioridad.qual.topic.toLowerCase()} · {Math.round(prioridad.qual.negativeShare)}% negativos
+                          {plural(prioridad.qual.mentions, 'comentario', 'comentarios')} sobre {prioridad.qual.topic.toLowerCase()} · {Math.round(prioridad.qual.negativeShare)} % negativos
                         </Badge>
                       ) : null}
                       <Button variant="link" size="xs" onClick={() => onIr('favorability')}>
@@ -317,6 +321,7 @@ export function Fortalezas({ numero: n, fortalezas }: { numero: number; fortalez
             {fortalezas.map((fortaleza, indice) => (
               <TableRow key={fortaleza.id}>
                 <Numero n={indice + 1} />
+                {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                 <TableCell className="whitespace-normal!">
                   <div className="flex flex-col gap-1">
                     <Text as="span" size="sm" weight="medium">
@@ -386,6 +391,7 @@ function DetalleBrecha({ corte }: { corte: SegmentGaps }) {
             {corte.outliers.map(({ row, gap }, indice) => (
               <TableRow key={row.id}>
                 <Numero n={indice + 1} />
+                {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                 <TableCell className="whitespace-normal!">{row.label}</TableCell>
                 <TableCell className="text-right tabular-nums">
                   {numero(row.completed)} de {numero(row.invited)}
@@ -439,6 +445,7 @@ export function Brechas({ numero: n, analisis }: { numero: number; analisis: rea
                   celdas={
                     <>
                       <Numero n={indice + 1} />
+                      {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                       <TableCell className="whitespace-normal!">
                         <div className="flex flex-col gap-1">
                           <Text as="span" size="sm" weight="medium">
@@ -490,7 +497,7 @@ export function VozDeLaGente({ numero: n, sentimiento }: { numero: number; senti
                 <div key={id} className="flex items-center gap-1.5">
                   <InsigniaSentimiento sentimiento={id} />
                   <Text as="span" size="sm" weight="semibold" className="tabular-nums">
-                    {parte(sentimiento.counts[id], sentimiento.total)}%
+                    {parte(sentimiento.counts[id], sentimiento.total)} %
                   </Text>
                   <Text as="span" size="xs" variant="muted" className="tabular-nums">
                     {numero(sentimiento.counts[id])}
@@ -515,6 +522,7 @@ export function VozDeLaGente({ numero: n, sentimiento }: { numero: number; senti
                 {sentimiento.topics.slice(0, 4).map((tema, indice) => (
                   <TableRow key={tema.topic}>
                     <Numero n={indice + 1} />
+                    {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                     <TableCell className="whitespace-normal!">
                       <div className="flex flex-wrap items-center gap-2">
                         <Text as="span" size="sm" weight="medium">
@@ -523,12 +531,12 @@ export function VozDeLaGente({ numero: n, sentimiento }: { numero: number; senti
                         <Confianza nivel={confidenceFor(tema.total)} conPalabra />
                       </div>
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">{parte(tema.positive, tema.total)}%</TableCell>
-                    <TableCell className="text-right tabular-nums">{parte(tema.neutral, tema.total)}%</TableCell>
+                    <TableCell className="text-right tabular-nums">{parte(tema.positive, tema.total)} %</TableCell>
+                    <TableCell className="text-right tabular-nums">{parte(tema.neutral, tema.total)} %</TableCell>
                     <TableCell className="text-right tabular-nums">{numero(tema.total)}</TableCell>
                     <TableCell className="text-right">
                       <Badge variant="destructive-outline" size="sm" className="tabular-nums">
-                        {parte(tema.negative, tema.total)}%
+                        {parte(tema.negative, tema.total)} %
                       </Badge>
                     </TableCell>
                   </TableRow>

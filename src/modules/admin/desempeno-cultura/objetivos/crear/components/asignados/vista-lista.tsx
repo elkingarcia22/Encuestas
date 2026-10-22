@@ -105,7 +105,7 @@ export function VistaLista({
   const columnas = useMemo(() => columnasDe(tipo, conErrores), [tipo, conErrores])
 
   const config: DataGridListConfig<AssignmentRow> = {
-    // El marco y el recuento («8 grupos») los pone TablaDatos; sin título dentro del marco.
+    // El marco, el título y el recuento («8 grupos») los pone TablaDatos (con título, como en Encuestas: 20-oct).
     columns: columnas,
     sort: {
       onSortChange: (nuevo) => {
@@ -156,6 +156,7 @@ export function VistaLista({
         data={pagina}
         initialRowSelection={seleccionInicial}
         paginacion={{ pagina: actual, setPagina: setActual, porPagina, setPorPagina, total: resultado.length }}
+        titulo={grupal ? 'Asignaciones por grupo' : 'Asignaciones individuales'}
         nombre={grupal ? 'grupos' : 'personas'}
         singular={grupal ? 'grupo' : 'persona'}
         id={`asignaciones-${tipo}`}

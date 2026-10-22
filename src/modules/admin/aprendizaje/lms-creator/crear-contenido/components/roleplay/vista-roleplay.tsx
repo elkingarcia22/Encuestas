@@ -1,7 +1,8 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CheckmarkCircle02Icon } from '@hugeicons/core-free-icons'
 import type { ReactNode } from 'react'
-import { Avatar, AvatarImage, Badge, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Text } from '@ubits/flux-ui'
+import { Avatar, AvatarImage, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import orbeVoz from '@/shared/assets/orbe-voz.webp'
 import type { RoleplayConfig } from '../borrador'
 import { nombreModo, objetivosConTexto } from './modelo'
@@ -15,7 +16,7 @@ import { nombreModo, objetivosConTexto } from './modelo'
 /**
  * La cara del personaje: la imagen que subió el creador o, si no hay, **el orbe de voz** (RN-07).
  *
- * Es el mismo que lleva la tarjeta del Evaluador roleplay en «Añadir página», y no el orbe del agente: el de la
+ * Es el mismo que lleva la tarjeta del Evaluador roleplay en «Agregar página», y no el orbe del agente: el de la
  * chispa dice «esto lo hace la IA», que vale para cualquier recurso, mientras que el de la onda dice **que aquí se
  * habla**, que es de lo que va este. Así el recurso se reconoce igual desde que se elige hasta que se contesta
  * (Dave, 13-oct).

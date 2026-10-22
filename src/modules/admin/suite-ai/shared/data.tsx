@@ -1,5 +1,13 @@
 import type { IconSvgElement } from '@hugeicons/react'
-import { GoogleDriveIcon, Mail02Icon, SlackIcon } from '@hugeicons/core-free-icons'
+import {
+  Analytics01Icon,
+  Briefcase01Icon,
+  GoogleDriveIcon,
+  Mail02Icon,
+  Mortarboard01Icon,
+  SlackIcon,
+  UserWarning01Icon,
+} from '@hugeicons/core-free-icons'
 
 export type ConvoId = 'new' | 'evaluaciones' | 'vacaciones' | 'onboarding' | 'libre' | 'clima' | 'cursos' | 'matriz'
 
@@ -49,7 +57,7 @@ export const SEED_MESSAGES: Partial<Record<ConvoId, ChatMessage[]>> = {
     {
       id: 2,
       role: 'agent',
-      text: 'La encuesta de clima cerró con 76% de participación. El puntaje más bajo es «reconocimiento» (3,1 de 5) en operaciones.',
+      text: 'La encuesta de clima cerró con 76 % de participación. El puntaje más bajo es «reconocimiento» (3,1 de 5) en operaciones.',
     },
   ],
   cursos: [
@@ -97,7 +105,7 @@ export function replyFor(text: string, org = 'Meta Colombia') {
     return 'Listo el borrador: recuerda el cierre del ciclo el 18 de septiembre y ofrece dos franjas de 20 minutos dentro del turno. Nada sale hasta que lo apruebes.'
   }
   if (t.includes('participación') || t.includes('participacion')) {
-    return 'Ventas Bogotá está en 58% de participación, nueve puntos por debajo del promedio. La caída está en el turno de la tarde: 46% frente a 71% de la mañana.'
+    return 'Ventas Bogotá está en 58 % de participación, nueve puntos por debajo del promedio. La caída está en el turno de la tarde: 46 % frente a 71 % de la mañana.'
   }
   if (t.includes('recordatorio')) {
     return 'Preparé el recordatorio para las 24 evaluaciones vencidas. Se envía a los líderes, no a los evaluados. ¿Lo programo para mañana 8:00?'
@@ -106,13 +114,13 @@ export function replyFor(text: string, org = 'Meta Colombia') {
     return 'Los 5 casos sin líder quedaron asignados al jefe de área. Actualicé la matriz y no envié notificaciones todavía.'
   }
   if (t.includes('operaciones')) {
-    return 'Operaciones va en 84% de terminación con 12 vencidas. Ventas está 14 puntos abajo, concentrado en la sede Bogotá.'
+    return 'Operaciones va en 84 % de terminación con 12 vencidas. Ventas está 14 puntos abajo, concentrado en la sede Bogotá.'
   }
   if (t.includes('rotación') || t.includes('rotacion')) {
     return 'El riesgo de rotación Q3 se concentra en Ventas Bogotá: 18 personas con dos señales o más. Puedo preparar un plan de retención con foco en liderazgo.'
   }
   if (t.includes('clima')) {
-    return 'La encuesta de clima cerró con 76% de participación. El puntaje más bajo es «reconocimiento» (3,1 de 5) en operaciones.'
+    return 'La encuesta de clima cerró con 76 % de participación. El puntaje más bajo es «reconocimiento» (3,1 de 5) en operaciones.'
   }
   if (t.includes('analista') || t.includes('vacante')) {
     return 'Hay 3 vacantes de analista abiertas: Analista de datos en entrevistas (12 candidatos), Analista financiero en filtro inicial (28) y Analista de calidad en borrador.'
@@ -120,16 +128,36 @@ export function replyFor(text: string, org = 'Meta Colombia') {
   return `Listo. Revisé los datos de ${org} dentro de tus permisos y preparé una respuesta corta. Puedo convertirlo en un plan asignable si lo necesitas.`
 }
 
+// Sugerencias de un chat nuevo (15 oct, Carlos: tarjetas con icono, título y bajada debajo de la caja, como la
+// referencia de Brain²). La bajada dice qué hace el agente con ella.
 export type Starter = {
   label: string
+  description: string
+  icon: IconSvgElement
   draft?: string
   convo?: ConvoId
 }
 
 export const STARTERS: Starter[] = [
-  { label: 'Plan de formación para Ventas', draft: 'Prepárame un plan corto de feedback para los líderes de Ventas.' },
-  { label: 'Evaluaciones vencidas', convo: 'evaluaciones' },
-  { label: 'Riesgo de rotación Q3', draft: '¿Dónde está el mayor riesgo de rotación este trimestre?' },
+  {
+    label: 'Plan de formación',
+    description: 'Feedback para líderes de Ventas',
+    icon: Mortarboard01Icon,
+    draft: 'Prepárame un plan corto de feedback para los líderes de Ventas.',
+  },
+  { label: 'Evaluaciones', description: 'Las 360 que siguen vencidas', icon: Analytics01Icon, convo: 'evaluaciones' },
+  {
+    label: 'Riesgo de rotación',
+    description: 'Dónde está el riesgo del Q3',
+    icon: UserWarning01Icon,
+    draft: '¿Qué equipos tienen más riesgo de rotación en el Q3?',
+  },
+  {
+    label: 'Vacantes abiertas',
+    description: 'En qué etapa va cada una',
+    icon: Briefcase01Icon,
+    draft: '¿En qué etapa van las vacantes de analista abiertas?',
+  },
 ]
 
 export type Connector = {
@@ -169,7 +197,7 @@ export const initialsOf = (name: string) =>
     .join('')
 
 export const AUDIENCES = ['14 líderes de Ventas', '32 líderes de toda la empresa', 'Selección manual · 0 personas']
-export const DATE_RANGES = ['15 sep → 10 oct', '22 sep → 31 oct', '1 oct → 30 nov']
+export const DATE_RANGES = ['15 sept → 10 oct', '22 sept → 31 oct', '1 oct → 30 nov']
 
 export type PlanRow = {
   id: number

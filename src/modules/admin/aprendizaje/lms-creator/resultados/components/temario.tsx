@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
-import { CubeIcon, Mic01Icon, Pdf01Icon, Task01Icon, Video01Icon, ViewOffSlashIcon } from '@hugeicons/core-free-icons'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ViewOffSlashIcon } from '@hugeicons/core-free-icons'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Progress, Text } from '@ubits/flux-ui'
 import { Badge } from '@/shared/components/Badge'
 import { FilaPaginaIndice, type EstadoPaginaIndice } from '../../compartido/fila-pagina'
+import { NOMBRE_RECURSO, type TipoRecurso } from '../../crear-contenido/components/borrador'
+import { ICONO_RECURSO } from '../../crear-contenido/components/tipos-recurso'
 import { fecha, porcentaje } from './datos'
 
 // El temario del contenido leído desde una persona: el panel que abre una fila de Progreso.
@@ -22,8 +24,7 @@ import { fecha, porcentaje } from './datos'
 
 type Recurso = {
   nombre: string
-  tipo: string
-  icono: IconSvgElement
+  tipo: TipoRecurso
   /** Desde cuándo está oculta. */
   oculta?: string
 }
@@ -31,25 +32,29 @@ type Recurso = {
 type SeccionTemario = { id: string; titulo: string; recursos: readonly Recurso[] }
 
 // El temario del curso de ejemplo, el mismo que recorre el estudiante.
+//
+// El **tipo de cada recurso es el del catálogo** (`TipoRecurso`), no un texto escrito aquí: de ahí salen su nombre y su
+// icono, los mismos que usa el asistente y el índice del estudiante. Escribirlos a mano fue lo que hizo que esta
+// pantalla dijera «SCORM» de una página que en el contenido es una presentación interactiva (Dave, 14-oct).
 const TEMARIO: readonly SeccionTemario[] = [
   {
     id: 's1',
     titulo: 'Sección 1: Fundamentos',
     recursos: [
-      { nombre: 'Comunicación para desescalar un conflicto', tipo: 'Video', icono: Video01Icon },
-      { nombre: 'Conversaciones difíciles según Thomas-Kilmann', tipo: 'SCORM', icono: CubeIcon, oculta: '2026-10-12' },
-      { nombre: 'Evaluación Sección 1', tipo: 'Evaluación', icono: Task01Icon },
+      { nombre: 'Comunicación para desescalar un conflicto', tipo: 'video' },
+      { nombre: 'Conversaciones difíciles según Thomas-Kilmann', tipo: 'presentacion-interactiva', oculta: '2026-10-12' },
+      { nombre: 'Evaluación Sección 1', tipo: 'evaluacion-final' },
     ],
   },
   {
     id: 's2',
     titulo: 'Sección 2: Herramientas para resolver conflictos',
     recursos: [
-      { nombre: 'Simulador de conversación difícil', tipo: 'SCORM', icono: CubeIcon },
-      { nombre: 'Practica la conversación con tu equipo', tipo: 'Roleplay', icono: Mic01Icon },
-      { nombre: 'Guía mapa de conflicto', tipo: 'Documento', icono: Pdf01Icon },
-      { nombre: 'Evaluación Sección 2', tipo: 'Evaluación', icono: Task01Icon },
-      { nombre: 'Evaluación de cierre', tipo: 'Evaluación', icono: Task01Icon, oculta: '2026-10-12' },
+      { nombre: 'Simulador de conversación difícil', tipo: 'scorm' },
+      { nombre: 'Practica la conversación con tu equipo', tipo: 'roleplay' },
+      { nombre: 'Guía mapa de conflicto', tipo: 'pdf' },
+      { nombre: 'Evaluación Sección 2', tipo: 'evaluacion-final' },
+      { nombre: 'Evaluación de cierre', tipo: 'evaluacion-final', oculta: '2026-10-12' },
     ],
   },
 ]
@@ -125,8 +130,8 @@ export function TemarioPersona({ nombre, email, hechos, inicio, fin }: { nombre:
                     key={recurso.nombre}
                     titulo={recurso.nombre}
                     // Debajo del nombre, de qué es y —si ya lo hizo— cuándo lo completó.
-                    descripcion={estado === 'vista' ? `${recurso.tipo} · completado el ${fecha(diaDe(indice))}` : recurso.tipo}
-                    icono={recurso.icono}
+                    descripcion={estado === 'vista' ? `${NOMBRE_RECURSO[recurso.tipo]} · completado el ${fecha(diaDe(indice))}` : NOMBRE_RECURSO[recurso.tipo]}
+                    icono={ICONO_RECURSO[recurso.tipo]}
                     estado={estado}
                     extra={
                       recurso.oculta ? (

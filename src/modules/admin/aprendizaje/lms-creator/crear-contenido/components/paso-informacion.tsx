@@ -14,7 +14,6 @@ import {
   Mic01Icon,
   Mortarboard01Icon,
   News01Icon,
-  PlayIcon,
   PodcastIcon,
   Route01Icon,
   SignalFull01Icon,
@@ -23,9 +22,9 @@ import {
   Timer02Icon,
   Upload01Icon,
   Video02Icon,
+  Video01Icon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Empty,
   EmptyContent,
@@ -34,6 +33,7 @@ import {
   EmptyMedia,
   EmptyTitle,
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldLabel,
@@ -47,12 +47,14 @@ import {
   InputGroupAddon,
   InputGroupInput,
   Separator,
+  Switch,
   Text,
 } from '@ubits/flux-ui'
 import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import type { ClaseCreacion, Portada } from './borrador'
 import { EditorTexto } from './editor-texto'
-import { IDIOMAS_CONTENIDO, OPCIONES_CATEGORIA, OPCIONES_NIVEL, OPCIONES_TIPO, UNIDADES, embedDeVideo, textoMinutos, trailerValido } from './ficha'
+import { IDIOMAS_CONTENIDO, OPCIONES_CATEGORIA, OPCIONES_NIVEL, OPCIONES_TIPO, UNIDADES, miniaturaDeTrailer, textoMinutos, trailerValido } from './ficha'
+import { CapaTrailer, PortadaConTrailer } from '../../compartido/portada-trailer'
 import { InsigniaIA } from './marco-inmersivo'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { BotonIcono } from '@/shared/components/BotonIcono'
@@ -61,7 +63,7 @@ import { COSTO } from './borrador'
 import { GeneradorImagenIa } from './generador-imagen-ia'
 import { Selector, type OpcionSelector } from './selector'
 
-// Paso 1 · Información básica: tres conjuntos —Título y descripción, Portada y Ficha técnica—, cada uno en su marco: el título y la
+// Paso 1 · Información general: tres conjuntos —Título y descripción, Portada y Ficha técnica—, cada uno en su marco: el título y la
 // bajada sobre el fondo gris y los campos dentro del panel blanco, para que se lean como tres tareas y no como una lista. Son los datos
 // con los que el colaborador ve y encuentra el contenido en el catálogo. Obligatorios: nombre, portada, descripción,
 // tipo (solo en un contenido), nivel, idioma y un tiempo mayor que cero (HU-LMS-001, `faltantesPortada`). El modal
@@ -120,8 +122,8 @@ export function PasoInformacion({ portada, clase, minutosRuta = 0, onCambio }: P
           {/* Nombra lo que hay dentro, igual que «Portada» y «Ficha técnica»: los tres marcos se leen como un
               sistema. Antes decía «El contenido» / «La ruta» / «El evento», que además de cambiar según el flujo
               repetía algo que el título de la página ya dice (Dave, 6-oct). */}
-          <FrameTitle>Título y descripción</FrameTitle>
-          <FrameDescription>Cómo se llama y qué van a aprender.</FrameDescription>
+          <FrameTitle>Título, descripción y portada</FrameTitle>
+          <FrameDescription>Lo primero que ven los colaboradores en el catálogo.</FrameDescription>
         </FrameHeader>
         <FramePanel className="flex flex-col gap-4">
           <Field>
@@ -157,16 +159,17 @@ export function PasoInformacion({ portada, clase, minutosRuta = 0, onCambio }: P
             onCambio={(html) => onCambio({ descripcion: html })}
             alto={160}
           />
-        </FramePanel>
-      </Frame>
 
-      <Frame>
-        <FrameHeader>
-          <FrameTitle>Portada</FrameTitle>
-          <FrameDescription>Lo primero que ven los colaboradores en el catálogo. Créala con IA, súbela o suma un tráiler.</FrameDescription>
-        </FrameHeader>
-        <FramePanel>
-          <CampoPortada portada={portada} onCambio={onCambio} />
+          {/* **La portada, en el mismo marco.** Eran dos secciones seguidas y son la misma cosa: lo que se lleva la
+              tarjeta del catálogo. Separarlas obligaba a leer dos cabeceras para llenar un formulario de tres
+              campos (Dave, 15-oct). */}
+          <Separator />
+          {/* La portada lleva su etiqueta como los demás campos del marco: sin ella era el único bloque sin nombre,
+              y en un formulario eso se lee como si viniera de otro sitio (Dave, 15-oct). */}
+          <Field>
+            <FieldLabel htmlFor="cc-portada">Portada</FieldLabel>
+            <CampoPortada portada={portada} onCambio={onCambio} />
+          </Field>
         </FramePanel>
       </Frame>
 
@@ -257,17 +260,14 @@ export function PasoInformacion({ portada, clase, minutosRuta = 0, onCambio }: P
  */
 function CampoPortada({ portada, onCambio }: { portada: Portada; onCambio: (cambio: Partial<Portada>) => void }) {
   const [conIa, setConIa] = useState(false)
-  const [reproduciendo, setReproduciendo] = useState(false)
+  // El interruptor arranca encendido si el contenido ya traía un tráiler: lo que hay puesto manda sobre el estado.
+  const [conTrailer, setConTrailer] = useState(Boolean(portada.trailer.trim()))
   const archivo = useRef<HTMLInputElement>(null)
 
   const elegirArchivo = () => archivo.current?.click()
-  const reproducir = () => {
-    const embed = embedDeVideo(portada.trailer)
-    if (embed) setReproduciendo(true)
-    else window.open(portada.trailer, '_blank', 'noopener')
-  }
-
   const trailerInvalido = Boolean(portada.trailer.trim()) && !trailerValido(portada.trailer)
+  const miniatura = conTrailer && !trailerInvalido ? miniaturaDeTrailer(portada.trailer) : null
+  const conEnlace = conTrailer && Boolean(portada.trailer.trim()) && !trailerInvalido
 
   return (
     <div className="flex flex-col gap-4">
@@ -281,7 +281,6 @@ function CampoPortada({ portada, onCambio }: { portada: Portada; onCambio: (camb
         onChange={(e) => {
           const f = e.target.files?.[0]
           if (f) {
-            setReproduciendo(false)
             onCambio({ imagen: URL.createObjectURL(f), imagenIA: false, promptIA: '' })
           }
           e.target.value = ''
@@ -311,46 +310,28 @@ function CampoPortada({ portada, onCambio }: { portada: Portada; onCambio: (camb
           </EmptyContent>
         </Empty>
       ) : (
-        <div className="relative aspect-video w-full overflow-hidden rounded-xl border bg-muted">
-          {reproduciendo ? (
-            <iframe
-              src={embedDeVideo(portada.trailer) ?? ''}
-              title="Tráiler del contenido"
-              className="size-full border-0"
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen
-            />
-          ) : (
-            <>
-              <img src={portada.imagen} alt="Portada del contenido" className="size-full object-cover" />
-              {/* Velo degradado en la franja de arriba: sobre una portada clara, la insignia y los botones se perdían.
-                  Cae a transparente antes de la mitad para no ensuciar la imagen, y no intercepta el cursor. */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/45 via-black/15 to-transparent"
-              />
-              {portada.imagenIA ? <InsigniaIA className="absolute top-3 left-3" /> : null}
-              <div className="absolute top-3 right-3 flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={elegirArchivo}>
-                  <HugeiconsIcon icon={Upload01Icon} size={14} aria-hidden="true" />
-                  Cambiar imagen
-                </Button>
-                {/* El secundario de IA del sistema de diseño, en pastilla: armado a mano salía con la esquina de la
-                    librería (el jefe de Dave, 13-oct). */}
-                <BotonIaSecundario size="sm" onClick={() => setConIa(true)}>
-                  Editar con IA
-                </BotonIaSecundario>
-              </div>
-              {portada.trailer ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Button variant="outline" size="icon-lg" aria-label="Reproducir tráiler" onClick={reproducir}>
-                    <HugeiconsIcon icon={PlayIcon} size={22} />
-                  </Button>
-                </div>
-              ) : null}
-            </>
-          )}
-        </div>
+        // Sin el play del tráiler: en el formulario la portada es la imagen que se está eligiendo, y el tráiler se
+        // prueba desde su propia tarjeta, debajo (Dave, 15-oct).
+        <PortadaConTrailer className="rounded-xl border" imagen={portada.imagen}>
+          {/* Velo degradado en la franja de arriba: sobre una portada clara, la insignia y los botones se perdían.
+              Cae a transparente antes de la mitad para no ensuciar la imagen, y no intercepta el cursor. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/45 via-black/15 to-transparent"
+          />
+          {portada.imagenIA ? <InsigniaIA className="absolute top-3 left-3" /> : null}
+          <div className="absolute top-3 right-3 flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={elegirArchivo}>
+              <HugeiconsIcon icon={Upload01Icon} size={14} aria-hidden="true" />
+              Cambiar imagen
+            </Button>
+            {/* El secundario de IA del sistema de diseño, en pastilla: armado a mano salía con la esquina de la
+                librería (el jefe de Dave, 13-oct). */}
+            <BotonIaSecundario size="sm" onClick={() => setConIa(true)}>
+              Editar con IA
+            </BotonIaSecundario>
+          </div>
+        </PortadaConTrailer>
       )}
 
       {/* El generador, desplegado en la página. Su cabecera dice qué es y lo cierra: una X suelta al lado de un campo
@@ -372,37 +353,72 @@ function CampoPortada({ portada, onCambio }: { portada: Portada; onCambio: (camb
             promptInicial={portada.imagenIA ? portada.promptIA : ''}
             costo={COSTO.portada}
             frase={false}
-            onGenerado={(imagen, prompt) => {
-              setReproduciendo(false)
-              onCambio({ imagen, imagenIA: true, promptIA: prompt })
-            }}
+            onGenerado={(imagen, prompt) => onCambio({ imagen, imagenIA: true, promptIA: prompt })}
           />
         </div>
       ) : null}
 
-      <Separator />
+      {/* **El tráiler, en su propia tarjeta y apagado de entrada.** No es una forma de hacer la portada: es algo que
+          se reproduce sobre ella, y la mayoría de los contenidos no lo lleva. Con el interruptor apagado ni siquiera
+          se pide el enlace, y encendido aparece el campo y, a la derecha, la miniatura de lo que se puso
+          (Dave, 15-oct). */}
+      <div className="bg-card flex flex-wrap items-start gap-4 rounded-xl border p-4">
+        <div className="flex min-w-60 flex-1 flex-col gap-3">
+          <Field orientation="horizontal">
+            <FieldContent>
+              <FieldLabel htmlFor="cc-portada-trailer-switch">Tráiler</FieldLabel>
+              <FieldDescription>Un vídeo corto que se reproduce sobre la portada.</FieldDescription>
+            </FieldContent>
+            <Switch
+              id="cc-portada-trailer-switch"
+              checked={conTrailer}
+              onCheckedChange={(valor) => {
+                setConTrailer(valor)
+                // Apagarlo quita el enlace: dejarlo guardado y sin usar es lo que hace que después nadie sepa si el
+                // contenido tiene tráiler o no.
+                if (!valor) onCambio({ trailer: '' })
+              }}
+            />
+          </Field>
 
-      {/* El tráiler, donde le corresponde: un dato más de la portada, no una tercera forma de hacerla. */}
-      <Field data-invalid={trailerInvalido ? 'true' : undefined}>
-        <FieldLabel htmlFor="cc-portada-trailer">
-          Tráiler
-          <Badge variant="secondary" size="xs">
-            Opcional
-          </Badge>
-        </FieldLabel>
-        <Input
-          id="cc-portada-trailer"
-          placeholder="https://www.youtube.com/watch?v=..."
-          value={portada.trailer}
-          onChange={(e) => onCambio({ trailer: e.target.value })}
-          aria-invalid={trailerInvalido || undefined}
-        />
-        {trailerInvalido ? (
-          <FieldError>Solo se admiten enlaces de YouTube, Vimeo, Google Drive y OneDrive.</FieldError>
-        ) : (
-          <FieldDescription>Se reproduce sobre la portada. YouTube, Vimeo, Drive y OneDrive.</FieldDescription>
-        )}
-      </Field>
+          {conTrailer ? (
+            <Field data-invalid={trailerInvalido ? 'true' : undefined}>
+              <Input
+                id="cc-portada-trailer"
+                placeholder="https://www.youtube.com/watch?v=..."
+                value={portada.trailer}
+                onChange={(e) => onCambio({ trailer: e.target.value })}
+                aria-invalid={trailerInvalido || undefined}
+                aria-label="Enlace del tráiler"
+              />
+              {/* De dónde puede venir el enlace, pegado al campo donde se pega: en la cabecera de la tarjeta se leía
+                  antes de que hubiera nada donde escribirlo (Dave, 15-oct). */}
+              {trailerInvalido ? (
+                <FieldError>Solo se admiten enlaces de YouTube, Vimeo, Google Drive o OneDrive.</FieldError>
+              ) : (
+                <FieldDescription>Puede ser un link de YouTube, Vimeo, Drive y OneDrive.</FieldDescription>
+              )}
+            </Field>
+          ) : null}
+        </div>
+
+        {/* La miniatura, a la derecha. De YouTube se saca de su dirección fija; Vimeo, Drive y OneDrive piden una
+            llamada con credenciales, así que ahí va el marco con el icono de vídeo. */}
+        {conEnlace ? (
+          <div className="bg-muted relative aspect-video w-52 shrink-0 overflow-hidden rounded-lg border">
+            {miniatura ? (
+              <img src={miniatura} alt="" aria-hidden="true" className="size-full object-cover" />
+            ) : (
+              <span className="text-muted-foreground flex size-full items-center justify-center">
+                <HugeiconsIcon icon={Video01Icon} size={22} aria-hidden="true" />
+              </span>
+            )}
+            {/* El play de la miniatura **reproduce**: es donde se comprueba que el enlace es el que se quería, sin
+                salir del formulario ni abrir otra pestaña (Dave, 15-oct). */}
+            <CapaTrailer trailer={portada.trailer} tamano="sm" />
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }

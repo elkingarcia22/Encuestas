@@ -1,66 +1,36 @@
 import type { ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { InformationCircleIcon, LibraryIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
-import { Alert, AlertAction, AlertDescription, Button, Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, Text } from '@ubits/flux-ui'
-import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
+import { InformationCircleIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { Alert, AlertAction, AlertDescription, Button } from '@ubits/flux-ui'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
-import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { TOTAL_WEIGHT, type ObjectiveSet } from '../../../modelo/constructor/cicloBuilderTypes'
-import type { IntencionAsignacion } from './piezas-asignacion'
 
-// Fase 2 del panel de asignación: los objetivos de los destinatarios elegidos, con el mismo armado que el paso
-// «Objetivos de la empresa». Para quién son y cuánto deben sumar ya lo dicen el título y la bajada del panel, así que
-// aquí no se repiten. Arriba, lo que se puede traer ya hecho (el banco) y «Repartir por igual» mientras el peso no cuadra;
-// debajo, el aviso de cupo recortado o el de carga previa, la lista de tarjetas y «Añadir objetivo».
+// Fase 2 de la asignación, la columna derecha de la ventana: el objetivo elegido en la lista de la izquierda, abierto con
+// su formulario de siempre (21-oct, Elkin). Agregar y el peso viven en esa lista (indice-objetivos);
+// aquí quedan los avisos del cupo (recortado o con carga previa), el vacío y la tarjeta.
 
 export function FaseObjetivos({
   set,
-  total,
   cupo,
-  onRepartir,
   onRecuperar,
   aviso,
   iaAbierta,
-  sinIa,
-  onElegir,
+  onAgregar,
   children,
 }: {
   set: ObjectiveSet
-  total: number
   cupo: number
-  onRepartir: () => void
   /** El cupo se recortó por otra asignación que ya no se cruza: se puede devolver. */
   onRecuperar?: () => void
   aviso: ReactNode
   iaAbierta: boolean
-  /** Con Orbit Flow ya abierto, «Proponer con IA» no se ofrece otra vez. */
-  sinIa: boolean
-  onElegir: (intencion: Exclude<IntencionAsignacion, 'plantilla'>) => void
+  onAgregar: () => void
   children: ReactNode
 }) {
   const vacio = set.objectives.length === 0
 
   return (
-    <section className="flex flex-col gap-4" aria-label="Objetivos de la asignación">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Text as="p" size="sm" variant="muted">Trae objetivos ya hechos desde el catálogo o pídele a la IA que los proponga.</Text>
-        <div className="flex items-center gap-2">
-          {total !== cupo && !vacio ? (
-            <Button variant="ghost" onClick={onRepartir}>
-              Repartir por igual
-            </Button>
-          ) : null}
-          <Button variant="outline" onClick={() => onElegir('banco')}>
-            <HugeiconsIcon icon={LibraryIcon} aria-hidden="true" />
-            Elegir del banco
-          </Button>
-          {/* «Proponer con IA» se queda: decisión de Cristian al unir el 9-oct (la IA, el último de la fila). */}
-          <BotonIaSecundario disabled={sinIa} onClick={() => onElegir('ia')}>
-            Proponer con IA
-          </BotonIaSecundario>
-        </div>
-      </div>
-
+    <section className="flex flex-col gap-4" aria-label="Objetivo elegido">
       {onRecuperar && !iaAbierta ? (
         <Alert variant="info">
           <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
@@ -79,33 +49,23 @@ export function FaseObjetivos({
       {iaAbierta ? null : aviso}
 
       {vacio && iaAbierta ? (
-        <Empty className="border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <IconoIA />
-            </EmptyMedia>
-            <EmptyTitle>Creando objetivos con IA</EmptyTitle>
-            <EmptyDescription>Dile a Orbit Flow, en el panel derecho, qué necesitas medir. Los objetivos que genere aparecerán aquí para que los revises.</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        // Mismo vacío que el paso «Objetivos de la empresa»: la pieza del sistema con su ilustración glass.
+        <PrimeraVez
+          icono="glass-message"
+          titulo="Creando objetivos con IA"
+          descripcion="Dile a Orbit, en el panel derecho, qué necesitas medir. Los objetivos que genere aparecerán en la lista para que los revises."
+          className="py-8 border"
+        />
       ) : vacio ? (
         <PrimeraVez
           icono="glass-add"
           titulo="Todavía no hay objetivos"
-          descripcion="Escribe el primero o tráelo del banco."
-          accion={{ texto: 'Añadir objetivo', icono: PlusSignIcon, onClick: () => onElegir('manual') }}
+          descripcion="Escribe el primero."
+          accion={{ texto: 'Agregar objetivo', icono: PlusSignIcon, onClick: onAgregar }}
           className="py-8 border-dashed"
         />
       ) : (
-        <>
-          {children}
-          <div className="flex justify-end pt-2">
-            <Button variant="outline" onClick={() => onElegir('manual')}>
-              <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
-              Añadir objetivo
-            </Button>
-          </div>
-        </>
+        children
       )}
     </section>
   )

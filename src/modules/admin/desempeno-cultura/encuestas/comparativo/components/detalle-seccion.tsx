@@ -1,12 +1,6 @@
 import { useMemo } from 'react'
 import { Message01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
   FramePanel,
   Item,
   ItemContent,
@@ -18,6 +12,8 @@ import {
   TabsTrigger,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { BarraSegmentada } from '@/modules/design-system/metricas/graficos'
@@ -35,7 +31,6 @@ import { Cambio } from '@/modules/admin/seleccion/propuestas/components/cifras'
 // medición, qué los separa de la base y, por tono, lo que la gente escribió en la base. La lectura
 // de la IA se escribe con esas mismas cifras. Con la forma de los drawers del módulo (Crear con plantilla):
 // cada sección es un marco con su título y, dentro, una tarjeta con las filas separadas por una línea.
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 // Cuántos comentarios de cada tono se muestran; el resto está en Resultados › Preguntas.
 const MAXIMO_COMENTARIOS = 20
@@ -75,7 +70,7 @@ function Lectura({ seccion, comparativo }: { seccion: ComentariosSeccion; compar
         {/* Evidencia y volumen con la misma pieza que la Lectura IA (Dato): cada uno en su caja gris, lado a lado. */}
         <div className="grid gap-3 sm:grid-cols-2">
           <Dato nombre="Evidencia">
-            Positivo {hoy.positivo}% · Negativo {hoy.negativo}% en {base.shortLabel} ({signo(subePositivo)} / {signo(subeNegativo)})
+            Positivo {hoy.positivo} % · Negativo {hoy.negativo} % en {base.shortLabel} ({signo(subePositivo)} / {signo(subeNegativo)})
           </Dato>
           <Dato nombre="Volumen">
             {numero(hoy.n)} comentarios, {numero(Math.abs(hoy.n - antes.n))} {hoy.n >= antes.n ? 'más' : 'menos'} que en {previa.shortLabel}
@@ -114,7 +109,7 @@ function Medicion({ etiqueta, reparto, base, esBase }: { etiqueta: string; repar
           {TONOS.map((tono) => (
             <span key={tono.id} className="inline-flex flex-wrap items-center gap-1.5">
               <Text as="span" size="sm" weight="semibold" className={`tabular-nums ${COLOR_TONO[tono.id].texto}`}>
-                {reparto[tono.campo]}%
+                {reparto[tono.campo]} %
               </Text>
               <Text as="span" size="xs" variant="muted">
                 {SENTIMENT_LABELS[tono.id].plural.toLowerCase()}
@@ -132,15 +127,7 @@ function Comentarios({ comentarios, tono }: { comentarios: readonly OpenComment[
   const propios = comentarios.filter((comentario) => comentario.aiSentiment === tono)
   if (propios.length === 0) {
     return (
-      <Empty className="py-8">
-        <EmptyHeader>
-          <EmptyMedia variant="default">
-            <ImagenGlass nombre="glass-chat" />
-          </EmptyMedia>
-          <EmptyTitle>Sin comentarios {SENTIMENT_LABELS[tono].plural.toLowerCase()}</EmptyTitle>
-          <EmptyDescription>Nadie escribió algo con este tono en esta sección de la encuesta base.</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <PrimeraVez className="py-8" icono="glass-chat" titulo={`Sin comentarios ${SENTIMENT_LABELS[tono].plural.toLowerCase()}`} descripcion="Nadie escribió algo con este tono en esta sección de la encuesta base." />
     )
   }
   return (
@@ -155,6 +142,8 @@ function Comentarios({ comentarios, tono }: { comentarios: readonly OpenComment[
       }
       descripcion={`${propios.length > MAXIMO_COMENTARIOS ? `Los primeros ${MAXIMO_COMENTARIOS} comentarios` : 'Todos los comentarios'} con este tono en la encuesta base. Los de cada pregunta están en Resultados › Preguntas.`}
     >
+      {/* py-1!: el panel del marco no deja cambiar su relleno con una clase normal; las filas llevan el suyo (ficha
+          frame-panel-relleno-no-se-quita en ai-tools/flux-ui/diferencias.json). */}
       <FramePanel className="py-1!">
         <FilasSeparadas>
           {propios.slice(0, MAXIMO_COMENTARIOS).map((comentario) => (
@@ -204,6 +193,7 @@ export function DetalleSeccion({ seccion, comparativo, onCerrar }: { seccion: Co
           </TabsList>
           <TabsContent value="detalle" className="flex flex-col gap-6">
             <MarcoLista titulo="Reparto por medición" descripcion="Cómo se reparten los comentarios de esta sección en cada medición y qué separa a cada una de la base.">
+              {/* py-1!: mismo caso que en Comentarios (ficha frame-panel-relleno-no-se-quita). */}
               <FramePanel className="py-1!">
                 <FilasSeparadas>
                   {comparativo.columnas.flatMap((columna) => {

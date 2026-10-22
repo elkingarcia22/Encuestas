@@ -1,7 +1,8 @@
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft01Icon, ArrowRight01Icon, Clock01Icon, FileImportIcon, Logout01Icon } from '@hugeicons/core-free-icons'
-import { Alert, AlertDescription, AlertTitle, Badge, Button, Progress, Text } from '@ubits/flux-ui'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { ArrowLeft01Icon, ArrowRight01Icon, Clock01Icon, FileImportIcon } from '@hugeicons/core-free-icons'
+import { Alert, AlertDescription, AlertTitle, Button, Progress, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { DialogoSalir } from '@/modules/design-system/estados/confirmaciones'
 import { AiThinking } from '@/shared/components/AiThinking'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { PILL } from '@/modules/design-system/drawers/components/drawer-styles'
@@ -13,7 +14,8 @@ import type { CargaHistorica } from './use-carga-historica'
 
 // «Cargar encuestas»: el panel de la carga histórica. Es de IA (la IA lee los archivos y arma la encuesta): orbe en la
 // cabecera y botones en pastilla. Se arma como «Comparar encuestas»: tres pasos (archivos, datos generales, estructura)
-// en la franja bajo la cabecera. «Cargas» (lo que corre y el historial) se abre desde el pie del primer paso. La carga
+// en la franja bajo la cabecera. «Cargas» (lo que corre y el historial) se abre desde la fila bajo la cabecera del primer
+// paso. La carga
 // sigue en segundo plano al cerrar: su fila en la tabla muestra el avance y el Centro de procesos del header la lleva.
 
 const PASOS = ['Archivos', 'Datos generales', 'Estructura'] as const
@@ -33,7 +35,7 @@ function Analizando({ carga }: { carga: CargaHistorica }) {
             {copia.status}
           </Text>
           <Text as="span" size="sm" weight="semibold" className="tabular-nums">
-            {carga.analisis.avance}%
+            {carga.analisis.avance} %
           </Text>
         </div>
         <Progress value={carga.analisis.avance} aria-label="Avance del análisis" />
@@ -45,7 +47,7 @@ function Analizando({ carga }: { carga: CargaHistorica }) {
   )
 }
 
-function Pie({ carga, enCurso }: { carga: CargaHistorica; enCurso: number }) {
+function Pie({ carga }: { carga: CargaHistorica }) {
   const { paso } = carga
   if (carga.pestana === 'cargas' || carga.analisis || paso === 'error' || paso === 'empty' || paso === 'next-action') {
     return (
@@ -54,25 +56,11 @@ function Pie({ carga, enCurso }: { carga: CargaHistorica; enCurso: number }) {
       </Button>
     )
   }
-  const atras =
-    paso === 'dropzone' ? null : (
-      <Button variant="outline" className={PILL} onClick={carga.volver}>
-        <HugeiconsIcon icon={ArrowLeft01Icon} aria-hidden="true" />
-        Volver
-      </Button>
-    )
+  // El paso anterior se pide con «← Volver» arriba (PanelCarga, regla «panel-volver-arriba», 13-oct), no desde aquí. El pie
+  // lleva como mucho dos botones: «Ver cargas» va arriba, en la fila bajo la cabecera.
   if (paso === 'dropzone')
     return (
       <>
-        <Button variant="ghost" className={`mr-auto ${PILL}`} onClick={() => carga.setPestana('cargas')}>
-          <HugeiconsIcon icon={Clock01Icon} aria-hidden="true" />
-          Ver cargas
-          {enCurso > 0 ? (
-            <Badge variant="primary-light" size="xs" className="tabular-nums">
-              {enCurso}
-            </Badge>
-          ) : null}
-        </Button>
         <Button variant="outline" className={PILL} onClick={() => carga.cambiarAbierto(false)}>
           Cancelar
         </Button>
@@ -84,7 +72,6 @@ function Pie({ carga, enCurso }: { carga: CargaHistorica; enCurso: number }) {
   if (paso === 'select')
     return (
       <>
-        {atras}
         <Button className={PILL} disabled={!carga.elegida} onClick={carga.prepararElegida}>
           Continuar
         </Button>
@@ -93,7 +80,6 @@ function Pie({ carga, enCurso }: { carga: CargaHistorica; enCurso: number }) {
   if (paso === 'general')
     return (
       <>
-        {atras}
         <Button className={PILL} disabled={!carga.puedeSeguir} onClick={carga.irAEstructura}>
           Continuar
           <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />
@@ -103,7 +89,6 @@ function Pie({ carga, enCurso }: { carga: CargaHistorica; enCurso: number }) {
   if (paso === 'summary')
     return (
       <>
-        {atras}
         <Button className={PILL} onClick={carga.cargar}>
           <HugeiconsIcon icon={FileImportIcon} aria-hidden="true" />
           Cargar encuesta
@@ -124,13 +109,14 @@ export function PanelCarga({ carga }: { carga: CargaHistorica }) {
   return (
     <>
       {/* Como «Comparar encuestas»: la cabecera no cambia, los pasos van en la franja de abajo y cada paso pone su
-          pregunta en el cuerpo. «Cargas» (lo que corre y el historial) se abre desde el pie del primer paso y vuelve con
+          pregunta en el cuerpo. «Cargas» (lo que corre y el historial) se abre desde la fila de arriba del primer paso y vuelve con
           la fila de navegación, como un drawer anidado. */}
       <DrawerShell
         open={carga.abierto}
         onOpenChange={carga.cambiarAbierto}
         size="lg"
         ai
+        onVolver={!enCargas && !carga.analisis && ['select', 'general', 'summary'].includes(carga.paso) ? carga.volver : undefined}
         title={enCargas ? 'Cargas de encuestas' : (copiaAnalisis?.title ?? 'Cargar encuestas')}
         description={
           enCargas
@@ -142,15 +128,31 @@ export function PanelCarga({ carga }: { carga: CargaHistorica }) {
         navigation={
           enCargas ? (
             <div className="flex items-center border-b px-3 py-1.5">
+              {/* text-muted-foreground!: el botón sin borde no trae tono gris (ficha button-ghost-tonos en
+                  ai-tools/flux-ui/diferencias.json). */}
               <Button variant="ghost" size="sm" className={`text-muted-foreground! ${PILL}`} onClick={() => carga.setPestana('nueva')}>
                 <HugeiconsIcon icon={ArrowLeft01Icon} aria-hidden="true" />
                 Volver a cargar encuestas
               </Button>
             </div>
+          ) : !carga.analisis && carga.paso === 'dropzone' ? (
+            // «Ver cargas» arriba y no en el pie, que lleva como mucho dos botones (regla «panel-volver-arriba», 13-oct).
+            <div className="flex items-center border-b px-3 py-1.5">
+              {/* text-muted-foreground!: ficha button-ghost-tonos, como «Volver a cargar encuestas». */}
+              <Button variant="ghost" size="sm" className={`text-muted-foreground! ${PILL}`} onClick={() => carga.setPestana('cargas')}>
+                <HugeiconsIcon icon={Clock01Icon} aria-hidden="true" />
+                Ver cargas
+                {enCurso > 0 ? (
+                  <Badge variant="primary-light" size="xs" className="tabular-nums">
+                    {enCurso}
+                  </Badge>
+                ) : null}
+              </Button>
+            </div>
           ) : undefined
         }
         headerExtra={paso ? <PasosDrawer pasos={PASOS} actual={paso} onVolver={(destino) => (destino === paso - 1 ? carga.volver() : carga.volverAArchivos())} /> : undefined}
-        footer={<Pie carga={carga} enCurso={enCurso} />}
+        footer={<Pie carga={carga} />}
       >
         {enCargas ? (
           <PestanaCargas carga={carga} />
@@ -182,15 +184,13 @@ export function PanelCarga({ carga }: { carga: CargaHistorica }) {
           </div>
         )}
       </DrawerShell>
-      <DialogoConfirmar
+      {/* La ventana de salir del sistema (regla «salir-con-cambios», 13-oct): «Seguir aquí» y la salida en azul. */}
+      <DialogoSalir
         abierto={carga.confirmarSalida}
         onAbiertoChange={(abierto) => (abierto ? undefined : carga.cancelarSalida())}
-        icono={Logout01Icon}
-        titulo="¿Salir sin cargar la encuesta?"
-        descripcion="Se pierde lo que revisaste y corregiste en este paso. Los archivos no se guardan."
-        cancelar="Seguir revisando"
-        accion="Salir sin cargar"
-        onConfirmar={carga.cerrarDelTodo}
+        salida="Salir de la carga"
+        descripcion="Se pierde lo que revisaste y corregiste en este paso, y los archivos no se guardan."
+        onSalir={carga.cerrarDelTodo}
       />
     </>
   )

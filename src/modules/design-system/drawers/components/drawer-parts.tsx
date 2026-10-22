@@ -42,7 +42,7 @@ function NavRow({ c, s }: PartProps) {
   if (c.nav === 'back') {
     return (
       <div className="flex items-center border-b px-3 py-1.5">
-        <Button data-region="Volver" variant="ghost" size="sm" className={cn(shape, 'text-muted-foreground!')} onClick={() => notify(`Volver a ${s.back}`)}>
+        <Button data-region="Volver" variant="ghost" size="sm" className={cn(shape, 'text-muted-foreground!')} onClick={() => notify(`Volver a ${s.back}`, undefined, 'info')}>
           <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
           {s.back}
         </Button>
@@ -55,10 +55,10 @@ function NavRow({ c, s }: PartProps) {
         <div data-region="Anterior / siguiente" className="flex items-center gap-2.5">
           <span className="text-[13px] text-muted-foreground tabular-nums">3 de 18</span>
           <ButtonGroup>
-            <Button variant="outline" size="icon-xs" aria-label="Registro anterior" onClick={() => notify('Registro anterior')}>
+            <Button variant="outline" size="icon-xs" aria-label="Registro anterior" onClick={() => notify('Registro anterior', undefined, 'info')}>
               <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
             </Button>
-            <Button variant="outline" size="icon-xs" aria-label="Registro siguiente" onClick={() => notify('Registro siguiente')}>
+            <Button variant="outline" size="icon-xs" aria-label="Registro siguiente" onClick={() => notify('Registro siguiente', undefined, 'info')}>
               <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
             </Button>
           </ButtonGroup>
@@ -169,10 +169,10 @@ function ComposerPie({ placeholder }: { placeholder: string }) {
         onChange={setDraft}
         onSend={() => {
           setDraft('')
-          notify('Pregunta enviada')
+          notify('Pregunta enviada', undefined, 'success')
         }}
         placeholder={placeholder}
-        onVoice={() => notify('El modo voz se abre desde el chat de Orbit')}
+        onVoice={() => notify('El modo voz se abre desde el chat de Orbit', undefined, 'info')}
         contextNote=""
       />
     </div>
@@ -182,7 +182,7 @@ function ComposerPie({ placeholder }: { placeholder: string }) {
 function FooterContent({ c, s, onDone }: PartProps & { onDone?: () => void }) {
   const shape = c.ai ? PILL : WS
   const act = (label: string) => () => {
-    notify(label)
+    notify(label, undefined, 'info')
     onDone?.()
   }
 
@@ -307,7 +307,7 @@ export function DrawerPreview({ config: c, sample: s }: { config: DrawerConfig; 
           </div>
           {/* La misma X estándar del drawer real (CloseButton). */}
           <span data-region="Cerrar" className="flex shrink-0">
-            <CloseButton label="Cerrar" onClick={() => notify('El drawer se cierra')} />
+            <CloseButton label="Cerrar" onClick={() => notify('El drawer se cierra', undefined, 'info')} />
           </span>
         </div>
         <Under c={c} s={s} />

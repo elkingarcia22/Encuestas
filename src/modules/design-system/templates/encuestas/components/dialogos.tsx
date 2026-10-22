@@ -188,7 +188,7 @@ export function DialogoFechaCierre({
           </>
         ) : null
       }
-      confirmLabel="Guardar"
+      confirmLabel="Guardar cambios"
       pendingLabel="Guardando…"
       confirmDisabled={!valida}
       onConfirm={() => {

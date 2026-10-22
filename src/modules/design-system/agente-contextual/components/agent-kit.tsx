@@ -1,4 +1,17 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type KeyboardEvent as EventoTeclado,
+  type PointerEvent as EventoPuntero,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import {
   File01Icon,
@@ -79,9 +92,23 @@ const prefiereSinMovimiento = () => typeof window !== 'undefined' && window.matc
 // de la barra lateral (rápido y aterriza suave); sale con una pareja y un poco más lenta, porque con esa misma curva
 // recorría el 80% en 100 ms y se seguía sintiendo brusco. Si la pantalla arranca con el panel abierto, no entra
 // animado: solo lo hace al abrirlo después.
-export function AgentDock({ open, className, children }: { open: boolean; className?: string; children: ReactNode }) {
+// Desde el 13-oct (regla «orbit-un-solo-panel») es el único hueco de Orbit en todas las pantallas —también las que lo
+// acoplan con `useAgente`—, así entra y sale igual en todas, y trae el asidero para cambiarle el ancho. Con `mantener`
+// el panel cerrado sigue montado (oculto): la conversación y lo que esté creando no se pierden.
+export function AgentDock({
+  open,
+  mantener = false,
+  className,
+  children,
+}: {
+  open: boolean
+  mantener?: boolean
+  className?: string
+  children: ReactNode
+}) {
   const [shown, setShown] = useState(open)
   const [entering, setEntering] = useState(false)
+  const [ancho, setAncho] = useState<number | null>(null)
   const dockRef = useRef<HTMLDivElement>(null)
 
   if (open && !shown) {
@@ -101,7 +128,7 @@ export function AgentDock({ open, className, children }: { open: boolean; classN
     document.querySelector<HTMLElement>('[data-agent-reopen]')?.focus()
   }, [open])
 
-  if (!shown) return null
+  if (!shown && !mantener) return null
 
   return (
     <div
@@ -110,36 +137,87 @@ export function AgentDock({ open, className, children }: { open: boolean; classN
       onTransitionEnd={(event) => {
         if (!open && event.target === event.currentTarget && event.propertyName === 'grid-template-columns') setShown(false)
       }}
+      style={ancho ? ({ '--ancho-orbit': `${ancho}px` } as CSSProperties) : undefined}
       className={cn(
         'grid shrink-0 transition-[grid-template-columns] motion-reduce:transition-none',
         open
           ? 'grid-cols-[1fr] duration-350 ease-[cubic-bezier(0.32,0.72,0,1)]'
           : 'grid-cols-[0fr] duration-450 ease-[cubic-bezier(0.4,0,0.2,1)]',
         open && entering && 'starting:grid-cols-[0fr]',
+        !shown && 'hidden',
         className,
       )}
     >
       <div
         className={cn(
-          'flex min-w-0 justify-end overflow-hidden transition-opacity motion-reduce:transition-none',
+          'relative flex min-w-0 justify-end overflow-hidden transition-opacity motion-reduce:transition-none',
           open ? 'opacity-100 duration-250 ease-out' : 'opacity-0 duration-350 ease-in',
           open && entering && 'starting:opacity-0',
+          ancho && '[&_[data-agent-panel]]:w-(--ancho-orbit)!',
         )}
       >
+        {open ? <AsideroOrbit ancho={ancho} onAncho={setAncho} dock={dockRef} /> : null}
         {children}
       </div>
     </div>
   )
 }
 
+// El asidero del borde de Orbit, a media altura (war room del 13-oct: «un drag en la mitad para contraer por si hay
+// mucha información»). Arrastrar cambia el ancho entre 360 y 720 px; con el teclado, las flechas lo mueven de a 32 px;
+// doble clic vuelve al ancho de siempre (452 px). La pantalla se angosta con él: el panel nunca tapa sus botones.
+const ANCHO_MINIMO = 360
+const ANCHO_MAXIMO = 720
+function AsideroOrbit({ ancho, onAncho, dock }: { ancho: number | null; onAncho: (ancho: number | null) => void; dock: RefObject<HTMLDivElement | null> }) {
+  const medir = () => dock.current?.querySelector<HTMLElement>('[data-agent-panel]')?.getBoundingClientRect().width ?? 452
+  const acotar = (valor: number) => Math.round(Math.min(ANCHO_MAXIMO, Math.max(ANCHO_MINIMO, valor)))
+  const empezar = (evento: EventoPuntero<HTMLDivElement>) => {
+    evento.preventDefault()
+    const desde = evento.clientX
+    const anchoInicial = ancho ?? medir()
+    const mover = (movimiento: PointerEvent) => onAncho(acotar(anchoInicial + (desde - movimiento.clientX)))
+    const soltar = () => {
+      window.removeEventListener('pointermove', mover)
+      window.removeEventListener('pointerup', soltar)
+      document.body.style.cursor = ''
+    }
+    window.addEventListener('pointermove', mover)
+    window.addEventListener('pointerup', soltar)
+    document.body.style.cursor = 'col-resize'
+  }
+  const teclear = (evento: EventoTeclado<HTMLDivElement>) => {
+    if (evento.key !== 'ArrowLeft' && evento.key !== 'ArrowRight') return
+    evento.preventDefault()
+    onAncho(acotar((ancho ?? medir()) + (evento.key === 'ArrowLeft' ? 32 : -32)))
+  }
+  return (
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Ancho de Orbit"
+      aria-valuemin={ANCHO_MINIMO}
+      aria-valuemax={ANCHO_MAXIMO}
+      aria-valuenow={Math.round(ancho ?? 452)}
+      tabIndex={0}
+      title="Arrastra para cambiar el ancho de Orbit"
+      onPointerDown={empezar}
+      onKeyDown={teclear}
+      onDoubleClick={() => onAncho(null)}
+      className="group absolute top-1/2 left-0 z-10 flex h-16 w-3 -translate-y-1/2 cursor-col-resize touch-none items-center justify-center outline-none"
+    >
+      <span className="h-10 w-1 rounded-full bg-border transition-colors group-hover:bg-muted-foreground group-focus-visible:bg-primary" />
+    </div>
+  )
+}
+
 export function AgentRail({ onOpen, pending }: { onOpen: () => void; pending?: boolean }) {
   return (
-    <aside aria-label="Orbit Flow minimizado" className="flex w-15 shrink-0 flex-col items-center gap-3.5 border-l py-4">
+    <aside aria-label="Orbit minimizado" className="flex w-15 shrink-0 flex-col items-center gap-3.5 border-l py-4">
       {/* El punto azul también va en el nombre: solo con el color no llega al lector de pantalla. */}
       <BotonIcono
         data-agent-reopen=""
         size="icon"
-        aria-label={pending ? 'Abrir Orbit Flow · tiene algo nuevo' : 'Abrir Orbit Flow'}
+        aria-label={pending ? 'Abrir Orbit · tiene algo nuevo' : 'Abrir Orbit'}
         className="relative"
         onClick={onOpen}
       >
@@ -147,19 +225,19 @@ export function AgentRail({ onOpen, pending }: { onOpen: () => void; pending?: b
         {pending ? <span aria-hidden="true" className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-background bg-primary" /> : null}
       </BotonIcono>
       <span aria-hidden="true" className="text-[13px] text-muted-foreground [writing-mode:vertical-rl]">
-        Orbit Flow
+        Orbit
       </span>
     </aside>
   )
 }
 
-// «Orbit Flow»: con el panel cerrado, la forma de volver a abrirlo va en la fila de botones de la pantalla, siempre la
-// última, a la derecha del botón primario (auditoría 5-oct). Sin `label`: ya se llama «Orbit Flow». Por defecto va la pastilla entera; en pantallas
+// «Orbit»: con el panel cerrado, la forma de volver a abrirlo va en la fila de botones de la pantalla, siempre la
+// última, a la derecha del botón primario (auditoría 5-oct). Sin `label`: ya se llama «Orbit». Por defecto va la pastilla entera; en pantallas
 // muy cargadas (cabecera larga, botones con mucho texto) va `compact`: solo el orbe, para no competir con la acción
 // principal. El nombre sale al pasar el cursor.
 export function ReopenAgentButton({
   onClick,
-  label = 'Orbit Flow',
+  label = 'Orbit',
   compact,
   pending,
   region,

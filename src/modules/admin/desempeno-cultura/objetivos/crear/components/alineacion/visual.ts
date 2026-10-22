@@ -28,9 +28,3 @@ export const LEYENDA: Readonly<Record<AlignmentLevel, readonly AlignmentNodeKind
   agrupacion: ['company', 'target'],
   colaboradores: ['company', 'person', 'origin'],
 }
-
-export const ICONO_NIVEL: Readonly<Record<AlignmentLevel, typeof Target02Icon>> = {
-  objetivos: Target02Icon,
-  agrupacion: UserGroupIcon,
-  colaboradores: UserIcon,
-}

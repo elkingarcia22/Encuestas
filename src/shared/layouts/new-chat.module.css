@@ -7,34 +7,39 @@
   /* Un pelo más oscuro que el #d6306e entregado: con texto blanco encima quedaba en 4.48:1 (AA pide 4.5). */
   --ai-pink: #d22d6a;
   --ai-orange: #eb6233;
-  /* Ida y vuelta: al doble de ancho se ven siempre los cuatro tonos, en reposo azul → naranja y con el cursor al revés. */
-  --ai-gradient-loop: linear-gradient(
-    90deg,
-    var(--ai-blue) 0%,
-    var(--ai-purple) 18%,
-    var(--ai-pink) 35%,
-    var(--ai-orange) 50%,
-    var(--ai-pink) 65%,
-    var(--ai-purple) 82%,
-    var(--ai-blue) 100%
-  );
   position: relative;
   display: flex;
   border-radius: 9999px;
 }
 
-/* El relleno mide el doble del botón: al pasar el cursor se desliza y los tonos se mueven. */
+/* El relleno: azul → morado → rosa → naranja. Al pasar el cursor se invierte (naranja → azul) sin que nada se desplace:
+   cada punto cambia de color en su sitio, así no cruza ninguna franja ni se ve un corte (15 oct, Carlos; antes el
+   relleno medía el doble y se deslizaba de lado, y el naranja atravesaba el botón). La mezcla va en OKLCH, que da la
+   vuelta por el círculo de color: el azul llega al naranja pasando por morado y rosa, los tonos de la propia paleta, sin
+   grises. `--giro-ia` va de 0 a 100 % y es lo único que se anima. Se probaron un brillo que cruzaba, un salto y un
+   relleno que giraba (referencia «Animate» de shots.so) y se quitaron. */
+@property --giro-ia {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
 .button {
-  background: var(--ai-gradient-loop);
-  background-size: 200% 100%;
-  background-position: 0% 50%;
+  --giro-ia: 0%;
+  background: linear-gradient(
+    90deg in oklab,
+    color-mix(in oklch, var(--ai-blue), var(--ai-orange) var(--giro-ia)) 0%,
+    color-mix(in oklch, var(--ai-purple), var(--ai-pink) var(--giro-ia)) 36%,
+    color-mix(in oklch, var(--ai-pink), var(--ai-purple) var(--giro-ia)) 70%,
+    color-mix(in oklch, var(--ai-orange), var(--ai-blue) var(--giro-ia)) 100%
+  );
   color: white;
   box-shadow: none;
-  transition: background-position 500ms ease;
+  transition: --giro-ia 600ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .button:hover {
-  background-position: 100% 50%;
+  --giro-ia: 100%;
 }
 
 /* Texto e icono blancos en los dos modos: el botón de flux-ui pone `--primary-foreground`, que en oscuro es azul
@@ -57,6 +62,7 @@
     1;
 }
 
+/* Sin movimiento: el degradado se invierte de una, sin transición. */
 @media (prefers-reduced-motion: reduce) {
   .button {
     transition: none;

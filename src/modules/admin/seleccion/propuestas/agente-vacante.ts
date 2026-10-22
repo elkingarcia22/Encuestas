@@ -204,7 +204,7 @@ export type Intencion =
 const NO_HAGO: { patron: RegExp; que: string; donde: string }[] = [
   {
     patron: /\b(borra|borrar|elimina|eliminar|suprime|suprimir)\b.*\b(datos?|informacion|perfil|registro|ficha)\b|habeas/,
-    que: 'borrar los datos de una persona',
+    que: 'eliminar los datos de una persona',
     donde: 'su ficha en Mis candidatos, en «⋯» › «Eliminar sus datos». Desde su ficha aquí, el mismo «⋯» te lleva allá.',
   },
   {

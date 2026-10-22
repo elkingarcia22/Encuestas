@@ -587,7 +587,7 @@ export function PanelNotificaciones() {
               </ItemMedia>
               <ItemContent>
                 <ItemTitle>Novedades de la v4.2</ItemTitle>
-                <ItemDescription>Tres mejoras nuevas esta semana</ItemDescription>
+                <ItemDescription>Cuatro mejoras nuevas esta semana</ItemDescription>
               </ItemContent>
               <ItemActions>
                 <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" className="size-4" />

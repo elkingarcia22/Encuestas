@@ -1,6 +1,5 @@
 import type { CicloBuilderAssignmentSeed, ObjectiveSetKind, CicloDraft } from '../../modelo/constructor/cicloBuilderTypes'
 import { cicloStepIssue, getCicloStepperOrder, isCicloStepReachable, type CicloStepId, type CicloStepperStatusInput } from '../../modelo/constructor/cicloStepper'
-import { GOVERNANCE_META } from '../../modelo/constructor/cicloSetup'
 
 // Los pasos del constructor en español, sobre la lógica del prototipo (`cicloStepper`), con los mismos nombres de
 // funciones que `encuestas/crear/components/pasos.ts`. La diferencia con Encuestas es que aquí el recorrido no es fijo:
@@ -61,6 +60,8 @@ export function resumenFinalizar(estado: EstadoDelBorrador): { fallidos: PasoId[
   return { fallidos, mensaje: resto === 0 ? `${primero}.` : `${primero} y ${resto} ${resto === 1 ? 'paso más' : 'pasos más'} por completar.` }
 }
 
-/** La etiqueta del botón del último paso: RRHH termina con «Finalizar»; con líderes, colaboradores u otros, el
- *  administrador «Lanza el ciclo» y los demás escriben lo suyo. */
-export const etiquetaFinal = (borrador: CicloDraft) => (borrador.objectiveCreator ? GOVERNANCE_META[borrador.objectiveCreator].finishLabel : 'Finalizar')
+/** La etiqueta del botón del último paso, el verbo del flujo como «Crear encuesta» (21-oct): RRHH termina con «Crear
+ *  ciclo»; con líderes, colaboradores u otros, el administrador «Lanza el ciclo» y los demás escriben lo suyo. «Finalizar»
+ *  queda solo para cerrar un ciclo en curso, desde la lista. */
+// 21-oct: el último paso de toda creación dice «Publicar», escriba quien escriba los objetivos.
+export const etiquetaFinal = (_borrador: CicloDraft) => 'Publicar'

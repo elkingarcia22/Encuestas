@@ -9,7 +9,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Combobox,
   ComboboxContent,
@@ -29,6 +28,7 @@ import {
   Text,
   useComboboxAnchor,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { FilaCifras, type Cifra } from '@/modules/design-system/metricas/cifras'
 import { UBITS_DIRECTORY, buildStructureSummary, identifierTypeLabel, questionKind, type DetectedParticipant, type ParticipantGroup, type ParticipantResolution, type UbitsDirectoryUser, type SurveyReviewItem, type StructureSummary } from '../../modelo/carga-historica'
@@ -36,6 +36,7 @@ import { EncabezadoPaso } from '../pasos-drawer'
 import { FilasSeparadas } from '../marco-lista'
 import type { CargaHistorica } from './use-carga-historica'
 import { TextoCompleto } from '@/shared/components/TextoCompleto'
+import { numero } from '@/modules/design-system/graficos/piezas'
 
 // «Estructura»: lo que encontramos en los archivos antes de cargar. Los indicadores que calculamos,
 // con qué usuario de UBITS queda cada participante (solo en una carga pública), y cómo queda armada
@@ -83,7 +84,6 @@ function cifrasDe(item: SurveyReviewItem, resumen: StructureSummary): Cifra[] {
   return cifras
 }
 
-const numero = (valor: number) => valor.toLocaleString('es-CO')
 const plural = (n: number, uno: string, varios: string) => `${numero(n)} ${n === 1 ? uno : varios}`
 
 /** Asociar a mano un participante con un usuario de UBITS: un buscador por nombre o username. */

@@ -7,97 +7,98 @@ import {
   RefreshIcon,
 } from '@hugeicons/core-free-icons'
 import { useNavigate } from 'react-router'
-import { Badge, Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Heading, IconTile, Progress, useTheme } from '@ubits/flux-ui'
+import { Button, Dialog, DialogContent, DialogDescription, DialogTitle, Heading, IconTile, Progress, useTheme } from '@ubits/flux-ui'
 import promoBg from '@/shared/assets/promo-seleccion.jpg'
+import novedadesPortada from '@/shared/assets/novedades-portada.webp'
 import { Orb } from './Orb'
 import { PROMO_BULLETS, PROMO_NEWS, PROMO_STEPS } from './shell-data'
 import { notify } from './notify'
 import { CloseButton } from '@/shared/components/CloseButton'
 import { BotonIcono } from '@/shared/components/BotonIcono'
+import { Badge as Insignia } from '@/shared/components/Badge'
 
 type AnnouncementProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-// 1 · Lanzamiento de feature: el agente ya ejecuta en Selección. Copia del prototipo:
-// ilustración con dos tarjetas, «Nuevo», título, tres puntos y dos acciones.
+// 1 · Lanzamiento de feature: el agente ya ejecuta en Selección («Ver qué cambió» del chat de Orbit). Desde el 15 oct
+// (Carlos) tiene la forma de la ventana de Novedades: la ilustración en una baldosa con la X encima, título y bajada,
+// las mejoras como filas con su icono, título y detalle, y el pie gris con las dos acciones.
 export function FeatureDialog({ open, onOpenChange }: AnnouncementProps) {
   const navigate = useNavigate()
+  const close = () => onOpenChange(false)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* Entrada como en el prototipo: aparece, sube 10px y crece con un rebote suave (~300ms). */}
       <DialogContent
         showCloseButton={false}
-        className="gap-0! overflow-hidden p-0! duration-300! ease-[cubic-bezier(0.22,1.2,0.36,1)]! slide-in-from-bottom-[10px] sm:max-w-129!"
+        className={`flex! max-h-[72vh] flex-col gap-0! overflow-hidden p-0! sm:max-w-130! ${ENTER}`}
       >
-        <div className="relative h-53 overflow-hidden bg-cover bg-center" style={{ backgroundImage: `url(${promoBg})` }}>
-          <div className="absolute inset-x-8.5 top-9.5 flex items-center gap-3.5">
-            <div className="w-37.5 shrink-0 rounded-xl bg-card/95 p-3 shadow-xl">
-              <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">Vacante</p>
-              <p className="mt-1 text-sm font-medium">Analista de datos</p>
-              <Progress
-                value={64}
-                aria-label="Avance de la vacante"
-                className="mt-2"
-              />
-            </div>
-            {/* El orbe, no una estrella dibujada: es la única marca de la IA (auditoría, 5-oct). */}
-            <span className="flex size-8.5 shrink-0 items-center justify-center rounded-full bg-card shadow-lg">
-              <Orb className="size-5" />
-            </span>
-            <div className="min-w-0 flex-1 rounded-xl bg-card/95 px-3.5 py-3 shadow-xl">
-              <div className="flex items-center gap-2">
-                <Orb className="size-6" />
-                <span className="text-sm">
-                  Moví 12 candidatos a <span className="font-medium">Entrevistas</span>
-                </span>
+        {/* Portada: la ilustración del prototipo (la vacante y lo que hizo el agente) en una baldosa con 6px de aire y
+            esquinas concéntricas con la ventana, como la imagen de Novedades. Decorativa: el texto ya lo dice. */}
+        <div className="relative m-1.5 mb-0 shrink-0">
+          <div
+            aria-hidden="true"
+            className="relative h-43 overflow-hidden rounded-lg border bg-cover bg-center"
+            style={{ backgroundImage: `url(${promoBg})` }}
+          >
+            <div className="absolute inset-x-7 top-1/2 flex -translate-y-1/2 items-center gap-3.5">
+              <div className="w-37.5 shrink-0 rounded-xl bg-card/95 p-3 shadow-xl">
+                <p className="text-xs font-medium tracking-widest text-muted-foreground uppercase">Vacante</p>
+                <p className="mt-1 text-sm font-medium">Analista de datos</p>
+                <Progress value={64} aria-label="Avance de la vacante" className="mt-2" />
               </div>
-              <div className="mt-2 flex gap-2">
-                <Badge variant="secondary" size="xs">Hecho</Badge>
-                <Badge variant="secondary" size="xs">Sin correos</Badge>
+              {/* El orbe, no una estrella dibujada: es la única marca de la IA (auditoría, 5-oct). */}
+              <span className="flex size-8.5 shrink-0 items-center justify-center rounded-full bg-card shadow-lg">
+                <Orb className="size-5" />
+              </span>
+              <div className="min-w-0 flex-1 rounded-xl bg-card/95 px-3.5 py-3 shadow-xl">
+                <div className="flex items-center gap-2">
+                  <Orb className="size-6" />
+                  <span className="text-sm">
+                    Moví 12 candidatos a <span className="font-medium">Entrevistas</span>
+                  </span>
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <Insignia variant="secondary" size="xs">Hecho</Insignia>
+                  <Insignia variant="secondary" size="xs">Sin correos</Insignia>
+                </div>
               </div>
             </div>
           </div>
-          {/* Cerrar sobre la ilustración con la pastilla común de cerrar. */}
-          <CloseButton label="Cerrar" className="absolute top-4 right-4" onClick={() => onOpenChange(false)} />
+          <CloseButton label="Cerrar" className="absolute top-3 right-3" onClick={close} />
         </div>
 
-        <div className="px-7 pt-6.5 pb-5.5">
-          <DialogHeader className="gap-0!">
-            <Badge variant="secondary" className="w-fit tracking-wider uppercase">
-              <Orb className="size-3" />
-              Nuevo
-            </Badge>
-            <DialogTitle render={<Heading as="h2" level={3} />} className="mt-3.5">
-              El agente ya ejecuta en Selección
-            </DialogTitle>
-            <DialogDescription className="sr-only">
-              Pídele tareas con efecto real y revisa el impacto antes de confirmar.
-            </DialogDescription>
-          </DialogHeader>
-          <ul className="mt-5 flex flex-col gap-4">
-            {PROMO_BULLETS.map((b) => (
-              <li key={b.text} className="flex items-start gap-3">
-                <IconTile variant="solid" className="size-7.5! rounded-lg! bg-muted! text-foreground/75! [--icon-tile-icon-size:16px]">
-                  <HugeiconsIcon icon={b.icon} size={16} />
-                </IconTile>
-                <span className="flex-1 text-base leading-normal text-pretty text-foreground/75">{b.text}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="border-b px-6.5 pt-5 pb-5">
+          <DialogTitle render={<Heading as="h2" level={3} />}>El agente ya ejecuta en Selección</DialogTitle>
+          {/* 4px del título a su bajada, como en todo el sistema. */}
+          <DialogDescription className="mt-1! text-sm leading-normal">
+            Pídele tareas con efecto real y revisa el impacto antes de confirmar.
+          </DialogDescription>
         </div>
 
-        <DialogFooter className="flex-row! gap-3! px-7 pt-4 pb-6">
-          <Button variant="outline" size="lg" onClick={() => onOpenChange(false)}>
+        <ul className="min-h-0 flex-1 overflow-auto">
+          {PROMO_BULLETS.map((b) => (
+            <li key={b.title} className="flex gap-3 border-b px-6.5 py-4.5 last:border-b-0">
+              <IconTile variant="solid" className="size-8.5! rounded-md! bg-muted! text-foreground/75! [--icon-tile-icon-size:17px]">
+                <HugeiconsIcon icon={b.icon} size={17} />
+              </IconTile>
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="text-base font-medium">{b.title}</span>
+                <p className="text-sm leading-normal text-pretty text-muted-foreground">{b.text}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <div className="flex items-center justify-end gap-3 border-t bg-muted px-6.5 py-4">
+          <Button variant="outline" onClick={close}>
             Después
           </Button>
           <Button
-            size="lg"
-            className="flex-1"
             onClick={() => {
-              onOpenChange(false)
+              close()
               navigate('/admin/seleccion/exploraciones/uno')
               notify('Selección · el agente ya puede actuar aquí')
             }}
@@ -105,7 +106,7 @@ export function FeatureDialog({ open, onOpenChange }: AnnouncementProps) {
             Probarlo en Selección
             <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )
@@ -114,19 +115,28 @@ export function FeatureDialog({ open, onOpenChange }: AnnouncementProps) {
 // Entrada común de los anuncios, como en el prototipo: sube 10px y crece con un rebote suave (~300ms).
 const ENTER = 'duration-300! ease-[cubic-bezier(0.22,1.2,0.36,1)]! slide-in-from-bottom-[10px]'
 
-// 2 · Novedades del release (prototipo «Lo que cambió esta semana»): versión, tres mejoras y pie gris.
-export function ChangelogDialog({ open, onOpenChange }: AnnouncementProps) {
+// 2 · Novedades del release (prototipo «Lo que cambió esta semana»): portada, cuatro mejoras y pie gris.
+// `onOpenProcesses`: el header le pasa cómo abrir el Centro de procesos; sin él (copias del design system) solo avisa.
+export function ChangelogDialog({ open, onOpenChange, onOpenProcesses }: AnnouncementProps & { onOpenProcesses?: () => void }) {
   const close = () => onOpenChange(false)
   const navigate = useNavigate()
   const { setMode } = useTheme()
 
-  // Cada novedad lleva a su funcionalidad (1 oct): Selección abre Vacantes, el tema oscuro se prende y el Centro de
-  // procesos, que no tiene pantalla propia, dice dónde abrirlo.
+  // Cada novedad lleva a su funcionalidad (1 oct; 13 oct, Carlos): Selección abre Vacantes, el tema oscuro se prende,
+  // el Centro de procesos abre su panel y «Para atender» lleva al inicio, a ese módulo.
   const abrir = (titulo: string) => {
     close()
     if (titulo === 'Acciones en vacantes') navigate('/admin/seleccion/vacantes')
     else if (titulo === 'Tema oscuro') setMode('dark')
-    else notify('El centro de procesos se abre desde Notificaciones')
+    else if (titulo === 'Para atender') {
+      navigate('/admin')
+      // Espera a que el inicio se pinte y baja hasta el módulo (sin animar si la persona pidió menos movimiento).
+      window.setTimeout(() => {
+        const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        document.getElementById('para-atender')?.scrollIntoView({ behavior: suave ? 'smooth' : 'auto', block: 'center' })
+      }, 350)
+    } else if (onOpenProcesses) onOpenProcesses()
+    else notify('El centro de procesos está arriba, a la derecha de Notificaciones')
   }
 
   return (
@@ -135,32 +145,34 @@ export function ChangelogDialog({ open, onOpenChange }: AnnouncementProps) {
         showCloseButton={false}
         className={`flex! max-h-[72vh] flex-col gap-0! overflow-hidden p-0! sm:max-w-130! ${ENTER}`}
       >
-        <div className="relative overflow-hidden border-b px-6.5 pt-6 pb-5">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-20 -right-10 h-42.5 w-55 rounded-full bg-radial-[closest-side] from-primary/20 to-transparent blur-lg"
-          />
-          <div className="relative flex items-center gap-2">
-            <Badge className="tracking-wider">v4.2</Badge>
-            <span className="tabular-nums text-xs text-muted-foreground">11 SEP 2026</span>
-            <CloseButton label="Cerrar" className="ml-auto" onClick={close} />
+        {/* Portada (13 oct, Carlos): la imagen del Manifiesto del design system, en una baldosa con 6px de aire y esquinas
+            concéntricas con la ventana, y la X encima, como en la tarjeta del tour. Sin versión ni fecha. Decorativa. */}
+        <div className="relative m-1.5 mb-0 shrink-0">
+          <div aria-hidden="true" className="h-43 overflow-hidden rounded-lg border">
+            <img src={novedadesPortada} alt="" className="size-full object-cover" draggable={false} />
           </div>
-          <DialogTitle render={<Heading as="h2" level={3} />} className="relative mt-3">
+          <CloseButton label="Cerrar" className="absolute top-3 right-3" onClick={close} />
+        </div>
+        <div className="border-b px-6.5 pt-5 pb-5">
+          <DialogTitle render={<Heading as="h2" level={3} />}>
             Lo que cambió esta semana
           </DialogTitle>
           {/* 4px del título a su bajada, como en todo el sistema. */}
-          <DialogDescription className="relative mt-1! text-sm leading-normal">
-            Tres mejoras pensadas para que no tengas que revisar todo a mano.
+          <DialogDescription className="mt-1! text-sm leading-normal">
+            Nuestras mejoras más relevantes.
           </DialogDescription>
         </div>
 
         <ul className="min-h-0 flex-1 overflow-auto">
           {PROMO_NEWS.map((n) => (
-            // Toda la fila responde (1 oct): se tiñe al pasar el cursor con el gris de resaltado de los menús y la flecha avanza. El control sigue siendo el
-            // botón de la flecha, que se estira sobre la fila para que el clic caiga en cualquier punto.
+            // Toda la fila responde (1 oct): se tiñe al pasar el cursor con el gris de resaltado de los menús y la flecha avanza.
+            // El clic lo escucha la fila (13 oct): antes el botón se estiraba con un ::after, pero al presionar se hunde 1px,
+            // la capa se encoge al botón y el clic se perdía fuera de la flecha. Con teclado sigue siendo el botón de la
+            // flecha (Tab y Enter): su clic sube a la fila.
             <li
               key={n.title}
-              className="group/novedad relative flex gap-3 border-b px-6.5 py-4.5 transition-colors last:border-b-0 hover:bg-accent has-focus-visible:bg-accent"
+              className="group/novedad relative flex cursor-pointer gap-3 border-b px-6.5 py-4.5 transition-colors last:border-b-0 hover:bg-accent has-focus-visible:bg-accent"
+              onClick={() => abrir(n.title)}
             >
               <IconTile variant="solid" className="size-8.5! rounded-md! bg-muted! text-foreground/75! [--icon-tile-icon-size:17px]">
                 <HugeiconsIcon icon={n.icon} size={17} />
@@ -168,14 +180,14 @@ export function ChangelogDialog({ open, onOpenChange }: AnnouncementProps) {
               <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex items-center gap-2">
                   <span className="text-base font-medium">{n.title}</span>
-                  <Badge variant="secondary" size="xs" className="tracking-wider uppercase">{n.tag}</Badge>
+                  {/* Etiqueta en azul suave, como el botón de Novedades, y sin mayúsculas forzadas (13 oct, Carlos). */}
+                  <Insignia variant="primary-light" size="xs">{n.tag}</Insignia>
                 </div>
                 <p className="text-sm leading-normal text-pretty text-muted-foreground">{n.text}</p>
               </div>
               <BotonIcono
                 aria-label={`Ir a ${n.title}`}
-                className="self-center after:absolute after:inset-0 after:content-['']"
-                onClick={() => abrir(n.title)}
+                className="cursor-pointer self-center"
               >
                 <HugeiconsIcon
                   icon={ArrowRight01Icon}
@@ -187,8 +199,7 @@ export function ChangelogDialog({ open, onOpenChange }: AnnouncementProps) {
           ))}
         </ul>
 
-        <div className="flex items-center gap-3 border-t bg-muted px-6.5 py-4">
-          <span className="flex-1 text-xs text-muted-foreground">Se publican los jueves</span>
+        <div className="flex items-center justify-end gap-3 border-t bg-muted px-6.5 py-4">
           <Button
             variant="outline"
             onClick={() => {

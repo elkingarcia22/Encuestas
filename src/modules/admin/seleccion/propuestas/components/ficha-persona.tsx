@@ -26,23 +26,22 @@ import {
   Text,
 } from '@ubits/flux-ui'
 import { Badge } from '@/shared/components/Badge'
-import { CeldaCifra } from '@/modules/admin/inicio/components/bloques'
 import { notify, notifyAction } from '@/shared/components/notify'
 import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
-import { useNavigate } from 'react-router'
 import { fechaSinAnio, isoHaceDias } from '@/modules/design-system/patrones/formato'
 import { anotarCorreo, baseDeCandidatos } from '../base'
 import { VistaPreviaCorreo } from './vista-previa-correo'
 import { ASUNTO_TERMINAR, InvitarATerminar } from './invitar-a-terminar'
-import { Marco } from '../../vacantes/detalle/candidato/components/piezas'
-import { disponible, pesos, type Nota } from '../../vacantes/detalle/components/data'
+import { Marco } from '@/modules/design-system/patrones/ficha'
+import type { Nota } from '../../vacantes/detalle/components/data'
 import { horaDe, perfilDeCandidatura } from '../perfil-candidato'
 import { expedienteDeSesion, useExpedienteDeSesion } from '../expediente-sesion'
-import { QUIEN_MUEVE, registroDeMovimientos, sigueEnProceso, useMovimientos, type Movimiento } from '../movimientos'
-import { quienDe } from '../rechazos'
+import { QUIEN_MUEVE, registroDeMovimientos, sigueEnProceso, useMovimientos, useSinInvitacion, type Movimiento } from '../movimientos'
+import { AvisoSinInvitacion } from './invitar-a-etapa'
 import { BloqueImportada } from './bloque-importada'
+import { ListaNotas } from '../../vacantes/detalle/candidato/components/notas'
 import { BloqueRechazo, PieRechazada } from './bloque-rechazo'
 import { LineasMovimiento } from './lineas-movimiento'
 import { LineaDeEtapas, PerfilCandidato, useNavegarFicha, type PestanaInicial } from './perfil-candidato'
@@ -97,7 +96,13 @@ export function FichaPersona({
   rechazada,
   onReconsiderar,
   pestanaInicial,
+  onQuitar,
+  onInvitar,
 }: {
+  // Eliminarla de esta vacante, desde el «⋯» (solo dentro de la vacante).
+  onQuitar?: () => void
+  // Enviarle la invitación de su etapa con IA si entró sin ella («Solo moverla» o sin créditos).
+  onInvitar?: () => void
   // Con qué pestaña abre; sin ella, «Resumen». Desde el tablero se pasa `pestanaParaEtapa(etapa)`.
   pestanaInicial?: PestanaInicial
   candidatura: Candidatura
@@ -136,10 +141,6 @@ export function FichaPersona({
   // saber a dónde.
   const siguiente = siguienteEtapaDe(proceso, etapa)
 
-  // Lo que no ha dicho no se inventa (CA-25).
-  const pideSinDecir = candidato.sinDeclarar?.includes('pretension')
-  const empiezaSinDecir = candidato.sinDeclarar?.includes('disponibilidad')
-  const dentroDelRango = pideSinDecir || candidato.pretension <= vacante.rango[1]
   const diasAqui = candidatura.dias === 1 ? '1 día' : `${candidatura.dias} días`
   const etapaActual = proceso[paso - 1]
   const postulacion = perfil.historial.find((una) => una.actual)
@@ -161,38 +162,9 @@ export function FichaPersona({
               ) : null
           : undefined
       }
-      cabecera={
-        // Quién es, en una sola pieza y sin cajas (25 sep, Nicolás: «unas cosas como sí y otras no»): el nombre manda,
-        // debajo lo que hace y, en una línea tenue, de dónde es, cuánta experiencia trae y cómo llegó. El contacto va
-        // justo debajo, como botones que copian o abren.
-        // En el celular sin la foto y sin cortar nada: el cargo y los años se leen completos (CA-33).
-        <div className="flex items-start gap-4">
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            {/* Fuera del proceso, la etiqueta va junto al nombre: se ve en todas las pestañas, no solo en «Resumen» (1 oct). */}
-            <div className="flex min-w-0 items-center gap-2">
-              <Text as="div" size="xl" weight="semibold" className="min-w-0 break-words">
-                {candidato.nombre}
-              </Text>
-              {rechazada ? (
-                <Badge variant="destructive-outline" className="shrink-0">
-                  {quienDe(rechazada) === 'candidato' ? 'Se retiró' : 'Rechazada'}
-                </Badge>
-              ) : null}
-            </div>
-            <Text as="div" size="sm">
-              {candidato.cargo} en {candidato.empresa}
-            </Text>
-            <Text as="div" variant="muted" size="sm">
-              {candidato.ciudad} · {candidato.anios === 1 ? '1 año' : `${candidato.anios} años`} de experiencia ·{' '}
-              {candidatura.importada
-                ? `Entró con un lote (${candidatura.importada.origen.toLowerCase()})`
-                : candidato.origen === 'Agregado a mano'
-                  ? 'Agregado a mano por el equipo'
-                  : 'Aplicó por el portal de empleo'}
-            </Text>
-          </div>
-        </div>
-      }
+      // Quién es (la cara, el nombre y dónde vive) va en la cabecera del panel, no aquí (13 oct, reunión con la PM y el TL:
+      // sin «Candidatura» ni el nombre de la vacante, que ya se sabe, y sin cargo, empresa ni años de experiencia, que no
+      // dicen en qué). Debajo, el contacto: correo y celular, lo que más se usa.
       // Las decisiones, fijas abajo en todas las pestañas, como la barra de la exploración 3.
       pie={
         <div className="@container flex shrink-0 flex-wrap items-center gap-2 border-t bg-card px-5 py-3 in-data-[slot=drawer-popup]:bg-popover">
@@ -215,7 +187,7 @@ export function FichaPersona({
             </>
           ) : (
             <>
-              <MasDeLaFicha candidatura={candidatura} />
+              <MasDeLaFicha candidatura={candidatura} onQuitar={onQuitar} />
               {/* En el celular el pie cabe en una fila: «Rechazar» queda en su icono y «Avanzar» sin el nombre de la etapa,
                   que sí dice al lector de pantalla (CA-33). */}
               <Button variant="outline" onClick={onRechazar} aria-label="Rechazar">
@@ -258,7 +230,7 @@ export function FichaPersona({
             </AlertDescription>
           </Alert>
         ) : null}
-        {rechazada ? null : <AlertaPendiente candidatura={candidatura} />}
+        {rechazada ? null : <AlertaPendiente candidatura={candidatura} onInvitar={onInvitar} />}
         {/* Su paso por la empresa, dicho igual que en la tarjeta (CA-09). */}
         {pasoPorLaEmpresa(candidatura.personaId, candidato.cargo) ? (
           <Alert variant="info">
@@ -276,7 +248,12 @@ export function FichaPersona({
             titulo={tituloEtapa(etapa)}
             descripcion={
               <>
-                {rechazada ? `Etapa ${paso} de ${proceso.length} · aquí se quedó` : `Etapa ${paso} de ${proceso.length} · lleva ${diasAqui} aquí`}
+                {/* Los días van en la alerta de arriba cuando espera algo de ti: aquí no se repiten (13 oct). */}
+                {rechazada
+                  ? `Etapa ${paso} de ${proceso.length} · aquí se quedó`
+                  : candidato.accion
+                    ? `Etapa ${paso} de ${proceso.length}`
+                    : `Etapa ${paso} de ${proceso.length} · lleva ${diasAqui} aquí`}
                 {etapaActual?.descripcion ? `. ${etapaActual.descripcion.replace(/\.$/, '')}.` : null}
               </>
             }
@@ -311,55 +288,14 @@ export function FichaPersona({
 
         {/* Sin «Puntajes de la IA» ni el «cumple / no cumple» que se corregía a mano (8 oct, VP de producto): el puntaje
             de cada etapa está dentro de ella, y la lectura del CV es la de Serena, en texto. */}
-        {/* ── Lo que pide ── Tres cifras, como las del resto del producto. */}
-        <Marco
-          titulo="Lo que pide"
-          descripcion="Frente a lo que ofrece la vacante."
-          accion={
-            dentroDelRango ? null : (
-              <Badge variant="warning-light" className="shrink-0">
-                Pide más que el tope
-              </Badge>
-            )
-          }
-        >
-          <FramePanel className="@container">
-            <div className="grid gap-4 @md:grid-cols-3">
-              <CeldaCifra
-                cifra={{
-                  etiqueta: 'Salario',
-                  valor: pideSinDecir ? 'No lo ha dicho' : pesos(candidato.pretension),
-                  // Corto, para que quepa en una línea en el panel: si pide más, el aviso ámbar ya lo dice arriba.
-                  detalle: pideSinDecir
-                    ? `Pregúntaselo. Rango: ${pesos(vacante.rango[0])} – ${pesos(vacante.rango[1])}`
-                    : dentroDelRango
-                      ? `Rango: ${pesos(vacante.rango[0])} – ${pesos(vacante.rango[1])}`
-                      : `Tope: ${pesos(vacante.rango[1])}`,
-                }}
-              />
-              <CeldaCifra
-                cifra={{
-                  etiqueta: 'Puede empezar',
-                  valor: empiezaSinDecir ? 'No lo ha dicho' : disponible(candidato.disponibilidad),
-                  detalle: empiezaSinDecir ? 'Pregúntaselo' : 'desde que acepte',
-                }}
-              />
-              <CeldaCifra
-                cifra={{
-                  etiqueta: 'Experiencia',
-                  valor: candidato.anios === 1 ? '1 año' : `${candidato.anios} años`,
-                  detalle: `hoy: ${candidato.cargo.toLowerCase()}`,
-                }}
-              />
-            </div>
-          </FramePanel>
-        </Marco>
+        {/* «Lo que pide» (salario, cuándo puede empezar, si se reubica) pasó a «Datos» (13 oct, PM: «eso no lo dejaría en
+            el resumen; lo metería en los datos, porque acá ya está asociado a una vacante específica»). */}
 
         {/* ── Cómo llegó ── Solo si entró por un lote de hojas de vida. */}
         <BloqueImportada candidatura={candidatura} />
 
-        {/* ── Lo último del equipo ── Una nota, la más reciente: las demás están en su etapa, en «Etapas». */}
-        <UltimaNota candidatura={candidatura} personaId={perfil.id} postulacionId={postulacion?.id} />
+        {/* ── Notas del equipo ── Las de la persona y la más reciente de sus etapas, en un solo bloque. */}
+        <NotasDelEquipo candidatura={candidatura} personaId={perfil.id} postulacionId={postulacion?.id} />
       </div>
     </PerfilCandidato>
   )
@@ -376,9 +312,11 @@ export function FichaPersona({
 // - Si pidió no recibir correos, no se le escribe desde aquí y se dice (CA-05).
 type Escrito = { titulo: string; asunto: string; texto: string; reenvio?: boolean }
 
-function AlertaPendiente({ candidatura }: { candidatura: Candidatura }) {
+function AlertaPendiente({ candidatura, onInvitar }: { candidatura: Candidatura; onInvitar?: () => void }) {
   const navegar = useNavegarFicha()
   const movimientos = useMovimientos(candidatura.id)
+  // Entró a una etapa con IA sin invitación: lo que espera es que se la envíen (13 oct, PM).
+  const sinInvitacion = useSinInvitacion(candidatura)
   useExpedienteDeSesion()
   const [escribiendo, setEscribiendo] = useState<Escrito | null>(null)
   const { candidato, etapa, dias, vacante } = candidatura
@@ -388,6 +326,7 @@ function AlertaPendiente({ candidatura }: { candidatura: Candidatura }) {
   const ultimo = correos[correos.length - 1]
   // Reenviar la invitación hace empezar el plazo otra vez.
   const reenvio = [...correos].reverse().find((movimiento) => /reenviamos la invitación/i.test(movimiento.aviso ?? ''))
+  if (sinInvitacion) return <AvisoSinInvitacion candidatura={candidatura} onInvitar={onInvitar} />
   if (!accion) return null
   const nombre = candidato.nombre.split(' ')[0]
   const cuanto = dias === 1 ? '1 día' : `${dias} días`
@@ -422,8 +361,8 @@ function AlertaPendiente({ candidatura }: { candidatura: Candidatura }) {
           venceEn === 1 ? 'mañana' : `en ${venceEn} días`
         }). Si se vence, sale del proceso con el motivo «Entrevista expirada».`
     : /hace \d+ d[ií]as/.test(accion)
-      ? `Espera una respuesta tuya. Está en ${tituloEtapa(etapa)}.`
-      : `Espera una respuesta tuya. Lleva ${cuanto} en ${tituloEtapa(etapa)}.`
+      ? 'Espera una respuesta tuya.'
+      : `Espera una respuesta tuya desde hace ${cuanto}.`
 
   const correo: Escrito | null = deSerena
     ? vencida
@@ -539,13 +478,12 @@ function AlertaPendiente({ candidatura }: { candidatura: Candidatura }) {
   )
 }
 
-// «⋯» de la ficha, el primero de la fila: lo que se usa poco. Borrar los datos de alguien (habeas data) se hace en su
-// ficha de «Mis candidatos», porque la saca de todas las vacantes y de la base: desde aquí se dice y se lleva allá (CA-18).
-function MasDeLaFicha({ candidatura }: { candidatura: Candidatura }) {
-  const navigate = useNavigate()
-  const [borrando, setBorrando] = useState(false)
+// «⋯» de la ficha, el primero de la fila: lo que se usa poco. Copiar el enlace a su ficha (para compartirla con alguien
+// del equipo) y eliminarla de esta vacante (13 oct, PM: «eliminar de la vacante; eliminar candidato ya sería de la base,
+// desde Mis candidatos»). Eliminar a la persona de toda la plataforma se hace en Mis candidatos.
+function MasDeLaFicha({ candidatura, onQuitar }: { candidatura: Candidatura; onQuitar?: () => void }) {
+  const [quitando, setQuitando] = useState(false)
   const nombre = candidatura.candidato.nombre
-  const otras = OTRAS_DE(candidatura.personaId, candidatura.id).filter((otra) => sigueEnProceso(otra.id))
   return (
     <>
       <DropdownMenu>
@@ -564,32 +502,49 @@ function MasDeLaFicha({ candidatura }: { candidatura: Candidatura }) {
             <HugeiconsIcon icon={Link01Icon} size={16} />
             Copiar el enlace a su ficha
           </DropdownMenuItem>
-          <DropdownMenuItem variant="destructive" onClick={() => setBorrando(true)}>
-            <HugeiconsIcon icon={Delete02Icon} size={16} />
-            Eliminar sus datos…
-          </DropdownMenuItem>
+          {onQuitar ? (
+            <DropdownMenuItem variant="destructive" onClick={() => setQuitando(true)}>
+              <HugeiconsIcon icon={Delete02Icon} size={16} />
+              Eliminar de la vacante
+            </DropdownMenuItem>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
-      <VentanaDeAccion
-        open={borrando}
-        onOpenChange={setBorrando}
-        title={`Eliminar los datos de ${nombre}`}
-        sub="Cuando la persona lo pide (habeas data), sus datos se borran de toda la plataforma, no solo de esta vacante."
-        note="Se hace desde su ficha en Mis candidatos."
-        confirmLabel="Ir a su ficha en Mis candidatos"
-        onConfirm={() => navigate(`/admin/seleccion/candidatos/dos?persona=${encodeURIComponent(candidatura.personaId)}`)}
-      >
-        <Text as="p" size="sm">
-          Sale de «{candidatura.vacante.titulo}»{otras.length ? ` y de ${otras.length === 1 ? 'su otra vacante' : `sus otras ${otras.length} vacantes`}` : ''}, y de tu base.
-          Allá ves todo lo que se borra antes de confirmar.
-        </Text>
-      </VentanaDeAccion>
+      {onQuitar ? (
+        <VentanaDeAccion
+          open={quitando}
+          onOpenChange={setQuitando}
+          size="sm"
+          title="Eliminar de la vacante"
+          lead={nombre}
+          sub={`Sale de «${candidatura.vacante.titulo}» sin que le llegue ningún correo. Sigue en tu base y en sus otras vacantes.`}
+          footer={
+            <>
+              <Button variant="outline" onClick={() => setQuitando(false)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setQuitando(false)
+                  onQuitar()
+                }}
+              >
+                <HugeiconsIcon icon={Delete02Icon} size={16} />
+                Eliminar de la vacante
+              </Button>
+            </>
+          }
+        />
+      ) : null}
     </>
   )
 }
 
-// La nota más reciente del equipo, con quién y cuándo; las demás se leen en «Etapas», en la etapa donde se escribieron.
-function UltimaNota({ candidatura, personaId, postulacionId }: { candidatura: Candidatura; personaId: string; postulacionId?: string }) {
+// Las notas del equipo, en un solo bloque (13 oct, información repetida: la nota sobre la persona salía dos veces, en «Lo
+// último del equipo» y en «Notas generales»). Arriba las que son sobre la persona, que no viven en ninguna etapa y no se
+// mudan al moverla; debajo, la más reciente de sus etapas, con el atajo para leerla donde se escribió (las demás están ahí).
+function NotasDelEquipo({ candidatura, personaId, postulacionId }: { candidatura: Candidatura; personaId: string; postulacionId?: string }) {
   const navegar = useNavegarFicha()
   // Con lo que comentó el equipo en la sesión, en cualquier etapa de esta vacante (CA-22).
   useExpedienteDeSesion()
@@ -598,29 +553,49 @@ function UltimaNota({ candidatura, personaId, postulacionId }: { candidatura: Ca
     : []
   const notas = [...candidatura.candidato.notas, ...deLaSesion]
   if (!notas.length) return null
-  const nota = notas.reduce((ultima, una) => (una.id > ultima.id ? una : ultima))
+  const generales = notas.filter((nota) => !nota.etapa)
+  const deEtapas = notas.filter((nota) => nota.etapa)
+  const ultima = deEtapas.length ? deEtapas.reduce((mas, una) => (una.id > mas.id ? una : mas)) : null
+  const descripcion = [
+    generales.length ? `${generales.length} sobre la persona` : null,
+    deEtapas.length === 1 ? '1 en sus etapas' : deEtapas.length ? `la más reciente de ${deEtapas.length} en sus etapas` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
   return (
     <Marco
-      titulo="Lo último del equipo"
-      descripcion={notas.length === 1 ? '1 nota' : `La más reciente de ${notas.length} notas`}
+      titulo="Notas del equipo"
+      descripcion={descripcion.charAt(0).toUpperCase() + descripcion.slice(1)}
       accion={
-        <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navegar('etapas', nota.etapa ?? candidatura.etapa)}>
-          Ver en su etapa
-          <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
-        </Button>
+        ultima ? (
+          <Button variant="ghost" size="sm" className="shrink-0" onClick={() => navegar('etapas', ultima.etapa ?? candidatura.etapa)}>
+            Ver en su etapa
+            <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
+          </Button>
+        ) : undefined
       }
     >
-      <FramePanel className="flex flex-col gap-1">
-        <Text as="span" size="sm" weight="medium">
-          {nota.autor}{' '}
-          <Text as="span" variant="muted" size="xs" weight="normal">
-            · {nota.fecha}
+      {generales.length ? (
+        <FramePanel>
+          <ListaNotas notas={generales} vacia="" />
+        </FramePanel>
+      ) : null}
+      {ultima ? (
+        <FramePanel className="flex flex-col gap-1">
+          <Text as="span" variant="muted" size="xs">
+            En {tituloEtapa(ultima.etapa ?? candidatura.etapa)}
           </Text>
-        </Text>
-        <Text as="p" variant="muted" size="sm">
-          {nota.texto}
-        </Text>
-      </FramePanel>
+          <Text as="span" size="sm" weight="medium">
+            {ultima.autor}{' '}
+            <Text as="span" variant="muted" size="xs" weight="normal">
+              · {ultima.fecha}
+            </Text>
+          </Text>
+          <Text as="p" variant="muted" size="sm">
+            {ultima.texto}
+          </Text>
+        </FramePanel>
+      ) : null}
     </Marco>
   )
 }

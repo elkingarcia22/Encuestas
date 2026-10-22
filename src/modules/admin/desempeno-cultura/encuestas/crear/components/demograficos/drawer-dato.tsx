@@ -1,19 +1,20 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Delete02Icon } from '@hugeicons/core-free-icons'
-import { Button, Field, FieldContent, FieldDescription, FieldError, FieldLabel, FramePanel, Switch } from '@ubits/flux-ui'
+import { Button, FieldError } from '@ubits/flux-ui'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
+import { BotonCancelarPanel } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { MIN_OPTIONS, buildOption } from '../../../modelo/questionCatalog'
 import type { DemographicField } from '../../../modelo/surveyBuilderTypes'
-import { BloqueNombre, BloqueOpciones, BloqueTipo } from '../../../components/demograficos/campos-demografico'
-import { MarcoLista } from '../../../components/marco-lista'
+import { BloqueNombre, BloqueOpciones } from '../../../components/demograficos/campos-demografico'
 import { MENSAJE_NOMBRE_REPETIDO, nombreRepetido, plegarNombre as plegar } from '../../../components/demograficos/nombre-repetido'
 import { LIMITE_NOMBRE_DEMOGRAFICO, cortoDeMinimo, mensajeMinimo } from '../../../modelo/limites-texto'
 
 // Crear o editar un dato demográfico de la encuesta, en el mismo panel que usa el módulo de datos
 // demográficos. Se trabaja sobre una copia: lo escrito solo llega a la encuesta al guardar. En los del
 // sistema las opciones son fijas, porque son los valores que la plataforma guarda de cada persona. El nombre no puede
-// repetir el de otro dato: del sistema, del módulo o de los de esta encuesta.
+// repetir el de otro dato: del sistema, del módulo o de los de esta encuesta. Todos los datos demográficos son
+// obligatorios al responder, así que el panel no pregunta por eso.
 
 function Formulario({ campo, esNuevo, opcionesFijas, nombresUsados, onGuardar, onCancelar, onEliminar }: { campo: DemographicField; esNuevo: boolean; opcionesFijas: boolean; nombresUsados: readonly string[]; onGuardar: (campo: DemographicField) => void; onCancelar: () => void; onEliminar?: () => void }) {
   const [copia, setCopia] = useState(campo)
@@ -28,6 +29,8 @@ function Formulario({ campo, esNuevo, opcionesFijas, nombresUsados, onGuardar, o
   // Al editar, el nombre que ya traía no cuenta como repetido: solo se avisa si se cambia a otro que ya existe.
   const repetido = plegar(copia.label) !== plegar(campo.label) || esNuevo ? nombreRepetido(copia.label, nombresUsados) : false
   const listo = !sinNombre && !nombreCorto && !repetido && !pocasOpciones && !opcionRepetida
+  // Algo cambió respecto a como se abrió: cerrar con la X, Escape, fuera o «Cancelar» pregunta antes (regla «panel-con-datos»).
+  const conCambios = JSON.stringify(copia) !== JSON.stringify(campo)
 
   const guardar = () => {
     setIntento(true)
@@ -39,27 +42,19 @@ function Formulario({ campo, esNuevo, opcionesFijas, nombresUsados, onGuardar, o
       open
       onOpenChange={(abierto) => (abierto ? undefined : onCancelar())}
       size="md"
+      conCambios={conCambios}
       title={esNuevo ? 'Crear dato demográfico' : 'Editar dato demográfico'}
-      description={esNuevo ? 'Solo se usará en esta encuesta. Después puedes guardarlo en el módulo para reutilizarlo.' : 'Los cambios se aplican solo a esta encuesta.'}
+      description={esNuevo ? 'Solo se usará en esta encuesta. Después puedes guardarlo para reutilizarlo en futuras encuestas.' : 'Los cambios se aplican solo a esta encuesta.'}
       footer={
         <>
-          {/* Eliminar abajo a la izquierda, en el rojo del design system (Botones › Peligro): abre la confirmación. */}
-          {!esNuevo && onEliminar ? (
-            <Button variant="destructive" className="mr-auto" onClick={onEliminar}>
-              <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" data-icon="inline-start" />
-              Eliminar
-            </Button>
-          ) : null}
-          <Button variant="outline" onClick={onCancelar}>
-            Cancelar
-          </Button>
+          {/* El pie lleva como mucho dos botones (regla «panel-volver-arriba»): «Cancelar» pasa por la misma pregunta que la X. */}
+          <BotonCancelarPanel />
           <Button onClick={guardar} disabled={repetido}>{esNuevo ? 'Crear dato' : 'Guardar cambios'}</Button>
         </>
       }
     >
       <div className="flex flex-col gap-6">
         <BloqueNombre id="dato-enunciado" valor={copia.label} onCambio={(label) => cambiar({ label })} error={repetido ? MENSAJE_NOMBRE_REPETIDO : intento && sinNombre ? `Ponle un nombre para poder ${esNuevo ? 'crearlo' : 'guardarlo'}.` : intento && nombreCorto ? mensajeMinimo(LIMITE_NOMBRE_DEMOGRAFICO.min) : null} />
-        <BloqueTipo id="dato-tipo" valor={copia.type} onCambio={(type) => cambiar({ type })} deshabilitado={opcionesFijas} />
         <BloqueOpciones
           opciones={copia.options.map((opcion) => ({ clave: opcion.id, texto: opcion.label }))}
           minimo={MIN_OPTIONS}
@@ -74,18 +69,14 @@ function Formulario({ campo, esNuevo, opcionesFijas, nombresUsados, onGuardar, o
             </>
           }
         />
-        {copia.visible ? (
-          <MarcoLista titulo="Al responder">
-            <FramePanel>
-              <Field orientation="horizontal">
-                <FieldContent>
-                  <FieldLabel htmlFor="dato-obligatoria">Obligatoria</FieldLabel>
-                  <FieldDescription>El participante no puede terminar la encuesta sin responderla.</FieldDescription>
-                </FieldContent>
-                <Switch id="dato-obligatoria" checked={copia.required} onCheckedChange={(required) => cambiar({ required })} />
-              </Field>
-            </FramePanel>
-          </MarcoLista>
+        {/* Eliminar va fuera del pie, al final del panel, en el rojo del design system (Botones › Peligro): abre la confirmación. */}
+        {!esNuevo && onEliminar ? (
+          <div>
+            <Button variant="destructive" onClick={onEliminar}>
+              <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" data-icon="inline-start" />
+              Eliminar dato
+            </Button>
+          </div>
         ) : null}
       </div>
     </DrawerShell>

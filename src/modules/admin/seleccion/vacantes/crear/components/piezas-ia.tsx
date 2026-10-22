@@ -7,7 +7,6 @@ import {
   AlertTitle,
   Avatar,
   AvatarFallback,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -31,6 +30,7 @@ import {
   Spinner,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { CampoNumero } from './piezas'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'

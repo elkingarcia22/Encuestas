@@ -72,7 +72,7 @@ export function RotationChart({ selected, onAsk }: AskProps) {
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span aria-hidden="true" className="w-4 border-t border-dashed border-muted-foreground" />
-          Meta 2,5%
+          Meta 2,5 %
         </div>
       </div>
       {/* Alternativa en texto del gráfico: cada barra es un botón con el mes y su valor, y el grupo dice qué se mide. Los

@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { toast } from '@ubits/flux-ui'
 import { notify, notifyAction } from '@/shared/components/notify'
 import { CANDIDATURAS, VACANTES_UI, tituloEtapa, type Candidatura } from '../datos'
 import { registroDeImportadas } from '../importacion'
@@ -14,8 +13,11 @@ import {
   personasTexto,
   pideDecision,
   registroDeMovimientos,
+  sinInvitacionEn,
   type Movimiento,
 } from '../movimientos'
+import { creditosDeCambios, cupoDeInvitaciones, enviarInvitacion } from '../invitaciones'
+import { DialogoInvitar } from './invitar-a-etapa'
 import { fallaAlRechazar } from '../rechazos'
 import { avisoDeError, noSeGuardo } from '../simular'
 import { cambiarVacantes } from '../../exploraciones/uno/inicio/acciones'
@@ -32,6 +34,7 @@ import {
   filtrarBase,
   hayFiltros as hayFiltrosEn,
   ordenarBase,
+  paisDe,
   postular as postularEnLaBase,
   registroDePostuladas,
   unir as unirEnLaBase,
@@ -73,6 +76,8 @@ import { detalleDe } from './use-proceso'
 
 export type CuentasBase = Record<Situacion, number> & {
   duplicados: number
+  // En al menos una vacante abierta («En algún proceso»), con los demás filtros puestos.
+  enProceso: number
   // Entraron en los últimos 30 días.
   recientes: number
   // Esperan algo de quien recluta en alguna vacante («acción requerida»).
@@ -88,8 +93,9 @@ type Ventana =
   | { tipo: 'guardar' }
   | { tipo: 'rechazar'; candidatura: Candidatura; lista: Candidatura[]; alRechazar?: () => void }
   | { tipo: 'mover'; pedido: PedidoMover }
+  | { tipo: 'invitar'; candidatura: Candidatura }
 
-const SIN_DECISION: Omit<DecisionMover, 'cambios'> = { comentario: '', ia: 'conservar', aviso: null, cerrarVacante: false }
+const SIN_DECISION: Omit<DecisionMover, 'cambios'> = { comentario: '', ia: 'conservar', invitar: true, aviso: null, cerrarVacante: false }
 
 export type BusquedaConCuenta = Busqueda & { cuantas: number }
 
@@ -156,7 +162,8 @@ export function useBase({
       libre: de('libre'),
       descartada: de('descartada'),
       contratada: de('contratada'),
-      duplicados: sinSituacion.filter((persona) => persona.duplicadoDe).length,
+      duplicados: filtrarBase(alcance, filtros, 'duplicados', { enTodo }).filter((persona) => persona.duplicadoDe).length,
+      enProceso: filtrarBase(alcance, filtros, 'enProceso', { enTodo }).filter((persona) => persona.situacion === 'proceso').length,
       recientes: filtrarBase(alcance, filtros, 'recientes').filter((persona) => persona.dias <= 30).length,
       esperan: filtrarBase(alcance, filtros, 'esperan').filter((persona) => persona.espera).length,
       todas: sinSituacion.length,
@@ -166,6 +173,7 @@ export function useBase({
   const disponibles = useMemo(() => etiquetasDeLaBase(personas), [personas])
   // Sin ciudad no es una ciudad (MC-15).
   const ciudades = useMemo(() => [...new Set(personas.map((persona) => persona.ciudad).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')), [personas])
+  const paises = useMemo(() => [...new Set(ciudades.map(paisDe))].sort((a, b) => a.localeCompare(b, 'es')), [ciudades])
   const busquedas = useMemo<BusquedaConCuenta[]>(
     () => guardadas.map((busqueda) => ({ ...busqueda, cuantas: filtrarBase(todas, busqueda.filtros).length })),
     [guardadas, todas],
@@ -357,12 +365,10 @@ export function useBase({
       cerrar()
       return
     }
-    const deshacer = eliminarDeLaBase(elegidas.map((persona) => persona.id))
+    // Sin «Deshacer»: se confirmó escribiendo la palabra (13 oct, PM).
+    eliminarDeLaBase(elegidas.map((persona) => persona.id))
     terminar(elegidas)
-    notifyAction(`Eliminaste los datos de ${quienes(elegidas)}`, 'Se borran del todo al cerrar este aviso.', {
-      label: 'Deshacer',
-      onClick: deshacer,
-    }, 'success')
+    notify(`Eliminaste a ${quienes(elegidas)}`, 'Ya no está en tu base ni en sus vacantes.', 'success')
   }
 
   // La misma persona dos veces: la ficha que se mira es la principal y la otra se suma a ella.
@@ -410,11 +416,7 @@ export function useBase({
     }
     const vacante = candidatura.vacante
     if (vacante.estado === 'Cerrada') {
-      toast.add({
-        type: 'warning',
-        title: 'La vacante está cerrada',
-        description: 'Nadie cambia de etapa mientras esté cerrada. Reábrela desde la vacante para seguir con el proceso.',
-      })
+      notify('La vacante está cerrada', 'Nadie cambia de etapa mientras esté cerrada. Reábrela desde la vacante para seguir.', 'warning')
       return
     }
     if (destino === candidatura.etapa) return
@@ -432,8 +434,21 @@ export function useBase({
       ...cambio,
       pasa: consecuenciasDe(cambio.candidatura, cambio.destino, cambio.candidatura.vacante.etapas, movimientosDe(cambio.candidatura.id)),
     }))
+    // Las invitaciones que alcanzan con lo libre de cada agente; quien no alcance, o con «Solo moverla», entra sin
+    // invitación (como en la vacante).
+    const alcanza = cupoDeInvitaciones()
     const nuevos: Movimiento[] = hechos.map(({ candidatura, destino, pasa }, indice) => {
-      const ia = pasa.entra ? (pasa.entra.hecha === undefined ? 'invitada' : decision.ia === 'repetir' ? 'reinvitada' : 'conservada') : undefined
+      const ia = pasa.entra
+        ? pasa.entra.hecha === undefined
+          ? decision.invitar && alcanza(destino)
+            ? 'invitada'
+            : 'sin-invitar'
+          : decision.ia === 'repetir'
+            ? alcanza(destino)
+              ? 'reinvitada'
+              : 'sin-invitar'
+            : 'conservada'
+        : undefined
       const entrevista = pasa.deja?.entrevista
       return {
         id: `${candidatura.id}>${destino}@${cuando}-${indice}`,
@@ -457,13 +472,20 @@ export function useBase({
       }
     })
     registroDeMovimientos.agregar(nuevos)
+    const deshacerCreditos = creditosDeCambios(nuevos, new Map(hechos.map(({ candidatura }) => [candidatura.id, candidatura.candidato.nombre])))
     const [primero] = hechos
     notifyAction(
       hechos.length === 1
         ? `${primero.candidatura.candidato.nombre} ${primero.pasa.atras ? 'volvió' : 'pasó'} a ${tituloEtapa(primero.destino)}`
         : `${hechos.length} personas cambiaron de etapa`,
       `${primero.candidatura.vacante.titulo}. ${detalleDe(nuevos)}`,
-      { label: 'Deshacer', onClick: () => registroDeMovimientos.quitar(nuevos.map((movimiento) => movimiento.id)) },
+      {
+        label: 'Deshacer',
+        onClick: () => {
+          registroDeMovimientos.quitar(nuevos.map((movimiento) => movimiento.id))
+          deshacerCreditos()
+        },
+      },
       'success',
     )
   }
@@ -613,6 +635,19 @@ export function useBase({
           onConfirmar={(decision) => confirmarRechazo(ventana.candidatura, decision, ventana.alRechazar)}
         />
       ) : null}
+      {ventana?.tipo === 'invitar' ? (
+        <DialogoInvitar
+          abierto
+          onOpenChange={alCambiar}
+          candidatura={ventana.candidatura}
+          borrador={ventana.candidatura.vacante.estado === 'Borrador'}
+          onConfirmar={() => {
+            const { candidatura } = ventana
+            const etapa = sinInvitacionEn(candidatura, candidatura.vacante.etapas, movimientosDe(candidatura.id))
+            if (etapa) enviarInvitacion(candidatura, etapa, { borrador: candidatura.vacante.estado === 'Borrador' })
+          }}
+        />
+      ) : null}
       {ventana?.tipo === 'mover' ? (
         <DialogoMover
           abierto
@@ -651,6 +686,7 @@ export function useBase({
     loteVisto,
     disponibles,
     ciudades,
+    paises,
     // Búsquedas guardadas
     busquedas,
     busquedaActiva,
@@ -668,6 +704,8 @@ export function useBase({
     // Su proceso en una vacante
     candidaturaDe,
     mover,
+    // Enviarle la invitación de su etapa con IA a quien entró sin ella (13 oct, PM).
+    invitar: (candidatura: Candidatura) => setVentana({ tipo: 'invitar', candidatura }),
     rechazar,
     // Importar a la base
     importar,

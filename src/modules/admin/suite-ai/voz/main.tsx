@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ChartAverageIcon, LeftToRightListBulletIcon, Mic01Icon } from '@hugeicons/core-free-icons'
 import { useNavigate } from 'react-router'
-import { Badge, Button, Progress, Separator, cn } from '@ubits/flux-ui'
+import { Button, Progress, Separator, cn } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import metaLogo from '@/shared/assets/meta.png'
 import { Orb } from '@/shared/components/Orb'
 import { notify } from '@/shared/components/notify'
@@ -78,11 +79,11 @@ export function Component() {
   const toggleMic = () => {
     const on = !listening
     setListening(on)
-    notify(on ? 'Te escucho' : 'Micrófono en pausa')
+    notify(on ? 'Te escucho' : 'Micrófono en pausa', undefined, 'info')
   }
 
   const writeInstead = () => {
-    notify('Pasé la voz al texto')
+    notify('Pasé la voz al texto', undefined, 'info')
     navigate(chatWith('draft', QUESTION))
   }
 
@@ -106,7 +107,7 @@ export function Component() {
         <span className="flex h-4.5">
           <Separator orientation="vertical" />
         </span>
-        <span className="text-sm font-medium">Orbit Flow</span>
+        <span className="text-sm font-medium">Orbit</span>
         <Badge variant="outline" className="h-7 gap-2 px-3">
           <span
             aria-hidden="true"
@@ -147,7 +148,7 @@ export function Component() {
         <div className="mt-8 flex max-w-190 animate-in motion-reduce:animate-none gap-3.5 duration-500 fade-in slide-in-from-bottom-3">
           <Orb className="mt-0.5 size-6.5" />
           <p className="text-base leading-relaxed text-pretty text-foreground/80">
-            Ventas Bogotá está en <span className="font-medium text-foreground">58% de participación</span>, nueve
+            Ventas Bogotá está en <span className="font-medium text-foreground">58 % de participación</span>, nueve
             puntos por debajo del promedio de la empresa. La caída está concentrada en el turno de la tarde.
           </p>
         </div>
@@ -176,7 +177,7 @@ export function Component() {
                   className={cn('flex-1', styles.grow)}
                   style={{ '--delay': `${i * 80}ms` } as CSSProperties}
                 />
-                <span className="w-11 shrink-0 text-right tabular-nums text-xs">{turn.pct}%</span>
+                <span className="w-11 shrink-0 text-right tabular-nums text-xs">{turn.pct} %</span>
               </div>
             ))}
           </div>

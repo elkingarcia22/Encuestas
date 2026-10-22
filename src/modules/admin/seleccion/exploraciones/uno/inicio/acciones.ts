@@ -3,6 +3,7 @@ import { QUIEN_MUEVE, marcaDeTiempo, nombreDeLista, registroDeMovimientos, solta
 import { anotarCorreo, baseDeCandidatos, normalizarEtiqueta } from '../../../propuestas/base'
 import { diasDesdeQueAplico } from '../../../propuestas/perfil-candidato'
 import { simulado } from '../../../propuestas/simular'
+import { creditosDeCambios } from '../../../propuestas/invitaciones'
 import { estadoInicio } from './estado'
 
 // Lo que el inicio cambia de verdad, sobre las mismas listas que leen la vacante, su tablero y la ficha: mover a alguien
@@ -94,11 +95,14 @@ export function cambiarVacantes(vacantes: VacanteUI[], cambio: Partial<VacanteUI
   // Publicar un borrador suelta las invitaciones de IA que esperaban; deshacer las vuelve a retener (VA-45).
   const soltadas =
     cambio.estado === 'Publicada' ? vacantes.filter((vacante) => vacante.estado === 'Borrador').flatMap((vacante) => soltarEsperas(vacante.id) ?? []) : []
+  // Las invitaciones que salen apartan sus créditos, como al mover (13 oct, PM).
+  const deshacerCreditos = creditosDeCambios(soltadas.flatMap((soltada) => soltada.soltadas))
   vacantes.forEach((vacante) => Object.assign(vacante, cambio))
   estadoInicio.tocar()
   return () => {
     antes.forEach(({ vacante, copia }) => Object.assign(vacante, copia))
     soltadas.forEach((soltada) => soltada.deshacer())
+    deshacerCreditos()
     estadoInicio.tocar()
   }
 }
@@ -193,9 +197,9 @@ export function avisoDeEtiquetas(vacantes: VacanteUI[], poner: string[], quitar:
   const comillas = (lista: string[]) => nombreDeLista(lista.map((una) => `«${una}»`))
   const cuales = vacantes.length === 1 ? `«${vacantes[0].titulo}»` : `${vacantes.length} vacantes`
   const enFiltros = nuevas.length ? ` ${nuevas.length === 1 ? 'La nueva ya sale' : 'Las nuevas ya salen'} en «Filtros».` : ''
-  if (poner.length && quitar.length) return [`Cambiaste las etiquetas de ${cuales}`, `Pusiste ${comillas(poner)} y quitaste ${comillas(quitar)}.${enFiltros}`]
-  if (poner.length) return [`Etiquetaste ${cuales}`, `Con ${comillas(poner)}.${enFiltros}`]
-  return [`Quitaste ${comillas(quitar)}`, `De ${cuales}.`]
+  if (poner.length && quitar.length) return [`Cambiaste las carpetas de ${cuales}`, `Entró en ${comillas(poner)} y salió de ${comillas(quitar)}.${enFiltros}`]
+  if (poner.length) return [`Pusiste ${cuales} en ${comillas(poner)}`, `Ya ${vacantes.length === 1 ? 'aparece' : 'aparecen'} en esa carpeta.${enFiltros}`]
+  return [`Sacaste ${cuales} de ${comillas(quitar)}`, `Siguen en sus demás carpetas.`]
 }
 
 // El nombre de una copia, sin repetir ninguno: «X (copia)», «X (copia 2)»… y la copia de una copia no suma otro

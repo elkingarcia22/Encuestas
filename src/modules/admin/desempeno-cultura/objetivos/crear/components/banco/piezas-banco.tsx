@@ -6,7 +6,6 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  Badge,
   Button,
   Checkbox,
   Field,
@@ -37,6 +36,7 @@ import {
   SelectValue,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { TextoCompleto } from '@/shared/components/TextoCompleto'
 import { AMBITION_META, AMBITION_ORDER, type AmbitionLevel } from '../../../modelo/constructor/aiObjectiveGenerator'
 import { MEASURE_META, MEASURE_ORDER, type MeasureType } from '../../../modelo/constructor/cicloBuilderTypes'
@@ -57,10 +57,12 @@ const conSimbolo = (medida: MeasureType, valor: string) => (valor === '' ? '' : 
 function CampoFiltro({ id, etiqueta, valor, items, onCambio, deshabilitado = false }: { id: string; etiqueta: string; valor: string; items: readonly { value: string; label: string }[]; onCambio: (valor: string) => void; deshabilitado?: boolean }) {
   return (
     <Field orientation="horizontal">
+      {/* Etiqueta de ancho fijo para alinear los filtros: el tema la deja crecer (diferencias.json › instalacion-estilos-sin-capa). */}
       <FieldLabel htmlFor={id} className="w-24 flex-none!">
         {etiqueta}
       </FieldLabel>
       <Select value={valor} onValueChange={(nuevo) => onCambio(nuevo as string)} items={[...items]} disabled={deshabilitado}>
+        {/* Selector de ancho completo y fondo blanco sobre el gris (diferencias.json › select-trigger-fondo-solido). */}
         <SelectTrigger id={id} size="sm" className="min-w-0 w-full! flex-1 bg-background!">
           <SelectValue />
         </SelectTrigger>
@@ -95,6 +97,7 @@ export function FiltrosBanco({ banco }: { banco: ObjectiveBankController }) {
 
   return (
     <div className="flex items-center gap-2">
+      {/* Buscador de ancho completo y fondo blanco sobre el gris (diferencias.json › input-group-fondo-solido). */}
       <InputGroup className="min-w-0 w-full! flex-1 bg-background!">
         <InputGroupAddon>
           <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
@@ -118,6 +121,7 @@ export function FiltrosBanco({ banco }: { banco: ObjectiveBankController }) {
             </Badge>
           ) : null}
         </PopoverTrigger>
+        {/* Globo más ancho para que quepan los filtros: su ancho fijo no se cambia sin «!» (diferencias.json › popover-relleno-y-cabecera). */}
         <PopoverContent align="end" className="w-96!">
           <PopoverHeader>
             <PopoverTitle>Filtrar el banco</PopoverTitle>
@@ -183,6 +187,7 @@ function FilaBanco({ entrada, nivel, marcada, onAlternar, contexto }: { entrada:
 
 function Filas({ banco, entradas, conContexto }: { banco: ObjectiveBankController; entradas: readonly ObjectiveBankItem[]; conContexto: boolean }) {
   return (
+    // Filas pegadas, separadas por su divisor: el gap del tema no se quita sin «!» (diferencias.json › instalacion-estilos-sin-capa).
     <ItemGroup className="gap-0!">
       {entradas.map((entrada, indice) => (
         <div key={entrada.id}>
@@ -243,7 +248,9 @@ export function ListaBanco({ banco }: { banco: ObjectiveBankController }) {
         const nombre = banco.isSearching ? `${grupo.area.name} · ${grupo.theme.name}` : grupo.theme.name
         return (
           <Frame key={`${grupo.area.id}-${grupo.theme.id}`}>
+            {/* Acordeón dentro del marco: sin su borde ni sus rellenos, que ya pone el marco (diferencias.json › instalacion-estilos-sin-capa). */}
             <AccordionItem value={grupo.theme.id} className="border-0!">
+              {/* El disparador del acordeón ya trae su alto: la cabecera va sin relleno (instalacion-estilos-sin-capa). */}
               <FrameHeader className="py-0!">
                 <AccordionTrigger>
                   <div className="flex min-w-0 flex-1 items-center gap-2 pe-2 text-left">
@@ -266,6 +273,7 @@ export function ListaBanco({ banco }: { banco: ObjectiveBankController }) {
                   </div>
                 </AccordionTrigger>
               </FrameHeader>
+              {/* Sin el relleno de abajo del acordeón: lo pone el marco (diferencias.json › instalacion-estilos-sin-capa). */}
               <AccordionContent className="pb-0!">
                 <FramePanel className="flex flex-col gap-1">
                   <ElegirTodos banco={banco} entradas={grupo.items} />

@@ -16,6 +16,8 @@ const ALLOWED_PACKAGES = [
   '@hugeicons/core-free-icons',
   '@base-ui/react',
   'recharts',
+  // Animaciones (Framer Motion). Ya viene con flux-ui (14 oct, Nicolás: «debes usar framer para las animaciones»).
+  'motion',
   'react',
   'react-dom',
   'react-router',

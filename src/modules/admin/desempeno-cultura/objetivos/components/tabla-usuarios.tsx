@@ -15,6 +15,7 @@ import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { TextoCompleto } from '@/shared/components/TextoCompleto'
+import { Hint } from '@/shared/components/Hint'
 import type { UsuarioSinObjetivos } from '../modelo/usuarios'
 
 // «Usuarios sin objetivos»: las personas a las que falta asignarles algo. Mismo armado que la lista de ciclos (y que la
@@ -22,9 +23,13 @@ import type { UsuarioSinObjetivos } from '../modelo/usuarios'
 // avatar y su correo debajo, en vez de repetir el correo como usuario y como columna aparte. Sin cambio de ancho de
 // columna (`resizable: false`), las columnas se reparten el ancho del marco, sea de 1.140 o de 1.104 con la barra abierta;
 // con él, la tabla medía la suma de sus anchos y la columna de acciones quedaba cortada.
-// Cada fila tiene una sola acción, «Crear objetivo», como botón al final de la fila y no escondida en un menú.
+// Cada fila tiene una sola acción, «Crear objetivo», como botón al final de la fila y no escondida en un menú. Hoy va
+// apagada con un globo que dice por qué: crear un objetivo suelto para una persona todavía no existe, y un botón que solo
+// avisa «próximamente» finge (regla «nada-que-finja», 13-oct). Por eso tampoco hay selección ni acción en bloque.
 
-export function TablaUsuarios({ usuarios, onCrearObjetivo }: { usuarios: readonly UsuarioSinObjetivos[]; onCrearObjetivo: (usuarios: UsuarioSinObjetivos[]) => void }) {
+const SIN_CREAR_SUELTO = 'Por ahora los objetivos se crean dentro de un ciclo: agrega a esta persona desde Participantes del ciclo.'
+
+export function TablaUsuarios({ usuarios }: { usuarios: readonly UsuarioSinObjetivos[] }) {
   const [busqueda, setBusqueda] = useState('')
   const [areas, setAreas] = useState<string[]>([])
   const [actual, setActual] = useState(1)
@@ -47,7 +52,7 @@ export function TablaUsuarios({ usuarios, onCrearObjetivo }: { usuarios: readonl
   }
 
   const config: DataGridListConfig<UsuarioSinObjetivos> = {
-    // El marco y el recuento («24 personas») los pone TablaDatos; el título lo da la pestaña.
+    // El marco, el título y el recuento («24 personas») los pone TablaDatos (con título, como en Encuestas: 20-oct).
     columns: [
       {
         accessorKey: 'nombre',
@@ -94,10 +99,15 @@ export function TablaUsuarios({ usuarios, onCrearObjetivo }: { usuarios: readonl
         ...SIN_ARRASTRE,
         cell: ({ row }) => (
           <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={() => onCrearObjetivo([row.original])} aria-label={`Crear objetivo para ${row.original.nombre}`}>
-              <HugeiconsIcon icon={PlusSignIcon} aria-hidden="true" />
-              Crear objetivo
-            </Button>
+            {/* Un botón apagado no recibe el cursor: el globo va en un envoltorio que sí lo recibe (y el foco del teclado). */}
+            <Hint label={SIN_CREAR_SUELTO} side="left">
+              <span tabIndex={0} className="inline-flex">
+                <Button variant="outline" size="sm" disabled aria-label={`Crear objetivo para ${row.original.nombre}`}>
+                  <HugeiconsIcon icon={PlusSignIcon} aria-hidden="true" />
+                  Crear objetivo
+                </Button>
+              </span>
+            </Hint>
           </div>
         ),
       },
@@ -114,16 +124,6 @@ export function TablaUsuarios({ usuarios, onCrearObjetivo }: { usuarios: readonl
         setActual(1)
       },
     },
-    selection: { onSelectionChange: () => undefined },
-    bulkActions: [
-      {
-        id: 'crearObjetivo',
-        label: 'Crear objetivo',
-        icon: <HugeiconsIcon icon={PlusSignIcon} aria-hidden="true" />,
-        visibility: 'always',
-        onClick: (filas) => onCrearObjetivo(filas),
-      },
-    ],
     labels: { dragToReorder: 'Arrastrar para reordenar la columna' },
     emptyState:
       busqueda.trim() || areas.length > 0
@@ -139,6 +139,7 @@ export function TablaUsuarios({ usuarios, onCrearObjetivo }: { usuarios: readonl
         config={config}
         data={paginaActual}
         paginacion={{ pagina: actual, setPagina: setActual, porPagina, setPorPagina, total: resultado.length }}
+        titulo="Usuarios sin objetivos"
         nombre="personas"
         singular="persona"
         id="usuarios-sin-objetivos"

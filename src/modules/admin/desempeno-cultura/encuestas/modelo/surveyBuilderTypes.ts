@@ -67,6 +67,11 @@ export interface SurveyQuestion {
   scale: ScaleConfig;
   /** Choice types only (single, multiple, dropdown). */
   options: readonly QuestionOption[];
+  /** Una sola pregunta de profundidad («¿por qué elegiste esa opción?») que sale tras responder. Opción única, múltiple, desplegable y Likert. */
+  depthWhyEnabled?: boolean;
+  depthWhyText?: string;
+  /** Suma la opción «Otro»: al elegirla, el participante escribe la suya. Opción única, múltiple y desplegable. */
+  allowOther?: boolean;
   /** Indicates if this question was imported from the UBITS question bank. */
   isBankQuestion?: boolean;
   /** Set on every question a "Crear con IA" proposal produces. */

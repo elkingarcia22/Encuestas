@@ -1,27 +1,38 @@
+import { useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Notification01Icon, UserIcon } from '@hugeicons/core-free-icons'
+import { CheckmarkCircle02Icon, Notification01Icon, UnavailableIcon, UserIcon } from '@hugeicons/core-free-icons'
 import { Button, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Item, ItemActions, ItemContent, ItemDescription, ItemTitle, Progress, Text } from '@ubits/flux-ui'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { ColumnaIndicador, FilaIndicadores } from '@/modules/design-system/graficos/fila-indicadores'
 import { Badge } from '@/shared/components/Badge'
-import { formatoAvance } from '../../modelo/ciclos'
-import { ETAPAS, MEDIDAS, TONO_NIVEL, etiquetaNivel, haceCuanto, riesgoDePersona, ultimaDe } from '../../modelo/resultados/personas'
+import { formatoAvance, type Ciclo } from '../../modelo/ciclos'
+import { ETAPAS, MEDIDAS, haceCuanto, riesgoDePersona, ultimaDe } from '../../modelo/resultados/personas'
 import { OBJETIVOS_EMPRESA, type ObjetivoSeguido, type PersonaSeguida } from '../../modelo/resultados/seguimiento'
+import { DialogoRecordar } from './dialogo-recordar'
+import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { notify } from '@/shared/components/notify'
+import { activarObjetivos } from '../../components/ajustes-ciclo'
 
-// La ficha de una persona del ciclo (9-oct, la «PersonImpactSheet» del prototipo, por ahora de solo lectura): arriba sus
+// La ficha de una persona del ciclo (9-oct, la «PersonImpactSheet» del prototipo; desde el 21-oct cada objetivo se puede
+// activar o inactivar mientras el ciclo cambie): arriba sus
 // cuatro cifras (avance, estado, riesgo y objetivos en meta) y debajo cada objetivo con su peso, su medida, a qué objetivo
 // de empresa empuja, cuándo se actualizó y cuánto lleva. Con el ciclo abierto, el pie deja recordarle que reporte.
 
 const empresaDe = (id: string | null) => OBJETIVOS_EMPRESA.find((objetivo) => objetivo.id === id)?.titulo
 
-function FilaObjetivo({ objetivo }: { objetivo: ObjetivoSeguido }) {
+function FilaObjetivo({ objetivo, accion }: { objetivo: ObjetivoSeguido; accion?: ReactNode }) {
   const empresa = empresaDe(objetivo.empresa)
-  const detalle = [`Peso ${objetivo.peso}%`, MEDIDAS[objetivo.medida], haceCuanto(objetivo.ultimaActualizacion), objetivo.comentarios ? `${objetivo.comentarios} ${objetivo.comentarios === 1 ? 'comentario' : 'comentarios'}` : null].filter(Boolean).join(' · ')
+  const detalle = [`Peso ${objetivo.peso} %`, MEDIDAS[objetivo.medida], haceCuanto(objetivo.ultimaActualizacion), objetivo.comentarios ? `${objetivo.comentarios} ${objetivo.comentarios === 1 ? 'comentario' : 'comentarios'}` : null].filter(Boolean).join(' · ')
   return (
     <Item size="sm" className="items-start">
       <ItemContent className="min-w-0 gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <ItemTitle>{objetivo.titulo}</ItemTitle>
+          {!objetivo.activo ? (
+            <Badge variant="outline" size="sm">
+              Inactivo
+            </Badge>
+          ) : null}
           {objetivo.etapa !== 'aprobado' ? (
             <Badge variant={ETAPAS[objetivo.etapa].tono} size="sm">
               {ETAPAS[objetivo.etapa].etiqueta}
@@ -30,8 +41,9 @@ function FilaObjetivo({ objetivo }: { objetivo: ObjetivoSeguido }) {
         </div>
         <ItemDescription>{detalle}</ItemDescription>
         <Text as="span" size="xs" variant="muted">
-          {empresa ? `Empuja «${empresa}»` : 'Sin alinear a un objetivo de empresa'}
+          {objetivo.activo ? (empresa ? `Empuja «${empresa}»` : 'Sin alinear a un objetivo de empresa') : 'No cuenta para su avance; el suyo se conserva.'}
         </Text>
+        {accion ? <div className="pt-1">{accion}</div> : null}
       </ItemContent>
       <ItemActions className="w-32 shrink-0 flex-col items-end gap-1.5 self-center">
         {objetivo.cumplimiento === null ? (
@@ -51,7 +63,16 @@ function FilaObjetivo({ objetivo }: { objetivo: ObjetivoSeguido }) {
   )
 }
 
-export function FichaPersona({ persona, abierto, onCerrar, onRecordar }: { persona: PersonaSeguida | null; abierto: boolean; onCerrar: () => void; onRecordar: (persona: PersonaSeguida) => void }) {
+export function FichaPersona({ persona, ciclo, abierto, editable, onCerrar }: { persona: PersonaSeguida | null; ciclo: Ciclo; abierto: boolean; editable: boolean; onCerrar: () => void }) {
+  // El recordatorio se pregunta dentro de este panel, como vista del mismo (regla «preguntar-dentro-del-panel»).
+  const [recordar, setRecordar] = useState(false)
+  // Inactivar un objetivo pregunta antes (deja de contar para la persona); activarlo no: vuelve con el avance que traía.
+  const [porInactivar, setPorInactivar] = useState<ObjetivoSeguido | null>(null)
+  const cambiaObjetivos = editable && persona !== null && !persona.retirado
+  const activar = (objetivo: ObjetivoSeguido) => {
+    activarObjetivos(ciclo.id, [objetivo.id], true)
+    notify('Objetivo activado', `Vuelve a contar para ${persona?.colaborador.name ?? 'la persona'} con el avance que traía.`, 'success')
+  }
   const colaborador = persona?.colaborador
   const enMeta = persona ? persona.objetivos.filter((objetivo) => (objetivo.cumplimiento ?? 0) >= 100).length : 0
   const riesgo = persona ? riesgoDePersona(persona.riesgo) : null
@@ -59,7 +80,11 @@ export function FichaPersona({ persona, abierto, onCerrar, onRecordar }: { perso
   return (
     <DrawerShell
       open={persona !== null}
-      onOpenChange={(valor) => (valor ? undefined : onCerrar())}
+      onOpenChange={(valor) => {
+        if (valor) return
+        setRecordar(false)
+        onCerrar()
+      }}
       size="lg"
       icon={UserIcon}
       kicker="Colaborador"
@@ -67,7 +92,7 @@ export function FichaPersona({ persona, abierto, onCerrar, onRecordar }: { perso
       description={colaborador ? `${colaborador.role} · ${colaborador.area} · Líder: ${colaborador.leader ?? 'sin asignar'}` : undefined}
       footer={
         persona && abierto ? (
-          <Button variant="outline" onClick={() => onRecordar(persona)}>
+          <Button variant="outline" onClick={() => setRecordar(true)}>
             <HugeiconsIcon icon={Notification01Icon} aria-hidden="true" />
             Recordar actualizar avance
           </Button>
@@ -77,7 +102,7 @@ export function FichaPersona({ persona, abierto, onCerrar, onRecordar }: { perso
       {persona && riesgo ? (
         <div className="flex flex-col gap-4">
           <FilaIndicadores etiqueta={`Cifras de ${persona.colaborador.name}`} columnas={2}>
-            <ColumnaIndicador titulo="Avance" cifra={persona.avance === null ? 'Sin avance' : formatoAvance(persona.avance)} pie={<Badge variant={TONO_NIVEL[persona.nivel]}>{etiquetaNivel(persona.nivel)}</Badge>} />
+            <ColumnaIndicador titulo="Avance" cifra={persona.avance === null ? 'Sin avance' : formatoAvance(persona.avance)} pie={<Badge variant={persona.nivel.badge}>{persona.nivel.etiqueta}</Badge>} />
             <ColumnaIndicador
               titulo="Objetivos en meta"
               cifra={`${enMeta} de ${persona.objetivos.length}`}
@@ -102,7 +127,17 @@ export function FichaPersona({ persona, abierto, onCerrar, onRecordar }: { perso
               <div className="divide-y">
                 {persona.objetivos.map((objetivo) => (
                   <div key={objetivo.id}>
-                    <FilaObjetivo objetivo={objetivo} />
+                    <FilaObjetivo
+                      objetivo={objetivo}
+                      accion={
+                        cambiaObjetivos ? (
+                          <Button variant="ghost" size="sm" onClick={() => (objetivo.activo ? setPorInactivar(objetivo) : activar(objetivo))}>
+                            <HugeiconsIcon icon={objetivo.activo ? UnavailableIcon : CheckmarkCircle02Icon} aria-hidden="true" />
+                            {objetivo.activo ? 'Inactivar' : 'Activar'}
+                          </Button>
+                        ) : undefined
+                      }
+                    />
                   </div>
                 ))}
               </div>
@@ -110,6 +145,25 @@ export function FichaPersona({ persona, abierto, onCerrar, onRecordar }: { perso
           </Frame>
         </div>
       ) : null}
+      <DialogoRecordar ciclo={ciclo} personas={recordar && persona ? [persona] : null} onCerrar={() => setRecordar(false)} />
+      <DialogoConfirmar
+        abierto={porInactivar !== null}
+        onAbiertoChange={(valor) => (valor ? undefined : setPorInactivar(null))}
+        icono={UnavailableIcon}
+        titulo="¿Inactivar este objetivo?"
+        descripcion={
+          <>
+            <strong className="font-semibold">{porInactivar?.titulo}</strong> deja de contar para <strong className="font-semibold">{persona?.colaborador.name}</strong> y sale del ponderado. Su avance se conserva y puedes volver a activarlo.
+          </>
+        }
+        accion="Inactivar objetivo"
+        onConfirmar={() => {
+          if (!porInactivar) return
+          activarObjetivos(ciclo.id, [porInactivar.id], false)
+          setPorInactivar(null)
+          notify('Objetivo inactivado', `Ya no cuenta para el avance de ${persona?.colaborador.name ?? 'la persona'}.`, 'success')
+        }}
+      />
     </DrawerShell>
   )
 }

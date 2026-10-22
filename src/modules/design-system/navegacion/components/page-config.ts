@@ -62,7 +62,7 @@ export type PageConfig = {
   primary: boolean
   secondary: boolean
   more: boolean
-  // Botón que abre el agente contextual («Orbit Flow»), siempre el último de la fila: pastilla completa o solo el orbe.
+  // Botón que abre el agente contextual («Orbit»), siempre el último de la fila: pastilla completa o solo el orbe.
   modoIa: 'none' | 'full' | 'orb'
   // Botones en pastilla, como en Suite AI.
   ai: boolean
@@ -154,7 +154,8 @@ const BASE: PageConfig = {
   tabMore: false,
   inner: 'none',
   pagination: 'none',
-  footer: 'legal',
+  // 13-oct: el pie legal sale solo en las páginas de inicio (regla «footer-solo-home»); ningún caso de aquí lo es.
+  footer: 'none',
   width: 'default',
 }
 
@@ -173,9 +174,9 @@ const SAMPLE: PageSample = {
     { icon: Building03Icon, text: 'Analítica' },
     { icon: UserIcon, text: 'Laura Méndez' },
     { icon: Location01Icon, text: 'Bogotá' },
-    { icon: Calendar03Icon, text: 'Publicada el 2 sep' },
+    { icon: Calendar03Icon, text: 'Publicada el 2 sept' },
   ],
-  primary: 'Nueva vacante',
+  primary: 'Crear vacante',
   primaryIcon: Add01Icon,
   secondary: 'Exportar',
   secondaryIcon: Download04Icon,
@@ -247,7 +248,6 @@ export const PAGE_CASES: PageCase[] = [
       more: true,
       records: 'arrows',
       inner: 'tabs',
-      tabIcons: true,
       counts: false,
     },
     sample: {
@@ -286,7 +286,7 @@ export const PAGE_CASES: PageCase[] = [
       siblings: ['Onboarding', 'Offboarding', 'Periodo de prueba'],
       title: 'Onboarding',
       short: 'Sigue a las personas que ingresan este mes y lo que les falta para empezar.',
-      primary: 'Nuevo ingreso',
+      primary: 'Agregar ingreso',
       tabs: [
         { label: 'Todos los ingresos', count: 24, icon: UserMultiple02Icon },
         { label: 'Esta semana', count: 6, icon: Calendar03Icon },
@@ -306,7 +306,6 @@ export const PAGE_CASES: PageCase[] = [
       titleSize: 'md',
       secondary: false,
       under: 'tabs',
-      tabIcons: true,
       tabMore: true,
       views: true,
       inner: 'chips',
@@ -417,7 +416,7 @@ export const PAGE_CASES: PageCase[] = [
       short: 'Cómo se ganan, se piden y se aprueban las vacaciones en Meta Colombia.',
       meta: [
         { icon: UserIcon, text: 'Gestión humana' },
-        { icon: Calendar03Icon, text: 'Actualizada el 1 sep' },
+        { icon: Calendar03Icon, text: 'Actualizada el 1 sept' },
       ],
       primary: 'Confirmar lectura',
       primaryIcon: undefined,
@@ -454,7 +453,7 @@ export const PAGE_CASES: PageCase[] = [
       kicker: 'Planes de formación',
       title: 'Crear plan de formación',
       short: 'Paso 2 de 4 · Audiencia',
-      long: 'Paso 2 de 4 · Audiencia. Puedes salir cuando quieras: el borrador queda guardado.',
+      long: 'Paso 2 de 4 · Audiencia. Puedes salir cuando quieras: si hay cambios, te preguntamos antes.',
       // Una sola salida a la derecha del título, como en Crear vacante (5-oct): contorno, icono de salir y este texto.
       secondary: 'Salir de la creación',
       secondaryIcon: Logout01Icon,
@@ -583,7 +582,7 @@ const PART_TEXT: Record<string, string> = {
   Hermanos: 'Desplegable en la última miga para saltar a otra página del mismo nivel sin subir.',
   Volver:
     'En pantallas de detalle, junto al título: regresa a la lista de donde viniste. Acompaña a la miga de arriba, no la reemplaza. Nunca en un asistente por pasos: ahí la única salida es «Salir de la creación», a la derecha (en LMS Creator, BotonSalirCreacion: «Salir de la creación», «Volver a añadir página» o «Salir de la edición», según a dónde lleve).',
-  'Barra superior': 'La pone el marco, no la pantalla: el botón que abre y cierra el menú, la miga de pan, el buscador y las acciones de la derecha. Se documenta en /design-system/header.',
+  'Barra superior': 'La pone el marco, no la pantalla: el botón que abre y cierra el menú, la miga de pan y las acciones de la derecha (el buscador quedó fuera del rediseño). Se documenta en /design-system/header.',
   Imagen: 'Icono, avatar u orbe que identifica lo que estás viendo. Viene en tres tamaños.',
   Antetítulo: 'Palabra corta sobre el título que da contexto: producto, tipo u origen.',
   Título: 'El nombre de la pantalla o del registro. Siempre va, en tamaño grande, mediano o compacto.',
@@ -594,13 +593,13 @@ const PART_TEXT: Record<string, string> = {
   Metadatos: 'Datos cortos del registro: área, responsable, lugar, fechas.',
   Acciones: 'Grupo de botones en la fila del título, a la derecha. No bajan con la descripción: si no caben, saltan debajo del título.',
   'Anterior / siguiente': 'Pasa al registro de al lado sin volver a la lista. Puede decir en cuál vas («2 de 12»).',
-  'Orbit Flow': 'Abre Orbit Flow sobre esta pantalla. Va al final de la fila de acciones, a la derecha del botón primario: completo por defecto; solo el orbe cuando la pantalla ya viene muy cargada.',
+  'Orbit': 'Abre Orbit sobre esta pantalla. Va al final de la fila de acciones, a la derecha del botón primario: completo por defecto; solo el orbe cuando la fila tiene más de dos llamados a la acción, contando a Orbit y sin contar el «⋯» (regla del 5-oct).',
   'Más acciones':
-    'Menú de tres puntos con lo que se usa poco. Va primero, a la izquierda de todos los botones, y su menú abre hacia la derecha: ⋯ · terciario · secundario · primario · IA y Orbit Flow.',
+    'Menú de tres puntos con lo que se usa poco. Va primero, a la izquierda de todos los botones, y su menú abre hacia la derecha: ⋯ · terciario · secundario · primario · IA y Orbit.',
   'Botón secundario': 'Acción de apoyo, con contorno. Va antes del primario.',
-  'Botón primario': 'La acción principal. Solo una; a su derecha solo van los botones de IA y Orbit Flow, siempre al final.',
+  'Botón primario': 'La acción principal. Solo una; a su derecha solo van los botones de IA y Orbit, siempre al final.',
   Pestañas:
-    'Cambian entre grupos de la misma sección sin salir de la página. La maestra es la subrayada, pegada bajo el título; la pastilla gris queda para casos especiales. Pueden llevar icono y conteo.',
+    'Cambian entre grupos de la misma sección sin salir de la página. La maestra es la subrayada, pegada bajo el título; la pastilla gris queda para casos especiales. Llevan solo texto, sin icono (y conteo si hace falta; regla del 5-oct).',
   'Más pestañas': 'Cuando no caben todas, las últimas se guardan en «Más».',
   'Menú del producto': 'Las páginas de un producto arriba, cuando el menú lateral ya no alcanza.',
   Submenú: 'Opción del menú que abre un panel con más páginas agrupadas.',
@@ -615,8 +614,8 @@ const PART_TEXT: Record<string, string> = {
   Paginación:
     'Al final del contenido, para pasar de página cuando hay muchos resultados. Es el paginador del sistema, el mismo de las tablas: filas por página, cuántos se ven y «Anterior / Siguiente».',
   'Barra de acciones':
-    'Barra fija abajo para guardar cambios o avanzar de paso. En un asistente lleva a la izquierda el estado del guardado («Guardado», la pieza ChipGuardado, la misma en todos los flujos) y a la derecha «Atrás» con contorno y seguir. Sin «Cancelar»: la única salida es la de junto al título (regla de creación, 6-oct). En los flujos de LMS Creator a pantalla completa es la misma barra (BarraEditor), fija al pie del marco.',
-  Pie: 'Lo pone el marco al final de cada pantalla: tecnología de UBITS y legales.',
+    'Barra fija abajo para guardar cambios o avanzar de paso. En un asistente lleva a la izquierda el estado del guardado (la pieza ChipGuardado, la misma en todos los flujos: «Cambios sin guardar» hasta que de verdad hay un borrador y entonces «Guardado») y a la derecha «Atrás» con contorno y seguir. Sin «Cancelar»: la única salida es la de junto al título (regla de creación, 6-oct). En los flujos de LMS Creator a pantalla completa es la misma barra (BarraEditor), fija al pie del marco.',
+  Pie: 'Lo pone el marco solo al final de las páginas de inicio (no en creación ni en subvistas): tecnología de UBITS y legales.',
   Slot: 'Todo lo que la pantalla necesite: tablas, tarjetas, formularios. No es parte del componente.',
 }
 
@@ -634,7 +633,7 @@ export function pageParts(c: PageConfig): PartInfo[] {
   if (c.meta) names.push('Metadatos')
   if (c.records !== 'none' || c.modoIa !== 'none' || c.more || c.secondary || c.primary) names.push('Acciones')
   if (c.records !== 'none') names.push('Anterior / siguiente')
-  if (c.modoIa !== 'none') names.push('Orbit Flow')
+  if (c.modoIa !== 'none') names.push('Orbit')
   if (c.more) names.push('Más acciones')
   if (c.secondary) names.push('Botón secundario')
   if (c.primary) names.push('Botón primario')

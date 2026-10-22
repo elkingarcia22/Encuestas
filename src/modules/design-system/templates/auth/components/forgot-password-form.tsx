@@ -74,7 +74,7 @@ export function ForgotPasswordForm({
           </CursorDeshabilitado>
           <Button type="button" variant="ghost" size="lg" className="w-full cursor-pointer" onClick={onBack}>
             <HugeiconsIcon icon={ArrowLeft02Icon} size={16} aria-hidden="true" />
-            Regresar
+            Volver a iniciar sesión
           </Button>
         </div>
       </form>

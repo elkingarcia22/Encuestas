@@ -7,14 +7,12 @@ import {
   Building03Icon,
   Csv01Icon,
   Delete02Icon,
-  LogoutSquare01Icon,
   PlusSignIcon,
   Rocket01Icon,
   Tick02Icon,
   UserGroupIcon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -55,15 +53,16 @@ import {
   Switch,
   Text,
   Textarea,
-  toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify } from '@/shared/components/notify'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { ChipGuardado } from '@/shared/components/ChipGuardado'
 import { PageActionBar } from '@/shared/components/PageShell'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { BotonSalirCreacion } from '@/modules/design-system/navegacion/boton-salir-creacion'
 
-import { DialogoConfirmar, RegistroConfirmar } from '../../../estados/confirmaciones'
+import { DialogoConfirmar } from '../../../estados/confirmaciones'
 import { PantallaDeError } from '../../../estados/errores-sistema'
 import { registroQueNoExiste, registroSinEdicion } from '../../../estados/errores-sistema-datos'
 import { AdjuntoCsv, type Subida } from '../../../estados/procesos'
@@ -167,7 +166,6 @@ function FormularioEncuesta({ editando, conPlantilla }: { editando?: Encuesta; c
   const [anonima, setAnonima] = useState(editando?.anonima ?? true)
   const [errores, setErrores] = useState<Errores>({})
   const [tocado, setTocado] = useState(false)
-  const [saliendo, setSaliendo] = useState(false)
   const [activando, setActivando] = useState(false)
 
   const cambiar = () => setTocado(true)
@@ -263,13 +261,13 @@ function FormularioEncuesta({ editando, conPlantilla }: { editando?: Encuesta; c
         ? todas.map((encuesta) => (encuesta.id === editando.id ? { ...encuesta, ...datos, tocado: Date.now() } : encuesta))
         : [{ ...datos, id: `s-nueva-${todas.length + 1}`, origen: elegida ? 'UBITS' : 'Propia', respuestas: 0, tocado: Date.now() }, ...todas],
     )
-    toast.add({
-      type: 'success',
-      title: activar ? 'Encuesta activada' : 'Encuesta guardada como borrador',
-      description: activar
+    notify(
+      activar ? 'Encuesta activada' : 'Encuesta guardada como borrador',
+      activar
         ? `Se enviará a ${participantes.toLocaleString('es-CO')} personas el ${fechaCorta(inicio)}.`
         : 'La encontrarás en la lista para terminarla y activarla.',
-    })
+      'success',
+    )
     navigate(ruta())
   }
 
@@ -284,7 +282,26 @@ function FormularioEncuesta({ editando, conPlantilla }: { editando?: Encuesta; c
         }
         // Una sola salida, como el asistente de referencia (Crear vacante, 5-oct): «Salir de la creación» a la derecha
         // del título, sin flecha de volver junto a él.
-        acciones={<BotonSalirCreacion texto={editando ? 'Salir de la edición' : 'Salir de la creación'} onClick={() => (tocado ? setSaliendo(true) : navigate(ruta()))} />}
+        // 13-oct: la ventana es la del sistema («¿Salir sin guardar?» con sus tres salidas, en su tamaño normal).
+        acciones={
+          <BotonSalirCreacion
+            texto={editando ? 'Salir de la edición' : 'Salir de la creación'}
+            onClick={() => navigate(ruta())}
+            salida={{
+              conCambios: tocado,
+              retomarEn: 'Encuestas',
+              alGuardarYSalir: () => {
+                // Guardar como borrador pide al menos las fechas y el tipo: si faltan, se vuelve a los datos generales.
+                if (!rango?.from || !rango.to || !tipo) {
+                  setErrores(validar(1))
+                  setPaso(1)
+                  return
+                }
+                guardar(false)
+              },
+            }}
+          />
+        }
         etiqueta={editando ? <Badge variant="secondary">{editando.estado}</Badge> : undefined}
       />
 
@@ -639,7 +656,9 @@ function FormularioEncuesta({ editando, conPlantilla }: { editando?: Encuesta; c
       {/* Barra fija abajo, como el patrón Navegación › Pasos: el estado de guardado a la izquierda y los pasos a la
           derecha, a la vista aunque el formulario sea largo. Con un paso corto baja hasta el final de la pantalla. */}
       <PageActionBar className="mt-auto">
-        <ChipGuardado estado={tocado ? 'editando' : 'guardado'} />
+        {/* «Cambios sin guardar» en cuanto hay algo cambiado, hasta que se guarda como borrador o se activa. «Guardar y
+            salir» y «Guardar como borrador» sí tienen un borrador detrás: dejan la encuesta en la lista (13-oct, I-276). */}
+        {tocado ? <ChipGuardado estado="editando" /> : <span />}
         <div className="ml-auto flex flex-wrap items-center gap-2">
           <Button variant="outline" disabled={paso === 1} onClick={() => setPaso((actual) => Math.max(actual - 1, 1))}>
             <HugeiconsIcon icon={ArrowLeft01Icon} aria-hidden="true" data-icon="inline-start" />
@@ -679,44 +698,6 @@ function FormularioEncuesta({ editando, conPlantilla }: { editando?: Encuesta; c
         }}
       />
 
-      {/* Salir con cambios es preguntar antes de hacer algo: DialogoConfirmar con sus tres salidas y en su tamaño normal
-          (en el chico los tres botones no caben en una fila). El título es fijo; la encuesta va en la tarjeta. */}
-      <DialogoConfirmar
-        abierto={saliendo}
-        onAbiertoChange={setSaliendo}
-        icono={LogoutSquare01Icon}
-        titulo={editando ? '¿Salir de la edición?' : '¿Salir de la creación?'}
-        descripcion={
-          editando
-            ? 'Tienes cambios sin guardar. Si sales ahora, la encuesta queda como estaba.'
-            : 'Tienes cambios sin guardar. Si sales ahora, la encuesta no se guarda.'
-        }
-        cancelar="Seguir editando"
-        otra={{
-          texto: 'Salir sin guardar',
-          onClick: () => {
-            setSaliendo(false)
-            navigate(ruta())
-          },
-        }}
-        accion="Guardar y salir"
-        onConfirmar={() => {
-          setSaliendo(false)
-          // Guardar como borrador pide al menos las fechas y el tipo: si faltan, se vuelve a los datos generales.
-          if (!rango?.from || !rango.to || !tipo) {
-            setErrores(validar(1))
-            setPaso(1)
-            return
-          }
-          guardar(false)
-        }}
-      >
-        <RegistroConfirmar
-          nombre={nombre.trim() || elegida?.nombre || 'Encuesta sin título'}
-          detalle={editando ? 'Encuesta · en edición' : 'Encuesta nueva'}
-          estado="Cambios sin guardar"
-        />
-      </DialogoConfirmar>
 
     </div>
   )

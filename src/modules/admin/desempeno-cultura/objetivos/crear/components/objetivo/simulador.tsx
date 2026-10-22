@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Badge, Field, FieldDescription, FieldLabel, FieldTitle, Heading, Item, ItemContent, Text, ToggleGroup, ToggleGroupItem } from '@ubits/flux-ui'
+import { Field, FieldDescription, FieldLabel, FieldTitle, Heading, Item, ItemContent, Text, ToggleGroup, ToggleGroupItem } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { MEASURE_META, formatMeasureValue, parseAmount, type MeasureType, type ObjectiveDirection } from '../../../modelo/constructor/cicloBuilderTypes'
 import { formatoAvance } from '../../../modelo/ciclos'
 import { computeCompliance, type ComplianceResult } from '../../../modelo/constructor/complianceRules'
@@ -94,7 +95,7 @@ export function Simulador({
         <FieldLabel htmlFor={`${id}-ejemplo`}>Resultado de ejemplo</FieldLabel>
         {booleano ? <FieldDescription>Elige una de las dos opciones.</FieldDescription> : null}
         <div className="flex flex-col items-start gap-4 w-full">
-          {booleano ? null : <CampoCifra id={`${id}-ejemplo`} simbolo={MEASURE_META[medida].symbol} valor={texto} className="w-full max-w-[320px]" onCambio={(valor) => elegir(soloCifra(valor, ALLOW_NEGATIVE_RESULTS))} />}
+          {booleano ? null : <CampoCifra id={`${id}-ejemplo`} simbolo={MEASURE_META[medida].symbol} valor={texto} className="w-full" onCambio={(valor) => elegir(soloCifra(valor, ALLOW_NEGATIVE_RESULTS))} />}
           <ToggleGroup
             aria-label="Resultados de prueba"
             value={atajoElegido ? [atajoElegido.etiqueta] : []}
@@ -107,6 +108,7 @@ export function Simulador({
             className="grid grid-cols-2 gap-2 w-full"
           >
             {atajos.map((atajo) => (
+              // Atajos que se parten en dos líneas y ocupan su celda: el tema del ToggleGroupItem fija alto, esquina y una sola línea (diferencias.json › instalacion-estilos-sin-capa).
               <ToggleGroupItem key={atajo.etiqueta} value={atajo.etiqueta} className="px-3 py-1.5 rounded-md! w-full min-w-0 h-auto! whitespace-normal! text-center justify-center">
                 {atajo.etiqueta}
               </ToggleGroupItem>
@@ -117,6 +119,7 @@ export function Simulador({
       <Field>
         <FieldTitle>Cumplimiento</FieldTitle>
         <Item variant="outline" size="sm" className="bg-card">
+          {/* Cifra y estado en una fila: el tema de ItemContent lo apila (diferencias.json › instalacion-estilos-sin-capa). */}
           <ItemContent className="flex-row! items-center gap-2">
             {porcentaje !== null ? (
               <>

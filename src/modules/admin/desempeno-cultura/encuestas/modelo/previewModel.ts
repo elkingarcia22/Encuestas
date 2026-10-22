@@ -257,7 +257,8 @@ export function toPreviewQuestion(field: DemographicField): SurveyQuestion {
     id: field.id,
     statement: field.label,
     type: field.type,
-    required: field.required,
+    // Every demographic is required: the author no longer chooses it.
+    required: true,
     scale: {
       kind: null,
       ratingType: null,

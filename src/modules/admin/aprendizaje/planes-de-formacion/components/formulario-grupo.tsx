@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Delete02Icon, Logout01Icon, Logout03Icon, MoreHorizontalIcon, UserAdd01Icon, UserGroupIcon } from '@hugeicons/core-free-icons'
+import { Delete02Icon, Logout03Icon, MoreHorizontalIcon, UserAdd01Icon, UserGroupIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -32,6 +31,7 @@ import {
 } from '@ubits/flux-ui'
 import { ReopenAgentButton } from '@/modules/design-system/agente-contextual/components/agent-kit'
 import { SinResultados } from '@/shared/components/SinResultados'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { ChipGuardado } from '@/shared/components/ChipGuardado'
 import { notify } from '@/shared/components/notify'
@@ -44,6 +44,7 @@ import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/est
 import { PantallaDeError } from '@/modules/design-system/estados/errores-sistema'
 import { registroQueNoExiste } from '@/modules/design-system/estados/errores-sistema-datos'
 import { HOY, plural } from '@/modules/design-system/patrones/formato'
+import { BotonSalirCreacion } from '@/modules/design-system/navegacion/boton-salir-creacion'
 import { buscarGrupo, cambiarGrupos, nombreCompleto, useGrupos, usuarioDe, type Grupo, type Usuario } from './grupos-datos'
 import { AgenteGrupos, useAgente } from './agente-aprendizaje'
 import { planesConGrupo, rutaGrupo } from './lista-grupos'
@@ -214,13 +215,14 @@ function Formulario({ grupo }: { grupo?: Grupo }) {
           })),
         )
       }
-      notify('Grupo actualizado.', `«${datos.nombre}» · ${integrantes.length} ${plural(integrantes.length, 'integrante', 'integrantes')}.`)
+      const detalle = `«${datos.nombre}» · ${integrantes.length} ${plural(integrantes.length, 'integrante', 'integrantes')}.`
+      notify('Grupo actualizado.', detalle, 'success')
       navigate(volver)
     } else {
       const nuevo: Grupo = { id: `g-${Date.now()}`, ...datos }
       cambiarGrupos((todos) => [nuevo, ...todos])
       // RN-03: el texto de la historia.
-      notify('Grupo creado correctamente.', `«${nuevo.nombre}» ya se puede elegir al asignar un plan.`)
+      notify('Grupo creado correctamente.', `«${nuevo.nombre}» ya se puede elegir al asignar un plan.`, 'success')
       navigate(rutaGrupo())
     }
   }
@@ -269,10 +271,7 @@ function Formulario({ grupo }: { grupo?: Grupo }) {
               </DropdownMenu>
             ) : null}
             {gestionar(false)}
-            <Button variant="outline" onClick={salir}>
-              <HugeiconsIcon icon={Logout01Icon} aria-hidden="true" />
-              {grupo ? 'Salir de la edición' : 'Salir de la creación'}
-            </Button>
+            <BotonSalirCreacion texto={grupo ? 'Salir de la edición' : 'Salir de la creación'} onClick={salir} />
             {/* Lo de IA va de último y se abre al lado: no es otra página. */}
             {agente.disponible ? <ReopenAgentButton compact onClick={agente.abrir} /> : null}
           </>
@@ -423,7 +422,7 @@ function Formulario({ grupo }: { grupo?: Grupo }) {
           accion="Eliminar grupo"
           onConfirmar={() => {
             cambiarGrupos((todos) => todos.filter((g) => g.id !== grupo.id))
-            notify('Grupo eliminado', `«${grupo.nombre}» ya no aparece al asignar planes.`)
+            notify('Grupo eliminado', `«${grupo.nombre}» ya no aparece al asignar planes.`, 'success')
             navigate(rutaGrupo())
           }}
         />

@@ -22,7 +22,6 @@ import {
   AttachmentDescription,
   AttachmentMedia,
   AttachmentTitle,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -57,8 +56,9 @@ import {
   ScrollArea,
   Separator,
   Text,
-  toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify } from '@/shared/components/notify'
 
 import {
   BASE,
@@ -231,7 +231,7 @@ function ContenidoDePagina({
             <AttachmentDescription>Material descargable · 1,2 MB</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <AttachmentAction aria-label="Descargar guía" onClick={() => toast.add({ type: 'success', title: 'Guía descargada' })}>
+            <AttachmentAction aria-label="Descargar guía" onClick={() => notify('Guía descargada', undefined, 'success')}>
               <HugeiconsIcon icon={Download01Icon} aria-hidden="true" />
             </AttachmentAction>
           </AttachmentActions>
@@ -253,7 +253,7 @@ function ContenidoDePagina({
             <AttachmentDescription>18 páginas · 3,4 MB</AttachmentDescription>
           </AttachmentContent>
           <AttachmentActions>
-            <AttachmentAction aria-label="Descargar PDF" onClick={() => toast.add({ type: 'success', title: 'PDF descargado' })}>
+            <AttachmentAction aria-label="Descargar PDF" onClick={() => notify('PDF descargado', undefined, 'success')}>
               <HugeiconsIcon icon={Download01Icon} aria-hidden="true" />
             </AttachmentAction>
           </AttachmentActions>
@@ -334,7 +334,7 @@ function ContenidoDePagina({
           <EmptyContent className="flex flex-col items-center gap-4">
             <div className="flex flex-wrap justify-center gap-2">
               {contenido.certificado ? (
-                <Button onClick={() => toast.add({ type: 'success', title: 'Certificado descargado' })}>
+                <Button onClick={() => notify('Certificado descargado', undefined, 'success')}>
                   <HugeiconsIcon icon={Download01Icon} aria-hidden="true" />
                   Descargar certificado
                 </Button>

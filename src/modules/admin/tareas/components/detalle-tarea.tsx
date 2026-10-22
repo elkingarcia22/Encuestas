@@ -18,7 +18,6 @@ import {
   AlertTitle,
   Avatar,
   AvatarFallback,
-  Badge,
   Button,
   Checkbox,
   DropdownMenu,
@@ -27,10 +26,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
   Field,
   FieldLabel,
   Frame,
@@ -56,6 +51,8 @@ import {
   Text,
   Textarea,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 
 import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
@@ -135,12 +132,8 @@ export function DetalleTarea({ tarea, acciones }: { tarea: Tarea | undefined; ac
     return (
       <Frame>
         <FramePanel>
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>Elige una tarea</EmptyTitle>
-              <EmptyDescription>Su detalle, sus subtareas y su historial aparecen aquí.</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          {/* Vacío con su ilustración glass (13-oct). */}
+          <PrimeraVez icono="glass-paper" titulo="Elige una tarea" descripcion="Su detalle, sus subtareas y su historial aparecen aquí." />
         </FramePanel>
       </Frame>
     )

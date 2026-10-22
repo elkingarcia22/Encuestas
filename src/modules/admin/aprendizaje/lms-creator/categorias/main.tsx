@@ -1,3 +1,4 @@
-import { createPage } from '@/shared/pages/createPage'
+import { crearProximamente } from '@/modules/design-system/estados/pantalla-proximamente'
 
-export const { Component } = createPage('Categorías', '/admin/aprendizaje/lms-creator/categorias', 'AdminAprendizajeLmsCreatorCategoriasPage')
+// Sin maquetar todavía: sigue en el menú con «Próximamente» y abre la espera del sistema (regla «pantallas-pendientes», 13-oct).
+export const { Component } = crearProximamente('Categorías', undefined, undefined, 'AdminAprendizajeLmsCreatorCategoriasPage')

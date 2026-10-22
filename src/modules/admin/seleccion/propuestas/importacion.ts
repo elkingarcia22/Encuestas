@@ -18,7 +18,9 @@ import {
 import { PERSONAS, type Persona } from './personas'
 import { anotarProcesos, baseDeCandidatos } from './base'
 import { QUIEN_MUEVE, entradasA, registroDeMovimientos } from './movimientos'
+import { creditosDeCambios } from './invitaciones'
 import { familiaDe } from './familias'
+import { fechaCorta } from '@/modules/design-system/patrones/formato'
 
 // Importar hojas de vida: las reglas, los datos y la lectura simulada.
 //
@@ -84,7 +86,7 @@ const oyentesAutorizacion = new Set<() => void>()
 export const autorizacionDeDatos = {
   leer: () => autorizacion,
   aceptar: (quien: string) => {
-    autorizacion = { quien, fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }) }
+    autorizacion = { quien, fecha: fechaCorta(new Date().toLocaleDateString('en-CA')) }
     oyentesAutorizacion.forEach((oyente) => oyente())
   },
   suscribir: (oyente: () => void) => {
@@ -950,6 +952,8 @@ function entregar(clave: string, lote: LoteCvs, nuevos: ArchivoLote[]): LoteCvs 
     // historial (VA-08).
     const entradas = entradasA(candidaturas, vacante.etapas, lote.quien ?? QUIEN_MUEVE, (buscarVacanteUI(vacante.id)?.estado ?? vacante.estado) === 'Borrador')
     if (entradas.length) registroDeMovimientos.agregar(entradas)
+    // Cada invitación aparta sus créditos en Créditos, como al mover (13 oct, PM).
+    creditosDeCambios(entradas, new Map(candidaturas.map((c) => [c.id, c.candidato.nombre])))
     avisarImportadas({ tipo: 'entraron', candidaturas })
     const ids = new Map(nuevos.map((archivo, indice) => [archivo.id, candidaturas[indice].id]))
     return { ...lote, archivos: lote.archivos.map((archivo) => (ids.has(archivo.id) ? { ...archivo, candidaturaId: ids.get(archivo.id) } : archivo)) }

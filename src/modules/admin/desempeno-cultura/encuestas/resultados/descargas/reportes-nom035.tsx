@@ -1,4 +1,5 @@
-import { Alert, AlertDescription, Badge, Heading, Progress, Separator, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { Alert, AlertDescription, Heading, Progress, Separator, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import type { Nom035Responsible } from '../../modelo/descargas/tipos'
 import { channeledRoster, type ChanneledPerson } from '../../modelo/descargas/canalizados'
 import { NOM035_REQUIRED_PARTICIPATION } from '../../modelo/nom035'
@@ -15,7 +16,7 @@ import { Ajusta, Bloque, MAX_COLUMNAS, TANDAS, partir, Cifras, Documento, Leyend
 // salvo las piezas del papel. Portados del prototipo, con los componentes de la pantalla.
 
 const NORMA = 'NOM-035-STPS-2018'
-const porcentaje = (valor: number) => `${Math.round(valor)}%`
+const porcentaje = (valor: number) => `${Math.round(valor)} %`
 const enRiesgo = (riesgo: number) => ['alto', 'muy-alto'].includes(riskBandForScore(riesgo).id)
 
 function Riesgo({ riesgo, nivel }: { riesgo: number | null; nivel?: boolean }) {
@@ -32,7 +33,7 @@ const LEYENDA_RIESGO = RISK_BANDS.map((banda) => ({ etiqueta: banda.label, rango
 const LeyendaRiesgo = () => <Leyenda titulo="Nivel de riesgo" tramos={LEYENDA_RIESGO} />
 
 /** Las dos rayas de firma: quien entrega (el responsable) y quien recibe. */
-function Firmas({ persona, responsable, respaldo }: { persona: string; responsable: Nom035Responsible | null; respaldo: { nombre: string; detalle: string } }) {
+export function Firmas({ persona, responsable, respaldo }: { persona: string; responsable: Nom035Responsible | null; respaldo: { nombre: string; detalle: string } }) {
   const firma = (nombre: string, detalle: string) => (
     <div className="flex flex-col items-center gap-1 pt-12 text-center">
       <Separator />
@@ -433,8 +434,19 @@ function Carta({ borrador, persona, posicion, total, responsable }: { borrador: 
   )
 }
 
-export function CartasCanalizacion({ borrador, resultados, pedido }: { borrador: SurveyDraft; resultados: SurveyResults; pedido: Pick<PedidoNom035, 'responsible'> }) {
-  const canalizados = channeledRoster(borrador, resultados).filter((persona) => persona.channeled)
+// `soloIds`: las cartas de unas personas en concreto (las que se marcan en la pestaña Canalización); sin él, todas.
+export function CartasCanalizacion({
+  borrador,
+  resultados,
+  pedido,
+  soloIds,
+}: {
+  borrador: SurveyDraft
+  resultados: SurveyResults
+  pedido: Pick<PedidoNom035, 'responsible'>
+  soloIds?: readonly string[]
+}) {
+  const canalizados = channeledRoster(borrador, resultados).filter((persona) => persona.channeled && (!soloIds || soloIds.includes(persona.id)))
   return (
     <Documento>
       {canalizados.length === 0 ? (

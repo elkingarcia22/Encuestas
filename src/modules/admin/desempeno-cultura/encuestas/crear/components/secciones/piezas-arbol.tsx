@@ -1,7 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Delete02Icon, FolderExportIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +10,7 @@ import {
   DropdownMenuTrigger,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import type { SectionTreeEntry } from '../../../modelo/sectionTree'
@@ -87,11 +87,14 @@ export function MoverA({
 /** Borrar: siempre se confirma en la ventana corta del sistema (ActionDialog), que abre el paso; ya no dentro de la fila. */
 // `secundario`: con borde y del alto de un campo, para ir junto al título que se está editando (el secundario del DS).
 export function BotonBorrar({ que, bloqueo, onBorrar, secundario = false }: { que: string; bloqueo: string | null; onBorrar: () => void; secundario?: boolean }) {
+  // «!»: el icono de eliminar en rojo; los botones de contorno y sin borde de la librería no traen tono rojo
+  // (diferencias.json › button-ghost-tonos).
   const boton = secundario ? (
     <Button variant="outline" size="icon" aria-label={`Eliminar ${que}`} className="text-destructive!" disabled={bloqueo !== null} onClick={onBorrar}>
       <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
     </Button>
   ) : (
+    // «!»: rojo de quitar; el ghost no trae tono rojo (diferencias.json › button-ghost-tonos).
     <BotonIcono aria-label={`Eliminar ${que}`} className="text-destructive!" disabled={bloqueo !== null} onClick={onBorrar}>
       <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
     </BotonIcono>

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Delete02Icon, Layers01Icon } from '@hugeicons/core-free-icons'
-import { Badge, Button, Field, FieldError, FieldLabel, Input, Text } from '@ubits/flux-ui'
+import { Button, Field, FieldError, FieldLabel, Input, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import { notify } from '@/shared/components/notify'
 import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
@@ -29,7 +30,7 @@ import { ModalAgregarPresentacion } from './presentacion/modal-agregar-presentac
 import { ModalAgregarRoleplay } from './roleplay/modal-agregar-roleplay'
 import { abrirEdicionPresentacion } from './presentacion/vista-presentacion'
 
-// Todo lo que se hace con las páginas y secciones desde el editor: «Añadir página» (el selector de tipo y, detrás, el
+// Todo lo que se hace con las páginas y secciones desde el editor: «Agregar página» (el selector de tipo y, detrás, el
 // flujo de cada recurso), «Editar», «Reemplazar» y «Eliminar página», y las secciones. Es la lógica del paso «Recursos»
 // del asistente anterior sin su maqueta: el editor pone la vista y esto pone los modales y las salidas.
 //
@@ -65,7 +66,7 @@ export function useRecursos({ borrador, onVerPagina }: Opciones) {
   const secciones = seccionesVisibles(borrador)
   const primeraSeccion = secciones[0]?.id ?? 'default'
 
-  // Al volver de un recurso con «Volver» (video con IA, presentación, roleplay), se reabre «Añadir página» en la sección
+  // Al volver de un recurso con «Volver» (video con IA, presentación, roleplay), se reabre «Agregar página» en la sección
   // que se estaba llenando.
   useEffect(() => {
     if (borrador.reabrirAnadir) {
@@ -172,7 +173,7 @@ export function useRecursos({ borrador, onVerPagina }: Opciones) {
           etiqueta: 'Editar',
           onClick: () => {
             if (r.origenVideo === 'avatar') {
-              notify('No hay un borrador editable para este video. Genera uno con IA de nuevo.')
+              notify('No hay un borrador editable para este video. Genera uno con IA de nuevo.', undefined, 'warning')
               return
             }
             abrirIntencion({ seccionId, titulo: '', tipo: 'video', paginaId: pagina.id })
@@ -187,7 +188,7 @@ export function useRecursos({ borrador, onVerPagina }: Opciones) {
           etiqueta: 'Editar',
           onClick: () => {
             if (!abrirEdicionPresentacion(r.presentacion)) {
-              notify('No hay datos editables para esta presentación. Genera una con IA de nuevo.')
+              notify('No hay datos editables para esta presentación. Genera una con IA de nuevo.', undefined, 'warning')
               return
             }
             abrirIntencion({ seccionId, titulo: '', tipo: 'presentacion-interactiva', paginaId: pagina.id })
@@ -209,7 +210,7 @@ export function useRecursos({ borrador, onVerPagina }: Opciones) {
 
   const pedirEliminarSeccion = (seccion: Seccion) => {
     if (secciones.length <= 1) {
-      notify('Debe haber al menos una sección.')
+      notify('Debe haber al menos una sección.', undefined, 'warning')
       return
     }
     setConfirmar({ tipo: 'seccion', seccion })
@@ -314,7 +315,7 @@ export function useRecursos({ borrador, onVerPagina }: Opciones) {
   )
 
   return {
-    /** «Añadir página» en una sección (sin sección: la primera). */
+    /** «Agregar página» en una sección (sin sección: la primera). */
     anadirPagina: (seccionId?: string) => setAnadir({ seccionId: seccionId ?? primeraSeccion }),
     accionesDe,
     pedirEliminarPagina: (pagina: Pagina) => setConfirmar({ tipo: 'pagina', pagina }),
@@ -363,7 +364,7 @@ function EditarSeccion({ seccion, onCerrar }: { seccion: Seccion | null; onCerra
               onCerrar()
             }}
           >
-            Guardar
+            Guardar cambios
           </Button>
         </>
       }
@@ -395,7 +396,7 @@ function EditarSeccion({ seccion, onCerrar }: { seccion: Seccion | null; onCerra
               Opcional
             </Badge>
           </div>
-          <EditorTexto key={clave} id="cc-seccion-descripcion" valor={descripcion} onCambio={setDescripcion} placeholder="Añade una descripción para la sección aquí" alto={120} />
+          <EditorTexto key={clave} id="cc-seccion-descripcion" valor={descripcion} onCambio={setDescripcion} placeholder="Agrega una descripción para la sección aquí" alto={120} />
         </div>
       </div>
     </ActionDialog>

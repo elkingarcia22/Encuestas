@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useBlocker, useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Delete02Icon, LogoutSquare01Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { Delete02Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Field,
@@ -25,13 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
-  toast,
 } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
-import { ChipGuardado, useGuardadoSimulado } from '@/shared/components/ChipGuardado'
+import { ChipGuardado } from '@/shared/components/ChipGuardado'
+import { notify } from '@/shared/components/notify'
 import { PageActionBar, PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
-import { BotonSalirCreacion } from '@/modules/design-system/navegacion/boton-salir-creacion'
-import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { BotonSalirCreacion, VentanaSalir } from '@/modules/design-system/navegacion/boton-salir-creacion'
 import { RangoDeFechas, type Rango } from '@/modules/design-system/formularios/rango-de-fechas'
 import { HOY, plural } from '@/modules/design-system/patrones/formato'
 import { HOY_ISO, PERSONAS, aFechaIso, type Plan, type Tarea } from '../components/datos'
@@ -63,9 +62,9 @@ export function Component() {
   const [tareas, setTareas] = useState<string[]>([])
   const [nuevaTarea, setNuevaTarea] = useState('')
   const [errores, setErrores] = useState<Errores>({})
-  const [guardado, avisarCambio] = useGuardadoSimulado()
+  // Sin borrador real (13-oct, «guardado-honesto»): el plan no existe hasta que se crea, así que el chip dice «Cambios
+  // sin guardar» en cuanto se toca algo y nunca «Guardado».
   const [tocado, setTocado] = useState(false)
-  const [confirmarSalida, setConfirmarSalida] = useState(false)
   // Salida deliberada (confirmada o recién creada): el guardia no vuelve a preguntar.
   const saliendo = useRef(false)
 
@@ -76,12 +75,10 @@ export function Component() {
     saliendo.current = true
     navigate(RUTA_TAREAS)
   }
-  const pedirSalir = () => (tocado ? setConfirmarSalida(true) : salir())
 
-  // Cada cambio reinicia el guardado del borrador y borra el error de ese campo.
+  // Cada cambio marca que hay algo sin guardar y borra el error de ese campo.
   const cambio = (campo?: keyof Errores) => {
     setTocado(true)
-    avisarCambio()
     if (campo) setErrores((previos) => ({ ...previos, [campo]: undefined }))
   }
 
@@ -130,13 +127,11 @@ export function Component() {
       subtareas: [],
       historial: [],
     }))
-    toast.add({
-      type: 'success',
-      title: 'Plan creado',
-      description: nuevas.length
-        ? `«${plan.nombre}» quedó con ${nuevas.length} ${plural(nuevas.length, 'tarea', 'tareas')}.`
-        : `«${plan.nombre}» quedó listo para sumarle tareas.`,
-    })
+    notify(
+      'Plan creado',
+      nuevas.length ? `«${plan.nombre}» quedó con ${nuevas.length} ${plural(nuevas.length, 'tarea', 'tareas')}.` : `«${plan.nombre}» quedó listo para sumarle tareas.`,
+      'success',
+    )
     // La pestaña Planes recibe el plan nuevo ya seleccionado (el mismo camino que usan los planes armados con IA).
     saliendo.current = true
     navigate(RUTA_TAREAS, { state: { nuevos: [{ plan, tareas: nuevas }], elegido: plan.id } })
@@ -148,7 +143,7 @@ export function Component() {
         breadcrumbs={[{ label: 'Tareas', path: RUTA_TAREAS }, { label: 'Crear plan' }]}
         title="Crear plan"
         description="Agrupa tareas de seguimiento con un responsable y una vigencia, y míralas avanzar juntas."
-        actions={<BotonSalirCreacion onClick={pedirSalir} />}
+        actions={<BotonSalirCreacion onClick={salir} salida={{ conCambios: tocado }} />}
       />
 
       <PageContent className="pb-2">
@@ -295,42 +290,25 @@ export function Component() {
         </Frame>
 
         <PageActionBar className="mb-1">
-          {/* El estado del guardado aparece en cuanto hay algo que guardar. */}
-          {tocado ? <ChipGuardado estado={guardado} /> : <span />}
+          {/* Aparece en cuanto hay algo que guardar y dice «Cambios sin guardar» hasta que se crea el plan. */}
+          {tocado ? <ChipGuardado estado="editando" /> : <span />}
           <Button className="ml-auto" onClick={crear}>
             Crear plan
           </Button>
         </PageActionBar>
       </PageContent>
 
-      {/* Lo que se pierde, en la ventana de confirmar: el título fijo y el plan en el cuerpo (Carlos, 1-oct). Sirve al
-          botón de salir y, con la misma pregunta, a las salidas que no pasan por él. */}
-      <DialogoConfirmar
-        abierto={confirmarSalida || salidaBloqueada !== null}
-        onAbiertoChange={(abierto) => {
-          if (abierto) return
-          setConfirmarSalida(false)
-          salidaBloqueada?.reset()
+      {/* El botón «Salir de la creación» trae su propia ventana (BotonSalirCreacion con `salida`). Esta es la misma ventana
+          para las salidas que no pasan por él (barra lateral, «atrás»). No hay borrador: lo que se lleva se pierde. */}
+      <VentanaSalir
+        abierto={salidaBloqueada !== null}
+        onAbiertoChange={(abierto) => (abierto ? undefined : salidaBloqueada?.reset())}
+        borrador={false}
+        onSalir={() => {
+          saliendo.current = true
+          salidaBloqueada?.proceed()
         }}
-        size="sm"
-        icono={LogoutSquare01Icon}
-        titulo="¿Salir sin guardar?"
-        descripcion="Lo que llevas se pierde: el plan no se guarda al salir."
-        cancelar="Seguir editando"
-        accion="Salir sin guardar"
-        destructiva
-        onConfirmar={() => {
-          setConfirmarSalida(false)
-          if (salidaBloqueada) {
-            saliendo.current = true
-            salidaBloqueada.proceed()
-          } else {
-            salir()
-          }
-        }}
-      >
-        <RegistroConfirmar nombre={nombre.trim() || 'Plan sin nombre'} detalle="Plan de formación" estado="Sin guardar" />
-      </DialogoConfirmar>
+      />
     </PageShell>
   )
 }

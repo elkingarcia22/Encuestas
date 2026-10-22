@@ -68,7 +68,7 @@ export function Participacion({ resultados, segmento, onSegmento }: Props) {
         ayuda="Es el porcentaje de personas invitadas que completaron la encuesta: personas que completaron ÷ personas invitadas."
         cifra={formatPercent(rate)}
         lectura={LECTURA[tono]}
-        pie={`${numero(completed)} de ${numero(invited)} · meta ${PARTICIPATION_TARGET}%`}
+        pie={`${numero(completed)} de ${numero(invited)} · meta ${formatPercent(PARTICIPATION_TARGET)}`}
         tituloAnillos="Estado de los invitados"
         totalAnillos={`${numero(invited)} en total`}
         anillos={[

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Heading, Tabs, TabsList, TabsTrigger, Text } from '@ubits/flux-ui'
-import { NecesitaTuAtencion, TopMetricas } from '@/modules/design-system/templates/home-operativo/components/inicio-operativo'
+import { TopMetricas } from '@/modules/design-system/templates/home-operativo/components/inicio-operativo'
 import { PERSONA, saludo } from '@/modules/design-system/templates/home-operativo/components/data'
 import { PageShell } from '@/shared/components/PageShell'
 import { AccionesRapidas } from './components/acciones-rapidas'
 import { METRICAS_ADMIN, PERIODOS_ADMIN, type PeriodoAdmin } from './components/metricas-periodo'
+import { ParaAtender } from './components/para-atender'
 
 // Inicio del administrador (1 oct, Charlie). De arriba abajo: el saludo, seis «Acciones rápidas» en tarjetas, las
 // métricas con su periodo (últimos 30 o 90 días) y «Necesita tu atención» al mismo ancho que las métricas. Se ocultaron «Cómo
@@ -69,7 +70,7 @@ export function Component() {
         />
         </div>
         <div className={ENTRADA} style={retraso(520)}>
-        <NecesitaTuAtencion enlace={(slug) => RUTA[slug] ?? '/admin'} contadorAzul enMarco entrada={{ clase: ENTRADA, desde: 600, paso: 40 }} />
+        <ParaAtender enlace={(slug) => RUTA[slug] ?? '/admin'} entrada={{ clase: ENTRADA, desde: 600, paso: 60 }} />
         </div>
       </div>
     </PageShell>

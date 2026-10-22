@@ -1,6 +1,8 @@
 import { COLLABORATORS, type Collaborator } from '../../../encuestas/modelo/collaborators'
 import { parseSurveyDate, startOfToday } from '../../../encuestas/modelo/surveyListDates'
 import { avanceEsperado, diasParaCierre, type Ciclo } from '../ciclos'
+import { CONFIG_INICIAL, nivelPara, nivelesEfectivos, tonoDe, type TonoId } from '../configuracion'
+import { SIN_AJUSTES, type AjustesCiclo } from '../../components/ajustes-ciclo'
 
 // El seguimiento de un ciclo para sus resultados (portado del prototipo «configuración objetivos», 9-oct): quiénes
 // están en el ciclo, qué objetivos tiene cada uno, cuánto llevan, si reportaron y si conversaron sobre ellos. La lista
@@ -26,6 +28,8 @@ export interface ObjetivoSeguido {
   empresa: string | null
   /** Los días en que se reportó avance, para el ritmo de actividad. */
   avances: readonly Date[]
+  /** Inactivo (desde Resultados): no cuenta para la persona ni entra al ponderado; su avance se conserva. */
+  activo: boolean
 }
 
 export type Etapa = 'aprobado' | 'por-aprobar' | 'por-ajustar'
@@ -42,9 +46,11 @@ export interface PersonaSeguida {
   id: string
   colaborador: Collaborator
   objetivos: readonly ObjetivoSeguido[]
+  /** Salió del ciclo pero su avance sigue contando en el progreso (eligieron conservarlo al sacarla). */
+  retirado: boolean
   /** Avance ponderado: Σ peso × cumplimiento de sus objetivos. null si no reportó nada. */
   avance: number | null
-  nivel: NivelId
+  nivel: NivelVista
   /** Qué tan atrás va frente al calendario (solo con el ciclo abierto). */
   riesgo: Riesgo
 }
@@ -57,15 +63,37 @@ export function riesgoDe(avance: number | null, calendario: number, abierto: boo
   return brecha >= 25 ? 'alto' : brecha >= 12 ? 'medio' : brecha > 0 ? 'bajo' : 'sin'
 }
 
-/** Los niveles de desempeño de una persona, con «Por iniciar» fijo para quien no ha reportado (como en el prototipo). */
-export type NivelId = 'por-iniciar' | 'por-mejorar' | 'bueno' | 'excelente'
-export const NIVELES: readonly { id: NivelId; etiqueta: string; color: string; rango: string }[] = [
-  { id: 'por-iniciar', etiqueta: 'Por iniciar', color: 'var(--muted-foreground)', rango: 'Sin reportes' },
-  { id: 'por-mejorar', etiqueta: 'Por mejorar', color: 'var(--destructive)', rango: '0 a 33%' },
-  { id: 'bueno', etiqueta: 'Bueno', color: 'var(--warning)', rango: '34 a 66%' },
-  { id: 'excelente', etiqueta: 'Excelente', color: 'var(--success)', rango: '67% o más' },
-]
-export const nivelDe = (avance: number | null): NivelId => (avance === null ? 'por-iniciar' : avance <= 33 ? 'por-mejorar' : avance <= 66 ? 'bueno' : 'excelente')
+/** Un nivel de desempeño como lo pinta el reporte: su nombre, su color, su insignia y el rango que cubre. */
+export interface NivelVista {
+  id: string
+  etiqueta: string
+  color: string
+  badge: ReturnType<typeof tonoDe>['badge']
+  tono: TonoId
+  rango: string
+  desde: number
+  hasta: number
+}
+
+const vista = (id: string, etiqueta: string, tono: TonoId, desde: number, hasta: number, rango = `${desde} a ${hasta} %`): NivelVista => ({ id, etiqueta, color: tonoDe(tono).color, badge: tonoDe(tono).badge, tono, rango, desde, hasta })
+
+/** «Por iniciar» es fijo, para quien no ha reportado (como en el prototipo); los demás son los que configuró el ciclo. */
+export const POR_INICIAR = vista('por-iniciar', 'Por iniciar', 'neutral', 0, 0, 'Sin reportes')
+
+/** Los niveles de un ciclo, de su configuración (21-oct): «Por iniciar» primero y luego los suyos, de menor a mayor. */
+export function nivelesDe(ciclo: Ciclo): readonly NivelVista[] {
+  const config = ciclo.draft?.config ?? CONFIG_INICIAL
+  const propios = [...nivelesEfectivos(config)].sort((a, b) => a.desde - b.desde)
+  return [POR_INICIAR, ...propios.map((nivel) => vista(nivel.id, nivel.nombre, nivel.tono, nivel.desde, nivel.hasta))]
+}
+
+/** El nivel de un avance entre los del ciclo: sin avance, «Por iniciar». */
+export function nivelDe(avance: number | null, niveles: readonly NivelVista[]): NivelVista {
+  if (avance === null) return POR_INICIAR
+  const propios = niveles.filter((nivel) => nivel.id !== POR_INICIAR.id)
+  const elegido = nivelPara(avance, propios.map((nivel) => ({ id: nivel.id, nombre: nivel.etiqueta, desde: nivel.desde, hasta: nivel.hasta, tono: 'neutral' as const })))
+  return propios.find((nivel) => nivel.id === elegido.id) ?? POR_INICIAR
+}
 
 export interface ResultadosCiclo {
   ciclo: Ciclo
@@ -74,7 +102,9 @@ export interface ResultadosCiclo {
   objetivos: number
   /** Promedio simple del avance de las personas que reportaron. */
   avanceGeneral: number
-  porNivel: Readonly<Record<NivelId, number>>
+  /** Los niveles del ciclo, en orden, y cuántas personas cayeron en cada uno (por id). */
+  niveles: readonly NivelVista[]
+  porNivel: Readonly<Record<string, number>>
   /** Qué parte del calendario ya pasó, en %, y cuántos días quedan (solo con el ciclo abierto). */
   calendario: number
   diasRestantes: number
@@ -117,7 +147,7 @@ const MAXIMO_PERSONAS = 80
 const MESES = new Intl.DateTimeFormat('es', { month: 'short' })
 
 /** Siembra las personas del ciclo y arma su reporte completo. */
-export function construirResultados(ciclo: Ciclo, hoy: Date = startOfToday()): ResultadosCiclo {
+export function construirResultados(ciclo: Ciclo, ajustes: AjustesCiclo = SIN_AJUSTES, hoy: Date = startOfToday()): ResultadosCiclo {
   const r = azar(ciclo.id)
   const abierto = ciclo.estado === 'En curso'
   const total = Math.max(6, Math.min(MAXIMO_PERSONAS, ciclo.personas))
@@ -157,9 +187,10 @@ export function construirResultados(ciclo: Ciclo, hoy: Date = startOfToday()): R
         cumplimiento,
         comentarios: r() < 0.55 ? Math.floor(1 + r() * 5) : 0,
         ultimaActualizacion: conAvance ? hace(Math.floor(r() * 25)) : null,
+        activo: true,
       }
     })
-    return { id: `${ciclo.id}-p${indice}`, colaborador, objetivos }
+    return { id: `${ciclo.id}-p${indice}`, colaborador, objetivos, retirado: false }
   })
 
   // Calibración: se escala el cumplimiento sembrado para que el promedio de las personas caiga en el avance que dice la
@@ -169,16 +200,35 @@ export function construirResultados(ciclo: Ciclo, hoy: Date = startOfToday()): R
   const crudos = crudas.map((persona) => avanceDe(persona.objetivos)).filter((valor): valor is number => valor !== null)
   const promedioCrudo = crudos.length ? crudos.reduce((a, b) => a + b, 0) / crudos.length : 0
   const factor = promedioCrudo > 0 ? ciclo.avance / promedioCrudo : 1
+  const niveles = nivelesDe(ciclo)
   const personas: PersonaSeguida[] = crudas.map((persona) => {
     const objetivos = persona.objetivos.map((objetivo) =>
       objetivo.cumplimiento === null || objetivo.medida === 'hito' ? objetivo : { ...objetivo, cumplimiento: Math.round(Math.min(150, objetivo.cumplimiento * factor)) },
     )
     const crudo = avanceDe(objetivos)
     const avance = crudo === null ? null : Math.round(crudo * 10) / 10
-    return { ...persona, objetivos, avance, nivel: nivelDe(avance), riesgo: riesgoDe(avance, avanceEsperado(ciclo, hoy), abierto) }
+    return { ...persona, objetivos, avance, nivel: nivelDe(avance, niveles), riesgo: riesgoDe(avance, avanceEsperado(ciclo, hoy), abierto) }
   })
 
-  return resumir(ciclo, personas, hoy)
+  return resumir(ciclo, ajustar(personas, ajustes, niveles, ciclo, hoy, abierto), hoy)
+}
+
+/** Aplica lo cambiado desde Resultados: quien salió sin conservar su avance deja de contar; quien lo conservó queda
+ *  marcado; un objetivo inactivo sale del ponderado de su persona (los pesos de los activos se reparten el 100 %). */
+function ajustar(personas: readonly PersonaSeguida[], ajustes: AjustesCiclo, niveles: readonly NivelVista[], ciclo: Ciclo, hoy: Date, abierto: boolean): PersonaSeguida[] {
+  if (Object.keys(ajustes.retirados).length === 0 && ajustes.inactivos.length === 0) return [...personas]
+  const inactivos = new Set(ajustes.inactivos)
+  return personas
+    .filter((persona) => ajustes.retirados[persona.id] !== 'descartar')
+    .map((persona) => {
+      const objetivos = persona.objetivos.map((objetivo) => ({ ...objetivo, activo: !inactivos.has(objetivo.id) }))
+      const activos = objetivos.filter((objetivo) => objetivo.activo)
+      const pesoActivo = activos.reduce((suma, objetivo) => suma + objetivo.peso, 0)
+      const conAvance = activos.some((objetivo) => objetivo.cumplimiento !== null)
+      const crudo = conAvance && pesoActivo > 0 ? activos.reduce((suma, objetivo) => suma + (objetivo.peso / pesoActivo) * Math.min(objetivo.cumplimiento ?? 0, 150), 0) : null
+      const avance = inactivos.size === 0 || !persona.objetivos.some((objetivo) => inactivos.has(objetivo.id)) ? persona.avance : crudo === null ? null : Math.round(crudo * 10) / 10
+      return { ...persona, objetivos, avance, nivel: nivelDe(avance, niveles), riesgo: riesgoDe(avance, avanceEsperado(ciclo, hoy), abierto), retirado: ajustes.retirados[persona.id] === 'conservar' }
+    })
 }
 
 /** Las cifras del reporte a partir de las personas que se miran: todas las del ciclo o solo las que dejan los filtros. */
@@ -187,7 +237,8 @@ export function resumir(ciclo: Ciclo, personas: readonly PersonaSeguida[], hoy: 
   const conAvance = personas.filter((persona) => persona.avance !== null)
   const avanceGeneral = conAvance.length ? Math.round((conAvance.reduce((s, p) => s + (p.avance ?? 0), 0) / conAvance.length) * 10) / 10 : 0
   const todos = personas.flatMap((persona) => persona.objetivos)
-  const porNivel = Object.fromEntries(NIVELES.map((nivel) => [nivel.id, personas.filter((persona) => persona.nivel === nivel.id).length])) as Record<NivelId, number>
+  const niveles = nivelesDe(ciclo)
+  const porNivel = Object.fromEntries(niveles.map((nivel) => [nivel.id, personas.filter((persona) => persona.nivel.id === nivel.id).length])) as Record<string, number>
 
   const areas = new Map<string, number[]>()
   for (const persona of conAvance) areas.set(persona.colaborador.area, [...(areas.get(persona.colaborador.area) ?? []), persona.avance ?? 0])
@@ -209,6 +260,7 @@ export function resumir(ciclo: Ciclo, personas: readonly PersonaSeguida[], hoy: 
     personas,
     objetivos: todos.length,
     avanceGeneral,
+    niveles,
     porNivel,
     calendario: avanceEsperado(ciclo, hoy),
     diasRestantes: Math.max(0, diasParaCierre(ciclo, hoy)),

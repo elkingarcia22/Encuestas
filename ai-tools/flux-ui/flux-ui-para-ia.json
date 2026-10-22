@@ -2,7 +2,7 @@
   "$archivo": "flux-ui-para-ia.json",
   "$para_que": "Reglas y catálogo para que cualquier IA construya el frontend del Playground UX sin inventar componentes: primero las piezas que el proyecto ya resolvió (\"piezas_del_proyecto\"), después @ubits/flux-ui. Se comparte tal cual con el equipo.",
   "$version_formato": "1.0",
-  "generado": "2026-10-15T14:19:25.711Z",
+  "generado": "2026-10-21T16:35:56.985Z",
   "libreria": {
     "paquete": "@ubits/flux-ui",
     "version": "0.5.5",
@@ -15,27 +15,42 @@
     "reglas_obligatorias": [
       "Primero la pieza que el proyecto ya resolvió (ver «piezas»), después el componente de @ubits/flux-ui del catálogo, y si no hay ninguno, para y pregunta. Hay una sola versión de cada pieza: si se queda corta se amplía, no se hace otra al lado.",
       "Todo lo que envía (correo, recordatorio, invitación, pedido), borra, desactiva, archiva, mueve de etapa o descarta pregunta antes con DialogoConfirmar y la tarjeta RegistroConfirmar (qué se toca y a cuántos afecta). Solo un cambio simple que se puede deshacer va directo, con notifyAction y «Deshacer». Nunca un aviso de «enviado» sin haber preguntado.",
-      "Dos ventanas, cada una con su trabajo: preguntar va en DialogoConfirmar; todo lo que tiene contenido (formulario, lista para elegir, vista previa, escribir un correo, confirmar con la lista de a quiénes afecta) va en ActionDialog. El título de una ventana dice qué es la ventana y es fijo; el nombre del registro va en el cuerpo.",
-      "Crear y editar viven en una página (PageShell + PageHeader + PageActionBar), nunca en una ventana ni en un panel. Hay una sola salida, BotonSalirCreacion («Salir de la creación» o «Salir de la edición») en las acciones de la cabecera: sin flecha junto al título, sin X y sin «Cancelar» en la barra. La barra lleva ChipGuardado a la izquierda y «Atrás» y seguir a la derecha. Excepción (Cristian, 9-oct): «Agregar una persona a tu base», en Mis candidatos, es una ventana (ActionDialog) con «Cancelar», como la diseñó Nicolás.",
-      "Salir con cambios pregunta con DialogoConfirmar en su tamaño normal: tres salidas («Seguir editando» · «Salir sin guardar» · «Guardar y salir») si hay algo que guardar; dos («Seguir editando» · «Salir sin guardar», destructiva) si no hay borrador posible. Sin cambios, sale directo. Copia el título y los textos de la pantalla modelo; no inventes otros.",
-      "Un panel (DrawerShell) con algo escrito no se cierra al tocar fuera; cerrarlo con la X, Escape o «Cancelar» con cambios pregunta («Seguir editando» · «Descartar»).",
-      "ChipGuardado dice la verdad: «Cambios sin guardar» mientras no se haya guardado nada y «Guardado» solo cuando de verdad hay un borrador. Una ventana nunca dice «no has hecho cambios» si los hay, ni promete algo que la pantalla no deja hacer.",
+      "Dos ventanas, cada una con su trabajo: preguntar va en DialogoConfirmar, también cuando lo que se confirma afecta a muchas personas (la tarjeta RegistroConfirmar dice qué se toca y a cuántas personas llega). Todo lo que tiene contenido para trabajar (formulario, lista para elegir o editar, vista previa, escribir un correo) va en ActionDialog. El título de una ventana dice qué es la ventana y es fijo; el nombre del registro va en el cuerpo.",
+      "Crear y editar viven en una página (PageShell + PageHeader + PageActionBar), nunca en una ventana ni en un panel. Hay una sola salida, BotonSalirCreacion («Salir de la creación» o «Salir de la edición») en las acciones de la cabecera: sin flecha junto al título, sin X y sin «Cancelar» en la barra. La barra lleva ChipGuardado a la izquierda y «Atrás» y seguir a la derecha. Excepción (Cristian, 9-oct): «Agregar una persona a tu base», en Mis candidatos, es una ventana (ActionDialog) con «Cancelar», como la diseñó Nicolás. Desde el 13-oct tampoco hay asistentes por pasos dentro de un panel: Agregar asignación (Planes), la asignación de Objetivos y Cargar encuestas van en su propia página (Cargar encuestas, encargado a Elkin).",
+      "Toda salida de una creación, una edición o un panel con cambios pregunta con DialogoSalir, la ventana de Crear contenido. Lleva el icono de salir, el título que repite el botón que la abre («¿Salir de la creación?», «¿Salir de la edición?»), una línea que dice qué pasa y dos salidas, «Seguir aquí» y la salida en azul; sin tarjeta del registro y sin tercera salida. Con borrador, salir lo guarda y la línea dice dónde queda («La vacante queda guardada como borrador. Puedes retomarla cuando quieras desde Vacantes.»); sin borrador, dice qué se pierde («Los cambios que hiciste se pierden y la vacante se queda como estaba.»). Pregunta solo si hay algo escrito o cambiado; si no, se sale directo. Lo decidió Nicolás el 13-oct («si tenemos algún salir de algo debemos usar ese modal») y reemplaza las tres salidas del 8-oct. El botón de salir va siempre en azul, también sin borrador: salir de un flujo no elimina nada y el rojo es solo para eliminar (war room del 15-oct). BotonSalirCreacion con `salida` la trae armada (VentanaSalir arma la línea según haya borrador o no), y las salidas que no pasan por el botón (barra lateral, «atrás» del navegador) usan la misma ventana.",
+      "Todo asistente por pasos cierra con BarraPasos, la misma barra fija (PageActionBar: un borde, una sombra): a la izquierda el estado del guardado (ChipGuardado) y lo que falte; a la derecha «Atrás» con su flecha, que aparece desde el paso 2 y lleva al paso anterior (no a la pantalla anterior), y el principal. El principal dice «Continuar» a secas, nunca «Continuar a recursos», «Siguiente» ni «Volver»; en el último paso dice el verbo del flujo («Publicar aviso», «Crear plan», «Crear contenido»).",
+      "Un panel (DrawerShell) con algo escrito o elegido lleva conCambios: no se cierra al tocar fuera y, al cerrarlo con la X, Escape o «Cancelar» (BotonCancelarPanel), pregunta «Seguir editando» · «Descartar» dentro del mismo panel.",
+      "En un panel lateral (DrawerShell) el volver va siempre arriba, junto al título, como «← Volver» (flecha y palabra). El pie lleva como mucho dos botones, el principal y el secundario; nunca un «Volver» o un «Atrás» que repite lo de arriba.",
+      "ChipGuardado dice la verdad: «Cambios sin guardar» mientras no se haya guardado nada y «Guardado» solo cuando de verdad hay un borrador. Las pantallas sin borrador real (Crear tarea, Crear plan de Tareas, Crear ciclo, carga masiva, Agregar persona) muestran «Cambios sin guardar» hasta que se crea, y su ventana de salida tiene dos opciones, sin «Guardar y salir». Una ventana nunca dice «no has hecho cambios» si los hay, ni promete algo que la pantalla no deja hacer.",
       "Toda tabla es TablaDatos y cabe en su marco (1.104 px con la barra lateral abierta): reparte los anchos, apaga el cambio de ancho si no cabe y deja que la columna de texto se corte con «…» y TextoCompleto. El «⋯» de cada fila se ve siempre.",
-      "En toda lista para elegir (participantes, el comparativo, demográficos, asignaciones…), la casilla (Checkbox) o el círculo (RadioGroupItem) van siempre a la izquierda de la fila, antes del icono y del texto; a la derecha solo va lo de apoyo (cifras, insignias, acciones). La fila entera elige. Homologado por Elkin el 9-oct.",
+      "PiePaginacion (el pie de TablaDatos y de las cuadrículas) solo muestra «Anterior» y «Siguiente» cuando hay más de una página. Con una sola, quedan «Filas por página», «Viendo 1–7 de 7» y el número de la página.",
+      "La tabla del sistema es una sola, TablaDatos, también en Vacantes y Mis candidatos (16-oct, Nicolás: «no veo aún que en vacantes o candidatos estén las tablas como deben ser»). La tabla lleva su título en lo gris, encima del conteo («Tus vacantes» / «19 vacantes»; 16-oct, Nicolás: «no me les quites los títulos a las tablas»). El buscador va en su cabecera, cada columna se ordena y se filtra desde su encabezado, las acciones con las elegidas salen junto al buscador y el «⋯» de cada fila en «Acciones». Lo que la tabla no puede decir con sus controles (mirar una sola carpeta, un lote importado, la vacante con que compara Orbit Flow) va en la línea del conteo y se quita con un botón junto al buscador. La tabla armada a mano de Selección («Tabla completa», 7 al 15 oct) se fue del design system; Créditos («Agentes con IA») y la tabla que arma Orbit en «Orbit Data» también son TablaDatos. Con un tablero, la otra vista es TablaDatos con el cambio Lista/Tablero de «Tablero con vistas», y el título de la sección va arriba, fuera del marco, con las vistas y el cambio.",
       "Los avisos usan notify(título, detalle, tipo) con su tipo ('success', 'info', 'warning' o 'error'). Nada de toast.add suelto ni ToastToaster en la pantalla.",
-      "Lo que hizo la IA lleva el orbe (IconoIA; como insignia, EtiquetaIA), nunca estrellas ni chispas. El primario de IA es BotonIa y la segunda acción BotonIaSecundario. El botón que abre el agente es ReopenAgentButton y se llama «Orbit Flow». Orden de una fila: «⋯» (BotonIcono) · terciario · secundario · primario · IA · Orbit Flow.",
+      "Lo que hizo la IA lleva el orbe (IconoIA; como insignia, EtiquetaIA), nunca estrellas ni chispas. El primario de IA es BotonIa y la segunda acción BotonIaSecundario. El botón que abre el agente es ReopenAgentButton y se llama «Orbit». Orden de una fila: «⋯» (BotonIcono) · terciario · secundario · primario · IA · Orbit.",
+      "Debajo del campo donde se le escribe a Orbit va siempre «Orbit puede cometer errores. Verifica la respuesta.», en letra pequeña y apagada: en el Orbit de cada pantalla (Composer del agent-kit) y en el chat de Suite AI. Ningún otro texto («El agente puede cometer errores…»). Donde el panel es estrecho, cabe en una o dos líneas sin apretar el campo.",
+      "El panel de Orbit de cada pantalla entra y sale con una sola animación: desde la derecha, y el contenido se encoge para dejarle sitio (AgentDock). Ninguna pantalla la redefine. En el borde izquierdo, a media altura, tiene un asidero para arrastrar su ancho cuando hay mucha información; nunca tapa los botones principales de la pantalla.",
+      "Cuando una pieza de IA lleva color de fondo (tarjeta, panel, caja de escribir) usa el halo de la IA: las clases vars y halo de @/shared/components/tarjeta-ia.module.css, con relative isolate (o overflow-hidden) en la pieza. Son cuatro manchas de luz pastel a lo ancho del borde de arriba (azul, morado, rosa y naranja) que se apagan antes del texto; sinHalo lo apaga cuando la pantalla ya tiene otra pieza de IA con color. Nada de radial-gradient ni manchas armadas a mano. Los cuatro colores de la IA (#285ee6, #7e2be0, #d6306e, #eb6233) salen de la clase vars (var(--ia-azul), var(--ia-morado), var(--ia-rosa), var(--ia-naranja)), nunca del tema: --primary y --destructive no son colores de la IA (el chat usaba el rojo de error como naranja). Pendiente: account-gauge, borde-ia, chat-status y new-chat repiten los cuatro valores en su propio CSS; están bien pintados, pero se pasarán a vars.",
       "El ancho lo pone PageShell (nada de max-w a mano), la letra sale de Heading y Text, los colores de los tokens del tema y las insignias del Badge del proyecto (10,5 px mínimo). className solo para layout.",
-      "Todo en español, también lo que solo oye el lector de pantalla. Fechas, plurales, cifras y porcentajes salen de las utilidades de formato (formato.ts, formatoAvance), no de toLocaleString ni de funciones propias.",
-      "El panel de lo que necesita atención (TableroAtencion, BloqueAtencion o la lista de la Super Home) vive solo en la Super Home (/admin), que reúne Selección, Aprendizaje y Cultura. Los inicios de cada módulo (Vacantes, Créditos, Contenidos, Encuestas…) no lo llevan; lo urgente de un módulo llega a la Super Home o a las notificaciones.",
-      "Todas las pestañas de la plataforma (TabsTrigger, incluidas las de los editores y paneles) llevan solo texto, sin ícono. Se usa la pestaña maestra subrayada (TabsList variant=\"line\"), sin pestañas anidadas.",
-      "Cuando una cabecera o una barra tiene más de dos llamados a la acción, contando al propio Orbit Flow y sin contar el «⋯» (que ya es un ícono), el botón del agente pasa a solo ícono (ReopenAgentButton con compact) para que el título y la descripción no se monten con los botones. Sigue siendo el último de la fila. El caso que lo originó: Encuestas, con «Crear con plantilla», «Crear encuesta» y Orbit Flow.",
-      "Cuando una cabecera o un bloque tiene dos llamados a la acción del mismo nivel, los dos van como secundarios (outline); el primario se reserva para cuando hay una sola acción principal. Los botones de IA y Orbit Flow siguen sus propias reglas.",
-      "Los avisos (notify) llevan un título de una línea, de unos 60 caracteres como máximo, y un detalle opcional de una o dos líneas, de unos 120. Lo que no cabe va a una ventana o al panel. Las cifras exactas las fija Nicolás (ver «por_decidir»).",
-      "En la plataforma no van secciones blancas sueltas: cada una vive dentro de un marco gris (Frame + FramePanel), y su título y su bajada van en el gris, nunca repetidos dentro del panel blanco. Si el contenido se nombra solo (unas cifras con su etiqueta, un estado vacío, un campo con su label), el marco va sin encabezado.",
+      "Toda barra de avance (Progress de la librería, también las dibujadas a mano) tiene las dos puntas redondeadas, el fondo gris y la parte de color. Se hereda del tema, no se fuerza pantalla por pantalla.",
+      "En modo oscuro, todo azul usado como texto, icono o borde pasa el contraste AA contra su fondo: 4,5:1 en texto y 3:1 en iconos y bordes. El azul de marca (--primary) sigue de fondo del botón, con texto claro (5,4:1, decisión de Nicolás del 18-sep); como texto (enlaces, nombres en tablas, pestaña activa, botones e insignias de tipo enlace) se usa --primary-texto (#7fb0ff, 4,7:1 sobre la fila resaltada y 9:1 sobre el fondo), y el foco usa un --ring más claro (#427ff7). Vive en el tema (src/index.css), no pantalla por pantalla.",
+      "Todo en español, también lo que solo oye el lector de pantalla. Fechas, plurales, cifras y porcentajes salen de las utilidades de formato (formato.ts, formatoAvance), no de toLocaleString ni de funciones propias. Vocabulario único (13-oct): «Agregar» (nunca «Añadir»), «Crear» para crear algo nuevo (no «Nuevo»), porcentajes con espacio («40 %»), septiembre abreviado «sept», «Eliminar» para borrar del sistema y «Quitar» para sacar de una lista, «Guardar cambios» al editar. Excepción: en el editor de video «Canvas» y «Media» se quedan porque son nombres de la HU; el resto se traduce.",
+      "El panel de lo que necesita atención vive en la Super Home (/admin) y también en el inicio de cada producto (Vacantes, Créditos, Encuestas, Objetivos…), porque no todos entran por la home ni tienen todos los productos. Es un solo patrón en todos: caja gris con título y descripción en el gris, tres columnas con su asunto y su llamado a la acción, sin prioridades (todo lo que sale es importante). La estructura la arma Carlos en la home y los productos la toman de ahí.",
+      "Todas las pestañas de la plataforma (TabsTrigger, incluidas las de los editores y paneles) llevan solo texto, sin ícono. La pestaña maestra es la subrayada (TabsList variant=\"line\"). Si hace falta una pestaña dentro de otra, la de adentro va en píldora (regla «pestanas-anidadas»).",
+      "Cuando una pestaña tiene sus propias pestañas (Resultados de encuestas), la principal es la subrayada (TabsList variant=\"line\") y la de adentro va en píldora (TabsList con su variante por defecto). Nunca dos filas de pestañas subrayadas.",
+      "Cuando una cabecera o una barra tiene más de dos llamados a la acción, contando al propio Orbit y sin contar el «⋯» (que ya es un ícono), o cuando la descripción choca con los botones (regla «encabezado-sin-choque»), el botón del agente pasa a solo ícono (ReopenAgentButton con compact), con un globo que dice «Orbit» al pasar el cursor. Sigue siendo el último de la fila. El caso que lo originó: Encuestas, con «Crear con plantilla», «Crear encuesta» y Orbit.",
+      "La descripción de PageHeader nunca se monta con los botones de la derecha. Si choca, primero el botón de Orbit pasa a solo icono (ReopenAgentButton compact), con un globo que dice «Orbit» al pasar el cursor; si aún choca, la descripción baja de línea antes de tocar los botones. Nunca se achican ni se esconden los botones para que quepa el texto.",
+      "La pantalla completa es solo para lo que pide atención total: los flujos de aprendizaje y, según Elkin, la tabla tipo Excel de Gestión de usuarios. Los clientes (sobre todo recursos humanos) usan pantallas chicas y ampliar casi no cambia nada, así que no se agrega «Ampliar» a tableros ni gráficos por costumbre. Cuando sí va, usa la plantilla del sistema: PantallaCompleta (o FullscreenTemplate con `margen` para los editores inmersivos de LMS Creator). Casi toda la ventana, con 16 px de margen sobre el fondo oscurecido; arriba el título con la tipografía del tema y un divisor; a la derecha sus acciones y la X en círculo (CloseButton). El botón que la abre es BotonAmpliar: solo icono, arriba a la derecha del bloque que se amplía, nunca flotando abajo.",
+      "Cuando una cabecera o un bloque tiene dos llamados a la acción del mismo nivel, los dos van como secundarios (outline); el primario se reserva para cuando hay una sola acción principal. Los botones de IA y Orbit siguen sus propias reglas.",
+      "Los avisos (notify) llevan un título de una línea, de unos 60 caracteres como máximo, y un detalle opcional de una o dos líneas, de unos 120. Lo que no cabe va a una ventana o al panel. Con texto largo el aviso se ensancha para no pasar de dos líneas, y su esquina es la de las tarjetas (13-oct). Las cifras exactas las fija Nicolás (ver «por_decidir»).",
+      "En la plataforma no van secciones blancas sueltas: cada una vive dentro de un marco gris (Frame + FramePanel), y su título y su bajada van en el gris, nunca repetidos dentro del panel blanco. Si el contenido se nombra solo (unas cifras con su etiqueta, un estado vacío, un campo con su label), el marco va sin encabezado. Dentro del panel blanco no va otra caja (regla caja-o-divisor, 8-oct).",
       "Una lista de contenidos con portada (Contenidos del LMS Creator, Universidad corporativa, Zona de estudio) se puede ver como tabla o como tarjetas, con el cambio Tabla/Cuadrícula de los controles compartidos de Contenidos (CambioDeVista y MarcoCuadricula). El modo tabla es siempre TablaDatos con CeldaTitulo; la cuadrícula va en el marco gris con PiePaginacion. En el portal del colaborador arranca en Cuadrícula. Las demás tablas (las de gestionar) siguen siendo solo TablaDatos.",
       "Lo que se pide dentro de un panel lateral (confirmar, escribir un correo, mover, abrir otro detalle) se abre en el mismo panel: su contenido cambia por el de la ventana y arriba queda «← título del panel» para volver. Nada de otra ventana ni otro panel encima. DrawerShell, VentanaDeAccion y DialogoConfirmar lo hacen solos con DrawerAnidado; no hay que armarlo en cada pantalla.",
       "Todo lo que carga o guarda tiene su error. Si no se guarda, nada cambia: el aviso rojo dice «No pudimos …» y una línea con la consecuencia («Sigue en …», «No salió ningún correo»), y trae «Reintentar», que repite lo mismo y cierra ese aviso. Si la acción venía de una ventana con datos escritos, la ventana se queda abierta con lo escrito. Un bloque que no carga muestra su error en el sitio, con la ilustración glass-danger y «Reintentar». Se prueba con ?simular=error y ?simular=falla-guardar.",
       "Los estados vacíos y los de error van con los iconos glass del design system, no con un icono de línea de Hugeicons: PrimeraVez cuando todavía no hay nada, SinResultados cuando la búsqueda o los filtros lo dejan todo fuera, y la ilustración glass-danger con «Reintentar» cuando algo no cargó. Nada de un Empty armado a mano.",
+      "Ningún botón ni opción de menú avisa de algo que no pasó («Vacante duplicada», «Exportando», «Sesión cerrada», «Aquí se abriría…»). O lo hace de verdad en la maqueta (la fila desaparece, el archivo se descarga, el estado cambia), o se quita, o queda apagado con un globo que dice por qué. Amplía «nada-visible-de-prueba» de los textos a las acciones.",
+      "Una pantalla que todavía no está maquetada sigue en el menú con la etiqueta «Próximamente» y abre PantallaProximamente: una sola pantalla de espera con su ilustración glass, sin rutas ni jerga. Ningún botón ni vacío promete llevar a ella como si existiera («Explorar catálogo» no se ofrece mientras el Catálogo no esté).",
+      "Como mucho dos niveles de caja: el marco gris de la sección y su panel blanco. Dentro del panel, los elementos de una lista (personas, opciones, preguntas, ajustes) se separan con un divisor y se marcan con hover al pasar el cursor, no con otra caja con borde. Una sección que se puede contraer usa acordeón, no un interruptor que además borra lo configurado. Checks y radios van del mismo lado en toda la plataforma: a la izquierda del texto.",
+      "Para elegir de una lista larga dentro de un contenedor (participantes de una encuesta, destinatarios de un ciclo de objetivos, un plan) se usa ListaElegible con una FilaElegible por fila: buscador y herramientas («Agrupar por», «Ver elegidos») arriba, casilla de la página y conteo, filas con divisor, checks a la izquierda y el pie de paginación del sistema cuando hay más de una página. Sin caja dentro de caja ni cabecera de columnas: si hace falta ordenar o actuar por fila, es TablaDatos en su propia página. La hizo Elkin (14-oct) y se aprobó en el war room del 13-oct.",
       "Toda pieza visible de la interfaz sale de un componente de la lista \"componentes\" de este archivo. Si se ve en pantalla (botón, campo, tabla, tarjeta, modal, menú, pestaña, aviso, etiqueta, avatar, barra de progreso, gráfico, calendario…), es un componente de @ubits/flux-ui.",
       "Antes de escribir código de interfaz, analiza qué piezas necesita la pantalla y búscalas aquí por \"nombre\", \"usar_para\" y \"buscar\". Usa la que mejor encaje.",
       "No crees componentes visuales nuevos. No dibujes con div o span y clases algo que la librería ya resuelve: un círculo con una inicial es Avatar, una barra de color es Progress, un recuadro vacío con un mensaje es Empty, una etiqueta de estado es Badge.",
@@ -46,7 +61,11 @@
       "No cambies la apariencia de los componentes. \"className\" solo para layout: ancho, alto, márgenes, padding de contenedores, gap, grid, flex, posición, truncado y visibilidad. Nada de colores, bordes, sombras, radios ni tipografía sobre un componente de la librería.",
       "Iconos: solo Hugeicons, siempre como dato dentro de <HugeiconsIcon icon={NombreIcon} />.",
       "Colores: solo los tokens de \"tokens_del_tema\". Nunca colores literales (#hex, rgb, oklch) ni la paleta cruda de Tailwind (bg-blue-500, text-slate-700…). Para texto usa Heading y Text.",
-      "Si ningún componente cubre la necesidad, detente: no la improvises a mano. Explica qué falta, qué componentes se acercan y pregunta si se pide al equipo de la librería o se resuelve con uno existente."
+      "Si ningún componente cubre la necesidad, detente: no la improvises a mano. Explica qué falta, qué componentes se acercan y pregunta si se pide al equipo de la librería o se resuelve con uno existente.",
+      "Eliminar una vacante (cancela entrevistas, devuelve créditos) o un candidato de la base es definitivo: la ventana dice qué se lleva por delante, pide escribir «eliminar» para habilitar el botón rojo y el aviso no ofrece «Deshacer». Queda registrado quién lo hizo y cuándo. Sacar a alguien de una sola vacante es «Eliminar de la vacante»; eliminar a la persona se hace en Mis candidatos.",
+      "Para dar movimiento (cifras que suben, filas y tarjetas que entran una tras otra) se usa motion («motion/react»), la librería de Framer Motion que ya trae flux-ui. Gestos cortos y siempre los mismos; la página va dentro de MotionConfig reducedMotion=\"user\". Las piezas viven en el design system: CifraAnimada (metricas/cifra-animada.tsx) y entrada/FilaAnimada (data-grid/movimiento.ts); Selección las usa desde ahí.",
+      "Arrastrar o avanzar a alguien a una etapa con IA (Serena AI, Psicométrico, Role Play…) no mueve en el acto: abre «Mover a otra etapa» con dos opciones. «Que la IA le escriba» dice cuánto cuesta y cuánto queda libre en su agente; sin nada libre se apaga y la ventana lleva a Créditos. «Solo moverla» la deja en la etapa sin invitación y sin gastar: queda «Esperando acción» y la invitación se envía después desde el «⋯» de su tarjeta o el aviso de su ficha («Enviar la invitación»). Cada invitación que sale aparta sus créditos y queda en el historial de Créditos; si la entrevista se cancela sin terminar, vuelven.",
+      "Cada producto con IA tiene su propia bolsa de créditos y su propio rastro: Selección los gestiona en Créditos (/admin/seleccion/creditos) y LMS Creator en su saldo. El menú de empresa muestra un anillo por producto («Créditos de Selección», «Créditos de LMS Creator»), nunca un total de «Créditos de IA». Lo que cuesta algo se dice junto a la acción, con el saldo del agente o del producto que lo paga."
     ],
     "protocolo_por_cada_pieza": [
       "Describe en una frase qué verá la persona (por ejemplo: \"lista de colaboradores con filtros y paginación\").",
@@ -115,34 +134,46 @@
         "en_vez_de": "dibujarlo con div y degradados"
       },
       {
-        "necesidad": "Preguntar antes de hacer algo: eliminar, salir sin guardar, activar, descartar, enviar (también cuando muestra lo que se pierde)",
-        "usa": "DialogoConfirmar: icono arriba, título y texto centrados, el registro y lo que se pierde como hijos, «cancelar» y la acción (destructiva en rojo), «otra» para una tercera salida (guardar y salir) y «enCurso» para el spinner. Acuerdo del 6-oct",
+        "necesidad": "Preguntar antes de hacer algo: eliminar, salir sin guardar, activar, descartar, enviar (también cuando afecta a muchas personas o muestra lo que se pierde)",
+        "usa": "DialogoConfirmar: icono arriba, título y texto alineados a la izquierda, el registro y lo que se pierde como hijos, «cancelar» y la acción (destructiva en rojo), «otra» para una tercera salida (guardar y salir) y «enCurso» para el spinner. Acuerdo del 6-oct",
         "desde": "@/modules/design-system/estados/confirmaciones",
         "en_vez_de": "ActionDialog para una confirmación sin contenido, o AlertDialog suelto (se documenta en /design-system/estados › Confirmaciones)"
       },
       {
-        "necesidad": "Una ventana con contenido: formulario corto, lista para elegir, vista previa, detalle, ajustes, o confirmar mostrando la lista de a quiénes afecta",
+        "necesidad": "Una ventana con contenido para trabajar: formulario corto, lista para elegir o editar, vista previa, detalle, ajustes",
         "usa": "ActionDialog (size sm 448, default 620, wide 736 para formularios largos, full para editores; lead, media, onBack, headerActions, dismissible, hideFooter, footer)",
         "desde": "@/shared/components/ActionDialog",
         "en_vez_de": "ConfiguredModal (retirado el 5-oct), Dialog o AlertDialog sueltos. Crear o editar algo no va en una ventana: va en una página con PageActionBar"
       },
       {
+        "necesidad": "Preguntar antes de hacer algo: eliminar, activar, descartar, enviar (también cuando muestra lo que se pierde)",
+        "usa": "DialogoConfirmar: icono arriba, título y texto centrados, el registro y lo que se pierde como hijos, «cancelar» y la acción (destructiva en rojo), «otra» para una tercera salida y «enCurso» para el spinner. Acuerdo del 6-oct. Para salir de algo, DialogoSalir",
+        "desde": "@/modules/design-system/estados/confirmaciones",
+        "en_vez_de": "ActionDialog para una confirmación sin contenido, o AlertDialog suelto (se documenta en /design-system/estados › Confirmaciones)"
+      },
+      {
         "necesidad": "Una tabla o un listado, con o sin paginación",
-        "usa": "TablaDatos, la única tabla del sistema: cabecera como Vacantes (conteo a la izquierda, buscador y «Personalizar columnas» a la derecha, sin título dentro del marco), encabezados de 40 px con asidero, orden y filtro por columna, columna «Acciones» con BotonIcono ⋯ y el paginador en español PiePaginacion (10/20/50, «Viendo 1–10 de 84 …»). La celda que nombra algo, con o sin imagen, es CeldaTitulo",
+        "usa": "TablaDatos, la única tabla del sistema: cabecera como Vacantes (en lo gris, su título con `titulo` y debajo el conteo a la izquierda; buscador y «Personalizar columnas» a la derecha), encabezados de 40 px con asidero, orden y filtro por columna, columna «Acciones» con BotonIcono ⋯ y el paginador en español PiePaginacion (10/20/50, «Viendo 1–10 de 84 …»). La celda que nombra algo, con o sin imagen, es CeldaTitulo. Mientras se maqueta avisa en la consola si las columnas pasan de 1.104 px, y sin emptyState propio trae el vacío glass; lo mejor sigue siendo SinResultados con «Limpiar» (13-oct)",
         "desde": "@/modules/design-system/data-grid/tabla-datos y @/modules/design-system/data-grid/celda-titulo (el paginador vive en @/modules/admin/seleccion/propuestas/components/paginacion)",
         "en_vez_de": "MarcoTabla (retirada el 5-oct), DataGridList o Table sueltos, otro paginador, o una cuadrícula de tarjetas dentro de un marco de tabla. Una lista de contenidos con portada puede verse además como tarjetas con el cambio Tabla/Cuadrícula (regla contenidos-tabla-o-tarjetas, 9-oct); su modo tabla sigue siendo TablaDatos con CeldaTitulo e imagen"
       },
       {
-        "necesidad": "Una lista para elegir dentro de un contenedor (acordeón, panel lateral, sección con marco)",
-        "usa": "ListaElegible: buscador y herramientas (filtros, «Agrupar por», «Ver elegidos») sueltos encima y un solo panel blanco con la casilla de la página, las filas (FilaElegible: casilla, título y detalle o un contenido propio, y lo de apoyo a la derecha; tamano=\"xs\" para filas de una línea, como Participantes) y el pie PiePaginacion solo si hace falta. Sin columnas ni orden: es para elegir (9-oct, Elkin, Participantes de Encuestas y Objetivos)",
+        "necesidad": "Elegir personas o grupos de una lista larga dentro de un contenedor (participantes, destinatarios)",
+        "usa": "ListaElegible con buscador, herramientas, casillaPagina, paginacion y una FilaElegible por fila",
         "desde": "@/modules/design-system/listas/lista-elegible",
-        "en_vez_de": "una TablaDatos dentro de un acordeón o de otro marco (tabla dentro de contenedor dentro de contenedor), o filas con casilla armadas a mano. Si hay que comparar, ordenar por columna o actuar por fila, es TablaDatos en su propia página. Se documenta en Design system › Ajustes propios › Piezas del sistema"
+        "en_vez_de": "una TablaDatos o un ItemGroup armado a mano dentro de un acordeón o un panel"
       },
       {
         "necesidad": "Un panel lateral",
-        "usa": "DrawerShell",
+        "usa": "DrawerShell. Con algo escrito o elegido, pásale conCambios: no se cierra al tocar fuera y, al cerrarlo, pregunta «Seguir editando · Descartar» dentro del mismo panel (13-oct)",
         "desde": "@/modules/design-system/drawers/components/drawer-shell",
         "en_vez_de": "Sheet directo"
+      },
+      {
+        "necesidad": "Ver algo a pantalla completa (un tablero, un mapa de calor, una vista previa) y el botón que la abre",
+        "usa": "PantallaCompleta con titulo, descripcion, acciones y onCerrar; BotonAmpliar arriba a la derecha del bloque; FullscreenTemplate con margen para los editores inmersivos",
+        "desde": "@/modules/design-system/marco/pantalla-completa",
+        "en_vez_de": "una capa fixed inset-0 propia, ActionDialog forzado a pantalla completa o un «Ampliar» flotando abajo"
       },
       {
         "necesidad": "Cerrar una ventana o panel",
@@ -175,6 +206,12 @@
         "en_vez_de": "una Card con degradado a mano (se documenta en /design-system/tarjeta-ia)"
       },
       {
+        "necesidad": "Poner el color de la IA de fondo en una pieza (tarjeta, panel, caja de escribir)",
+        "usa": "las clases vars y halo de tarjeta-ia.module.css: import halo from '@/shared/components/tarjeta-ia.module.css' y className={cn(halo.vars, halo.halo, 'relative isolate')}; sinHalo para apagarlo. Para un color suelto de la IA, var(--ia-azul|morado|rosa|naranja) dentro de vars",
+        "desde": "@/shared/components/tarjeta-ia.module.css",
+        "en_vez_de": "radial-gradient o manchas de color a mano, o --primary y --destructive como colores de la IA"
+      },
+      {
         "necesidad": "Botones de IA",
         "usa": "BotonIa (el único primario de IA: el degradado de marca en pastilla) y BotonIaSecundario (la segunda acción de IA de la vista). Van al final de su fila",
         "desde": "@/shared/components/BotonIa y @/shared/components/BotonIaSecundario",
@@ -182,7 +219,7 @@
       },
       {
         "necesidad": "El agente contextual: panel, hilo, burbujas, propuestas y sugerencias",
-        "usa": "AgentStage, AgentRail, ContextPanel, AgentThread, UserBubble, AgentNote, AgentThinking, ProposalCard, AgentCard, AgentList, UndoRow, AgentSuggestions, SourcePills, ReopenAgentButton (el botón que lo abre: se llama «Orbit Flow» y va siempre el último de su fila). El cuadro de escribir es Composer (@/modules/admin/suite-ai/shared/composer)",
+        "usa": "AgentStage, AgentRail, ContextPanel, AgentThread, UserBubble, AgentNote, AgentThinking, ProposalCard, AgentCard, AgentList, UndoRow, AgentSuggestions, SourcePills, ReopenAgentButton (el botón que lo abre: se llama «Orbit» y va siempre el último de su fila). El cuadro de escribir es Composer (@/modules/admin/suite-ai/shared/composer)",
         "desde": "@/modules/design-system/agente-contextual/components/agent-kit",
         "en_vez_de": "rehacer el panel o las tarjetas del agente, o un botón «Agente IA» armado a mano",
         "ver_tambien": "use-agent-thread para el estado del hilo, y agent-styles + agent.module.css para sus medidas"
@@ -243,13 +280,13 @@
       },
       {
         "necesidad": "Las cifras de un tablero",
-        "usa": "Indicadores (la fila en su marco), FilaCifras (dentro de una tarjeta), CeldaCifra, TarjetaIndicador. Con comparación frente al periodo anterior y ayuda, la fila de Selección: FilaIndicadores + ColumnaIndicador con Cambio, Ayuda, Cifra y Pie (6-oct, forma de Nicolás). Cambio es la única insignia de comparación, también en tablas: decimales, sinColor, enCelda («0 pp» gris) y ayuda (nota en el globo)",
+        "usa": "Indicadores (la fila en su marco), FilaCifras (dentro de una tarjeta), CeldaCifra. Con un gráfico chico por cifra (como Vacantes y Encuestas), FilaIndicadores + ColumnaIndicador con DonaReparto, BarrasMini o AnilloAvance de @/modules/design-system/graficos/piezas. Con comparación frente al periodo anterior y ayuda, la fila de Selección: FilaIndicadores + ColumnaIndicador con Cambio, Ayuda, Cifra y Pie (6-oct, forma de Nicolás). Cambio es la única insignia de comparación, también en tablas: decimales, sinColor, enCelda («0 pp» gris) y ayuda (nota en el globo)",
         "desde": "@/modules/design-system/metricas/cifras; la de Selección en @/modules/design-system/graficos/fila-indicadores y @/modules/admin/seleccion/propuestas/components/cifras",
         "en_vez_de": "una tarjeta suelta por cifra, un número grande a mano o una insignia de variación propia: las métricas van en una sola fila partida por líneas (se documenta en /design-system/metricas)"
       },
       {
         "necesidad": "Lo que necesita tu atención (asuntos por resolver, arriba de una pantalla)",
-        "usa": "TableroAtencion: una columna por grupo (Críticas, Necesitan atención, Acción manual, Sugerencias de la IA), recogido con lo más urgente y «Expandir»; cada asunto se resuelve en su panel (ListaAsuntos, TarjetaSugerencia, MediaGrupo). Va solo en la Super Home (decisión del 5-oct): los inicios de cada módulo no lo llevan",
+        "usa": "TableroAtencion: una columna por grupo (Críticas, Necesitan atención, Acción manual, Sugerencias de la IA), recogido con lo más urgente y «Expandir»; cada asunto se resuelve en su panel (ListaAsuntos, TarjetaSugerencia, MediaGrupo). Va en la Super Home y en el inicio de cada producto, con el mismo patrón (regla atencion-en-cada-producto, 8-oct)",
         "desde": "@/modules/design-system/metricas/tablero-atencion",
         "en_vez_de": "un aviso amarillo con la lista o un tablero propio (se documenta en /design-system/metricas)"
       },
@@ -279,7 +316,7 @@
       },
       {
         "necesidad": "La franja plegable «N cosas necesitan tu atención» encima de una lista",
-        "usa": "BloqueAtencion (alertas de la más grave a la menos, cada una con su «Ver»; si no hay ninguna, no se pinta). Desde el 5-oct lo urgente va solo en la Super Home: no se suma a inicios de módulo nuevos",
+        "usa": "BloqueAtencion (alertas de la más grave a la menos, cada una con su «Ver»; si no hay ninguna, no se pinta). Desde el 8-oct lo urgente va en la Super Home y en el inicio de cada producto con el patrón de TableroAtencion",
         "desde": "@/shared/components/BloqueAtencion",
         "en_vez_de": "un Collapsible con Item armado en cada lista. La usan Vacantes y Contenidos; se documenta en Marco › Ajustes propios › Vacantes (Alertas plegables)"
       },
@@ -344,10 +381,16 @@
         "en_vez_de": "otro cargador con Attachment y Progress: hay uno solo (Ajustes propios › Cargador de archivos). Para una imagen: icono, imagen y etiquetaElegir con el nombre del campo, como CampoImagen de Configuración"
       },
       {
-        "necesidad": "La única salida de una creación o edición (asistente, editor, formulario de alta)",
-        "usa": "BotonSalirCreacion: contorno e icono de salir, dice a dónde lleva («Salir de la creación», «Salir de la edición», «Volver a añadir página»). Va en las acciones de PageHeader, a la derecha del título",
+        "necesidad": "La única salida de una creación o edición y su ventana (modal) «¿Salir de la creación?»: la ventana de salir de una creación (asistente, editor, formulario de alta)",
+        "usa": "BotonSalirCreacion (con `salida`) y VentanaSalir para las salidas que no pasan por el botón",
         "desde": "@/modules/design-system/navegacion/boton-salir-creacion",
         "en_vez_de": "una flecha junto al título, una X, o «Cancelar» en la barra de abajo"
+      },
+      {
+        "necesidad": "La barra fija de un asistente por pasos: guardado, «Atrás» desde el paso 2 y «Continuar»",
+        "usa": "BarraPasos con paso, onAtras, inicio (ChipGuardado) y principal",
+        "desde": "@/modules/design-system/navegacion/barra-pasos",
+        "en_vez_de": "PageActionBar con los botones de «Atrás» y «Continuar» armados a mano"
       },
       {
         "necesidad": "La tarjeta de lo que se toca dentro de una confirmación (nombre, detalle e insignia de estado)",
@@ -372,6 +415,42 @@
         "usa": "pedirMover y DialogoMover (avisa si la vacante está cerrada y abre «Mover a otra etapa» cuando el cambio tiene consecuencias; lo simple va al instante con «Deshacer»). Pieza de Selección: depende de sus datos (vacantes, etapas, plantillas de correo), por eso no vive en el sistema de diseño; fuera de Selección no se usa",
         "desde": "@/modules/admin/seleccion/propuestas/components/dialogo-mover y use-proceso",
         "en_vez_de": "mover al instante sin revisar saltos, retrocesos ni entrevistas sin terminar"
+      },
+      {
+        "necesidad": "Una pantalla que todavía no está maquetada (sale en el menú con «Próximamente»)",
+        "usa": "PantallaProximamente (título de la pantalla, una línea de qué tendrá y la ilustración glass; sin rutas ni jerga). Se registra en el routes.ts del módulo y su entrada del menú lleva la etiqueta «Próximamente»",
+        "desde": "@/modules/design-system/estados/pantalla-proximamente",
+        "en_vez_de": "el recuadro rayado «Slot · … Todavía no está maquetada: se arma en /…» de PlaceholderPage"
+      },
+      {
+        "necesidad": "El «Cancelar» de un panel lateral con datos",
+        "usa": "BotonCancelarPanel en el pie del DrawerShell: pasa por la misma pregunta que la X («Seguir editando · Descartar»). mismaSeleccion(a, b) para saber si una selección cambió y pasar conCambios",
+        "desde": "@/modules/design-system/drawers/components/boton-cancelar-panel",
+        "en_vez_de": "un Button «Cancelar» que llama a onOpenChange(false) y cierra sin preguntar"
+      },
+      {
+        "necesidad": "Un asistente que se abre desde otra creación como página propia (Agregar asignación, asignación de Objetivos)",
+        "usa": "useSubpaginaEnUrl(param): abre y cierra la subpágina con un parámetro de la dirección (?asignacion=nueva o <id>), así «Atrás» del navegador funciona y la creación de fondo sigue montada; useFrenoAtras pregunta antes de volver con algo escrito",
+        "desde": "@/modules/design-system/navegacion/subpagina-en-url",
+        "en_vez_de": "un asistente por pasos dentro de un panel lateral (regla crear-en-pagina, 13-oct)"
+      },
+      {
+        "necesidad": "La fila de pasos de un asistente (Paso 1 de 5 con los nombres)",
+        "usa": "PasosFila con los pasos de cada pantalla (la de Crear encuesta y Crear ciclo)",
+        "desde": "@/modules/design-system/navegacion/pasos-fila",
+        "en_vez_de": "los pasos de la librería armados en cada pantalla"
+      },
+      {
+        "necesidad": "Preguntar al salir de una creación, una edición o un panel con cambios",
+        "usa": "DialogoSalir: la ventana de Crear contenido. «salida» es el texto del botón que la abre (por defecto «Salir de la creación»), «descripcion» dice qué pasa al salir (dónde queda el borrador o qué se pierde) y «onSalir» sale. Lleva «Seguir aquí» y la salida en azul (13-oct)",
+        "desde": "@/modules/design-system/estados/confirmaciones",
+        "en_vez_de": "DialogoConfirmar con tres salidas («Seguir editando · Salir sin guardar · Guardar y salir»), «¿Salir sin guardar?» en rojo o ActionDialog para salir"
+      },
+      {
+        "necesidad": "Las partes de una tabla que TablaDatos no trae: ordenar desde el encabezado de una tabla de resultados, las carpetas de la fila, anterior y siguiente en el panel, que toda la fila abra",
+        "usa": "EncabezadoOrdenable (tablas de resultados con la tabla de la librería), CarpetasDeFila, NavegarRegistros y abrirAlTocar; el campo de un filtro con CampoFiltro; las filas que entran con FilaAnimada y entrada; las cifras que suben con CifraAnimada. Elegir varias y actuar sobre ellas lo trae TablaDatos (16-oct)",
+        "desde": "@/modules/design-system/data-grid/partes-tabla, @/modules/design-system/data-grid/abrir-al-tocar, @/modules/design-system/data-grid/movimiento, @/modules/design-system/navegacion/campo-filtro y @/modules/design-system/metricas/cifra-animada",
+        "en_vez_de": "copiarlas dentro de cada pantalla, o una barra de elegidas o una franja de «elegir todas» propias en una tabla del sistema"
       }
     ],
     "patrones_de_partida": {
@@ -444,31 +523,42 @@
       },
       {
         "id": "dos-ventanas",
-        "fecha": "2026-10-06",
-        "texto": "Dos ventanas, cada una con su trabajo: preguntar va en DialogoConfirmar; todo lo que tiene contenido (formulario, lista para elegir, vista previa, escribir un correo, confirmar con la lista de a quiénes afecta) va en ActionDialog. El título de una ventana dice qué es la ventana y es fijo; el nombre del registro va en el cuerpo."
+        "fecha": "2026-10-13",
+        "texto": "Dos ventanas, cada una con su trabajo: preguntar va en DialogoConfirmar, también cuando lo que se confirma afecta a muchas personas (la tarjeta RegistroConfirmar dice qué se toca y a cuántas personas llega). Todo lo que tiene contenido para trabajar (formulario, lista para elegir o editar, vista previa, escribir un correo) va en ActionDialog. El título de una ventana dice qué es la ventana y es fijo; el nombre del registro va en el cuerpo."
       },
       {
         "id": "crear-en-pagina",
         "fecha": "2026-10-06",
-        "texto": "Crear y editar viven en una página (PageShell + PageHeader + PageActionBar), nunca en una ventana ni en un panel. Hay una sola salida, BotonSalirCreacion («Salir de la creación» o «Salir de la edición») en las acciones de la cabecera: sin flecha junto al título, sin X y sin «Cancelar» en la barra. La barra lleva ChipGuardado a la izquierda y «Atrás» y seguir a la derecha. Excepción (Cristian, 9-oct): «Agregar una persona a tu base», en Mis candidatos, es una ventana (ActionDialog) con «Cancelar», como la diseñó Nicolás.",
+        "texto": "Crear y editar viven en una página (PageShell + PageHeader + PageActionBar), nunca en una ventana ni en un panel. Hay una sola salida, BotonSalirCreacion («Salir de la creación» o «Salir de la edición») en las acciones de la cabecera: sin flecha junto al título, sin X y sin «Cancelar» en la barra. La barra lleva ChipGuardado a la izquierda y «Atrás» y seguir a la derecha. Excepción (Cristian, 9-oct): «Agregar una persona a tu base», en Mis candidatos, es una ventana (ActionDialog) con «Cancelar», como la diseñó Nicolás. Desde el 13-oct tampoco hay asistentes por pasos dentro de un panel: Agregar asignación (Planes), la asignación de Objetivos y Cargar encuestas van en su propia página (Cargar encuestas, encargado a Elkin).",
         "modelo": "src/modules/admin/aprendizaje/planes-de-formacion/components/formulario-plan.tsx"
       },
       {
         "id": "salir-con-cambios",
-        "fecha": "2026-10-08",
-        "texto": "Salir con cambios pregunta con DialogoConfirmar en su tamaño normal: tres salidas («Seguir editando» · «Salir sin guardar» · «Guardar y salir») si hay algo que guardar; dos («Seguir editando» · «Salir sin guardar», destructiva) si no hay borrador posible. Sin cambios, sale directo. Copia el título y los textos de la pantalla modelo; no inventes otros.",
-        "modelo": "src/modules/admin/aprendizaje/planes-de-formacion/components/formulario-plan.tsx"
+        "fecha": "2026-10-13",
+        "texto": "Toda salida de una creación, una edición o un panel con cambios pregunta con DialogoSalir, la ventana de Crear contenido. Lleva el icono de salir, el título que repite el botón que la abre («¿Salir de la creación?», «¿Salir de la edición?»), una línea que dice qué pasa y dos salidas, «Seguir aquí» y la salida en azul; sin tarjeta del registro y sin tercera salida. Con borrador, salir lo guarda y la línea dice dónde queda («La vacante queda guardada como borrador. Puedes retomarla cuando quieras desde Vacantes.»); sin borrador, dice qué se pierde («Los cambios que hiciste se pierden y la vacante se queda como estaba.»). Pregunta solo si hay algo escrito o cambiado; si no, se sale directo. Lo decidió Nicolás el 13-oct («si tenemos algún salir de algo debemos usar ese modal») y reemplaza las tres salidas del 8-oct. El botón de salir va siempre en azul, también sin borrador: salir de un flujo no elimina nada y el rojo es solo para eliminar (war room del 15-oct). BotonSalirCreacion con `salida` la trae armada (VentanaSalir arma la línea según haya borrador o no), y las salidas que no pasan por el botón (barra lateral, «atrás» del navegador) usan la misma ventana.",
+        "modelo": "src/modules/admin/aprendizaje/lms-creator/crear-contenido/components/asistente-contenido.tsx"
+      },
+      {
+        "id": "barra-de-pasos",
+        "fecha": "2026-10-13",
+        "texto": "Todo asistente por pasos cierra con BarraPasos, la misma barra fija (PageActionBar: un borde, una sombra): a la izquierda el estado del guardado (ChipGuardado) y lo que falte; a la derecha «Atrás» con su flecha, que aparece desde el paso 2 y lleva al paso anterior (no a la pantalla anterior), y el principal. El principal dice «Continuar» a secas, nunca «Continuar a recursos», «Siguiente» ni «Volver»; en el último paso dice el verbo del flujo («Publicar aviso», «Crear plan», «Crear contenido»).",
+        "modelo": "src/modules/admin/aprendizaje/lms-creator/crear-contenido/components/asistente-contenido.tsx"
       },
       {
         "id": "panel-con-datos",
         "fecha": "2026-10-08",
-        "texto": "Un panel (DrawerShell) con algo escrito no se cierra al tocar fuera; cerrarlo con la X, Escape o «Cancelar» con cambios pregunta («Seguir editando» · «Descartar»).",
-        "modelo": "src/modules/admin/desempeno-cultura/objetivos/crear/components/asignados/panel-asignacion.tsx"
+        "texto": "Un panel (DrawerShell) con algo escrito o elegido lleva conCambios: no se cierra al tocar fuera y, al cerrarlo con la X, Escape o «Cancelar» (BotonCancelarPanel), pregunta «Seguir editando» · «Descartar» dentro del mismo panel.",
+        "modelo": "src/modules/admin/desempeno-cultura/objetivos/crear/components/banco/guardar-en-banco.tsx (DrawerShell conCambios y BotonCancelarPanel)"
+      },
+      {
+        "id": "panel-volver-arriba",
+        "fecha": "2026-10-13",
+        "texto": "En un panel lateral (DrawerShell) el volver va siempre arriba, junto al título, como «← Volver» (flecha y palabra). El pie lleva como mucho dos botones, el principal y el secundario; nunca un «Volver» o un «Atrás» que repite lo de arriba."
       },
       {
         "id": "guardado-honesto",
-        "fecha": "2026-10-08",
-        "texto": "ChipGuardado dice la verdad: «Cambios sin guardar» mientras no se haya guardado nada y «Guardado» solo cuando de verdad hay un borrador. Una ventana nunca dice «no has hecho cambios» si los hay, ni promete algo que la pantalla no deja hacer."
+        "fecha": "2026-10-13",
+        "texto": "ChipGuardado dice la verdad: «Cambios sin guardar» mientras no se haya guardado nada y «Guardado» solo cuando de verdad hay un borrador. Las pantallas sin borrador real (Crear tarea, Crear plan de Tareas, Crear ciclo, carga masiva, Agregar persona) muestran «Cambios sin guardar» hasta que se crea, y su ventana de salida tiene dos opciones, sin «Guardar y salir». Una ventana nunca dice «no has hecho cambios» si los hay, ni promete algo que la pantalla no deja hacer."
       },
       {
         "id": "tabla-cabe",
@@ -476,9 +566,16 @@
         "texto": "Toda tabla es TablaDatos y cabe en su marco (1.104 px con la barra lateral abierta): reparte los anchos, apaga el cambio de ancho si no cabe y deja que la columna de texto se corte con «…» y TextoCompleto. El «⋯» de cada fila se ve siempre."
       },
       {
-        "id": "elegir-a-la-izquierda",
-        "fecha": "2026-10-09",
-        "texto": "En toda lista para elegir (participantes, el comparativo, demográficos, asignaciones…), la casilla (Checkbox) o el círculo (RadioGroupItem) van siempre a la izquierda de la fila, antes del icono y del texto; a la derecha solo va lo de apoyo (cifras, insignias, acciones). La fila entera elige. Homologado por Elkin el 9-oct."
+        "id": "paginador-una-pagina",
+        "fecha": "2026-10-13",
+        "texto": "PiePaginacion (el pie de TablaDatos y de las cuadrículas) solo muestra «Anterior» y «Siguiente» cuando hay más de una página. Con una sola, quedan «Filas por página», «Viendo 1–7 de 7» y el número de la página.",
+        "modelo": "src/modules/admin/aprendizaje/planes-de-formacion/components/lista-planes.tsx"
+      },
+      {
+        "id": "tabla-del-sistema",
+        "fecha": "2026-10-16",
+        "texto": "La tabla del sistema es una sola, TablaDatos, también en Vacantes y Mis candidatos (16-oct, Nicolás: «no veo aún que en vacantes o candidatos estén las tablas como deben ser»). La tabla lleva su título en lo gris, encima del conteo («Tus vacantes» / «19 vacantes»; 16-oct, Nicolás: «no me les quites los títulos a las tablas»). El buscador va en su cabecera, cada columna se ordena y se filtra desde su encabezado, las acciones con las elegidas salen junto al buscador y el «⋯» de cada fila en «Acciones». Lo que la tabla no puede decir con sus controles (mirar una sola carpeta, un lote importado, la vacante con que compara Orbit Flow) va en la línea del conteo y se quita con un botón junto al buscador. La tabla armada a mano de Selección («Tabla completa», 7 al 15 oct) se fue del design system; Créditos («Agentes con IA») y la tabla que arma Orbit en «Orbit Data» también son TablaDatos. Con un tablero, la otra vista es TablaDatos con el cambio Lista/Tablero de «Tablero con vistas», y el título de la sección va arriba, fuera del marco, con las vistas y el cambio.",
+        "modelo": "src/modules/admin/seleccion/exploraciones/uno/inicio/tabla-vacantes.tsx"
       },
       {
         "id": "avisos-con-tipo",
@@ -487,13 +584,41 @@
       },
       {
         "id": "ia-orbe",
-        "fecha": "2026-10-01",
-        "texto": "Lo que hizo la IA lleva el orbe (IconoIA; como insignia, EtiquetaIA), nunca estrellas ni chispas. El primario de IA es BotonIa y la segunda acción BotonIaSecundario. El botón que abre el agente es ReopenAgentButton y se llama «Orbit Flow». Orden de una fila: «⋯» (BotonIcono) · terciario · secundario · primario · IA · Orbit Flow."
+        "fecha": "2026-10-08",
+        "texto": "Lo que hizo la IA lleva el orbe (IconoIA; como insignia, EtiquetaIA), nunca estrellas ni chispas. El primario de IA es BotonIa y la segunda acción BotonIaSecundario. El botón que abre el agente es ReopenAgentButton y se llama «Orbit». Orden de una fila: «⋯» (BotonIcono) · terciario · secundario · primario · IA · Orbit."
+      },
+      {
+        "id": "aviso-de-orbit",
+        "fecha": "2026-10-13",
+        "texto": "Debajo del campo donde se le escribe a Orbit va siempre «Orbit puede cometer errores. Verifica la respuesta.», en letra pequeña y apagada: en el Orbit de cada pantalla (Composer del agent-kit) y en el chat de Suite AI. Ningún otro texto («El agente puede cometer errores…»). Donde el panel es estrecho, cabe en una o dos líneas sin apretar el campo."
+      },
+      {
+        "id": "orbit-un-solo-panel",
+        "fecha": "2026-10-13",
+        "texto": "El panel de Orbit de cada pantalla entra y sale con una sola animación: desde la derecha, y el contenido se encoge para dejarle sitio (AgentDock). Ninguna pantalla la redefine. En el borde izquierdo, a media altura, tiene un asidero para arrastrar su ancho cuando hay mucha información; nunca tapa los botones principales de la pantalla."
+      },
+      {
+        "id": "halo-ia",
+        "fecha": "2026-10-15",
+        "texto": "Cuando una pieza de IA lleva color de fondo (tarjeta, panel, caja de escribir) usa el halo de la IA: las clases vars y halo de @/shared/components/tarjeta-ia.module.css, con relative isolate (o overflow-hidden) en la pieza. Son cuatro manchas de luz pastel a lo ancho del borde de arriba (azul, morado, rosa y naranja) que se apagan antes del texto; sinHalo lo apaga cuando la pantalla ya tiene otra pieza de IA con color. Nada de radial-gradient ni manchas armadas a mano. Los cuatro colores de la IA (#285ee6, #7e2be0, #d6306e, #eb6233) salen de la clase vars (var(--ia-azul), var(--ia-morado), var(--ia-rosa), var(--ia-naranja)), nunca del tema: --primary y --destructive no son colores de la IA (el chat usaba el rojo de error como naranja). Pendiente: account-gauge, borde-ia, chat-status y new-chat repiten los cuatro valores en su propio CSS; están bien pintados, pero se pasarán a vars.",
+        "modelo": "src/modules/admin/inicio/components/acciones-rapidas.tsx"
       },
       {
         "id": "medidas-del-tema",
         "fecha": "2026-09-25",
         "texto": "El ancho lo pone PageShell (nada de max-w a mano), la letra sale de Heading y Text, los colores de los tokens del tema y las insignias del Badge del proyecto (10,5 px mínimo). className solo para layout."
+      },
+      {
+        "id": "avance-punta-redonda",
+        "fecha": "2026-10-13",
+        "texto": "Toda barra de avance (Progress de la librería, también las dibujadas a mano) tiene las dos puntas redondeadas, el fondo gris y la parte de color. Se hereda del tema, no se fuerza pantalla por pantalla.",
+        "modelo": "src/modules/admin/aprendizaje/planes-de-formacion/components/lista-planes.tsx"
+      },
+      {
+        "id": "azules-modo-oscuro",
+        "fecha": "2026-10-13",
+        "texto": "En modo oscuro, todo azul usado como texto, icono o borde pasa el contraste AA contra su fondo: 4,5:1 en texto y 3:1 en iconos y bordes. El azul de marca (--primary) sigue de fondo del botón, con texto claro (5,4:1, decisión de Nicolás del 18-sep); como texto (enlaces, nombres en tablas, pestaña activa, botones e insignias de tipo enlace) se usa --primary-texto (#7fb0ff, 4,7:1 sobre la fila resaltada y 9:1 sobre el fondo), y el foco usa un --ring más claro (#427ff7). Vive en el tema (src/index.css), no pantalla por pantalla.",
+        "modelo": "src/index.css"
       },
       {
         "id": "forzados-con-ficha",
@@ -502,8 +627,8 @@
       },
       {
         "id": "textos-y-formatos",
-        "fecha": "2026-10-08",
-        "texto": "Todo en español, también lo que solo oye el lector de pantalla. Fechas, plurales, cifras y porcentajes salen de las utilidades de formato (formato.ts, formatoAvance), no de toLocaleString ni de funciones propias."
+        "fecha": "2026-10-13",
+        "texto": "Todo en español, también lo que solo oye el lector de pantalla. Fechas, plurales, cifras y porcentajes salen de las utilidades de formato (formato.ts, formatoAvance), no de toLocaleString ni de funciones propias. Vocabulario único (13-oct): «Agregar» (nunca «Añadir»), «Crear» para crear algo nuevo (no «Nuevo»), porcentajes con espacio («40 %»), septiembre abreviado «sept», «Eliminar» para borrar del sistema y «Quitar» para sacar de una lista, «Guardar cambios» al editar. Excepción: en el editor de video «Canvas» y «Media» se quedan porque son nombres de la HU; el resto se traduce."
       },
       {
         "id": "archivos-ajenos",
@@ -511,36 +636,55 @@
         "texto": "En un archivo de otra persona se cambia solo la línea exacta, sin Prettier ni reescribir bloques, y se dice en la respuesta. La zona protegida (src/shared, src/app, src/index.css, scripts/, AGENTS.md) se toca solo con permiso."
       },
       {
-        "id": "atencion-solo-super-home",
-        "fecha": "2026-10-05",
-        "texto": "El panel de lo que necesita atención (TableroAtencion, BloqueAtencion o la lista de la Super Home) vive solo en la Super Home (/admin), que reúne Selección, Aprendizaje y Cultura. Los inicios de cada módulo (Vacantes, Créditos, Contenidos, Encuestas…) no lo llevan; lo urgente de un módulo llega a la Super Home o a las notificaciones.",
+        "id": "atencion-en-cada-producto",
+        "fecha": "2026-10-08",
+        "texto": "El panel de lo que necesita atención vive en la Super Home (/admin) y también en el inicio de cada producto (Vacantes, Créditos, Encuestas, Objetivos…), porque no todos entran por la home ni tienen todos los productos. Es un solo patrón en todos: caja gris con título y descripción en el gris, tres columnas con su asunto y su llamado a la acción, sin prioridades (todo lo que sale es importante). La estructura la arma Carlos en la home y los productos la toman de ahí.",
         "modelo": "src/modules/admin/inicio/main.tsx"
       },
       {
         "id": "footer-solo-home",
         "fecha": "2026-10-05",
-        "texto": "El pie de página (AppFooter) se muestra solo en las páginas de inicio (home) de la plataforma. En las pantallas de creación, edición y subvistas no aparece, para no competir con la barra de acciones fija. Lo monta el marco (zona protegida): el cambio es de ingeniería. Desde el 9-oct (con permiso de Cristian) ya no sale en Selección ni en las pantallas de creación del LMS Creator; el resto sigue pendiente de ingeniería."
+        "texto": "El pie de página (AppFooter: «Con la tecnología de UBITS» y los legales) sale solo en los inicios: /admin, /portal-colaborador y el inicio del design system. En el resto de pantallas (listas, detalles, creaciones, Suite AI, el inicio de cada producto) no existe, para que no choque con las barras fijas ni sume un scroll. Lo decide el propio AppFooter con la lista de inicios; las demostraciones del design system que enseñan el marco lo piden con `siempre`.",
+        "modelo": "src/shared/components/AppFooter.tsx"
       },
       {
         "id": "pestanas-solo-texto",
         "fecha": "2026-10-05",
-        "texto": "Todas las pestañas de la plataforma (TabsTrigger, incluidas las de los editores y paneles) llevan solo texto, sin ícono. Se usa la pestaña maestra subrayada (TabsList variant=\"line\"), sin pestañas anidadas."
+        "texto": "Todas las pestañas de la plataforma (TabsTrigger, incluidas las de los editores y paneles) llevan solo texto, sin ícono. La pestaña maestra es la subrayada (TabsList variant=\"line\"). Si hace falta una pestaña dentro de otra, la de adentro va en píldora (regla «pestanas-anidadas»)."
+      },
+      {
+        "id": "pestanas-anidadas",
+        "fecha": "2026-10-13",
+        "texto": "Cuando una pestaña tiene sus propias pestañas (Resultados de encuestas), la principal es la subrayada (TabsList variant=\"line\") y la de adentro va en píldora (TabsList con su variante por defecto). Nunca dos filas de pestañas subrayadas.",
+        "modelo": "src/modules/admin/desempeno-cultura/encuestas/resultados/main.tsx"
       },
       {
         "id": "orbit-flow-compacto",
         "fecha": "2026-10-05",
-        "texto": "Cuando una cabecera o una barra tiene más de dos llamados a la acción, contando al propio Orbit Flow y sin contar el «⋯» (que ya es un ícono), el botón del agente pasa a solo ícono (ReopenAgentButton con compact) para que el título y la descripción no se monten con los botones. Sigue siendo el último de la fila. El caso que lo originó: Encuestas, con «Crear con plantilla», «Crear encuesta» y Orbit Flow.",
+        "texto": "Cuando una cabecera o una barra tiene más de dos llamados a la acción, contando al propio Orbit y sin contar el «⋯» (que ya es un ícono), o cuando la descripción choca con los botones (regla «encabezado-sin-choque»), el botón del agente pasa a solo ícono (ReopenAgentButton con compact), con un globo que dice «Orbit» al pasar el cursor. Sigue siendo el último de la fila. El caso que lo originó: Encuestas, con «Crear con plantilla», «Crear encuesta» y Orbit.",
         "modelo": "src/modules/admin/desempeno-cultura/encuestas/main.tsx"
+      },
+      {
+        "id": "encabezado-sin-choque",
+        "fecha": "2026-10-13",
+        "texto": "La descripción de PageHeader nunca se monta con los botones de la derecha. Si choca, primero el botón de Orbit pasa a solo icono (ReopenAgentButton compact), con un globo que dice «Orbit» al pasar el cursor; si aún choca, la descripción baja de línea antes de tocar los botones. Nunca se achican ni se esconden los botones para que quepa el texto.",
+        "modelo": "src/modules/admin/tareas/crear-tarea/main.tsx"
+      },
+      {
+        "id": "pantalla-completa",
+        "fecha": "2026-10-13",
+        "texto": "La pantalla completa es solo para lo que pide atención total: los flujos de aprendizaje y, según Elkin, la tabla tipo Excel de Gestión de usuarios. Los clientes (sobre todo recursos humanos) usan pantallas chicas y ampliar casi no cambia nada, así que no se agrega «Ampliar» a tableros ni gráficos por costumbre. Cuando sí va, usa la plantilla del sistema: PantallaCompleta (o FullscreenTemplate con `margen` para los editores inmersivos de LMS Creator). Casi toda la ventana, con 16 px de margen sobre el fondo oscurecido; arriba el título con la tipografía del tema y un divisor; a la derecha sus acciones y la X en círculo (CloseButton). El botón que la abre es BotonAmpliar: solo icono, arriba a la derecha del bloque que se amplía, nunca flotando abajo.",
+        "modelo": "src/modules/admin/desempeno-cultura/encuestas/resultados/components/pantalla-completa.tsx"
       },
       {
         "id": "dos-acciones-secundarias",
         "fecha": "2026-10-01",
-        "texto": "Cuando una cabecera o un bloque tiene dos llamados a la acción del mismo nivel, los dos van como secundarios (outline); el primario se reserva para cuando hay una sola acción principal. Los botones de IA y Orbit Flow siguen sus propias reglas."
+        "texto": "Cuando una cabecera o un bloque tiene dos llamados a la acción del mismo nivel, los dos van como secundarios (outline); el primario se reserva para cuando hay una sola acción principal. Los botones de IA y Orbit siguen sus propias reglas."
       },
       {
         "id": "avisos-cortos",
         "fecha": "2026-10-01",
-        "texto": "Los avisos (notify) llevan un título de una línea, de unos 60 caracteres como máximo, y un detalle opcional de una o dos líneas, de unos 120. Lo que no cabe va a una ventana o al panel. Las cifras exactas las fija Nicolás (ver «por_decidir»)."
+        "texto": "Los avisos (notify) llevan un título de una línea, de unos 60 caracteres como máximo, y un detalle opcional de una o dos líneas, de unos 120. Lo que no cabe va a una ventana o al panel. Con texto largo el aviso se ensancha para no pasar de dos líneas, y su esquina es la de las tarjetas (13-oct). Las cifras exactas las fija Nicolás (ver «por_decidir»)."
       },
       {
         "id": "sin-buscador-global",
@@ -550,7 +694,7 @@
       {
         "id": "secciones-en-caja-gris",
         "fecha": "2026-10-09",
-        "texto": "En la plataforma no van secciones blancas sueltas: cada una vive dentro de un marco gris (Frame + FramePanel), y su título y su bajada van en el gris, nunca repetidos dentro del panel blanco. Si el contenido se nombra solo (unas cifras con su etiqueta, un estado vacío, un campo con su label), el marco va sin encabezado.",
+        "texto": "En la plataforma no van secciones blancas sueltas: cada una vive dentro de un marco gris (Frame + FramePanel), y su título y su bajada van en el gris, nunca repetidos dentro del panel blanco. Si el contenido se nombra solo (unas cifras con su etiqueta, un estado vacío, un campo con su label), el marco va sin encabezado. Dentro del panel blanco no va otra caja (regla caja-o-divisor, 8-oct).",
         "modelo": "src/modules/admin/aprendizaje/certificados/descarga/main.tsx"
       },
       {
@@ -584,12 +728,89 @@
         "modelo": "src/modules/admin/desempeno-cultura/objetivos/crear/components/asignados/lista-roster.tsx"
       },
       {
+        "id": "nada-que-finja",
+        "fecha": "2026-10-13",
+        "texto": "Ningún botón ni opción de menú avisa de algo que no pasó («Vacante duplicada», «Exportando», «Sesión cerrada», «Aquí se abriría…»). O lo hace de verdad en la maqueta (la fila desaparece, el archivo se descarga, el estado cambia), o se quita, o queda apagado con un globo que dice por qué. Amplía «nada-visible-de-prueba» de los textos a las acciones.",
+        "modelo": "src/modules/admin/aprendizaje/lms-creator/contenidos/main.tsx («Eliminar» pregunta y quita la fila)"
+      },
+      {
+        "id": "un-arreglo-se-barre",
+        "fecha": "2026-10-13",
+        "texto": "Un arreglo se trata como una regla: al cerrar un hallazgo se busca el mismo problema en todo src (ds-ubits usos, Grep del patrón) y se arreglan sus hermanos en el mismo cambio, o se anotan en el JSON de la auditoría con su dueño. Lo que se arregla en una sola pantalla vuelve a salir en la siguiente auditoría (H-197 y H-036 del 8-oct)."
+      },
+      {
+        "id": "una-pantalla-por-cosa",
+        "fecha": "2026-10-13",
+        "texto": "Hay una sola pantalla por cosa. Cuando una exploración o una versión gana, su ruta vieja redirige a la nueva y los archivos que ya nadie usa se borran en el mismo cambio (comprobado con npm run build). Nada de dos listas o dos detalles vivos para lo mismo.",
+        "modelo": "src/modules/admin/routes.ts (exploraciones dos y tres llevan a la uno)"
+      },
+      {
+        "id": "unir-no-copiar",
+        "fecha": "2026-10-13",
+        "texto": "El trabajo de otra persona entra a la rama con un merge (o cherry-pick) de sus commits, para que el historial diga quién escribió cada línea. Copiar sus archivos en un commit propio esconde al autor (9c826c3, 6dde8f4 y 54830ab ocultaron el de 105 hallazgos del 13-oct). Si hay que resolver choques, se resuelven dentro del merge."
+      },
+      {
+        "id": "pantallas-pendientes",
+        "fecha": "2026-10-13",
+        "texto": "Una pantalla que todavía no está maquetada sigue en el menú con la etiqueta «Próximamente» y abre PantallaProximamente: una sola pantalla de espera con su ilustración glass, sin rutas ni jerga. Ningún botón ni vacío promete llevar a ella como si existiera («Explorar catálogo» no se ofrece mientras el Catálogo no esté).",
+        "modelo": "src/modules/design-system/estados/pantalla-proximamente.tsx"
+      },
+      {
+        "id": "caja-o-divisor",
+        "fecha": "2026-10-08",
+        "texto": "Como mucho dos niveles de caja: el marco gris de la sección y su panel blanco. Dentro del panel, los elementos de una lista (personas, opciones, preguntas, ajustes) se separan con un divisor y se marcan con hover al pasar el cursor, no con otra caja con borde. Una sección que se puede contraer usa acordeón, no un interruptor que además borra lo configurado. Checks y radios van del mismo lado en toda la plataforma: a la izquierda del texto."
+      },
+      {
+        "id": "lista-de-seleccion",
+        "fecha": "2026-10-13",
+        "texto": "Para elegir de una lista larga dentro de un contenedor (participantes de una encuesta, destinatarios de un ciclo de objetivos, un plan) se usa ListaElegible con una FilaElegible por fila: buscador y herramientas («Agrupar por», «Ver elegidos») arriba, casilla de la página y conteo, filas con divisor, checks a la izquierda y el pie de paginación del sistema cuando hay más de una página. Sin caja dentro de caja ni cabecera de columnas: si hace falta ordenar o actuar por fila, es TablaDatos en su propia página. La hizo Elkin (14-oct) y se aprobó en el war room del 13-oct.",
+        "modelo": "src/modules/admin/desempeno-cultura/encuestas/crear/components/participantes/directorio.tsx"
+      },
+      {
         "id": "cambiar-una-regla",
         "fecha": "2026-10-08",
         "texto": "Una regla nueva o cambiada se escribe primero en ai-tools/reglas/reglas.json (con fecha y, si reemplaza otra, cuál), se regenera con node ai-tools/reglas/generar-reglas.mjs y se barren todos sus usos con Grep en src/ y en los documentos el mismo día. Lo que no se pueda barrer ese día va a «por_decidir» (o a la ficha del dueño) con quién lo resuelve."
+      },
+      {
+        "id": "eliminar-escribiendo",
+        "fecha": "2026-10-13",
+        "texto": "Eliminar una vacante (cancela entrevistas, devuelve créditos) o un candidato de la base es definitivo: la ventana dice qué se lleva por delante, pide escribir «eliminar» para habilitar el botón rojo y el aviso no ofrece «Deshacer». Queda registrado quién lo hizo y cuándo. Sacar a alguien de una sola vacante es «Eliminar de la vacante»; eliminar a la persona se hace en Mis candidatos.",
+        "modelo": "src/modules/admin/seleccion/propuestas/components/dialogos-vacante.tsx"
+      },
+      {
+        "id": "mover-a-etapa-con-ia",
+        "fecha": "2026-10-15",
+        "texto": "Arrastrar o avanzar a alguien a una etapa con IA (Serena AI, Psicométrico, Role Play…) no mueve en el acto: abre «Mover a otra etapa» con dos opciones. «Que la IA le escriba» dice cuánto cuesta y cuánto queda libre en su agente; sin nada libre se apaga y la ventana lleva a Créditos. «Solo moverla» la deja en la etapa sin invitación y sin gastar: queda «Esperando acción» y la invitación se envía después desde el «⋯» de su tarjeta o el aviso de su ficha («Enviar la invitación»). Cada invitación que sale aparta sus créditos y queda en el historial de Créditos; si la entrevista se cancela sin terminar, vuelven.",
+        "modelo": "src/modules/admin/seleccion/propuestas/components/dialogo-mover.tsx"
+      },
+      {
+        "id": "creditos-por-producto",
+        "fecha": "2026-10-15",
+        "texto": "Cada producto con IA tiene su propia bolsa de créditos y su propio rastro: Selección los gestiona en Créditos (/admin/seleccion/creditos) y LMS Creator en su saldo. El menú de empresa muestra un anillo por producto («Créditos de Selección», «Créditos de LMS Creator»), nunca un total de «Créditos de IA». Lo que cuesta algo se dice junto a la acción, con el saldo del agente o del producto que lo paga.",
+        "modelo": "src/shared/components/AccountPopover.tsx"
       }
     ],
     "retiradas": [
+      {
+        "pieza": "TarjetaIndicador",
+        "desde": "2026-10-13",
+        "usa": "Indicadores, o FilaIndicadores + ColumnaIndicador con su gráfico chico: las cifras van en una sola fila, no en tarjetas sueltas"
+      },
+      {
+        "pieza": "Sparkline (de metricas/graficos)",
+        "desde": "2026-10-13",
+        "usa": "Tendencia junto a la cifra (metricas/graficos) o TendenciaConMeta (Tendencia de graficos/piezas)"
+      },
+      {
+        "pieza": "Anillo (de metricas/graficos)",
+        "desde": "2026-10-13",
+        "usa": "AnilloAvance (@/modules/design-system/graficos/piezas)"
+      },
+      {
+        "pieza": "Dona (de metricas/graficos)",
+        "desde": "2026-10-13",
+        "usa": "DonaReparto (@/modules/design-system/graficos/piezas)"
+      },
       {
         "pieza": "ConfiguredModal",
         "desde": "2026-10-05",
@@ -643,7 +864,7 @@
       {
         "pieza": "«Agente IA» como nombre del botón del agente",
         "desde": "2026-10-01",
-        "usa": "ReopenAgentButton, que dice «Orbit Flow»"
+        "usa": "ReopenAgentButton, que dice «Orbit»"
       },
       {
         "pieza": "Flecha junto al título, X o «Cancelar» para salir de una creación",
@@ -654,43 +875,29 @@
         "pieza": "vacantes/detalle/components/compartir-vacante",
         "desde": "2026-10-08",
         "usa": "DialogoCompartirVacante"
+      },
+      {
+        "pieza": "«Orbit Flow» como nombre del agente",
+        "desde": "2026-10-08",
+        "usa": "«Orbit» (ReopenAgentButton ya dice «Orbit»)"
+      },
+      {
+        "pieza": "Ventana de salida con tres botones o «¿Salir sin guardar?»",
+        "desde": "2026-10-13",
+        "usa": "DialogoSalir"
       }
     ],
     "por_decidir": [
       {
-        "id": "H-180",
-        "pregunta": "La asignación de objetivos: ¿panel lateral (excepción documentada) o vista dentro del paso?",
-        "decide": "Cristian con Elkin"
-      },
-      {
         "id": "H-249",
         "pregunta": "Sacar a alguien de un proceso: ¿«Rechazar» o «Descartar», y una sola ventana?",
-        "decide": "Nicolás"
-      },
-      {
-        "id": "titulo-salida",
-        "pregunta": "El título de la ventana de salida: «¿Salir sin guardar los cambios?», «¿Salir de la creación?» o «¿Salir sin guardar?» (hoy conviven los tres)",
-        "decide": "Cristian"
-      },
-      {
-        "id": "guardar-sin-borrador",
-        "pregunta": "«Guardar y salir» y el chip «Guardado» en pantallas que no tienen borrador real (carga masiva, Crear usuario, Crear tarea, Agregar persona)",
-        "decide": "Cristian"
-      },
-      {
-        "id": "vocabulario",
-        "pregunta": "Añadir o Agregar, Crear o Nuevo, «40 %» o «40%», «sept» o «sep»",
-        "decide": "diseño"
+        "decide": "Nicolás",
+        "propuesta": "Cristian (13-oct): «Rechazar»."
       },
       {
         "id": "avisos-largo",
-        "pregunta": "Los límites exactos de título y detalle de los avisos (la regla usa unos 60 y 120 caracteres como provisional).",
+        "pregunta": "Los límites exactos de título y detalle de los avisos (la regla usa unos 60 y 120 caracteres como provisional). El ancho con texto largo y la esquina ya se decidieron el 13-oct (regla avisos-cortos).",
         "decide": "Nicolás"
-      },
-      {
-        "id": "atencion-modulos",
-        "pregunta": "¿Se quita ya el panel de atención de Vacantes, Créditos, Contenidos, Encuestas y el inicio de Selección, o se integra con las notificaciones?",
-        "decide": "Carlos con Nicolás y Elkin"
       },
       {
         "id": "paginador-cuadricula",
@@ -706,6 +913,18 @@
         "id": "reintentar-con-id",
         "pregunta": "El aviso de error con «Reintentar» de Selección sigue usando toast.add porque notifyAction no devuelve el id del aviso para cerrarlo. Que notifyAction lo devuelva (src/shared/components/notify.ts, zona protegida).",
         "decide": "ingeniería"
+      },
+      {
+        "id": "vacantes-dos-listas",
+        "pregunta": "Hay dos listas y dos detalles de Vacantes vivos (exploraciones/uno, la del menú, y /admin/seleccion/vacantes). ¿Cuál se queda?",
+        "decide": "Nicolás con Elkin",
+        "propuesta": "Cristian (13-oct): queda la del menú; /seleccion/vacantes y su detalle llevan a ella, «Crear vacante», «Volver a vacantes» y «Compartir» apuntan ahí, y la vieja se borra con su visto bueno."
+      },
+      {
+        "id": "cargar-encuestas-pagina",
+        "pregunta": "«Cargar encuestas» es un asistente de tres pasos en un panel; la regla crear-en-pagina (13-oct) lo pasa a página propia.",
+        "decide": "Elkin",
+        "propuesta": "Encargo preparado por Cristian el 13-oct."
       }
     ]
   },

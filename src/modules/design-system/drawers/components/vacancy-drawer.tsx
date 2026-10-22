@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Briefcase06Icon, LogoutSquare01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { Briefcase06Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Checkbox,
   Field,
   FieldDescription,
   FieldLabel,
-  IconTile,
   Input,
   Label,
   Select,
@@ -27,7 +26,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@ubits/flux-ui'
-import { ActionDialog } from '@/shared/components/ActionDialog'
+import { DialogoSalir } from '../../estados/confirmaciones'
 import { notify } from '@/shared/components/notify'
 import { DrawerShell } from './drawer-shell'
 import { KICKER, STEP_INDICATOR, STEP_LINE, WS } from './drawer-styles'
@@ -237,23 +236,12 @@ export function VacancyDrawer({ open, onOpenChange }: Props) {
         ) : null}
       </DrawerShell>
 
-      {/* Salir con cambios: la ventana única del sistema (decisión 4 de la auditoría, 5-oct), con el icono de salir. El
-          clic afuera no la cierra, como antes. */}
-      <ActionDialog
-        open={confirm}
-        onOpenChange={setConfirm}
-        size="sm"
-        dismissible={false}
-        media={
-          <IconTile variant="soft" size="sm">
-            <HugeiconsIcon icon={LogoutSquare01Icon} aria-hidden="true" />
-          </IconTile>
-        }
-        title="¿Descartar la vacante?"
-        sub="Tienes cambios sin publicar. Si cierras ahora se pierden."
-        cancelLabel="Seguir editando"
-        confirmLabel="Descartar"
-        onConfirm={() => {
+      {/* Cerrar con cambios, con la ventana de salida del sistema (13 oct). No hay borrador: dice qué se pierde. */}
+      <DialogoSalir
+        abierto={confirm}
+        onAbiertoChange={setConfirm}
+        descripcion="Lo que llenaste se pierde: la vacante solo se guarda al publicarla."
+        onSalir={() => {
           reset()
           onOpenChange(false)
         }}

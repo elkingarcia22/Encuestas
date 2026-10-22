@@ -42,7 +42,7 @@ const RESULT_NOTE: Record<AgentResult, string> = {
 
 const GUIDE = [
   {
-    title: 'Usa Orbit Flow para',
+    title: 'Usa Orbit para',
     text: 'trabajar sobre lo que ya está abierto: un registro, un campo, una selección o un dato. Nunca saca a la persona de su pantalla.',
   },
   {
@@ -55,11 +55,19 @@ const GUIDE = [
   },
   {
     title: 'Abierto o cerrado',
-    text: 'Abierto, 452px pegado a la derecha y debajo del header, que se queda donde está. Cerrado, «Orbit Flow» al final de la fila de acciones, a la derecha del botón primario: completo por defecto, o solo el orbe cuando la pantalla ya viene muy cargada. Entra y sale deslizándose por la derecha mientras la pantalla se ensancha con él (se ve en «Estados del panel» y en las pantallas reales); si la persona pidió menos movimiento, cambia sin animación.',
+    text: 'Abierto, 452px pegado a la derecha y debajo del header, que se queda donde está. Cerrado, «Orbit» al final de la fila de acciones, a la derecha del botón primario: completo por defecto, o solo el orbe cuando la pantalla ya viene muy cargada. Entra y sale deslizándose por la derecha mientras la pantalla se ensancha con él, igual en todas las pantallas (AgentDock, 13-oct; se ve en «Estados del panel» y en las pantallas reales); si la persona pidió menos movimiento, cambia sin animación.',
+  },
+  {
+    title: 'Más ancho cuando hay mucho',
+    text: 'En su borde izquierdo, a media altura, un asidero cambia el ancho entre 360 y 720px: se arrastra, se mueve con las flechas del teclado y con doble clic vuelve a 452px. La pantalla se angosta con él; nunca tapa sus botones (war room del 13-oct).',
+  },
+  {
+    title: 'Debajo del campo',
+    text: 'Siempre «Orbit puede cometer errores. Verifica la respuesta.» (AvisoOrbit, lo pone la bandeja del campo), también en el chat de Suite AI.',
   },
   {
     title: 'La conversación',
-    text: 'Sigue al cerrar el panel y al volver a abrirlo. Esc lo cierra con el foco dentro. Mientras responde, «Detener» la corta. «Nueva conversación» guarda la de ahora y deja volver a ella. Si el agente tiene algo urgente, «Orbit Flow» trae un punto azul hasta abrirlo.',
+    text: 'Sigue al cerrar el panel y al volver a abrirlo. Esc lo cierra con el foco dentro. Mientras responde, «Detener» la corta. «Nueva conversación» guarda la de ahora y deja volver a ella. Si el agente tiene algo urgente, «Orbit» trae un punto azul hasta abrirlo.',
   },
 ]
 
@@ -146,7 +154,7 @@ export function Component() {
               {open ? null : (
                 <>
                   <Choice
-                    label="Orbit Flow"
+                    label="Orbit"
                     value={config.reopen}
                     onChange={set('reopen')}
                     options={[
@@ -165,7 +173,7 @@ export function Component() {
             <ControlSection title="Cabecera">
               <SwitchRow label="Cerrar" checked={config.close} onChange={set('close')} />
               <Text as="span" size="sm" variant="muted">
-                El orbe y el nombre «Orbit Flow» van siempre.
+                El orbe y el nombre «Orbit» van siempre.
               </Text>
             </ControlSection>
 

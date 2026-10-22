@@ -2,7 +2,6 @@ import { createContext, useContext, useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Add01Icon, Download04Icon, MoreHorizontalIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +14,7 @@ import {
   Text,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
@@ -38,8 +38,8 @@ const VACANCIES: Vacancy[] = [
   { name: 'Ejecutivo comercial B2B', area: 'Ventas', stage: 'Filtro inicial', status: 'abiertas', candidates: 42, owner: 'Andrés Pardo', updated: 'Ayer', days: 1 },
   { name: 'Coordinador de bodega', area: 'Operaciones', stage: 'Oferta', status: 'abiertas', candidates: 7, owner: 'Sara Gómez', updated: 'Hace 2 días', days: 2 },
   { name: 'Diseñador de producto', area: 'Tecnología', stage: 'Publicada', status: 'abiertas', candidates: 3, owner: 'Laura Méndez', updated: 'Hace 3 días', days: 3 },
-  { name: 'Líder de nómina', area: 'Gestión humana', stage: 'Borrador', status: 'borradores', candidates: 0, owner: 'Sara Gómez', updated: '12 sep', days: 23 },
-  { name: 'Analista contable', area: 'Finanzas', stage: 'Contratada', status: 'cerradas', candidates: 26, owner: 'Andrés Pardo', updated: '2 sep', days: 33 },
+  { name: 'Líder de nómina', area: 'Gestión humana', stage: 'Borrador', status: 'borradores', candidates: 0, owner: 'Sara Gómez', updated: '12 sept', days: 23 },
+  { name: 'Analista contable', area: 'Finanzas', stage: 'Contratada', status: 'cerradas', candidates: 26, owner: 'Andrés Pardo', updated: '2 sept', days: 33 },
   { name: 'Técnico de mantenimiento', area: 'Operaciones', stage: 'Cancelada', status: 'cerradas', candidates: 11, owner: 'Laura Méndez', updated: '28 ago', days: 38 },
 ]
 
@@ -79,10 +79,10 @@ function MenuVacante({ vacante }: { vacante: Vacancy }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => abrir(vacante)}>Ver vacante</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => notify('Duplicada')}>Duplicar</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => notify('Enlace copiado')}>Copiar enlace</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify('Duplicada', undefined, 'success')}>Duplicar</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify('Enlace copiado', undefined, 'success')}>Copiar enlace</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={() => notify('Vacante archivada')}>
+        <DropdownMenuItem variant="destructive" onClick={() => notify('Vacante archivada', undefined, 'success')}>
           Archivar
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -229,7 +229,7 @@ export function Component() {
               icono="glass-add"
               titulo={VACIO[tab]}
               descripcion="Publica una vacante y sigue aquí a sus candidatos, etapa por etapa."
-              accion={{ texto: 'Nueva vacante', icono: Add01Icon, onClick: () => notify('Nueva vacante') }}
+              accion={{ texto: 'Crear vacante', icono: Add01Icon, onClick: () => notify('Crear vacante', undefined, 'info') }}
             />
           ),
         },
@@ -250,19 +250,19 @@ export function Component() {
                   <HugeiconsIcon icon={MoreHorizontalIcon} size={18} />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
-                  <DropdownMenuItem onClick={() => notify('Configurar etapas del proceso')}>Configurar etapas</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => notify('Plantillas de vacante')}>Plantillas de vacante</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => notify('Configurar etapas del proceso', undefined, 'info')}>Configurar etapas</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => notify('Plantillas de vacante', undefined, 'info')}>Plantillas de vacante</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => notify('Vacantes archivadas')}>Ver archivadas</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => notify('Vacantes archivadas', undefined, 'info')}>Ver archivadas</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button data-region="Botón secundario" variant="outline" className={WS} onClick={() => notify('Exportando vacantes a Excel')}>
+              <Button data-region="Botón secundario" variant="outline" className={WS} onClick={() => notify('Exportando vacantes a Excel', undefined, 'info')}>
                 <HugeiconsIcon icon={Download04Icon} size={16} />
                 Exportar
               </Button>
-              <Button data-region="Botón primario" className={WS} onClick={() => notify('Nueva vacante')}>
+              <Button data-region="Botón primario" className={WS} onClick={() => notify('Crear vacante', undefined, 'info')}>
                 <HugeiconsIcon icon={Add01Icon} size={16} />
-                Nueva vacante
+                Crear vacante
               </Button>
             </>
           }
@@ -289,7 +289,7 @@ export function Component() {
         />
 
         <PageContent>
-          <AbrirVacante.Provider value={(vacante) => notify(`Abrir «${vacante.name}»`)}>
+          <AbrirVacante.Provider value={(vacante) => notify(`Abrir «${vacante.name}»`, undefined, 'info')}>
             <TablaDatos
               key={version}
               config={config}

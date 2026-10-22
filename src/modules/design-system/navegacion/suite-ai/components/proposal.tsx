@@ -4,7 +4,6 @@ import { ThumbsDownIcon, ThumbsUpIcon, Tick02Icon, UserSwitchIcon } from '@hugei
 import {
   Avatar,
   AvatarFallback,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -14,6 +13,7 @@ import {
   Progress,
   Toggle,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { notify } from '@/shared/components/notify'
 import { PILL } from '../../../drawers/components/drawer-styles'
 import type { Readiness, Role } from './data'
@@ -70,7 +70,7 @@ export function RoleCard({ role }: { role: Role }) {
             pressed={vote === 'down'}
             onPressedChange={(pressed) => {
               setVote(pressed ? 'down' : null)
-              if (pressed) notify('Le contaremos al agente qué no funcionó')
+              if (pressed) notify('Le contaremos al agente qué no funcionó', undefined, 'info')
             }}
           >
             <HugeiconsIcon icon={ThumbsDownIcon} size={16} />
@@ -129,7 +129,7 @@ export function RoleCard({ role }: { role: Role }) {
                       variant="ghost"
                       size="sm"
                       className={`${PILL} text-muted-foreground!`}
-                      onClick={() => notify(`El agente busca otra opción en lugar de ${candidate.name}`)}
+                      onClick={() => notify(`El agente busca otra opción en lugar de ${candidate.name}`, undefined, 'info')}
                     >
                       <HugeiconsIcon icon={UserSwitchIcon} size={16} />
                       Reemplazar

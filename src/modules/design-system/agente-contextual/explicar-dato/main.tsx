@@ -120,7 +120,7 @@ export function Component() {
       hint="El panel toma como contexto el indicador o la barra que tocas"
       width="default"
       anatomy={false}
-      back={{ label: 'Casos de Orbit Flow', to: '/design-system/agente-contextual' }}
+      back={{ label: 'Casos de Orbit', to: '/design-system/agente-contextual' }}
     >
       <AgentStage state={panel} onOpen={() => setPanel('open')} panel={agentPanel}>
         <div className="@container px-8 py-6">
@@ -131,11 +131,11 @@ export function Component() {
               description="Cómo se mueve la gente en Meta Colombia. Pasa el cursor por un dato y pregúntale al agente."
               actions={
                 <>
-                  <Button variant="outline" className={WS} onClick={() => notify('Periodo: marzo a septiembre 2026')}>
+                  <Button variant="outline" className={WS} onClick={() => notify('Periodo: marzo a septiembre 2026', undefined, 'info')}>
                     <HugeiconsIcon icon={Calendar03Icon} size={16} />
                     Mar – Sep 2026
                   </Button>
-                  <Button variant="outline" className={WS} onClick={() => notify('Exportando el tablero a Excel')}>
+                  <Button variant="outline" className={WS} onClick={() => notify('Exportando el tablero a Excel', undefined, 'info')}>
                     <HugeiconsIcon icon={Download04Icon} size={16} />
                     Exportar
                   </Button>

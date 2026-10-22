@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Download04Icon, InformationCircleIcon } from '@hugeicons/core-free-icons'
-import { Alert, AlertDescription, AlertTitle, Badge, Button, Field, FieldDescription, FieldLabel, FramePanel, IconTile, Item, ItemContent, ItemDescription, ItemMedia, ItemTitle, RadioGroup, RadioGroupItem, Tabs, TabsContent, TabsList, TabsTrigger, Text } from '@ubits/flux-ui'
+import { Alert, AlertDescription, AlertTitle, Button, Field, FieldDescription, FieldLabel, FramePanel, IconTile, Item, ItemContent, ItemDescription, ItemMedia, ItemTitle, RadioGroup, RadioGroupItem, Tabs, TabsContent, TabsList, TabsTrigger, Text } from '@ubits/flux-ui'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
+import { Badge } from '@/shared/components/Badge'
 import { Hint } from '@/shared/components/Hint'
 import { FILA_CLICABLE, FilasSeparadas, MarcoLista } from '../../components/marco-lista'
 import { blockedReason, populationFilterApplies, populationScope } from '../../modelo/descargas/anonimato'
@@ -311,6 +312,7 @@ export function PanelDescargas({ abierto, onAbierto, borrador, resultados, nom03
           {/* Una lista para elegir, como «Tipos de encuesta» de Comparar (Elkin, 15-oct): filas separadas con el círculo a la
               izquierda, no tarjetas. */}
           <MarcoLista titulo="Tipo de reporte" descripcion="Elige qué archivo quieres generar de esta medición.">
+            {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
             <FramePanel className="py-1!">
               <RadioGroup value={tipo} onValueChange={(valor) => setTipo(valor as ReportKind)} aria-label="Tipo de reporte">
                 <FilasSeparadas>
@@ -336,6 +338,7 @@ export function PanelDescargas({ abierto, onAbierto, borrador, resultados, nom03
           {!nom035 && tipo === 'pdf' ? (
           <>
             <MarcoLista titulo={<TituloConCuenta titulo="Secciones del reporte" cuenta={seccionesImpresas.length} />} descripcion="Se imprimen en este orden en el PDF.">
+              {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
               <FramePanel className="py-1!">
                 <FilasSeparadas>
                   {PDF_SECTIONS.map((seccion) => {
@@ -374,6 +377,7 @@ export function PanelDescargas({ abierto, onAbierto, borrador, resultados, nom03
           {!nom035 && tipo === 'xlsx' ? (
           <>
             <MarcoLista titulo={<TituloConCuenta titulo="Hojas del libro" cuenta={pestanasLibro} />} descripcion="Cada hoja encendida es una pestaña del archivo.">
+              {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
               <FramePanel className="py-1!">
                 <FilasSeparadas>
                   {XLSX_SHEETS.map((hoja, posicion) => {
@@ -404,6 +408,7 @@ export function PanelDescargas({ abierto, onAbierto, borrador, resultados, nom03
 
           {!nom035 && tipo === 'comments' ? (
             <MarcoLista titulo="Comentarios que entran" descripcion="Apagados, entran todos.">
+              {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
               <FramePanel className="py-1!">
                 <FilasSeparadas>
                   <FilaBloque
@@ -441,6 +446,7 @@ export function PanelDescargas({ abierto, onAbierto, borrador, resultados, nom03
 
           {esRiesgo ? (
             <MarcoLista titulo="Personalización del reporte" descripcion={esIndividual ? 'Elige a quién se le genera el reporte individual.' : 'Qué bloques por demográfico lleva el reporte.'}>
+              {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
               <FramePanel className="py-1!">
                 <FilasSeparadas>
                   {!esIndividual && conSegmentos ? (
@@ -512,6 +518,7 @@ export function PanelDescargas({ abierto, onAbierto, borrador, resultados, nom03
 
           {aplicaFiltro ? (
             <MarcoLista titulo="Población" descripcion="Por defecto, toda la medición.">
+              {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
               <FramePanel className="py-1!">
                 <FiltroPoblacion
                   segmentos={segmentos}

@@ -2,6 +2,7 @@ import { blankRow, dataRow, fileStamp, headRow, hintRow, saveBlob, slugify, titl
 import type { ComparativeTreeNode } from './comparativeSectionTree'
 import { comentariosPorSeccion, type Comparativo } from './lectura'
 import { lecturaIa } from './lectura-ia'
+import { fechaCorta } from '@/modules/design-system/patrones/formato'
 
 // El Excel del comparativo: el resumen de cada medición, la tabla por sección y pregunta, la
 // positividad de los comentarios y la lectura de la IA. Las mismas cifras de la pantalla, con la base
@@ -14,7 +15,7 @@ function hojaResumen(c: Comparativo): SheetSpec {
   const base = c.titulares[c.olas[0].id]
   const filas: RowSpec[] = [
     titleRow('Comparativo de encuestas'),
-    hintRow(`Base: ${c.base.name} · ${c.columnas.length} mediciones · generado el ${new Date().toLocaleDateString('es-CO')}`),
+    hintRow(`Base: ${c.base.name} · ${c.columnas.length} mediciones · generado el ${fechaCorta(new Date().toLocaleDateString('en-CA'))}`),
     blankRow,
     headRow(['Medición', 'Favorabilidad', 'Dif. vs base (pp)', 'Participación', 'Dif. vs base (pp)', 'eNPS', 'Dif. vs base (pts)', 'Invitados', 'Respondieron']),
     ...c.columnas.map((columna, indice) => {

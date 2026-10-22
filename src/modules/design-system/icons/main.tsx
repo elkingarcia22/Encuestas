@@ -27,10 +27,10 @@ import {
   Text,
   ToggleGroup,
   ToggleGroupItem,
-  toast,
 } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
+import { notify } from '@/shared/components/notify'
 import { SinResultados } from '@/shared/components/SinResultados'
 
 import { IconoIA } from '../ia/icono-ia'
@@ -60,9 +60,9 @@ function TarjetaIcono({ icono }: { icono: IconoGlass }) {
     const nombre = `${icono.nombre}@2x.png`
     try {
       await navigator.clipboard.writeText(nombre)
-      toast.add({ type: 'success', title: 'Nombre copiado', description: nombre })
+      notify('Nombre copiado', nombre, 'success')
     } catch {
-      toast.add({ type: 'info', title: nombre, description: 'Cópialo a mano: el navegador no dejó usar el portapapeles.' })
+      notify(nombre, 'Cópialo a mano: el navegador no dejó usar el portapapeles.', 'info')
     }
   }
 

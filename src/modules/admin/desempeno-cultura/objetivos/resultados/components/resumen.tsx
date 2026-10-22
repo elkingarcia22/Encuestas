@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Progress, Text } from '@ubits/flux-ui'
 import { ColumnaIndicador, DetalleIndicador, FilaIndicadores } from '@/modules/design-system/graficos/fila-indicadores'
 import { AnilloAvance } from '@/modules/design-system/graficos/piezas'
@@ -6,7 +6,7 @@ import { QueMide } from '../../../encuestas/components/que-mide'
 import { TarjetaResumen } from '../../../encuestas/resultados/components/tarjeta-resumen'
 import { formatoAvance } from '../../modelo/ciclos'
 import { findComplianceState } from '../../modelo/constructor/complianceStates'
-import { NIVELES, type ResultadosCiclo } from '../../modelo/resultados/seguimiento'
+import type { ResultadosCiclo } from '../../modelo/resultados/seguimiento'
 import { parseSurveyDate } from '../../../encuestas/modelo/surveyListDates'
 import { SelectorVista } from '../../../encuestas/resultados/components/controles'
 import { alineacionPersonas, alineacionPorGrupo, aprobacion, avancePorGrupo, estados, nombreCorte, pesoPorEmpresa, pesoPorGrupo, porGrupo, porLider, riesgo, ritmoSemanal, tiposDeMedida, type Corte, type Dimension } from '../../modelo/resultados/lecturas'
@@ -48,7 +48,7 @@ function TiempoDelCiclo({ resultados }: { resultados: ResultadosCiclo }) {
             Avance {formatoAvance(resultados.avanceGeneral)}
           </Text>
           <Text as="span" size="xs" variant="muted">
-            Calendario {resultados.calendario}%
+            Calendario {resultados.calendario} %
           </Text>
         </div>
       </div>
@@ -63,8 +63,9 @@ function TiempoDelCiclo({ resultados }: { resultados: ResultadosCiclo }) {
   )
 }
 
-export function Resumen({ resultados, corte, onTramo }: { resultados: ResultadosCiclo; corte: Corte; onTramo: (dimension: Dimension, tramo: string, etiqueta: string) => void }) {
-  const { ciclo, personas, porNivel } = resultados
+/** `verPor`: el «Ver por» que va en la cabecera de cada caja que compara grupos (como en Participación de Encuestas). */
+export function Resumen({ resultados, corte, verPor, onTramo }: { resultados: ResultadosCiclo; corte: Corte; verPor: ReactNode; onTramo: (dimension: Dimension, tramo: string, etiqueta: string) => void }) {
+  const { ciclo, personas, porNivel, niveles } = resultados
   const porArea = porGrupo(resultados, corte).map((fila) => ({ area: fila.grupo, avance: fila.avance, personas: fila.personas }))
   const grupo = nombreCorte(corte)
   const grupoMinuscula = grupo.toLowerCase()
@@ -84,13 +85,13 @@ export function Resumen({ resultados, corte, onTramo }: { resultados: Resultados
         lectura={lecturaDe(resultados)}
         pie={
           resultados.abierto
-            ? `${resultados.calendario}% del calendario corrido · ${plural(resultados.diasRestantes, 'día restante', 'días restantes')}`
+            ? `${resultados.calendario} % del calendario corrido · ${plural(resultados.diasRestantes, 'día restante', 'días restantes')}`
             : `Cerró el ${ciclo.cierre} · ${plural(total, 'persona', 'personas')}`
         }
         grafico={<AnilloAvance valor={Math.min(100, resultados.avanceGeneral)} color="var(--primary)" etiqueta="Avance general" tamano={48} />}
         tituloAnillos="Niveles de cumplimiento"
         totalAnillos={`${total.toLocaleString('es-CO')} personas`}
-        anillos={NIVELES.map((nivel) => ({ id: nivel.id, etiqueta: nivel.etiqueta, porcentaje: parte(porNivel[nivel.id], total), color: nivel.color, cantidad: porNivel[nivel.id].toLocaleString('es-CO') }))}
+        anillos={niveles.map((nivel) => ({ id: nivel.id, etiqueta: nivel.etiqueta, porcentaje: parte(porNivel[nivel.id] ?? 0, total), color: nivel.color, cantidad: (porNivel[nivel.id] ?? 0).toLocaleString('es-CO') }))}
         tituloTop={`${grupo} con menor avance`}
         // Como el prototipo: el top solo tiene sentido con tres áreas o más para comparar.
         top={porArea.length >= 3 ? porArea.slice(0, 3).map((fila) => ({ id: fila.area, etiqueta: fila.area, valor: 100 - Math.min(100, fila.avance), texto: formatoAvance(fila.avance) })) : []}
@@ -147,13 +148,13 @@ export function Resumen({ resultados, corte, onTramo }: { resultados: Resultados
         </Bloque>
       ) : null}
 
-      <Bloque titulo="Cómo van los objetivos" descripcion={`El estado de los objetivos aprobados y el avance por ${grupoMinuscula}.`}>
+      <Bloque titulo="Cómo van los objetivos" descripcion={`El estado de los objetivos aprobados y el avance por ${grupoMinuscula}.`} extra={verPor}>
         <Panel titulo="Estado de los objetivos" detalle={`${aprobados.toLocaleString('es-CO')} aprobados`}>
           <Reparto tramos={estados(resultados)} total={String(aprobados)} onTramo={(tramo) => onTramo('estado', tramo.id, tramo.etiqueta)} />
         </Panel>
         <Panel
           titulo={`Avance por ${grupoMinuscula}`}
-          detalle={resultados.abierto ? `Calendario corrido: ${resultados.calendario}%` : undefined}
+          detalle={resultados.abierto ? `Calendario corrido: ${resultados.calendario} %` : undefined}
           extra={
             <SelectorVista
               etiqueta="Orden"
@@ -170,16 +171,16 @@ export function Resumen({ resultados, corte, onTramo }: { resultados: Resultados
         </Panel>
       </Bloque>
 
-      <Bloque titulo="Dónde se está jugando el ciclo" descripcion={`Cómo se reparte el peso de los objetivos por ${grupoMinuscula} y entre los objetivos de empresa.`}>
+      <Bloque titulo="Dónde se está jugando el ciclo" descripcion={`Cómo se reparte el peso de los objetivos por ${grupoMinuscula} y entre los objetivos de empresa.`} extra={verPor}>
         <Panel titulo={`Reparto del peso por ${grupoMinuscula}`}>
           <Barras filas={pesoPorGrupo(resultados, corte)} formato={formatoAvance} />
         </Panel>
         <Panel titulo="Peso por objetivo de empresa">
-          <Reparto tramos={pesoEmpresa} total="100%" unidad={() => ''} />
+          <Reparto tramos={pesoEmpresa} total="100 %" unidad={() => ''} />
         </Panel>
       </Bloque>
 
-      <Bloque titulo="Alineación con la estrategia" descripcion="Cuánto del esfuerzo cuelga de un objetivo de empresa.">
+      <Bloque titulo="Alineación con la estrategia" descripcion="Cuánto del esfuerzo cuelga de un objetivo de empresa." extra={verPor}>
         <Panel titulo="Colaboradores por alineación">
           <Reparto tramos={alineacionPersonas(resultados)} total={String(total)} onTramo={(tramo) => onTramo('alineacion', tramo.id, tramo.etiqueta)} />
         </Panel>
@@ -193,7 +194,7 @@ export function Resumen({ resultados, corte, onTramo }: { resultados: Resultados
           <Reparto tramos={tiposDeMedida(resultados)} total={String(resultados.objetivos)} onTramo={(tramo) => onTramo('medida', tramo.id, tramo.etiqueta)} />
         </Panel>
         <Panel titulo="Ritmo de actividad" detalle="Avances reportados por día de la semana">
-          <Barras filas={ritmoSemanal(resultados)} formato={(valor) => `${Math.round(valor)}%`} />
+          <Barras filas={ritmoSemanal(resultados)} formato={(valor) => `${Math.round(valor)} %`} />
         </Panel>
       </Bloque>
     </div>

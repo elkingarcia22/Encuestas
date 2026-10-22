@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import {
   AlertCircleIcon,
-  ClipboardListIcon,
   EyeOffIcon,
   PercentIcon,
   ShuffleIcon,
@@ -12,15 +11,9 @@ import {
   ViewIcon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Frame,
   FramePanel,
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
   Field,
   FieldContent,
   FieldDescription,
@@ -41,6 +34,8 @@ import {
   TableRow,
   Text,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { Badge } from '@/shared/components/Badge'
 import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
 import { fechaCorta } from '@/modules/design-system/patrones/formato'
 import { sumaPesos, type ClaseCreacion, type ItemPeso, type TipoNavegacion, type Visibilidad } from './borrador'
@@ -271,15 +266,8 @@ export function PanelPesos({ items: todos, pesos, pesosVacio = false, onPeso }: 
     return (
       <Frame>
         <FramePanel>
-        <Empty className="py-14">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <HugeiconsIcon icon={ClipboardListIcon} />
-            </EmptyMedia>
-            <EmptyTitle>Aún no hay evaluaciones</EmptyTitle>
-            <EmptyDescription>Agrega evaluaciones en Recursos. Cuando exista al menos una, aquí verás su peso en la nota final.</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        {/* Vacío con su ilustración glass (13-oct). */}
+        <PrimeraVez icono="glass-chart" titulo="Aún no hay evaluaciones" descripcion="Agrega evaluaciones en Recursos. Cuando exista al menos una, aquí verás su peso en la nota final." />
         </FramePanel>
       </Frame>
     )
@@ -290,7 +278,7 @@ export function PanelPesos({ items: todos, pesos, pesosVacio = false, onPeso }: 
       {!visibles.length || visibles.length === 1 ? (
         <Text variant="muted" size="sm">
           {visibles.length
-            ? 'Con una sola evaluación, el peso es automáticamente el 100% de la nota final.'
+            ? 'Con una sola evaluación, el peso es automáticamente el 100 % de la nota final.'
             : 'Todas las evaluaciones están ocultas. Muéstralas en Recursos para asignar pesos.'}
         </Text>
       ) : null}
@@ -300,7 +288,7 @@ export function PanelPesos({ items: todos, pesos, pesosVacio = false, onPeso }: 
           <FramePanel className="flex flex-col gap-3" aria-live="polite">
             <div className="flex items-baseline gap-2">
               <Text as="span" size="sm">
-                El total debe ser 100%. Llevas
+                El total debe ser 100 %. Llevas
               </Text>
               <Heading as="h3" level={3} className="tabular-nums">
                 {suma}

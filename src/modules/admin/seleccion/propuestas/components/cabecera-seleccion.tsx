@@ -9,7 +9,7 @@ import { CeldaCifra } from '@/modules/design-system/metricas/cifras'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { ColumnaIndicador, FilaIndicadores } from '@/modules/design-system/graficos/fila-indicadores'
 import { CANDIDATURAS, ESPERA_RESPUESTA, VACANTES_UI } from '../datos'
-import { LineaEsqueleto, useCarga } from './carga'
+import { LineaEsqueleto, useCarga } from '@/modules/design-system/estados/carga'
 import { Ayuda, Cambio, Cifra, Pie } from './cifras'
 import type { Base } from './use-base'
 
@@ -30,7 +30,7 @@ export const EXPLORACION: Record<string, { descripcion: string }> = {
     descripcion: 'Todos los procesos abiertos de la empresa, con lo que espera una respuesta tuya.',
   },
   '/admin/seleccion/candidatos/dos': {
-    descripcion: 'Tu base de personas en volumen: la partes por en qué anda cada una, marcas a varias y las postulas o etiquetas juntas.',
+    descripcion: 'Encuentra a la persona que buscas en tu base y postúlala a una vacante.',
   },
 }
 
@@ -252,13 +252,10 @@ export function PulsoBase({ base }: { base: Base }) {
   // Maqueta: la semana pasada esperaban cuatro personas menos.
   const esperanAntes = Math.max(0, esperan.length - 4)
 
-  const libres = todas.filter((persona) => persona.situacion === 'libre')
-  const libresAntes = libres.filter((persona) => persona.dias > 30).length
-
   // Mientras cargan, cada columna ya dice qué cuenta (el rótulo y la ayuda no dependen de los datos) y en gris la cifra y
   // sus dos líneas, en el mismo alto.
   const cifra = (valor: number, cambio: ReactNode) =>
-    cargando ? <LineaEsqueleto tamano="titulo" ancho="w-24" className="h-7" /> : <Cifra valor={valor.toLocaleString('es-CO')} cambio={cambio} />
+    cargando ? <LineaEsqueleto tamano="titulo" ancho="w-24" className="h-7" /> : <Cifra valor={valor} cambio={cambio} />
   const pie = (frente: string, significa: string) =>
     cargando ? (
       <div className="flex w-full flex-col gap-0.5">
@@ -272,12 +269,14 @@ export function PulsoBase({ base }: { base: Base }) {
   return (
     <section aria-labelledby="cifras-base-titulo" aria-busy={cargando || undefined}>
       {/* Compacto, como el marco de «Tus candidatos» de abajo: los dos títulos de la pantalla se arman igual. */}
+      {/* Tres cifras (13 oct, PM: «el total de mi base, lo que está en este momento moviéndose, y si tengo a alguien
+          bloqueado; no dejaría nada más»). Sin «Libres para postular»: no están libres, están en la base. */}
       <Frame spacing="sm">
         <FrameHeader>
           <FrameTitle id="cifras-base-titulo">Cómo va tu base</FrameTitle>
           <FrameDescription>Cada cifra, frente al periodo anterior.</FrameDescription>
         </FrameHeader>
-        <FilaIndicadores etiqueta="Indicadores de tu base" columnas={4} enMarco>
+        <FilaIndicadores etiqueta="Indicadores de tu base" columnas={3} enMarco>
           <ColumnaIndicador
             titulo="Personas en tu base"
             ayuda={<Ayuda titulo="Personas en tu base">Todas las personas de tu base: las que aplicaron, las que importaste y las que agregaste a mano. Se compara con las que había hace un mes.</Ayuda>}
@@ -295,19 +294,13 @@ export function PulsoBase({ base }: { base: Base }) {
             pie={pie(`Frente a ${enProcesoAntes} el mes pasado`, `Repartidas en ${vacantesConGente} ${plural(vacantesConGente, 'vacante', 'vacantes')}`)}
           />
           <ColumnaIndicador
-            titulo="Esperan algo de ti"
-            ayuda={<Ayuda titulo="Esperan algo de ti">Personas en un proceso que esperan una acción tuya para seguir: revisarlas, agendarlas o responderles. Menos es mejor. Se compara con la semana pasada.</Ayuda>}
+            titulo="Esperando acción"
+            ayuda={<Ayuda titulo="Esperando acción">Personas en un proceso que esperan una acción tuya para seguir: revisarlas, moverlas o responderles. Menos es mejor. Se compara con la semana pasada.</Ayuda>}
             cifra={cifra(esperan.length, <Cambio valor={esperan.length - esperanAntes} sufijo="" menosEsMejor frente="la semana pasada" />)}
             pie={pie(
               `Frente a ${esperanAntes} la semana pasada`,
               esperan.length ? `La que más: ${esperan[0].persona.nombre} (${esperan[0].dias} ${plural(esperan[0].dias, 'día', 'días')})` : 'Nadie está esperando ahora mismo',
             )}
-          />
-          <ColumnaIndicador
-            titulo="Libres para postular"
-            ayuda={<Ayuda titulo="Libres para postular">Personas que nunca han estado en un proceso: las puedes postular a una vacante. Se compara con las que había hace un mes.</Ayuda>}
-            cifra={cifra(libres.length, <Cambio valor={libres.length - libresAntes} sufijo="" frente="el mes pasado" />)}
-            pie={pie(`Frente a ${libresAntes} el mes pasado`, 'Nunca han pasado por un proceso')}
           />
         </FilaIndicadores>
       </Frame>

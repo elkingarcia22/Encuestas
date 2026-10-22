@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft01Icon, ArrowRight01Icon, CircleIcon, Logout01Icon, LogoutSquare01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { ArrowLeft01Icon, ArrowRight01Icon, CircleIcon, Logout01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { useBlocker, useLocation, useNavigate, useParams } from 'react-router'
 import {
   Button,
   Card,
   CardContent,
   Heading,
-  IconTile,
   Progress,
   Spinner,
   Text,
-  toast,
   Stepper,
   StepperContent,
   StepperIndicator,
@@ -24,7 +22,7 @@ import {
 import { AiThinking } from '@/shared/components/AiThinking'
 import { Orb } from '@/shared/components/Orb'
 import { notify } from '@/shared/components/notify'
-import { ActionDialog } from '@/shared/components/ActionDialog'
+import { DialogoSalir } from '@/modules/design-system/estados/confirmaciones'
 import { PageActionBar, PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 // El chip de guardado compartido (decisión 21 de la auditoría, 5-oct): el mismo de Crear contenido y Crear assessment.
 import { ChipGuardado, type EstadoGuardado } from '@/shared/components/ChipGuardado'
@@ -36,13 +34,14 @@ import type { VacantePublicada } from '../components/datos'
 import { PasoDescripcion } from './components/paso-descripcion'
 import { PasoInformacion } from './components/paso-informacion'
 import { PasoProceso } from './components/paso-proceso'
-import { PasosEnTarjeta } from './components/pasos-en-tarjeta'
 import { propuestaIa } from './components/propuesta-ia'
 import { ResumenVacante } from './components/resumen-vacante'
 import { enLista } from './components/secciones-informacion'
 import { guardarPlantillaPropia, plantillaPropiaPorId, problemaConNombre } from '../components/plantillas-propias'
 import type { Crumb } from '@/shared/layouts/nav-config'
 import { noSeGuardo } from '../../propuestas/simular'
+import { Deslizar } from '../../propuestas/components/animacion'
+import { MotionConfig } from 'motion/react'
 
 const RUTA_VACANTES = '/admin/seleccion/vacantes'
 
@@ -161,19 +160,17 @@ export type OpcionesCreacion = {
   volverA?: string
   migas?: Crumb[]
   alPublicar?: (vacante: VacanteNueva) => void
+  // Recibe la vacante a medio llenar cuando se sale de la creación: la lista la guarda como borrador (13 oct).
+  alSalir?: (vacante: VacanteNueva) => void
   // 1 oct (reunión con Elkin del 29 sep: «Editar» lleva a esta misma experiencia): con lo que ya tiene la vacante, en el
   // paso pedido y con los tres pasos abiertos. El botón final dice «Guardar cambios» y entrega la vacante a `alPublicar`.
   modo?: 'crear' | 'editar'
   // Con qué arranca: la vacante que se edita o una plantilla del catálogo ya puesta en esta forma.
   inicial?: VacanteNueva
   pasoInicial?: number
-  // Los pasos en una tarjeta, con una línea de cómo va cada uno, como en el LMS Creator (1 oct, Nicolás). Nació en la
-  // exploración 1; desde el 5-oct (decisión 6 de la auditoría: la referencia es la exploración 1) es lo de siempre
-  // también en Vacantes. Con `false` vuelven los pasos sueltos.
-  pasosEnTarjeta?: boolean
 }
 
-export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, modo = 'crear', inicial, pasoInicial, pasosEnTarjeta = true }: OpcionesCreacion = {}) {
+export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, alSalir, modo = 'crear', inicial, pasoInicial }: OpcionesCreacion = {}) {
   const navigate = useNavigate()
   // El mismo flujo sirve para tres cosas: crear una vacante (en blanco o desde una plantilla propia),
   // crear una plantilla y editar una plantilla propia. Cambian el título, el botón final y adónde se guarda.
@@ -184,40 +181,46 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
   const desdePlantilla = (state as { desdePlantilla?: string } | null)?.desdePlantilla
   const origen = plantillaId ?? (esPlantilla ? undefined : desdePlantilla)
   const [paso, setPaso] = useState(pasoInicial ?? 1)
+  // Hacia dónde se fue de paso: «Siguiente» entra desde la derecha y «Atrás» desde la izquierda (se ajusta en el render).
+  const [pasoPrevio, setPasoPrevio] = useState(paso)
+  const [haciaDonde, setHaciaDonde] = useState(0)
+  if (pasoPrevio !== paso) {
+    setPasoPrevio(paso)
+    setHaciaDonde(Math.sign(paso - pasoPrevio))
+  }
   const [vacante, setVacante] = useState<VacanteNueva>(() => inicial ?? (origen ? plantillaPropiaPorId(origen)?.vacante : undefined) ?? VACANTE_VACIA)
   const [estadoGuardado, setEstadoGuardado] = useState<EstadoGuardado>('guardado')
   const [archivoAbierto, setArchivoAbierto] = useState(false)
 
-  // Con cambios sin autoguardar (editando o a medio guardar), frena cualquier forma de salir de la
-  // pantalla (la miga de arriba, el menú de la izquierda, «atrás» del navegador…), no solo un botón propio.
-  // Publicar sí sale aunque falte el último autoguardado: la vacante ya queda publicada con todo.
+  // Sin borrador: al editar una vacante que ya existe, y en las plantillas, que entran al catálogo solo con «Guardar
+  // plantilla», lo cambiado no se autoguarda (13 oct).
+  const sinBorrador = editando || esPlantilla
+  const [tocada, setTocada] = useState(false)
+
+  // Salir pregunta con la ventana de salida del sistema, la de Crear contenido (13 oct, Nicolás: en Selección no hay
+  // otra). Frena cualquier forma de salir (el botón, la miga, el menú de la izquierda, «atrás» del navegador): con
+  // borrador, si ya se escribió algo, para contar dónde queda; sin borrador, si hay cambios sin guardar. Publicar sí sale
+  // sin preguntar: la vacante ya queda publicada con todo.
   const publicando = useRef(false)
-  const bloqueoSalida = useBlocker(() => !publicando.current && estadoGuardado !== 'guardado')
+  const bloqueoSalida = useBlocker(() => !publicando.current && (sinBorrador ? estadoGuardado !== 'guardado' : tocada))
   const salidaBloqueada = bloqueoSalida.state === 'blocked' ? bloqueoSalida : null
 
   const cambiar = (cambio: Partial<VacanteNueva>) => {
     setVacante((actual) => ({ ...actual, ...cambio }))
     setEstadoGuardado('editando')
+    setTocada(true)
   }
 
   // Solo se puede saltar a un paso que ya se desbloqueó; los de más allá salen con candado. Al editar, todos abiertos.
   const desbloqueado = editando || informacionCompleta(vacante) ? PASOS.length : 1
 
-  // Guardar a mano (desde el diálogo de salida) avisa con un toast; el autoguardado pasa por el mismo
-  // «Guardando…» pero calladito, el chip de la barra ya lo dice.
-  const guardar = (manual: boolean) => {
-    if (manual) notify(`Guardamos «${vacante.nombre.trim() || 'Vacante sin nombre'}» como borrador`, undefined, 'success')
-    setEstadoGuardado('guardando')
-  }
-
-  // A los pocos segundos sin escribir, arranca el autoguardado: el diálogo de salida solo debería
-  // verse en esa ventana muy corta en la que todavía no alcanzó a guardar. Al editar una vacante que ya existe no hay
-  // borrador que autoguardar: los cambios quedan con «Guardar cambios».
+  // A los pocos segundos sin escribir, arranca el autoguardado. Al editar una vacante que ya existe, o una plantilla, no
+  // hay borrador que autoguardar: los cambios quedan con «Guardar cambios» o «Guardar plantilla».
   useEffect(() => {
-    if (estadoGuardado !== 'editando' || editando) return
+    if (estadoGuardado !== 'editando' || sinBorrador) return
     const temporizador = window.setTimeout(() => setEstadoGuardado('guardando'), SEGUNDOS_AUTOGUARDADO * 1000)
     return () => window.clearTimeout(temporizador)
-  }, [vacante, estadoGuardado, editando])
+  }, [vacante, estadoGuardado, sinBorrador])
 
   // «Guardando…» se ve un momento (spinner en el botón, como en el resto de la maqueta) antes de
   // pasar a «Guardado»; si mientras tanto hay un cambio nuevo, este temporizador se cancela solo.
@@ -270,11 +273,11 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
   const publicar = () => {
     if (pendientes.length > 0) {
       setIntentoPublicar(true)
-      toast.add({
-        type: 'error',
-        title: esPlantilla ? 'Todavía no podemos guardar la plantilla' : editando ? 'Todavía no podemos guardar los cambios' : 'Todavía no podemos publicar la vacante',
-        description: `Configura ${enLista(pendientes.map((etapa) => `«${etapa.nombre}»`))} antes de ${esPlantilla ? 'guardarla' : editando ? 'guardar' : 'publicar'}.`,
-      })
+      notify(
+        esPlantilla ? 'Todavía no podemos guardar la plantilla' : editando ? 'Todavía no podemos guardar los cambios' : 'Todavía no podemos publicar la vacante',
+        `Configura ${enLista(pendientes.map((etapa) => `«${etapa.nombre}»`))} antes de ${esPlantilla ? 'guardarla' : editando ? 'guardar' : 'publicar'}.`,
+        'error',
+      )
       // Al editar se puede guardar desde cualquier paso: lo que falta está en el tercero.
       if (editando) setPaso(PASOS.length)
       return
@@ -296,7 +299,7 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
       const problema = problemaConNombre(vacante.nombre, plantillaId)
       if (problema) {
         publicando.current = false
-        toast.add({ type: 'error', title: 'Todavía no podemos guardar la plantilla', description: problema })
+        notify('Todavía no podemos guardar la plantilla', problema, 'error')
         setPaso(1)
         return
       }
@@ -337,7 +340,11 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
     notify(`Armamos ${vacante.secciones.length} secciones con ${origen}`, undefined, 'success')
   }
 
+  const salirDe = plantillaId || editando ? 'Salir de la edición' : 'Salir de la creación'
+
   return (
+    // Con «reducir movimiento» en el sistema, el paso cambia sin deslizarse.
+    <MotionConfig reducedMotion="user">
     <PageShell>
       <span ref={marca} aria-hidden="true" />
       {/* Título y bajada como en el design system; la bajada dice qué se decide en el paso en que se está.
@@ -351,7 +358,7 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
           // Desde una plantilla se vuelve al catálogo, que es de donde se llegó.
           <Button variant="outline" onClick={() => navigate(volverA, esPlantilla ? { state: { abrirCatalogo: true } } : undefined)}>
             <HugeiconsIcon icon={Logout01Icon} aria-hidden="true" />
-            {plantillaId || editando ? 'Salir de la edición' : 'Salir de la creación'}
+            {salirDe}
           </Button>
         }
       />
@@ -365,12 +372,12 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
         <Stepper
           value={paso}
           onValueChange={(value) => value <= desbloqueado && setPaso(value)}
-          // En la tarjeta cada círculo pone su propio icono (✓ o la alerta de que quedó algo atrás).
-          indicators={pasosEnTarjeta ? undefined : { completed: <HugeiconsIcon icon={Tick02Icon} className="size-3.5" /> }}
+          indicators={{ completed: <HugeiconsIcon icon={Tick02Icon} className="size-3.5" /> }}
           className="flex flex-col gap-6"
         >
+          {/* Los pasos limpios, en una fila: número, nombre y la línea, como en Crear encuesta (13 oct, Nicolás: «estos
+              steps deben ser limpios asi como los de otras secciones como dentro de encuestas»). */}
           <div data-region="Pasos" inert={creandoConIa}>
-            {pasosEnTarjeta ? <PasosEnTarjeta vacante={vacante} paso={paso} desbloqueado={desbloqueado} /> : (
             <StepperNav className="w-full">
               {PASOS.map((item, index) => (
                 <StepperItem
@@ -391,7 +398,6 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
                 </StepperItem>
               ))}
             </StepperNav>
-            )}
           </div>
 
           {/* Los tres pasos comparten la rejilla: el trabajo a la izquierda y «Así va la vacante» a la
@@ -400,6 +406,8 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
             <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <div className="relative min-w-0">
             <div inert={creandoConIa}>
+            {/* Cada paso entra desde el lado hacia donde se avanza (16 oct, glow up de movimiento). */}
+            <Deslizar clave={`paso-${paso}`} direccion={haciaDonde}>
             {paso === 1 ? (
               <PasoInformacion vacante={vacante} onCambio={cambiar} onCrearConIa={crearConIa} creandoConIa={creandoConIa} />
             ) : paso === 2 ? (
@@ -419,6 +427,7 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
                 onGenerandoIa={setMensajeIa}
               />
             )}
+            </Deslizar>
             </div>
             {ia ? <CreandoConIa ia={ia} nombre={vacante.nombre.trim()} onCerrar={cerrarIa} /> : null}
             </div>
@@ -432,9 +441,9 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
         {/* Siempre al fondo: con un paso corto baja hasta el final de la pantalla en vez de quedar pegada al contenido;
             con uno largo se queda fija abajo mientras se baja. */}
         <PageActionBar className="mt-auto">
-          {/* El estado del autoguardado va a la izquierda de la barra; los pasos, a la derecha. Al editar no hay
-              autoguardado: el chip solo aparece para decir que hay cambios sin guardar. */}
-          {!editando || estadoGuardado === 'editando' ? <ChipGuardado estado={estadoGuardado} /> : null}
+          {/* El estado del autoguardado va a la izquierda de la barra; los pasos, a la derecha. Al editar y en las
+              plantillas no hay autoguardado: el chip solo aparece para decir que hay cambios sin guardar. */}
+          {!sinBorrador || estadoGuardado === 'editando' ? <ChipGuardado estado={estadoGuardado} /> : null}
           {/* Qué falta lo dice el panel «Así va la vacante»: aquí solo se avisa cuando la IA está trabajando en una
               etapa o en la descripción (la vacante entera la anuncia la superposición del formulario). */}
           <div className="ml-auto flex min-w-0 items-center gap-4">
@@ -465,63 +474,28 @@ export function CreacionVacante({ volverA = RUTA_VACANTES, migas, alPublicar, mo
 
       <DialogoArchivo open={archivoAbierto} onOpenChange={setArchivoAbierto} onUsar={traerDescripcion} />
 
-      {/* Con la ventana única del sistema (ActionDialog, decisión 4 de la auditoría, 5-oct), con sus tres salidas de
-          siempre en el pie y el icono de salir. El título es fijo; la vacante va en la primera línea del cuerpo. Va en
-          620 px y no en 448: con tres botones el pie angosto no alcanza. */}
-      <ActionDialog
-        open={salidaBloqueada !== null}
-        onOpenChange={(abierto) => (abierto ? undefined : salidaBloqueada?.reset())}
-        media={
-          <IconTile variant="soft" size="sm">
-            <HugeiconsIcon icon={LogoutSquare01Icon} aria-hidden="true" />
-          </IconTile>
+      {/* La ventana de salida del sistema (13 oct): con borrador cuenta dónde queda la vacante; sin borrador, que lo
+          cambiado se pierde. */}
+      <DialogoSalir
+        abierto={salidaBloqueada !== null}
+        onAbiertoChange={(abierto) => (abierto ? undefined : salidaBloqueada?.reset())}
+        salida={salirDe}
+        descripcion={
+          !sinBorrador
+            ? 'La vacante queda guardada como borrador. Puedes retomarla cuando quieras desde Vacantes.'
+            : !esPlantilla
+              ? 'Los cambios que hiciste se pierden y la vacante se queda como estaba.'
+              : plantillaId
+                ? 'Los cambios que hiciste se pierden y la plantilla se queda como estaba.'
+                : 'Lo que llenaste se pierde: la plantilla entra al catálogo solo con «Guardar plantilla».'
         }
-        title={editando ? '¿Salir sin guardar los cambios?' : '¿Salir de la creación?'}
-        sub={
-          editando
-            ? 'La vacante sigue como estaba hasta que guardes. Si sales ahora, se pierde lo que cambiaste.'
-            : 'Los últimos cambios todavía no se autoguardan. Guárdalos para no perderlos.'
-        }
-        lead={
-          <Heading as="h3" level={6}>
-            {vacante.nombre.trim() || (esPlantilla ? 'Plantilla sin nombre' : 'Vacante sin nombre')}
-          </Heading>
-        }
-        footer={
-          <>
-            <Button variant="outline" onClick={() => salidaBloqueada?.reset()}>
-              {editando ? 'Seguir editando' : 'Cancelar'}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (editando) {
-                  salidaBloqueada?.proceed()
-                } else {
-                  guardar(true)
-                  salidaBloqueada?.reset()
-                }
-              }}
-            >
-              {editando ? 'Salir sin guardar' : 'Guardar sin salir'}
-            </Button>
-            <Button
-              onClick={() => {
-                if (editando) {
-                  salidaBloqueada?.reset()
-                  publicar()
-                } else {
-                  guardar(true)
-                  salidaBloqueada?.proceed()
-                }
-              }}
-            >
-              {editando ? 'Guardar y salir' : 'Salir y guardar'}
-            </Button>
-          </>
-        }
+        onSalir={() => {
+          if (!sinBorrador) alSalir?.(vacante)
+          salidaBloqueada?.proceed()
+        }}
       />
     </PageShell>
+    </MotionConfig>
   )
 }
 

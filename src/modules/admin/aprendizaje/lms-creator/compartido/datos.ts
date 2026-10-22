@@ -11,13 +11,14 @@ import {
   TextAlignLeftIcon,
   Video01Icon,
 } from '@hugeicons/core-free-icons'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // LMS Creator — los datos que comparten las tres exploraciones (27 sep, Nicolás: «3 exploraciones para LMS creator, de
 // como queda toda esta experiencia […] quiero algo MUUUUYY TOP»). Los mismos 20 contenidos, las mismas páginas y las
 // mismas reglas en las tres, para que lo que cambie entre ellas sea la forma de crear y no el detalle.
 //
 // Las reglas salen de las historias de usuario del producto (docs/plataforma-ubits/fuentes/…/lms-creator):
-// - HU-LMS-001 crear contenido: portada, recursos (páginas), certificado y ajustes; «Añadir página» con título opcional
+// - HU-LMS-001 crear contenido: portada, recursos (páginas), certificado y ajustes; «Agregar página» con título opcional
 //   (si va vacío, la página se llama como su recurso); tipos habilitados Video, PDF, Texto, Embebido, SCORM, Evaluación;
 //   Encuesta libre y de satisfacción se ven pero no se pueden crear; Asistencia solo en eventos.
 // - HU-LMS-002 editar publicado: en publicado no se elimina una página, se oculta; siempre queda al menos una visible; los
@@ -266,7 +267,7 @@ export function resumenPagina(pagina: Pagina) {
     case 'scorm':
       return `${nombre} · ${r.minutos} min`
     case 'presentacion':
-      return `${nombre} · ${r.diapositivas} diapositivas`
+      return `${nombre} · ${r.diapositivas} ${plural(r.diapositivas, 'diapositiva', 'diapositivas')}`
     case 'evaluacion':
       return `${nombre} · ${r.preguntas.length} ${r.preguntas.length === 1 ? 'pregunta' : 'preguntas'}`
     case 'asistencia':
@@ -343,7 +344,7 @@ export function hace(iso: string) {
   const dias = Math.round((HOY.getTime() - new Date(iso).getTime()) / 86_400_000)
   if (dias <= 0) return 'hoy'
   if (dias === 1) return 'ayer'
-  if (dias < 30) return `hace ${dias} días`
+  if (dias < 30) return `hace ${dias} ${plural(dias, 'día', 'días')}`
   const meses = Math.round(dias / 30)
   return meses === 1 ? 'hace un mes' : `hace ${meses} meses`
 }

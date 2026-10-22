@@ -41,6 +41,7 @@ import { InsigniaSentimiento } from './sentimiento'
 import { PreguntasPersonas, type Acotado } from './preguntas-personas'
 import { PreguntasRecuentos } from './preguntas-recuentos'
 import { TarjetaResumen } from './tarjeta-resumen'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Preguntas: ¿qué respondió la gente, una por una? Tres vistas conectadas, y eso es lo que las hace
 // una sola pantalla: desde el recuento de una opción se salta a las personas que la eligieron, y
@@ -256,7 +257,7 @@ export function Preguntas({ borrador, resultados, segmento, onSegmento }: Props)
           />
         }
         tituloAnillos="Resumen de respuestas"
-        totalAnillos={`${numero(totales.preguntas)} preguntas`}
+        totalAnillos={`${numero(totales.preguntas)} ${plural(totales.preguntas, 'pregunta', 'preguntas')}`}
         graficoReparto={
           <AnilloAvance
             valor={posibles > 0 ? (totales.respuestas / posibles) * 100 : 0}
@@ -278,6 +279,7 @@ export function Preguntas({ borrador, resultados, segmento, onSegmento }: Props)
             <div className="flex flex-col gap-4">
       {sinDemograficos ? <AvisoSinDemograficos /> : null}
       <Frame spacing="sm" className="[--frame-gap:0px]">
+        {/* Cabecera del marco en fila (título a la izquierda, controles a la derecha): con el tema sin capa solo obedece con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
         <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
           <div>
             <FrameTitle>{TITULO[vista]}</FrameTitle>

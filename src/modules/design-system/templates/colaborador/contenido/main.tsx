@@ -41,8 +41,8 @@ import {
   ProgressValue,
   Separator,
   Text,
-  toast,
 } from '@ubits/flux-ui'
+import { notify } from '@/shared/components/notify'
 import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import { PageHeader } from '@/shared/components/PageShell'
 
@@ -128,11 +128,11 @@ export function Component() {
         }
         actions={
           <>
-            <Button variant="ghost" onClick={() => toast.add({ type: 'success', title: 'Enlace copiado' })}>
+            <Button variant="ghost" onClick={() => notify('Enlace copiado', undefined, 'success')}>
               <HugeiconsIcon icon={Share08Icon} aria-hidden="true" />
               Compartir
             </Button>
-            <Button variant="outline" onClick={() => toast.add({ type: 'success', title: 'Guardado para después' })}>
+            <Button variant="outline" onClick={() => notify('Guardado para después', undefined, 'success')}>
               <HugeiconsIcon icon={Bookmark01Icon} aria-hidden="true" />
               Guardar
             </Button>

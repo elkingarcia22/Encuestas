@@ -3,7 +3,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { StopCircleIcon, Tick02Icon } from '@hugeicons/core-free-icons'
 import {
   Button,
-  IconTile,
   Progress,
   Spinner,
   Stepper,
@@ -15,8 +14,8 @@ import {
   StepperTitle,
   StepperTrigger,
 } from '@ubits/flux-ui'
-import { ActionDialog } from '@/shared/components/ActionDialog'
 import { notify } from '@/shared/components/notify'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { DrawerShell } from './drawer-shell'
 import { KICKER, PILL, STEP_INDICATOR, STEP_LINE } from './drawer-styles'
 
@@ -86,7 +85,7 @@ export function ProcessDrawer({ open, onOpenChange }: Props) {
               <Button
                 className={PILL}
                 onClick={() => {
-                  notify('Sigue corriendo · te avisamos al terminar')
+                  notify('Sigue corriendo · te avisamos al terminar', undefined, 'info')
                   onOpenChange(false)
                 }}
               >
@@ -139,29 +138,29 @@ export function ProcessDrawer({ open, onOpenChange }: Props) {
         <div className="mt-2 text-sm leading-relaxed text-muted-foreground">
           El proceso sigue corriendo aunque cierres este panel o la conversación. Lo encuentras en el centro de procesos, que se abre desde Notificaciones.
         </div>
-      </DrawerShell>
 
-      {/* La confirmación va en la ventana única del sistema (decisión 4 de la auditoría, 5-oct), con su icono y el
-          spinner en el botón mientras se cancela. */}
-      <ActionDialog
-        open={confirm}
-        onOpenChange={setConfirm}
-        size="sm"
-        media={
-          <IconTile variant="soft" size="sm">
-            <HugeiconsIcon icon={StopCircleIcon} aria-hidden="true" />
-          </IconTile>
-        }
-        title="¿Cancelar el proceso?"
-        sub="Lo que ya se publicó se queda. Los correos pendientes no se envían y el curso no se asigna."
-        cancelLabel="Seguir corriendo"
-        confirmLabel="Cancelar proceso"
-        pendingLabel="Cancelando…"
-        onConfirm={() => {
-          setCancelled(true)
-          notify('Proceso cancelado')
-        }}
-      />
+        {/* Cancelar es una pregunta sin contenido (dos botones y una frase): va en DialogoConfirmar (regla «dos-ventanas»,
+            13-oct) y, dentro del panel, se abre como vista del mismo panel con «← título». Con el spinner en el botón
+            mientras se cancela. */}
+        <DialogoConfirmar
+          abierto={confirm}
+          onAbiertoChange={setConfirm}
+          icono={StopCircleIcon}
+          titulo="¿Cancelar el proceso?"
+          descripcion="Lo que ya se publicó se queda. Los correos pendientes no se envían y el curso no se asigna."
+          cancelar="Seguir corriendo"
+          accion="Cancelar proceso"
+          destructiva
+          enCurso="Cancelando…"
+          onConfirmar={() => {
+            setConfirm(false)
+            setCancelled(true)
+            notify('Proceso cancelado', 'Lo que ya se publicó se queda.', 'info')
+          }}
+        >
+          <RegistroConfirmar nombre="Publicar política de vacaciones" detalle={`Paso ${Math.min(step, STEPS.length)} de ${STEPS.length} · 312 colaboradores`} estado="En curso" icono={StopCircleIcon} />
+        </DialogoConfirmar>
+      </DrawerShell>
     </>
   )
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Alert02Icon, ArrowDown01Icon, Cancel01Icon, UserRemove01Icon } from '@hugeicons/core-free-icons'
 import {
@@ -17,7 +17,9 @@ import {
 import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
 import { notify } from '@/shared/components/notify'
 import { Badge } from '@/shared/components/Badge'
+import { BotonIcono } from '@/shared/components/BotonIcono'
 import { SinResultados } from '@/shared/components/SinResultados'
+import { TextoCompleto } from '@/shared/components/TextoCompleto'
 import { FilaElegible, ListaElegible } from '@/modules/design-system/listas/lista-elegible'
 import { pagina } from '@/modules/design-system/templates/admin-compartido/lista'
 import { COLLABORATOR_COUNT, COLLABORATORS, type Collaborator } from '../../../modelo/collaborators'
@@ -41,6 +43,8 @@ import { Sincronizar } from './sincronizar'
 // que entró por un grupo pregunta antes.
 
 type Props = { seleccion: ParticipantsSelection; onCambio: (cambio: Partial<ParticipantsSelection>) => void }
+
+export type FiltroGrupoEnfocado = { grupo: string; segmento: SegmentKey }
 
 // Edad y sexo no se ofrecen para agrupar a quién responde (Elkin, 14-oct): son datos demográficos para leer los resultados,
 // no para elegir participantes. Siguen en Resultados y en Datos demográficos.
@@ -96,7 +100,12 @@ const LISTA_DE: Record<SegmentKey, { titulo: string; uno: string }> = {
 // Con la encuesta anónima, un grupo solo ve sus resultados cuando responden al menos `minimo` personas (PAR-019). Un grupo
 // elegido que ni completo llega a ese número nunca los verá: se avisa arriba de la lista y en su fila, sin impedir elegirlo
 // (sus respuestas siguen contando en el total y en los grupos más grandes).
-export function ListaDeGrupos({ seleccion, onCambio, minimo = null }: Props & { minimo?: number | null }) {
+export function ListaDeGrupos({
+  seleccion,
+  onCambio,
+  minimo = null,
+  onExcluirUsuarios,
+}: Props & { minimo?: number | null; onExcluirUsuarios?: (grupo: string, segmento: SegmentKey) => void }) {
   const [busqueda, setBusqueda] = useState('')
   const [soloElegidos, setSoloElegidos] = useState(false)
   const [actual, setActual] = useState(1)
@@ -258,6 +267,19 @@ export function ListaDeGrupos({ seleccion, onCambio, minimo = null }: Props & { 
                     </Badge>
                   ) : null}
                   {fuera.length ? <PersonasExcluidas grupo={grupo} personas={fuera} onIncluir={(ids) => onCambio(withPeopleIncluded(seleccion, ids))} /> : null}
+                  {elegidos.has(grupo) && onExcluirUsuarios ? (
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={(evento) => {
+                        evento.stopPropagation()
+                        onExcluirUsuarios(grupo, seleccion.groupSegmentBy)
+                      }}
+                    >
+                      <HugeiconsIcon icon={UserRemove01Icon} aria-hidden="true" />
+                      Excluir usuarios
+                    </Button>
+                  ) : null}
                   <Text as="span" size="sm" variant="muted" className="tabular-nums">
                     {porcentaje((cuantos / COLLABORATOR_COUNT) * 100)}
                   </Text>
@@ -273,7 +295,15 @@ export function ListaDeGrupos({ seleccion, onCambio, minimo = null }: Props & { 
 
 /* ---------------------------------------------------------------- personas */
 
-export function ListaDePersonas({ seleccion, onCambio }: Props) {
+export function ListaDePersonas({
+  seleccion,
+  onCambio,
+  filtroGrupo = null,
+  onLimpiarFiltroGrupo,
+}: Props & {
+  filtroGrupo?: FiltroGrupoEnfocado | null
+  onLimpiarFiltroGrupo?: () => void
+}) {
   const [busqueda, setBusqueda] = useState('')
   const [soloElegidos, setSoloElegidos] = useState(false)
   const [actual, setActual] = useState(1)
@@ -281,6 +311,15 @@ export function ListaDePersonas({ seleccion, onCambio }: Props) {
   const [porPagina, setPorPagina] = useState(20)
   const [enGrupo, setEnGrupo] = useState<Collaborator | null>(null)
   const [filtros, setFiltros] = useState<FiltrosPersona>({})
+
+  useEffect(() => {
+    if (!filtroGrupo) return
+    const clave = filtroGrupo.segmento === 'leader' ? 'leader' : filtroGrupo.segmento === 'country' ? 'country' : 'area'
+    setFiltros({ [clave]: filtroGrupo.grupo })
+    setSoloElegidos(false)
+    setBusqueda('')
+    setActual(1)
+  }, [filtroGrupo])
 
   const marcados = effectiveIndividualIds(seleccion)
   // Si al quitar marcas ya no queda ninguna, «Ver elegidas» se apaga y vuelve la lista completa en vez de un vacío.
@@ -324,13 +363,14 @@ export function ListaDePersonas({ seleccion, onCambio }: Props) {
     setFiltros({})
     setSoloElegidos(false)
     setActual(1)
+    onLimpiarFiltroGrupo?.()
   }
 
   // Al lado de la casilla de la página, lo que se puede marcar de una vez. Las opciones dependen de lo que ya está
   // marcado: solo se ofrece lo que tiene efecto.
   const opcionesSeleccion = (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-xs" aria-label="Opciones de selección" />}>
+      <DropdownMenuTrigger render={<BotonIcono size="icon-xs" aria-label="Opciones de selección" />}>
         <HugeiconsIcon icon={ArrowDown01Icon} aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-64">
@@ -361,6 +401,25 @@ export function ListaDePersonas({ seleccion, onCambio }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
+      {filtroGrupo && filtros[filtroGrupo.segmento === 'leader' ? 'leader' : filtroGrupo.segmento === 'country' ? 'country' : 'area'] === filtroGrupo.grupo ? (
+        <div className="px-(--frame-panel-header-px)">
+          <Alert variant="info" className="flex items-center justify-between gap-3">
+            <AlertDescription>
+              Viendo personas de «{filtroGrupo.grupo}». Puedes excluir a quienes no deban responder.
+            </AlertDescription>
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => {
+                setFiltros({})
+                onLimpiarFiltroGrupo?.()
+              }}
+            >
+              Ver todas las personas
+            </Button>
+          </Alert>
+        </div>
+      ) : null}
       <Fichas
         etiqueta="Elegidas una a una:"
         items={seleccion.selectedIds.flatMap((id) => {
@@ -417,17 +476,44 @@ export function ListaDePersonas({ seleccion, onCambio }: Props) {
             etiqueta={`Seleccionar a ${persona.name}`}
             tamano="xs"
             contenido={
-              <Text as="span" size="sm" className="truncate">
-                {persona.name}{' '}
-                <Text as="span" size="sm" variant="muted">
-                  · {detalle(persona)}
+              <TextoCompleto texto={`${persona.name} · ${detalle(persona)}`}>
+                <Text as="span" size="sm" className="truncate">
+                  {persona.name}{' '}
+                  <Text as="span" size="sm" variant="muted">
+                    · {detalle(persona)}
+                  </Text>
                 </Text>
-              </Text>
+              </TextoCompleto>
             }
             lateral={
-              <Text as="span" size="sm" variant="muted">
-                {persona.area}
-              </Text>
+              <div className="flex items-center gap-2">
+                <Text as="span" size="sm" variant="muted">
+                  {persona.area}
+                </Text>
+                {deGrupos.has(persona.id) ? (
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={(evento) => {
+                      evento.stopPropagation()
+                      setEnGrupo(persona)
+                    }}
+                  >
+                    Excluir del grupo
+                  </Button>
+                ) : dejadas.has(persona.id) ? (
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={(evento) => {
+                      evento.stopPropagation()
+                      onCambio(withPeopleIncluded(seleccion, [persona.id]))
+                    }}
+                  >
+                    Incluir en el grupo
+                  </Button>
+                ) : null}
+              </div>
             }
           />
         ))}
@@ -438,13 +524,13 @@ export function ListaDePersonas({ seleccion, onCambio }: Props) {
         abierto={enGrupo !== null}
         onAbiertoChange={(abierto) => (abierto ? undefined : setEnGrupo(null))}
         icono={UserRemove01Icon}
-        titulo="¿Dejar fuera a esta persona?"
+        titulo="¿Excluir a esta persona del grupo?"
         descripcion={
           enGrupo
             ? `«${enGrupo.name}» está en la encuesta porque elegiste el grupo «${grupoDe(enGrupo)}» (${SEGMENT_LABELS[seleccion.groupSegmentBy]}). El grupo sigue elegido y su fila dirá quién quedó fuera. Para quitar el grupo entero, desmarca el grupo en «Por grupos».`
             : ''
         }
-        accion="Dejar fuera solo a esta persona"
+        accion="Excluir del grupo"
         onConfirmar={() => {
           if (enGrupo) onCambio(withPersonExcluded(seleccion, enGrupo.id))
           setEnGrupo(null)

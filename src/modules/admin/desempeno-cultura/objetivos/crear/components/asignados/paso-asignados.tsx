@@ -1,11 +1,12 @@
 import { useState, type JSX } from 'react'
 import { Settings02Icon } from '@hugeicons/core-free-icons'
+import { Accordion } from '@ubits/flux-ui'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { EncabezadoPaso } from '../../../../encuestas/components/pasos-drawer'
 import { type CicloBuilderAssignmentSeed, type CicloDraft, type ObjectiveSet, type ObjectiveSetKind } from '../../../modelo/constructor/cicloBuilderTypes'
 import type { PedidoIa } from '../ia/pedido'
 import { NivelAsignaciones } from './nivel-asignaciones'
-import type { PedidoPanel } from './panel-asignacion'
+import type { PedidoPanel } from './creacion/usar-creacion'
 import type { IntencionAsignacion } from './piezas-asignacion'
 
 // Paso · Objetivos asignados: repartir los objetivos por grupo, por persona o de las dos formas, según el nivel que se
@@ -52,6 +53,18 @@ export function PasoAsignados({
   const [pedidoG, setPedidoG] = useState<PedidoPanel | null>(null)
   const [pedidoI, setPedidoI] = useState<PedidoPanel | null>(null)
   const [ofrecidas, setOfrecidas] = useState<ReadonlySet<ObjectiveSetKind>>(() => new Set())
+  // Arranca abierto el primer nivel del ciclo, como Participantes abre el que ya trae algo.
+  const [abiertos, setAbiertos] = useState<string[]>(() => [grupos ? 'grupal' : 'individual'])
+  // Una creación pedida en un nivel cerrado lo abre: «En la fila» se dibuja dentro de su sección.
+  const asegurarAbierto = (nivel: 'grupal' | 'individual') => setAbiertos((previos) => (previos.includes(nivel) ? previos : [...previos, nivel]))
+  const pedirG = (pedido: PedidoPanel | null) => {
+    setPedidoG(pedido)
+    if (pedido) asegurarAbierto('grupal')
+  }
+  const pedirI = (pedido: PedidoPanel | null) => {
+    setPedidoI(pedido)
+    if (pedido) asegurarAbierto('individual')
+  }
 
   const semillaDe = (kind: ObjectiveSetKind) => semillas.find((semilla) => semilla.kind === kind && semilla.objectives.length > 0) ?? null
   const pedidoDeSemilla = (kind: ObjectiveSetKind): PedidoPanel | null => {
@@ -62,11 +75,11 @@ export function PasoAsignados({
   const nivelActivo = grupos || individual
   if (grupos && pedidoG === null && !ofrecidas.has('grupal') && semillaDe('grupal')) {
     setOfrecidas(new Set([...ofrecidas, 'grupal']))
-    setPedidoG(pedidoDeSemilla('grupal'))
+    pedirG(pedidoDeSemilla('grupal'))
   }
   if (individual && pedidoI === null && !ofrecidas.has('individual') && semillaDe('individual')) {
     setOfrecidas(new Set([...ofrecidas, 'individual']))
-    setPedidoI(pedidoDeSemilla('individual'))
+    pedirI(pedidoDeSemilla('individual'))
   }
 
   const onSets = (cambio: (actual: readonly ObjectiveSet[]) => readonly ObjectiveSet[]) => onCambio((actual) => ({ objectiveSets: cambio(actual.objectiveSets) }))
@@ -105,9 +118,9 @@ export function PasoAsignados({
         onAsignacion={(cambio) => onCambio((actual) => ({ assignment: { ...actual.assignment, ...cambio } }))}
         conErrores={conErrores}
         semilla={semillaDe(tipoNivel)?.objectives ?? null}
-        onElegirSemilla={() => isGrupos ? setPedidoG(pedidoDeSemilla('grupal')) : setPedidoI(pedidoDeSemilla('individual'))}
+        onElegirSemilla={() => (isGrupos ? pedirG(pedidoDeSemilla('grupal')) : pedirI(pedidoDeSemilla('individual')))}
         pedido={isGrupos ? pedidoG : pedidoI}
-        onPedido={isGrupos ? setPedidoG : setPedidoI}
+        onPedido={isGrupos ? pedirG : pedirI}
         onGuardado={guardado}
         onCrearConIa={onCrearConIa}
         agenteAbierto={agenteAbierto}
@@ -115,10 +128,13 @@ export function PasoAsignados({
     )
   }
 
+  // Los niveles como los acordeones de Participantes: se abren y se cierran solos, sin perder lo repartido.
   return (
-    <section className="flex flex-col gap-8" aria-label={titulo}>
-      {grupos && renderNivel('grupal')}
-      {individual && renderNivel('individual')}
+    <section className="flex flex-col gap-4" aria-label={titulo}>
+      <Accordion value={abiertos} onValueChange={(valor) => setAbiertos(valor as string[])} className="gap-4">
+        {grupos && renderNivel('grupal')}
+        {individual && renderNivel('individual')}
+      </Accordion>
     </section>
   )
 }

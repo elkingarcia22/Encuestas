@@ -47,18 +47,19 @@ type Company = {
   tone?: string
   people: number
   licenses: [number, number]
-  credits: [number, number]
+  // Una bolsa por producto con IA, que no se suman (13 oct, PM de Selección: «son bolsas de crédito independientes»).
+  credits: { seleccion: [number, number]; lms: [number, number] }
 }
 
 const COMPANIES: Company[] = [
-  { id: 'meta', name: 'Meta Colombia', plan: 'Pro', logo: metaLogo, initial: 'MC', people: 940, licenses: [940, 1000], credits: [25000, 45000] },
+  { id: 'meta', name: 'Meta Colombia', plan: 'Pro', logo: metaLogo, initial: 'MC', people: 940, licenses: [940, 1000], credits: { seleccion: [13180, 30000], lms: [3760, 5000] } },
   // UBITS usa su propio producto, así que también es una empresa de la plataforma. Está aquí para poder enseñar el
   // caso de una empresa con **dos catálogos** —el que le vende a sus clientes y Ubits College, su formación
   // interna—, que no se podía contar desde una empresa que no es UBITS (Dave, 6-oct).
-  { id: 'ubits', name: 'UBITS', plan: 'Pro', logo: '/ubits-logo.svg', initial: 'UB', people: 318, licenses: [318, 350], credits: [52000, 60000] },
-  { id: 'alpha', name: 'Alpha Logística', plan: 'Esencial', initial: 'AL', people: 212, licenses: [212, 250], credits: [8400, 10000] },
-  { id: 'beta', name: 'Beta Retail', plan: 'Esencial', initial: 'BR', people: 1480, licenses: [1480, 2000], credits: [31000, 60000] },
-  { id: 'omega', name: 'Omega Salud', plan: 'Esencial', initial: 'OS', people: 96, licenses: [96, 150], credits: [2100, 5000] },
+  { id: 'ubits', name: 'UBITS', plan: 'Pro', logo: '/ubits-logo.svg', initial: 'UB', people: 318, licenses: [318, 350], credits: { seleccion: [34000, 40000], lms: [18000, 20000] } },
+  { id: 'alpha', name: 'Alpha Logística', plan: 'Esencial', initial: 'AL', people: 212, licenses: [212, 250], credits: { seleccion: [6200, 7000], lms: [2200, 3000] } },
+  { id: 'beta', name: 'Beta Retail', plan: 'Esencial', initial: 'BR', people: 1480, licenses: [1480, 2000], credits: { seleccion: [22000, 40000], lms: [9000, 20000] } },
+  { id: 'omega', name: 'Omega Salud', plan: 'Esencial', initial: 'OS', people: 96, licenses: [96, 150], credits: { seleccion: [1500, 3000], lms: [600, 2000] } },
 ]
 
 const CONFIG = [
@@ -270,7 +271,8 @@ export function AccountPopover({ compact = false, cliente = false }: { compact?:
               </div>
             </div>
             <Gauge label="Licencias" value={company.licenses} />
-            <Gauge label="Créditos de IA" value={company.credits} ai />
+            <Gauge label="Créditos de Selección" value={company.credits.seleccion} ai />
+            <Gauge label="Créditos de LMS Creator" value={company.credits.lms} ai />
           </div>
 
           {/* Cambiar de empresa en tarjeta, como «Vista actual» del perfil: toda la tarjeta abre el submenú y el icono de la

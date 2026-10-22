@@ -1,7 +1,10 @@
 import { useState, type JSX } from 'react'
-import { TOTAL_WEIGHT, totalWeight, type Objective } from '../../../modelo/constructor/cicloBuilderTypes'
+import { TOTAL_WEIGHT, distributeWeights, totalWeight, type Objective } from '../../../modelo/constructor/cicloBuilderTypes'
+import { rescaleObjectives } from '../../../modelo/constructor/objectiveSets'
+import type { ArreglosPeso } from './campo-peso'
 import type { ObjectiveModelId, ObjectiveModelRules } from '../../../modelo/constructor/objectiveModel'
 import type { ObjectiveScope } from '../../../modelo/constructor/objectiveBankTypes'
+import type { ObjetivoDelCiclo } from './campo-alineacion'
 import { TarjetaObjetivo } from './tarjeta-objetivo'
 
 // Una lista de tarjetas de objetivo con una sola abierta a la vez (como las preguntas en edición de encuestas). La
@@ -16,7 +19,7 @@ export interface ListaObjetivosProps {
   reglas: ObjectiveModelRules
   conErrores: boolean
   /** A qué se puede alinear cada objetivo: los de la empresa y, en individuales, los demás del mismo set. */
-  alineables: (objetivo: Objective) => { empresa: readonly Objective[]; ciclo?: readonly Objective[] }
+  alineables: (objetivo: Objective) => { empresa: readonly Objective[]; ciclo?: readonly ObjetivoDelCiclo[] }
   alineacionRequerida: boolean
   /** Solo asignados: el cupo del set (100 o su weightShare). */
   cupo?: number
@@ -29,6 +32,9 @@ export interface ListaObjetivosProps {
   contextoIa?: { nombreCiclo: string }
   /** Propuestas de la IA todavía sin conservar: se marcan con anillo y «Propuesta de IA». */
   resaltados?: ReadonlySet<string>
+  /** Solo la tarjeta abierta, fija y sin plegar: el detalle de la ventana de la asignación, con la lista de objetivos a su
+   *  izquierda (21-oct). Los que ya se visitaron y quedaron incompletos (`revisados`) muestran sus errores al volver. */
+  detalle?: { revisados: ReadonlySet<string> }
 }
 
 export function ListaObjetivos({
@@ -47,6 +53,7 @@ export function ListaObjetivos({
   onAbierta,
   contextoIa,
   resaltados,
+  detalle,
 }: ListaObjetivosProps): JSX.Element {
   const [propia, setPropia] = useState<string | null>(null)
   const controlada = abierta !== undefined
@@ -56,10 +63,23 @@ export function ListaObjetivos({
     onAbierta?.(id)
   }
   const total = totalWeight(objetivos)
+  // Los arreglos del peso que tocan a los demás (21-oct): cada objetivo se escribe por su cuenta con `onCambio`, que ya
+  // aplica sobre lo más reciente, así que varios cambios seguidos no se pisan.
+  const arreglosDe = (objetivo: Objective): ArreglosPeso => {
+    const otros = objetivos.filter((otro) => otro.id !== objetivo.id)
+    return {
+      otros: otros.length,
+      onAjustarDemas: () => rescaleObjectives(otros, cupo - objetivo.weight).forEach((otro) => onCambio(otro.id, { weight: otro.weight })),
+      onIguales: () => {
+        const partes = distributeWeights(objetivos.length, cupo)
+        objetivos.forEach((uno, indice) => onCambio(uno.id, { weight: partes[indice] }))
+      },
+    }
+  }
 
   return (
     <div className="flex flex-col gap-3">
-      {objetivos.map((objetivo, indice) => (
+      {objetivos.map((objetivo, indice) => (detalle && actual !== objetivo.id ? null : (
         <TarjetaObjetivo
           key={objetivo.id}
           objetivo={objetivo}
@@ -74,16 +94,18 @@ export function ListaObjetivos({
             if (actual === objetivo.id) abrir(null)
             onEliminar(objetivo.id)
           }}
-          conErrores={conErrores}
+          conErrores={conErrores || (detalle?.revisados.has(objetivo.id) ?? false)}
+          fija={detalle !== undefined}
           alineables={alineables(objetivo)}
           alineacionRequerida={alineacionRequerida}
           cupo={cupo}
           pesoDeLosDemas={total - objetivo.weight}
+          arreglosPeso={arreglosDe(objetivo)}
           alcance={alcance}
           contextoIa={contextoIa}
           resaltada={resaltados?.has(objetivo.id) ?? false}
         />
-      ))}
+      )))}
     </div>
   )
 }

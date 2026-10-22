@@ -3,7 +3,6 @@ import { Alert02Icon, CheckmarkCircle02Icon, GitCompareIcon, UserIcon } from '@h
 import {
   Avatar,
   AvatarFallback,
-  Badge,
   Button,
   Item,
   ItemActions,
@@ -23,6 +22,7 @@ import {
   TableRow,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { notify } from '@/shared/components/notify'
 import {
   AgentCard,
@@ -119,7 +119,7 @@ export function AgenteInicio({
     <ContextPanel
       context={
         <>
-          <span className="text-foreground">Vacante {vacante.titulo}</span> · {candidatos.length} candidatos en proceso
+          <span className="text-foreground">Vacante {vacante.titulo}</span> · {candidatos.length} {plural(candidatos.length, 'candidato', 'candidatos')} en proceso
         </>
       }
       {...marco}
@@ -133,7 +133,7 @@ export function AgenteInicio({
       scrollKey={thread.msgs.length ? thread.scrollKey : undefined}
     >
       <AgentNote>
-        Estoy mirando la vacante {vacante.titulo}: {candidatos.length} candidatos en proceso y {pendientes.length} con acción requerida.
+        Estoy mirando la vacante {vacante.titulo}: {candidatos.length} {plural(candidatos.length, 'candidato', 'candidatos')} en proceso y {pendientes.length} con acción requerida.
       </AgentNote>
 
       {pendientes.length ? (
@@ -284,7 +284,7 @@ export function AgenteResumen({
       </AgentCard>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Button onClick={() => notify('Resumen copiado', 'Listo para pegar en el acta del comité')}>Copiar para el comité</Button>
+        <Button onClick={() => notify('Resumen copiado', 'Listo para pegar en el acta del comité', 'success')}>Copiar para el comité</Button>
         <Button variant="outline" onClick={notaGuardada ? () => onFuente('notas') : onGuardarNota}>
           {notaGuardada ? 'Ver la nota' : 'Guardar como nota'}
         </Button>
@@ -450,7 +450,7 @@ export function AgenteComparar({
               {mejor.nombre}
             </Text>
             <Text as="p" size="sm" className="mt-1">
-              Tiene el mejor ajuste con el cargo ({mejor.ajuste}% frente a {segundo.ajuste}% de {nombreCorto(segundo)}) y cumple{' '}
+              Tiene el mejor ajuste con el cargo ({mejor.ajuste} % frente a {segundo.ajuste} % de {nombreCorto(segundo)}) y cumple{' '}
               {mejor.requisitos.filter((estado) => estado === 'Cumple').length} de {vacante.requisitos.length} requisitos.
             </Text>
             <AgentList
@@ -488,7 +488,7 @@ export function AgenteComparar({
                 Todos están en Para revisión o más adelante
               </Button>
             )}
-            <Button variant="outline" onClick={() => notify('Comparación copiada', 'Lista para compartir con el líder del área')}>
+            <Button variant="outline" onClick={() => notify('Comparación copiada', 'Lista para compartir con el líder del área', 'success')}>
               Copiar comparación
             </Button>
           </div>

@@ -17,7 +17,6 @@ import {
   AttachmentContent,
   AttachmentMedia,
   AttachmentTitle,
-  Badge,
   Button,
   Field,
   FieldContent,
@@ -45,6 +44,7 @@ import {
   Text,
   Textarea,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { CloseButton } from '@/shared/components/CloseButton'

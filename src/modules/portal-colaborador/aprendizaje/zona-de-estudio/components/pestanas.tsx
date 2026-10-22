@@ -1,11 +1,8 @@
-import { useNavigate } from 'react-router'
-import { Search01Icon } from '@hugeicons/core-free-icons'
 import { Frame, FramePanel, Heading, Progress, Text } from '@ubits/flux-ui'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
 import { CajaCarrusel } from './carrusel'
 import {
-  abrirContenido,
   competenciaPorId,
   imagenCompetencia,
   minutosCompetencia,
@@ -27,19 +24,9 @@ type PropsPlan = {
   vacio?: boolean
 }
 
-const CATALOGO = '/portal-colaborador/aprendizaje/catalogo'
-
-/** El «Primera vez» de una pestaña de Zona de estudio: aquí nadie crea, así que la salida siempre es el catálogo. */
+/** El «Primera vez» de una pestaña de Zona de estudio: aquí nadie crea. Sin «Explorar catálogo» mientras el Catálogo no exista (13-oct). */
 function VacioZona({ icono, titulo, descripcion }: { icono: string; titulo: string; descripcion: string }) {
-  const navigate = useNavigate()
-  return (
-    <PrimeraVez
-      icono={icono}
-      titulo={titulo}
-      descripcion={descripcion}
-      accion={{ texto: 'Explorar catálogo', icono: Search01Icon, onClick: () => navigate(CATALOGO) }}
-    />
-  )
+  return <PrimeraVez icono={icono} titulo={titulo} descripcion={descripcion} />
 }
 
 // ── Plan de contenidos ───────────────────────────────────────────────────────────────────────────────────────────
@@ -113,7 +100,6 @@ function Tarjeta({ t }: { t: Tarjeta }) {
       duracion={t.duracion}
       idioma={t.idioma}
       progreso={t.progreso}
-      onClick={abrirContenido}
       className="h-full"
     />
   )

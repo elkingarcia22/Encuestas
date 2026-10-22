@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
-import { toast } from '@ubits/flux-ui'
+import { notify } from '@/shared/components/notify'
 
 import { useTemporizadores } from '../../estados/temporizadores'
 import { MarcoAdmin } from '../admin-compartido/marco-admin'
@@ -29,7 +29,7 @@ export function Component() {
     despues(() => {
       setUsuarios((todos) => aplicarMasivo(accion, filas, todos))
       setMasivo((m) => (m ? { ...m, hechos: total, estado: 'listo' } : m))
-      toast.add({ type: 'success', title: 'Carga masiva terminada', description: `${MASIVAS[accion].hecho(total)}. También te enviamos el resultado por correo.` })
+      notify('Carga masiva terminada', `${MASIVAS[accion].hecho(total)}. También te enviamos el resultado por correo.`, 'success')
     }, 6600)
   }
 

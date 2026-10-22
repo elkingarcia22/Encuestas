@@ -8,7 +8,8 @@ import {
   PlusSignIcon,
   RefreshIcon,
 } from '@hugeicons/core-free-icons'
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
+import { useNavigate } from 'react-router'
+import { notify, notifyAction } from '@/shared/components/notify'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
 import {
@@ -25,12 +26,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
   Progress,
   ProgressLabel,
   ProgressValue,
@@ -40,7 +35,6 @@ import {
   Tabs,
   TabsContent,
   Text,
-  toast,
   Table,
   TableBody,
   TableCell,
@@ -52,14 +46,75 @@ import {
 import { Demo, EncabezadoPatron, PestanasDePatron, Reglas, SectionIntro, VerEnAccion, type Regla } from '../patrones/piezas'
 import { mostrarBanner } from '@/shared/components/banner'
 import { iniciales } from '../patrones/formato'
+import { ErrorDeCarga } from './carga'
 import { EstadosConfirmaciones } from './confirmaciones'
+import { PantallaProximamente } from './pantalla-proximamente'
 import { EstadosErroresSistema } from './errores-sistema'
 import { EstadosProcesos } from './procesos'
 import { IconoIA } from '../ia/icono-ia'
 
 /* ---------------------------------------------------------------- vacíos */
 
+// Los botones de las demostraciones hacen lo suyo de verdad (regla «nada-que-finja», 13-oct): limpiar vuelve a la lista y
+// reintentar carga, con su espera, en vez de avisar de algo que no pasó.
+function SinResultadosVivo() {
+  const [limpio, setLimpio] = useState(false)
+  if (limpio) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-6 text-center">
+        <Text variant="muted" size="sm">
+          Con la búsqueda y los filtros limpios vuelve la lista completa.
+        </Text>
+        <Button variant="outline" size="sm" onClick={() => setLimpio(false)}>
+          Volver a buscar «onboarding»
+        </Button>
+      </div>
+    )
+  }
+  return <SinResultados busqueda="onboarding" filtrosActivos={3} onLimpiar={() => setLimpio(true)} />
+}
+
+function ErrorDeCargaVivo() {
+  const [cargo, setCargo] = useState(false)
+  const [cargando, setCargando] = useState(false)
+  if (cargo) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-6 text-center">
+        <Text variant="muted" size="sm">
+          La lista cargó. Solo ese bloque se volvió a pedir; el resto de la página no se movió.
+        </Text>
+        <Button variant="outline" size="sm" onClick={() => setCargo(false)}>
+          Volver a fallar
+        </Button>
+      </div>
+    )
+  }
+  if (cargando) {
+    return (
+      <div className="flex items-center justify-center gap-3 py-10">
+        <Spinner className="size-5" />
+        <Text variant="muted" size="sm">
+          Cargando la lista…
+        </Text>
+      </div>
+    )
+  }
+  return (
+    <ErrorDeCarga
+      que="la lista"
+      onReintentar={() => {
+        setCargando(true)
+        window.setTimeout(() => {
+          setCargando(false)
+          setCargo(true)
+        }, 800)
+      }}
+    />
+  )
+}
+
 function EstadosVacios() {
+  const navigate = useNavigate()
   return (
     <div className="flex flex-col gap-6">
       <SectionIntro
@@ -67,8 +122,9 @@ function EstadosVacios() {
         description="Cuatro motivos distintos por los que una pantalla puede no tener nada que mostrar. Cada uno cuenta qué pasó y ofrece la salida correspondiente."
       />
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Los cuatro van con ilustración glass (decisión 14, 5-oct: «todo debe ir con las ilustraciones»). Los dos
-            primeros son las piezas reales, PrimeraVez y SinResultados: en una pantalla se usan ellas, no un Empty a mano. */}
+        {/* Los cuatro van con ilustración glass (decisión 14, 5-oct: «todo debe ir con las ilustraciones»), con las piezas
+            del proyecto y nunca con un Empty armado a mano: PrimeraVez (primera vez y sin permiso), SinResultados y
+            ErrorDeCarga (la pieza oficial del error de un bloque: glass-danger y «Reintentar»; 13-oct). */}
         <Demo
           title="Primera vez · PrimeraVez"
           description="No hay error: todavía nadie creó nada. Invita a crear el primero."
@@ -78,7 +134,7 @@ function EstadosVacios() {
             icono="glass-add"
             titulo="Todavía no hay planes de formación"
             descripcion="Cuando crees el primero aparecerá aquí junto a su avance y sus participantes."
-            accion={{ texto: 'Crear plan de formación', icono: PlusSignIcon, onClick: () => toast.add({ type: 'info', title: 'Aquí se abre la creación' }) }}
+            accion={{ texto: 'Crear plan de formación', icono: PlusSignIcon, onClick: () => navigate('/admin/aprendizaje/planes-de-formacion/planes/crear') }}
             className="py-6"
           />
         </Demo>
@@ -88,51 +144,43 @@ function EstadosVacios() {
           description="Sí hay datos, pero la búsqueda o los filtros los dejaron fuera. Dice qué se buscó y la salida es aflojar el filtro."
           centrado
         >
-          <SinResultados busqueda="onboarding" filtrosActivos={3} onLimpiar={() => toast.add({ type: 'info', title: 'Búsqueda y filtros limpios' })} />
+          <SinResultadosVivo />
         </Demo>
 
         <Demo
-          title="Error de carga"
-          description="Algo falló del lado del sistema. El usuario no hizo nada mal: se le ofrece reintentar."
+          title="Error de carga · ErrorDeCarga"
+          description="Algo falló del lado del sistema. El usuario no hizo nada mal: se le ofrece reintentar, y lo demás de la página sigue funcionando."
           centrado
         >
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="default">
-                <ImagenGlass nombre="glass-danger" />
-              </EmptyMedia>
-              <EmptyTitle>No pudimos cargar la lista</EmptyTitle>
-              <EmptyDescription>
-                Se perdió la conexión con el servidor. Vuelve a intentarlo en unos segundos.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button variant="outline">
-                <HugeiconsIcon icon={RefreshIcon} strokeWidth={2} aria-hidden="true" />
-                Reintentar
-              </Button>
-            </EmptyContent>
-          </Empty>
+          <ErrorDeCargaVivo />
         </Demo>
 
         <Demo
-          title="Sin permiso"
+          title="Sin permiso · PrimeraVez"
           description="El contenido existe pero no es para este usuario. No se ofrece acción, se explica a quién pedirla."
           centrado
         >
-          <Empty>
-            <EmptyHeader>
-              <EmptyMedia variant="default">
-                <ImagenGlass nombre="glass-lock" />
-              </EmptyMedia>
-              <EmptyTitle>No tienes acceso a este reporte</EmptyTitle>
-              <EmptyDescription>
-                Pídele a un administrador de tu empresa que te habilite el módulo de Métricas.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <PrimeraVez
+            icono="glass-lock"
+            titulo="No tienes acceso a este reporte"
+            descripcion="Pídele a un administrador de tu empresa que te habilite el módulo de Métricas."
+            className="py-6"
+          />
         </Demo>
       </div>
+
+      <Demo
+        title="Pantalla que todavía no está maquetada · PantallaProximamente"
+        description="Lo que no está maquetado sigue en el menú con la etiqueta «Próximamente» y abre esta pantalla de espera: el título y la bajada que tendrá, una sola ilustración glass y una línea de qué se podrá hacer. Sin rutas ni «Slot». Se registra con crearProximamente(título, descripción, qué tendrá, nombre) en el routes.ts del módulo; ningún botón promete llevar a ella como si existiera."
+      >
+        <div className="overflow-hidden rounded-2xl border bg-background px-6 pb-6">
+          <PantallaProximamente
+            titulo="Catálogo de contenidos"
+            descripcion="Explora el catálogo de UBITS y agrega contenidos a tus planes."
+            queTendra="Aquí vas a buscar cursos, rutas y eventos del catálogo, ver su ficha y agregarlos a un plan de formación."
+          />
+        </div>
+      </Demo>
 
       <Alert variant="info">
         <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
@@ -461,6 +509,9 @@ function EstadosCarga() {
 
 /* -------------------------------------------------------------- feedback */
 
+// El ejemplo de código que se muestra bajo los botones de aviso.
+const EJEMPLO_AVISO = "notify('Plan publicado', 'Los 48 participantes ya pueden verlo.', 'success')"
+
 function EstadosFeedback() {
   return (
     <div className="flex flex-col gap-6">
@@ -474,90 +525,68 @@ function EstadosFeedback() {
         description="Aviso flotante y pasajero, para confirmar que una acción salió bien o mal. Nunca para información que haya que leer con calma. Todos llevan su tipo: el icono de la izquierda dice si salió bien, si es información, una advertencia o un error, y la X de cerrar va siempre a la derecha (con notify, el tipo es el último dato)."
         centrado
       >
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              toast.add({
-                type: 'success',
-                title: 'Plan publicado',
-                description: 'Los 48 participantes ya pueden verlo.',
-              })
-            }
-          >
-            Éxito
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              toast.add({
-                type: 'info',
-                title: 'Cambios guardados como borrador',
-                description: 'Se publicarán cuando confirmes.',
-              })
-            }
-          >
-            Información
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              toast.add({
-                type: 'warning',
-                title: 'Quedan 3 licencias libres',
-                description: 'Revisa el plan antes de invitar a más personas.',
-              })
-            }
-          >
-            Advertencia
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              toast.add({
-                type: 'error',
-                title: 'No se pudo guardar',
-                description: 'Revisa tu conexión e inténtalo otra vez.',
-              })
-            }
-          >
-            Error
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              toast.add({
-                type: 'success',
-                title: 'Curso archivado',
-                description: 'Ya no aparece en el catálogo.',
-                actionProps: {
-                  children: 'Deshacer',
-                  onClick: () =>
-                    toast.add({ type: 'info', title: 'Curso restaurado' }),
-                },
-              })
-            }
-          >
-            Con acción
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              toast.promise(new Promise((resolve) => setTimeout(resolve, 2000)), {
-                loading: 'Generando el reporte…',
-                success: 'Reporte listo para descargar',
-                error: 'No pudimos generar el reporte',
-              })
-            }
-          >
-            Con espera
-          </Button>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => notify('Plan publicado', 'Los 48 participantes ya pueden verlo.', 'success')}
+            >
+              Éxito
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => notify('Cambios guardados como borrador', 'Se publicarán cuando confirmes.', 'info')}
+            >
+              Información
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => notify('Quedan 3 licencias libres', 'Revisa el plan antes de invitar a más personas.', 'warning')}
+            >
+              Advertencia
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => notify('No se pudo guardar', 'Revisa tu conexión e inténtalo otra vez.', 'error')}
+            >
+              Error
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                notifyAction(
+                  'Curso archivado',
+                  'Ya no aparece en el catálogo.',
+                  { label: 'Deshacer', onClick: () => notify('Curso restaurado', undefined, 'info') },
+                  'success',
+                )
+              }
+            >
+              Con acción
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // Con espera: el aviso de que empezó y, al terminar, el de que quedó (dos avisos con su tipo; el progreso
+                // largo se ve en el Centro de procesos, pestaña «Procesos largos»).
+                notify('Generando el reporte…', 'Te avisamos cuando esté listo.', 'info')
+                window.setTimeout(() => notify('Reporte listo para descargar', undefined, 'success'), 2000)
+              }}
+            >
+              Con espera
+            </Button>
+          </div>
+          <Text as="p" variant="muted" size="xs">
+            Se escriben con <code>notify(título, detalle, tipo)</code>, por ejemplo{' '}
+            <code>{EJEMPLO_AVISO}</code>; con «Deshacer», <code>notifyAction(título, detalle, {'{ label, onClick }'}, tipo)</code>.
+            Nunca <code>toast.add</code> suelto.
+          </Text>
         </div>
       </Demo>
 
@@ -718,7 +747,8 @@ export function Component() {
         >
           Qué mostrar cuando no hay nada, cuando algo está cargando, cuando hay que avisar, cuando
           conviene pedir confirmación y cuando la plataforma falla. Los casos salen de pantallas
-          reales de UBITS y todo es de la librería, sin nada dibujado a mano.
+          reales de UBITS y salen de las piezas del proyecto (PrimeraVez, SinResultados, notify, DialogoConfirmar…) hechas
+          sobre la librería.
         </EncabezadoPatron>
 
         <Tabs defaultValue="vacios">

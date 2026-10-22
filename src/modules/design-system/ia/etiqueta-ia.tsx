@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react'
-import { Badge } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { IconoIA } from './icono-ia'
 
 // La etiqueta de IA: la insignia que dice «esto lo hizo o lo hace la IA» (una etapa con IA, el ajuste que calculó,

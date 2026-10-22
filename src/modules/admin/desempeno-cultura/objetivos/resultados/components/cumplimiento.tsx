@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Item, ItemActions, ItemContent, Progress, Table, TableBody, TableCell, TableHead, TableHeader, Text } from '@ubits/flux-ui'
 import { AnilloAvance } from '@/modules/design-system/graficos/piezas'
 import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
@@ -11,11 +11,12 @@ import { FilaDesplegable } from '../../../encuestas/resultados/components/ia-sec
 import { BotonPantallaCompleta } from '../../../encuestas/resultados/components/pantalla-completa'
 import { TarjetaResumen } from '../../../encuestas/resultados/components/tarjeta-resumen'
 import { formatoAvance } from '../../modelo/ciclos'
-import { ESCALA_CUMPLIMIENTO, arbol, bandaDe, mapa, type NodoCumplimiento, type ObjetivoAgrupado } from '../../modelo/resultados/cumplimiento'
+import { arbol, bandaDe, escalaDe, mapa, type NodoCumplimiento, type ObjetivoAgrupado } from '../../modelo/resultados/cumplimiento'
 import { avancePorGrupo, estados, nombreCorte, type Corte } from '../../modelo/resultados/lecturas'
 import { riesgoDePersona } from '../../modelo/resultados/personas'
 import type { PersonaSeguida, ResultadosCiclo } from '../../modelo/resultados/seguimiento'
 import { MapaCumplimiento } from './mapa-cumplimiento'
+import { EscalaCumplimiento, useEscala } from './escala-cumplimiento'
 
 // La pestaña Cumplimiento (9-oct, como el prototipo): arriba la tarjeta de resumen —el cumplimiento general, en qué
 // estado va cada objetivo y los tres grupos con menor avance— y debajo dos lecturas del mismo dato, con la pastilla en la
@@ -33,11 +34,12 @@ const COMO_LEER = 'Cada cifra es el promedio del cumplimiento de los objetivos d
 /** La cifra de cada rama del árbol: su avance en el color de su tramo y, con el ciclo abierto, su riesgo. */
 function Metrica({ nodo, abierto }: { nodo: NodoCumplimiento; abierto: boolean }) {
   const riesgo = riesgoDePersona(nodo.riesgo)
+  const escala = useEscala()
   return (
     <div className="flex shrink-0 items-center gap-3">
       {abierto && nodo.riesgo !== 'sin' ? <Badge variant={riesgo.tono}>Riesgo {riesgo.etiqueta.toLowerCase()}</Badge> : null}
       <Progress value={Math.min(100, nodo.avance)} className="hidden w-28 md:flex" aria-label={`Avance ${formatoAvance(nodo.avance)}`} />
-      <Text as="span" size="sm" weight="semibold" className="w-14 text-right tabular-nums" style={{ color: COLOR_POR_TONO[bandaDe(nodo.avance).tone] }}>
+      <Text as="span" size="sm" weight="semibold" className="w-14 text-right tabular-nums" style={{ color: COLOR_POR_TONO[bandaDe(nodo.avance, escala).tone] }}>
         {formatoAvance(nodo.avance)}
       </Text>
     </div>
@@ -47,6 +49,7 @@ function Metrica({ nodo, abierto }: { nodo: NodoCumplimiento; abierto: boolean }
 /** Los objetivos de un grupo; cada uno se abre en las personas que lo llevan, y el nombre abre su ficha. */
 function Objetivos({ objetivos, onAbrir }: { objetivos: readonly ObjetivoAgrupado[]; onAbrir: (persona: PersonaSeguida) => void }) {
   const [abierto, setAbierto] = useState<string | null>(null)
+  const escala = useEscala()
   return (
     <Table>
       <TableHeader>
@@ -79,7 +82,7 @@ function Objetivos({ objetivos, onAbrir }: { objetivos: readonly ObjetivoAgrupad
                   </Text>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Text as="span" size="sm" weight="semibold" className="tabular-nums" style={{ color: COLOR_POR_TONO[bandaDe(objetivo.avance).tone] }}>
+                  <Text as="span" size="sm" weight="semibold" className="tabular-nums" style={{ color: COLOR_POR_TONO[bandaDe(objetivo.avance, escala).tone] }}>
                     {formatoAvance(objetivo.avance)}
                   </Text>
                 </TableCell>
@@ -95,7 +98,7 @@ function Objetivos({ objetivos, onAbrir }: { objetivos: readonly ObjetivoAgrupad
                         <li key={delaPersona.id}>
                           <Item size="sm">
                             <ItemContent className="min-w-0">
-                              <CeldaTitulo titulo={persona.colaborador.name} detalle={`${persona.colaborador.role} · peso ${delaPersona.peso}%`} onClick={() => onAbrir(persona)} />
+                              <CeldaTitulo titulo={persona.colaborador.name} detalle={`${persona.colaborador.role} · peso ${delaPersona.peso} %`} onClick={() => onAbrir(persona)} />
                             </ItemContent>
                             <ItemActions>
                               <Text as="span" size="sm" weight="medium" variant={delaPersona.cumplimiento === null ? 'muted' : 'default'} className="tabular-nums">
@@ -116,27 +119,31 @@ function Objetivos({ objetivos, onAbrir }: { objetivos: readonly ObjetivoAgrupad
   )
 }
 
-export function Cumplimiento({ resultados, corte, onAbrir }: { resultados: ResultadosCiclo; corte: Corte; onAbrir: (persona: PersonaSeguida) => void }) {
+/** Como Favorabilidad en Encuestas: la tarjeta lee el ciclo entero y los filtros solo acotan la caja de abajo
+ *  (`filtrados`), con sus controles (`controles`) en la cabecera y lo filtrado (`chips`) debajo. */
+export function Cumplimiento({ resultados, filtrados, corte, controles, chips, onAbrir }: { resultados: ResultadosCiclo; filtrados: ResultadosCiclo; corte: Corte; controles: ReactNode; chips: ReactNode; onAbrir: (persona: PersonaSeguida) => void }) {
   const [vista, setVista] = useState<Vista>('arbol')
-  const nodos = useMemo(() => arbol(resultados, corte), [resultados, corte])
-  const calor = useMemo(() => mapa(resultados, corte), [resultados, corte])
+  const nodos = useMemo(() => arbol(filtrados, corte), [filtrados, corte])
+  const calor = useMemo(() => mapa(filtrados, corte), [filtrados, corte])
   const tramos = estados(resultados)
   const totalObjetivos = tramos.reduce((s, tramo) => s + tramo.cantidad, 0)
   const rezagados = avancePorGrupo(resultados, corte, 'menor').slice(0, 3)
   const grupo = nombreCorte(corte).toLowerCase()
   const plural = nombreCorte(corte)
 
-  const leyenda = <LeyendaEscala titulo="Escala de cumplimiento" descripcion={COMO_LEER} escala={ESCALA_CUMPLIMIENTO} />
+  const escala = useMemo(() => escalaDe(resultados.niveles), [resultados.niveles])
+  const leyenda = <LeyendaEscala titulo="Escala de cumplimiento" descripcion={COMO_LEER} escala={escala} />
   const titulo = vista === 'arbol' ? `Cumplimiento por objetivo de empresa y ${grupo}` : `Mapa de calor por ${grupo}`
-  const descripcion = vista === 'arbol' ? `${nodos.length} objetivos de empresa · ${resultados.objetivos.toLocaleString('es-CO')} objetivos` : `${calor.columnas.length} ${calor.columnas.length === 1 ? 'grupo' : 'grupos'}`
+  const descripcion = vista === 'arbol' ? `${nodos.length} objetivos de empresa · ${filtrados.objetivos.toLocaleString('es-CO')} objetivos` : `${calor.columnas.length} ${calor.columnas.length === 1 ? 'grupo' : 'grupos'}`
 
   return (
+    <EscalaCumplimiento.Provider value={escala}>
     <div className="flex flex-col gap-6">
       <TarjetaResumen
         titulo="Cumplimiento general"
         ayuda="El promedio del avance de las personas que reportaron: el de cada persona pondera sus objetivos por su peso. El reparto dice en qué estado va cada objetivo aprobado; los que esperan visto bueno o se devolvieron no entran."
         cifra={formatoAvance(resultados.avanceGeneral)}
-        lectura={bandaDe(resultados.avanceGeneral).label}
+        lectura={bandaDe(resultados.avanceGeneral, escala).label}
         pie={`${resultados.enMeta.toLocaleString('es-CO')} de ${resultados.objetivos.toLocaleString('es-CO')} objetivos en meta`}
         grafico={<AnilloAvance valor={Math.min(100, resultados.avanceGeneral)} color="var(--primary)" etiqueta="Cumplimiento general" tamano={48} />}
         tituloAnillos="Estado de los objetivos"
@@ -157,7 +164,9 @@ export function Cumplimiento({ resultados, corte, onAbrir }: { resultados: Resul
             <FrameDescription>{descripcion}</FrameDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            {/* Como en Favorabilidad: la pastilla de la vista primero, luego «Ver por» y «Filtros», y la leyenda. */}
             <SelectorVista valor={vista} opciones={VISTAS} onCambio={setVista} etiqueta="Cómo se lee el cumplimiento" />
+            {controles}
             {leyenda}
             {vista === 'mapa' ? (
               <BotonPantallaCompleta titulo="Mapa de calor" descripcion={`Por ${grupo} · ${descripcion}`} acciones={leyenda}>
@@ -166,6 +175,7 @@ export function Cumplimiento({ resultados, corte, onAbrir }: { resultados: Resul
             ) : null}
           </div>
         </FrameHeader>
+        {chips}
         {nodos.length === 0 ? (
           <FramePanel>
             <PrimeraVez icono="glass-chart" titulo="Sin objetivos que mostrar" descripcion="Con los filtros puestos no queda ningún objetivo en el ciclo." />
@@ -176,7 +186,7 @@ export function Cumplimiento({ resultados, corte, onAbrir }: { resultados: Resul
               secciones={nodos}
               incluir={(nodo) => nodo.objetivos > 0}
               subtitulo={(nodo) => `${nodo.personas} ${nodo.personas === 1 ? 'persona' : 'personas'} · ${nodo.objetivos} objetivos · ${nodo.reportaron} con avance`}
-              metrica={(nodo) => <Metrica nodo={nodo} abierto={resultados.abierto} />}
+              metrica={(nodo) => <Metrica nodo={nodo} abierto={filtrados.abierto} />}
               preguntas={(nodo) => <Objetivos objetivos={nodo.questions} onAbrir={onAbrir} />}
             />
           </SobreGris>
@@ -188,5 +198,6 @@ export function Cumplimiento({ resultados, corte, onAbrir }: { resultados: Resul
         )}
       </Frame>
     </div>
+    </EscalaCumplimiento.Provider>
   )
 }

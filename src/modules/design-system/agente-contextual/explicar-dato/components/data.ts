@@ -20,9 +20,9 @@ export type Topic = {
 // Sin variación junto a la cifra (auditoría 5-oct, decisión 11): el detalle dice de cuándo es el dato, y «bad» suma
 // «Requiere atención». Cuánto subió o bajó lo explica el agente al preguntarle.
 export const KPIS: { id: string; title: string; value: string; note: string; bad: boolean }[] = [
-  { id: 'rotacion', title: 'Rotación voluntaria', value: '3,4%', note: 'Últimos 30 días', bad: true },
+  { id: 'rotacion', title: 'Rotación voluntaria', value: '3,4 %', note: 'Últimos 30 días', bad: true },
   { id: 'clima', title: 'Clima laboral', value: '72/100', note: 'Encuesta de agosto', bad: true },
-  { id: 'ausentismo', title: 'Ausentismo', value: '2,1%', note: 'Agosto', bad: false },
+  { id: 'ausentismo', title: 'Ausentismo', value: '2,1 %', note: 'Agosto', bad: false },
   { id: 'vacantes', title: 'Vacantes abiertas', value: '12', note: '4 críticas', bad: false },
 ]
 
@@ -61,14 +61,14 @@ const KPI_TOPICS: Record<string, Topic> = {
     id: 'rotacion',
     label: 'Rotación voluntaria · últimos 30 días',
     question: 'Explícame la rotación voluntaria',
-    lead: '3,4% es el valor más alto del año. Lo empuja agosto: 8 de las 18 salidas fueron en la planta Funza.',
+    lead: '3,4 % es el valor más alto del año. Lo empuja agosto: 8 de las 18 salidas fueron en la planta Funza.',
     drivers: AUGUST_DRIVERS,
-    sector: 'El sector manufactura en Colombia está en 2,6%: estamos 0,8 puntos arriba.',
+    sector: 'El sector manufactura en Colombia está en 2,6 %: estamos 0,8 puntos arriba.',
     unknown: '5 de las 18 personas no hicieron entrevista de salida, así que su motivo quedó vacío.',
     sources: ROTATION_SOURCES,
     peopleAction: 'Ver las 18 personas',
-    alertAction: 'Crear alerta si pasa de 3%',
-    alertDone: 'Alerta creada: te aviso si la rotación pasa de 3%',
+    alertAction: 'Crear alerta si pasa de 3 %',
+    alertDone: 'Alerta creada: te aviso si la rotación pasa de 3 %',
   },
   clima: {
     id: 'clima',
@@ -81,7 +81,7 @@ const KPI_TOPICS: Record<string, Topic> = {
       { label: 'Claridad de objetivos', share: 28 },
     ],
     sector: 'El promedio del sector es 75/100: estamos 3 puntos abajo.',
-    unknown: 'En Operaciones respondió solo el 64%; ahí el dato es menos confiable.',
+    unknown: 'En Operaciones respondió solo el 64 %; ahí el dato es menos confiable.',
     sources: ['Encuesta de clima · ago', '212 comentarios abiertos'],
     peopleAction: 'Ver comentarios de Operaciones',
     alertAction: 'Crear alerta si baja de 70',
@@ -91,18 +91,18 @@ const KPI_TOPICS: Record<string, Topic> = {
     id: 'ausentismo',
     label: 'Ausentismo · agosto',
     question: 'Explícame el ausentismo',
-    lead: '2,1%: estable desde mayo y por debajo del sector.',
+    lead: '2,1 %: estable desde mayo y por debajo del sector.',
     drivers: [
       { label: 'Incapacidades por enfermedad general', share: 52 },
       { label: 'Citas médicas y permisos', share: 29 },
       { label: 'Ausencias sin justificar', share: 19 },
     ],
-    sector: 'El sector está en 2,4%: estamos 0,3 puntos abajo.',
+    sector: 'El sector está en 2,4 %: estamos 0,3 puntos abajo.',
     unknown: 'Las incapacidades de septiembre llegan de la EPS hasta el 10 de octubre.',
     sources: ['Novedades de nómina', 'Reporte EPS'],
     peopleAction: 'Ver las 27 personas',
-    alertAction: 'Crear alerta si pasa de 3%',
-    alertDone: 'Alerta creada: te aviso si el ausentismo pasa de 3%',
+    alertAction: 'Crear alerta si pasa de 3 %',
+    alertDone: 'Alerta creada: te aviso si el ausentismo pasa de 3 %',
   },
   vacantes: {
     id: 'vacantes',
@@ -133,7 +133,7 @@ function monthTopic(month: (typeof MONTHS)[number]): Topic {
     question: august ? '¿Por qué subió la rotación en agosto?' : `Explícame la rotación de ${month.name}`,
     lead: august
       ? 'Subió 0,9 puntos frente a julio: 8 de las 18 salidas fueron en la planta Funza después del cambio de turnos del 4 de agosto.'
-      : `${formatPct(month.value)}% con ${people} salidas voluntarias, ${month.value > TARGET ? 'por encima' : 'dentro'} de la meta de 2,5%.`,
+      : `${formatPct(month.value)} % con ${people} salidas voluntarias, ${month.value > TARGET ? 'por encima' : 'dentro'} de la meta de 2,5 %.`,
     drivers: august
       ? AUGUST_DRIVERS
       : [
@@ -141,14 +141,14 @@ function monthTopic(month: (typeof MONTHS)[number]): Topic {
           { label: 'Traslado de ciudad o estudio', share: 34 },
           { label: 'Relación con el líder', share: 25 },
         ],
-    sector: `El sector manufactura en Colombia está en 2,6%: ${above ? `estamos ${formatPct(month.value - 2.6)} puntos arriba` : 'estamos por debajo'}.`,
+    sector: `El sector manufactura en Colombia está en 2,6 %: ${above ? `estamos ${formatPct(month.value - 2.6)} puntos arriba` : 'estamos por debajo'}.`,
     unknown: august
       ? '5 de las 18 personas no hicieron entrevista de salida, así que su motivo quedó vacío.'
       : 'Los motivos salen de la entrevista de salida; 2 personas no la hicieron.',
     sources: ROTATION_SOURCES,
     peopleAction: `Ver las ${people} personas`,
-    alertAction: 'Crear alerta si pasa de 3%',
-    alertDone: 'Alerta creada: te aviso si la rotación mensual pasa de 3%',
+    alertAction: 'Crear alerta si pasa de 3 %',
+    alertDone: 'Alerta creada: te aviso si la rotación mensual pasa de 3 %',
   }
 }
 

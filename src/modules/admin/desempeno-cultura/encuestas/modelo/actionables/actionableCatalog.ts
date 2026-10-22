@@ -128,7 +128,7 @@ export interface ActionableTask {
   assignee: string;
   /** Cómo se llama la tarea en su bandeja. */
   title: string;
-  /** Qué tiene que pasar para que quede en check. */
+  /** Qué tiene que pasar para que quede completada. */
   completion: string;
 }
 
@@ -243,7 +243,7 @@ export interface ReminderCadenceOption {
 
 export const REMINDER_CADENCES: readonly ReminderCadenceOption[] = [
   { id: "once", label: "Una vez", hint: "Un solo aviso al asignar la tarea, sin recordatorios posteriores." },
-  { id: "daily", label: "Diario", hint: "Recuerda cada día hasta que la tarea quede en check." },
+  { id: "daily", label: "Diario", hint: "Recuerda cada día hasta que la tarea quede completada." },
   { id: "weekly", label: "Semanal", hint: "Recuerda cada semana mientras la tarea siga abierta." },
   { id: "biweekly", label: "Quincenal", hint: "Recuerda cada dos semanas mientras la tarea siga abierta." },
   { id: "monthly", label: "Mensual", hint: "Un recordatorio al mes: para tareas que necesitan tiempo de maduración." },

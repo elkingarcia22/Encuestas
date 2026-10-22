@@ -8,7 +8,6 @@ import {
   AttachmentContent,
   AttachmentMedia,
   AttachmentTitle,
-  Badge,
   Button,
   Checkbox,
   cn,
@@ -34,6 +33,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIa } from '@/shared/components/BotonIa'
 import { BotonMuestra } from '@/modules/admin/aprendizaje/lms-creator/compartido/boton-muestra'
 import { Composer } from '@/modules/admin/suite-ai/shared/composer'
@@ -319,7 +319,7 @@ export function ModalTransicion({ abierto, proyecto, indice, onCerrar, onGuardar
               onCerrar()
             }}
           >
-            Guardar
+            Guardar cambios
           </Button>
         </>
       }

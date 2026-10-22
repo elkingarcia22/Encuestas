@@ -103,7 +103,7 @@ export const GOVERNANCE_META: Readonly<Record<CicloObjectiveCreator, GovernanceM
     mode: "Centralizado",
     description: "Quien crea el ciclo escribe y reparte todas las metas.",
     yourPart: "Tu flujo sigue hasta dejar los objetivos asignados y alineados.",
-    finishLabel: "Finalizar",
+    finishLabel: "Crear ciclo",
   },
   leader: {
     icon: UserSettings01Icon,

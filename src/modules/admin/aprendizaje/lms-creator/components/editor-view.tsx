@@ -3,7 +3,6 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon, Cancel01Icon } from '@hugeicons/core-free-icons'
 import { useNavigate } from 'react-router'
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +21,7 @@ import {
   cn,
   useSidebar,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { useAgentPanelFocus } from './agent-focus'
 import { AgentPanel, type CardAnim } from './agent-panel'
@@ -35,6 +35,7 @@ import { Hint } from '@/shared/components/Hint'
 import { HeaderActions } from '@/shared/components/AppHeader'
 import { HEADER_ICON } from '@/shared/components/header-icon'
 import { notify } from '@/shared/components/notify'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 const ORIGINAL_DESC = 'Curso de inducción para el área operativa. Incluye normas de seguridad y uso de equipos.'
 const ALL_COMPS = ['Comunicación', 'Orientación al detalle', 'Prevención de riesgos', 'Liderazgo de turno']
@@ -112,7 +113,7 @@ export function EditorView() {
     setDesc(PROPOSALS[propIdx])
     setApplied(true)
     setDescTick((t) => t + 1)
-    notify('Descripción actualizada · nada más cambió')
+    notify('Descripción actualizada · nada más cambió', undefined, 'success')
   }
 
   // Estado de la barra lateral del marco: el editor deja libre su ancho (abierta 288px, cerrada 72px del riel).
@@ -146,7 +147,7 @@ export function EditorView() {
   const suggestion = () => {
     setAgentOpen(true)
     animateCard('nudge')
-    notify('Sugerencia lista en el panel del agente')
+    notify('Sugerencia lista en el panel del agente', undefined, 'info')
   }
 
   return (
@@ -215,7 +216,7 @@ export function EditorView() {
                     {savedName}
                   </Heading>
                   <Text as="div" variant="muted" className="mt-1">
-                    Contenido propio · {lessons.length} lecciones · última edición hace 3 min
+                    Contenido propio · {lessons.length} {plural(lessons.length, 'lección', 'lecciones')} · última edición hace 3 min
                   </Text>
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2 @min-[42rem]:pt-1.5">
@@ -225,11 +226,11 @@ export function EditorView() {
                   <Button
                     variant={published ? 'outline' : 'default'}
                     className={cn(WS_BUTTON, 'px-4.5!')}
-                    onClick={() => (published ? notify('Ya está publicado') : setConfirm(true))}
+                    onClick={() => (published ? notify('Ya está publicado', undefined, 'info') : setConfirm(true))}
                   >
                     {published ? 'Publicado' : 'Publicar'}
                   </Button>
-                  {/* Orbit Flow va siempre a la derecha de la fila, después del primario (18 sep). Con Previsualizar y Publicar son tres
+                  {/* Orbit va siempre a la derecha de la fila, después del primario (18 sep). Con Previsualizar y Publicar son tres
                       llamados a la acción: va solo con el orbe (regla del 5-oct, más de dos llamados). */}
                   {/* El botón del design system, no una copia: aquí había uno propio que además bajaba el peso del
                       texto a 400 cuando el botón trae 500 (18 sep). Solo se le pasa la animación de entrada. */}
@@ -334,7 +335,7 @@ export function EditorView() {
                             onClick={(event) => {
                               focusAfterRemove(event.currentTarget, i)
                               setLessons((l) => l.filter((_, j) => j !== i))
-                              notify('Lección quitada')
+                              notify('Lección quitada', undefined, 'success')
                             }}
                           >
                             <HugeiconsIcon icon={Cancel01Icon} strokeWidth={1.5} className="size-3.5!" />
@@ -349,7 +350,7 @@ export function EditorView() {
                         className={DASHED}
                         onClick={() => {
                           setLessons((l) => [...l, { title: 'Lección nueva', meta: 'Sin contenido' }])
-                          notify('Lección agregada al final')
+                          notify('Lección agregada al final', undefined, 'success')
                         }}
                       >
                         Agregar lección
@@ -364,7 +365,7 @@ export function EditorView() {
                       <div key={row.title} className="flex items-center gap-4 border-b border-border/60 px-4.5 py-4">
                         <div className="flex-1">
                           <div className="text-[15px]">{row.title}</div>
-                          <div className="mt-1 text-[13px] text-muted-foreground">{row.people} personas</div>
+                          <div className="mt-1 text-[13px] text-muted-foreground">{row.people} {plural(row.people, 'persona', 'personas')}</div>
                         </div>
                         {/* Interruptor en tinta como en el prototipo: se reapunta el primario al color del texto. */}
                         <Switch
@@ -384,7 +385,7 @@ export function EditorView() {
                     <div className="flex divide-x">
                       {[
                         [published ? '128' : '0', 'Inscritos'],
-                        [published ? '12%' : '—', 'Terminación'],
+                        [published ? '12 %' : '—', 'Terminación'],
                         [published ? '4,6' : '—', 'Satisfacción'],
                       ].map(([value, label]) => (
                         <div key={label} className="flex-1 px-5 py-4.5">
@@ -419,12 +420,12 @@ export function EditorView() {
             onUndo={() => {
               setDesc(ORIGINAL_DESC)
               setApplied(false)
-              notify('Cambio deshecho')
+              notify('Cambio deshecho', undefined, 'success')
             }}
             onOtherVersion={otherVersion}
             onClose={() => {
               setAgentOpen(false)
-              notify('Agente cerrado · se puede reabrir')
+              notify('Agente cerrado · se puede reabrir', undefined, 'info')
             }}
           />
               </AgentDock>
@@ -470,7 +471,7 @@ export function EditorView() {
         confirmLabel="Publicar"
         onConfirm={() => {
           setPublished(true)
-          notify('Contenido publicado · visible para 128 personas')
+          notify('Contenido publicado · visible para 128 personas', undefined, 'success')
         }}
       />
     </div>

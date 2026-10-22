@@ -22,10 +22,10 @@ import {
   ItemContent,
   ItemTitle,
   Text,
-  toast,
 } from '@ubits/flux-ui'
 import type { DataGridListConfig } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
+import { notify } from '@/shared/components/notify'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
@@ -33,6 +33,7 @@ import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
 import { fechaCorta, plural } from '@/modules/design-system/patrones/formato'
 import { pagina, resolver } from '@/modules/design-system/templates/admin-compartido/lista'
 import { MetricasDestacadas, type Metrica } from '@/shared/components/MetricasDestacadas'
+import { TextoCompleto } from '@/shared/components/TextoCompleto'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { ESTADOS, type Aviso } from './components/datos'
 import { archivarAviso, useAvisos } from './components/estado'
@@ -104,18 +105,22 @@ const COLUMNAS: DataGridListConfig<Aviso>['columns'] = [
   {
     accessorKey: 'titulo',
     header: 'Título del aviso',
-    size: 300,
+    // 13-oct (I-120): las nueve columnas suman 1.101 px y caben en los 1.104 del marco; el título se corta a dos renglones
+    // con «…» y se lee entero en el globo.
+    size: 180,
     ...SIN_ARRASTRE,
     cell: ({ row }) => (
-      <Text as="span" size="sm" weight="medium" className="line-clamp-2 whitespace-normal">
-        {row.original.titulo}
-      </Text>
+      <TextoCompleto texto={row.original.titulo}>
+        <Text as="span" size="sm" weight="medium" tabIndex={0} className="line-clamp-2 whitespace-normal">
+          {row.original.titulo}
+        </Text>
+      </TextoCompleto>
     ),
   },
   {
     accessorKey: 'fecha',
-    header: 'Fecha de publicación',
-    size: 170,
+    header: 'Publicación',
+    size: 130,
     ...SIN_ARRASTRE,
     // Un borrador no tiene fecha de publicación: no se inventa una, se dice que no está publicado.
     cell: ({ row }) =>
@@ -129,11 +134,13 @@ const COLUMNAS: DataGridListConfig<Aviso>['columns'] = [
         </Text>
       ),
   },
-  { accessorKey: 'autor', header: 'Autor', size: 200, ...SIN_ARRASTRE, cell: ({ row }) => <Persona nombre={row.original.autor} /> },
-  { accessorKey: 'estado', header: 'Estado', size: 140, ...SIN_ARRASTRE, cell: ({ row }) => <EstadoBadge estado={row.original.estado} /> },
-  { accessorKey: 'vistas', header: 'Visualizaciones', size: 150, ...SIN_ARRASTRE, cell: ({ row }) => numeroCelda(row.original.vistas) },
-  { accessorKey: 'likes', header: 'Likes', size: 110, ...SIN_ARRASTRE, cell: ({ row }) => numeroCelda(row.original.likes) },
-  { accessorKey: 'clics', header: 'Clicks', size: 110, ...SIN_ARRASTRE, cell: ({ row }) => numeroCelda(row.original.clics) },
+  { accessorKey: 'autor', header: 'Autor', size: 155, ...SIN_ARRASTRE, cell: ({ row }) => <Persona nombre={row.original.autor} /> },
+  { accessorKey: 'estado', header: 'Estado', size: 120, ...SIN_ARRASTRE, cell: ({ row }) => <EstadoBadge estado={row.original.estado} /> },
+  // 14-oct (I-120): medido en pantalla, cada encabezado con orden y asidero ocupa más que su `size` y el marco real mide
+  // 1.079 px; las tres cifras van sin orden y «Vistas» abrevia el encabezado para que las nueve columnas quepan.
+  { accessorKey: 'vistas', header: 'Vistas', size: 110, enableSorting: false, ...SIN_ARRASTRE, cell: ({ row }) => numeroCelda(row.original.vistas) },
+  { accessorKey: 'likes', header: 'Likes', size: 80, enableSorting: false, ...SIN_ARRASTRE, cell: ({ row }) => numeroCelda(row.original.likes) },
+  { accessorKey: 'clics', header: 'Clicks', size: 80, enableSorting: false, ...SIN_ARRASTRE, cell: ({ row }) => numeroCelda(row.original.clics) },
   {
     id: 'acciones',
     header: 'Acciones',
@@ -141,14 +148,8 @@ const COLUMNAS: DataGridListConfig<Aviso>['columns'] = [
     enableSorting: false,
     enableResizing: false,
     ...SIN_ARRASTRE,
-    // Con las nueve columnas la tabla es más ancha que el marco de 1.140 px (solo los encabezados con su orden, filtro y
-    // asidero ocupan ~1.400 px), y la RN-02 pide que todas se puedan ocultar, no que falten. El menú de la fila va
-    // siempre a la vista: se queda pegado a la derecha mientras el resto se desplaza. Se fuerza con «!» porque la
-    // librería deja el estilo en línea; el borde izquierdo es el mismo de sus columnas fijadas.
-    meta: {
-      headerClassName: 'sticky! right-0 z-10 bg-card shadow-[inset_1px_0_0_0_var(--border)]',
-      cellClassName: 'sticky! right-0 z-10 bg-card shadow-[inset_1px_0_0_0_var(--border)]',
-    },
+    // 13-oct (I-120): las nueve columnas ya caben en el marco, así que el menú de la fila no necesita quedarse pegado a la
+    // derecha: se ve siempre sin desplazar la tabla. La RN-02 sigue: todas se pueden ocultar desde la configuración.
     cell: ({ row }) => <MenuDeFila aviso={row.original} />,
   },
 ]
@@ -266,11 +267,7 @@ export function Component() {
   const archivar = () => {
     if (!archivando) return
     archivarAviso(archivando.id)
-    toast.add({
-      type: 'success',
-      title: 'Aviso archivado',
-      description: `«${archivando.titulo}» ya no se ve en el inicio de los colaboradores.`,
-    })
+    notify('Aviso archivado', `«${archivando.titulo}» ya no se ve en el inicio de los colaboradores.`, 'success')
     setArchivando(null)
   }
 
@@ -367,6 +364,8 @@ export function Component() {
                 resultCount: () => `${numero(resultado.length)} de ${numero(avisos.length)} ${plural(avisos.length, 'aviso', 'avisos')}`,
               },
               globalTotal: resultado.length,
+              // Las columnas suman lo que mide el marco: sin cambio de ancho para que no se salgan de él.
+              layout: { resizable: false, reorderable: false },
             }}
           />
           )}

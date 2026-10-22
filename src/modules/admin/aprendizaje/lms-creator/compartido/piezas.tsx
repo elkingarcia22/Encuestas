@@ -6,6 +6,7 @@ import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import { CATEGORIAS, INSIGNIA_VISIBILIDAD, TIPOS_PAGINA, type Contenido, type Portada, type TipoPagina, type TonoPortada, type Visibilidad } from './datos'
 import { useCreditos } from './store'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Las piezas pequeñas que repiten las tres exploraciones: la portada, la insignia de visibilidad, el icono de cada tipo
 // de página y el saldo de créditos de IA.
@@ -112,7 +113,7 @@ export function SaldoCreditos({ className }: { className?: string }) {
     <Hint label="Créditos de IA de tu empresa para LMS Creator. Subir archivos y pegar enlaces no gasta créditos." side="bottom">
       <Badge variant="outline" size="default" className={cn('gap-1.5 tabular-nums', className)}>
         <IconoIA />
-        {saldo.toLocaleString('es-CO')} créditos
+        {saldo.toLocaleString('es-CO')} {plural(saldo, 'crédito', 'créditos')}
       </Badge>
     </Hint>
   )
@@ -121,6 +122,6 @@ export function SaldoCreditos({ className }: { className?: string }) {
 // «50 créditos» junto a un botón de IA: lo que cuesta antes de pulsarlo.
 export function Costo({ creditos, className }: { creditos: number; className?: string }) {
   return (
-    <span className={cn('text-xs tabular-nums text-muted-foreground', className)}>{creditos ? `${creditos} créditos` : 'Gratis'}</span>
+    <span className={cn('text-xs tabular-nums text-muted-foreground', className)}>{creditos ? `${creditos} ${plural(creditos, 'crédito', 'créditos')}` : 'Gratis'}</span>
   )
 }

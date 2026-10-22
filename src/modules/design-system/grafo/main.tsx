@@ -3,7 +3,6 @@ import { Link, useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon, Copy01Icon, LinkSquare02Icon, Search01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Frame,
   FrameDescription,
@@ -22,6 +21,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { notify } from '@/shared/components/notify'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'

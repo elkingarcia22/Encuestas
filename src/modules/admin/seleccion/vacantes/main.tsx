@@ -17,7 +17,6 @@ import {
   UserQuestion01Icon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Field,
   FieldDescription,
@@ -36,6 +35,9 @@ import {
   TooltipProvider,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
+import { Badge } from '@/shared/components/Badge'
 import type { IconSvgElement } from '@hugeicons/react'
 import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
 import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
@@ -191,7 +193,7 @@ export function Component() {
   useEffect(() => {
     if (!recienPublicada || avisoPublicada.current) return
     avisoPublicada.current = true
-    notify(`Publicamos «${recienPublicada.titulo}»`, 'Ya recibe candidatos. Comparte el enlace para empezar.')
+    notify(`Publicamos «${recienPublicada.titulo}»`, 'Ya recibe candidatos. Comparte el enlace para empezar.', 'success')
     navigate(location.pathname, { replace: true, state: null })
   }, [recienPublicada, navigate, location.pathname])
 
@@ -257,11 +259,7 @@ export function Component() {
       navigate('/admin/seleccion/vacantes/crear', { state: { desdePlantilla: plantilla.id } })
       return
     }
-    toast.add({
-      type: 'info',
-      title: `Usarías «${plantilla.nombre}»`,
-      description: `Punto de partida con el perfil y las ${plantilla.etapas} etapas del proceso ya armadas.`,
-    })
+    notify(`Usarías «${plantilla.nombre}»`, `Punto de partida con el perfil y las ${plantilla.etapas} etapas del proceso ya armadas.`, 'info')
     setCatalogoAbierto(false)
   }
 
@@ -299,9 +297,9 @@ export function Component() {
   const ejecutar = (accion: AccionFila, vacante: VacanteLista) => {
     if (accion === 'abrir') navigate(rutaVacante(vacante.id))
     if (accion === 'editar') toast.add({ type: 'info', title: 'Editar vacante', description: `Aquí se abriría el formulario de «${vacante.titulo}».` })
-    if (accion === 'duplicar') toast.add({ type: 'success', title: 'Vacante duplicada', description: `Creamos un borrador a partir de «${vacante.titulo}».` })
+    if (accion === 'duplicar') notify('Vacante duplicada', `Creamos un borrador a partir de «${vacante.titulo}».`, 'success')
     if (accion === 'compartir') setCompartir(vacante)
-    if (accion === 'pausar') toast.add({ type: 'success', title: 'Publicación pausada', description: `«${vacante.titulo}» deja de recibir candidatos.` })
+    if (accion === 'pausar') notify('Publicación pausada', `«${vacante.titulo}» deja de recibir candidatos.`, 'success')
     if (accion === 'eliminar') {
       setTextoEliminar('')
       setPorEliminar([vacante])
@@ -312,22 +310,22 @@ export function Component() {
   const cuantas = (n: number) => `${numero(n)} ${plural(n, 'vacante', 'vacantes')}`
 
   const duplicarVarias = (vacantes: VacanteLista[]) => {
-    toast.add({ type: 'success', title: `Duplicamos ${cuantas(vacantes.length)}`, description: 'Quedaron como borradores para que las ajustes antes de publicar.' })
+    notify(`Duplicamos ${cuantas(vacantes.length)}`, 'Quedaron como borradores para que las ajustes antes de publicar.', 'success')
     soltarSeleccion()
   }
 
   const pausarVarias = (vacantes: VacanteLista[]) => {
     const publicadas = vacantes.filter((vacante) => vacante.estado === 'Publicada')
     if (publicadas.length === 0) {
-      toast.add({ type: 'info', title: 'Ninguna está publicada', description: 'Solo se pausan las vacantes que están recibiendo candidatos.' })
+      notify('Ninguna está publicada', 'Solo se pausan las vacantes que están recibiendo candidatos.', 'info')
       return
     }
     setFilas((actuales) => actuales.map((vacante) => (publicadas.some((p) => p.id === vacante.id) ? { ...vacante, estado: 'Pausada' } : vacante)))
-    toast.add({
-      type: 'success',
-      title: `Pausamos ${cuantas(publicadas.length)}`,
-      description: publicadas.length < vacantes.length ? `Las otras ${numero(vacantes.length - publicadas.length)} no estaban publicadas.` : 'Dejan de recibir candidatos.',
-    })
+    notify(
+      `Pausamos ${cuantas(publicadas.length)}`,
+      publicadas.length < vacantes.length ? `Las otras ${numero(vacantes.length - publicadas.length)} no estaban publicadas.` : 'Dejan de recibir candidatos.',
+      'success',
+    )
     soltarSeleccion()
   }
 
@@ -340,11 +338,8 @@ export function Component() {
     if (!porEliminar) return
     const ids = new Set(porEliminar.map((vacante) => vacante.id))
     setFilas((actuales) => actuales.filter((v) => !ids.has(v.id)))
-    toast.add(
-      unaPorEliminar
-        ? { type: 'success', title: 'Vacante eliminada', description: `«${unaPorEliminar.titulo}» y su historial ya no están disponibles.` }
-        : { type: 'success', title: `Eliminamos ${cuantas(porEliminar.length)}`, description: 'Sus aplicaciones y su historial ya no están disponibles.' },
-    )
+    if (unaPorEliminar) notify('Vacante eliminada', `«${unaPorEliminar.titulo}» y su historial ya no están disponibles.`, 'success')
+    else notify(`Eliminamos ${cuantas(porEliminar.length)}`, 'Sus aplicaciones y su historial ya no están disponibles.', 'success')
     setPorEliminar(null)
     soltarSeleccion()
   }
@@ -484,24 +479,23 @@ export function Component() {
     ],
     emptyState: (busqueda || filtros.length > 0)
       ? {
+          // Vacíos con su ilustración glass (13-oct): sin resultados con «Limpiar», o todavía nada.
           type: 'no-results',
-          title: 'No encontramos vacantes',
-          description: 'Ninguna vacante coincide con tu búsqueda o con los filtros elegidos.',
-          action: {
-            id: 'limpiar',
-            label: 'Limpiar filtros',
-            variant: 'outline',
-            onClick: () => {
-              setBusqueda('')
-              setFiltros([])
-              setActual(1)
-            },
-          },
+          customComponent: (
+            <SinResultados
+              busqueda={busqueda}
+              filtrosActivos={filtros.length}
+              onLimpiar={() => {
+                setBusqueda('')
+                setFiltros([])
+                setActual(1)
+              }}
+            />
+          ),
         }
       : {
           type: 'empty',
-          title: 'Todavía no hay vacantes',
-          description: 'Crea la primera vacante para empezar.',
+          customComponent: <PrimeraVez icono="glass-bag" titulo="Todavía no hay vacantes" descripcion="Crea la primera vacante para empezar." />,
         },
     layout: {
       reorderable: true,
@@ -569,7 +563,6 @@ export function Component() {
         <DialogoCompartirVacante
           abierto
           onAbiertoChange={(abierto) => !abierto && setCompartir(null)}
-          id={compartir.id}
           titulo={compartir.titulo}
           conEnlace={compartir.estado === 'Publicada'}
           equipo={equipoDe(compartir)}

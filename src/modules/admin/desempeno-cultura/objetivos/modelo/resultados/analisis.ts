@@ -63,9 +63,9 @@ export function analizar(r: ResultadosCiclo): { resumen: string; lecturas: Lectu
   if (conAvance.length) {
     agregar({
       kind: 'finding',
-      title: `${pct(r.enMeta, r.objetivos)}% de los objetivos ya llegó a su meta`,
+      title: `${pct(r.enMeta, r.objetivos)} % de los objetivos ya llegó a su meta`,
       body: r.abierto ? 'Es lo que ya está asegurado. Lo demás depende del ritmo de aquí al cierre.' : 'Es la lectura final del ciclo: lo que llegó y lo que se quedó en el camino.',
-      evidence: `${plural(r.enMeta, 'objetivo', 'objetivos')} con cumplimiento de 100% o más, de ${plural(r.objetivos, 'objetivo', 'objetivos')} del ciclo.`,
+      evidence: `${plural(r.enMeta, 'objetivo', 'objetivos')} con cumplimiento de 100 % o más, de ${plural(r.objetivos, 'objetivo', 'objetivos')} del ciclo.`,
       confidence: confianza(personas),
     })
   }
@@ -75,7 +75,7 @@ export function analizar(r: ResultadosCiclo): { resumen: string; lecturas: Lectu
       kind: diferencia >= 0 ? 'finding' : 'risk',
       title: diferencia >= 0 ? `El avance va ${diferencia} puntos por delante del calendario` : `El avance va ${-diferencia} puntos por detrás del calendario`,
       body: diferencia >= 0 ? 'Al ritmo de hoy el ciclo llega a su meta antes del cierre.' : `Para cerrar en meta, lo que falta tiene que moverse más rápido en los ${plural(r.diasRestantes, 'día', 'días')} que quedan.`,
-      evidence: `Avance general ${formatoAvance(r.avanceGeneral)} frente a ${r.calendario}% del calendario corrido.`,
+      evidence: `Avance general ${formatoAvance(r.avanceGeneral)} frente a ${r.calendario} % del calendario corrido.`,
       confidence: confianza(r.reportaron),
     })
   }
@@ -87,14 +87,14 @@ export function analizar(r: ResultadosCiclo): { resumen: string; lecturas: Lectu
       kind: 'finding',
       title: `El ciclo se mide sobre todo con ${MEDIDAS[medida].toLowerCase()}`,
       body: 'Cuando casi todo se mide igual, el ciclo pierde lo que las otras medidas cuentan: un hito dice si algo se hizo, un número dice cuánto.',
-      evidence: `${pct(cuantos ?? 0, entradas.length)}% de los objetivos se mide con ${MEDIDAS[medida].toLowerCase()}.`,
+      evidence: `${pct(cuantos ?? 0, entradas.length)} % de los objetivos se mide con ${MEDIDAS[medida].toLowerCase()}.`,
       confidence: 'high',
     })
   }
   const alineados = entradas.filter((e) => e.objetivo.empresa !== null).length
   agregar({
     kind: 'finding',
-    title: `${pct(alineados, entradas.length)}% de los objetivos empuja un objetivo de empresa`,
+    title: `${pct(alineados, entradas.length)} % de los objetivos empuja un objetivo de empresa`,
     body: pct(alineados, entradas.length) >= 70 ? 'La mayor parte del esfuerzo del ciclo va hacia la estrategia.' : 'Una parte grande del esfuerzo no se sabe a qué objetivo de empresa ayuda.',
     evidence: `${plural(alineados, 'objetivo alineado', 'objetivos alineados')} de ${entradas.length.toLocaleString('es-CO')}.`,
     confidence: 'high',
@@ -107,7 +107,7 @@ export function analizar(r: ResultadosCiclo): { resumen: string; lecturas: Lectu
       kind: 'risk',
       title: `${plural(alto, 'persona está', 'personas están')} en riesgo alto de no cumplir`,
       body: 'Van 25 puntos o más por detrás del calendario. Sin una conversación con su líder, es poco probable que lleguen.',
-      evidence: `${pct(alto, personas)}% de las personas del ciclo con una brecha de 25 puntos o más frente al calendario.`,
+      evidence: `${pct(alto, personas)} % de las personas del ciclo con una brecha de 25 puntos o más frente al calendario.`,
       confidence: confianza(alto),
     })
   }
@@ -117,7 +117,7 @@ export function analizar(r: ResultadosCiclo): { resumen: string; lecturas: Lectu
       kind: 'risk',
       title: `${plural(sinReporte, 'persona no ha', 'personas no han')} reportado ningún avance`,
       body: 'Sin reportes el avance del ciclo se calcula sobre menos gente de la que lo lleva, y la cifra se ve mejor de lo que es.',
-      evidence: `${pct(sinReporte, personas)}% de las personas sin ningún objetivo con avance.`,
+      evidence: `${pct(sinReporte, personas)} % de las personas sin ningún objetivo con avance.`,
       confidence: confianza(personas),
     })
   }
@@ -125,9 +125,9 @@ export function analizar(r: ResultadosCiclo): { resumen: string; lecturas: Lectu
   if (pct(pasados, conAvance.length) >= 10) {
     agregar({
       kind: 'risk',
-      title: `${pct(pasados, conAvance.length)}% de los objetivos pasó del 125% de su meta`,
+      title: `${pct(pasados, conAvance.length)} % de los objetivos pasó del 125 % de su meta`,
       body: 'Sobrecumplir tanto suele decir que la meta quedó corta. Conviene revisarla antes del próximo ciclo.',
-      evidence: `${plural(pasados, 'objetivo', 'objetivos')} por encima de 125% de cumplimiento.`,
+      evidence: `${plural(pasados, 'objetivo', 'objetivos')} por encima de 125 % de cumplimiento.`,
       confidence: confianza(pasados),
     })
   }
@@ -160,7 +160,7 @@ export function analizar(r: ResultadosCiclo): { resumen: string; lecturas: Lectu
       kind: 'recommendation',
       title: `Pedir una línea de contexto en los ${mudos.toLocaleString('es-CO')} objetivos que avanzan sin conversación`,
       body: 'Un avance sin comentario dice cuánto, pero no por qué. Una línea del colaborador o de su líder basta para leerlo.',
-      evidence: `${pct(mudos, conAvance.length)}% de los objetivos con avance no tiene ningún comentario.`,
+      evidence: `${pct(mudos, conAvance.length)} % de los objetivos con avance no tiene ningún comentario.`,
       confidence: confianza(mudos),
     })
   }
@@ -184,8 +184,8 @@ export function analizar(r: ResultadosCiclo): { resumen: string; lecturas: Lectu
   }
 
   const resumen = [
-    `${r.ciclo.nombre} ${r.abierto ? 'va' : 'cerró'} en ${formatoAvance(r.avanceGeneral)} de avance general, con ${pct(r.enMeta, r.objetivos)}% de los objetivos en meta.`,
-    r.abierto ? (r.avanceGeneral >= r.calendario ? 'El ritmo alcanza para llegar al cierre.' : `El ritmo va por detrás del calendario (${r.calendario}% corrido).`) : '',
+    `${r.ciclo.nombre} ${r.abierto ? 'va' : 'cerró'} en ${formatoAvance(r.avanceGeneral)} de avance general, con ${pct(r.enMeta, r.objetivos)} % de los objetivos en meta.`,
+    r.abierto ? (r.avanceGeneral >= r.calendario ? 'El ritmo alcanza para llegar al cierre.' : `El ritmo va por detrás del calendario (${r.calendario} % corrido).`) : '',
     mayor && mayor.brecha >= BRECHA_QUE_CONTAR ? `La mayor diferencia está por ${mayor.etiqueta.toLowerCase()}: ${mayor.bajo.grupo} es el grupo más rezagado.` : 'No hay brechas grandes entre grupos.',
     bloqueados > 0 ? `Hay ${plural(bloqueados, 'objetivo', 'objetivos')} sin aprobar que todavía no cuentan.` : '',
   ]

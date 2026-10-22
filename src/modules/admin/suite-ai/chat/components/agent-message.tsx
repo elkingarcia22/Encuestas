@@ -52,6 +52,12 @@ type AgentMessageProps = {
   body?: ReactNode
   // «Regenerar» propio: la respuesta se vuelve a pedir con los datos de ahora (sin `alternates`).
   onRegenerate?: () => void
+  // Lo que acompaña la respuesta usa todo el ancho de la conversación (un tablero que arma la IA en «Habla con tus
+  // datos»); la frase se queda en su ancho de lectura.
+  wide?: boolean
+  // Detener desde fuera (el botón de enviar convertido en «Detener»): cada vez que cambia, la escritura se corta donde va.
+  // Con él, la respuesta no lleva su propio «Detener» debajo.
+  stopSignal?: number
 }
 
 const ACTION = 'size-8! min-w-8! px-0! text-muted-foreground hover:text-foreground'
@@ -75,6 +81,8 @@ export function AgentMessage({
   regions,
   body,
   onRegenerate,
+  wide = false,
+  stopSignal,
 }: AgentMessageProps) {
   const bodyRef = useRef<HTMLDivElement>(null)
   // Lo que dice la respuesta, para copiarla o leerla: con `body`, lo que se ve.
@@ -133,6 +141,14 @@ export function AgentMessage({
     }
   }, [streaming])
 
+  // «Detener» desde fuera: solo cuenta un cambio después de montarse (el valor con el que llegó no detiene nada). Se
+  // ajusta al dibujar, no en un efecto, para no pintar una palabra de más.
+  const [stopSeen, setStopSeen] = useState(stopSignal)
+  if (stopSignal !== stopSeen) {
+    setStopSeen(stopSignal)
+    if (streaming) setStopped((all) => ({ ...all, [index]: shown }))
+  }
+
   // Lector de pantalla: la respuesta se anuncia completa cuando termina de escribirse (no palabra por palabra) y el
   // aviso se vacía después para que al recorrer el chat no se lea dos veces.
   const finished = Boolean(streamed[index]) && !streaming && !regenerating
@@ -160,7 +176,7 @@ export function AgentMessage({
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1600)
     } catch {
-      notify('No se pudo copiar la respuesta')
+      notify('No se pudo copiar la respuesta', undefined, 'error')
     }
   }
 
@@ -173,7 +189,7 @@ export function AgentMessage({
     })
     if (next === 'up') {
       setFeedbackFor(null)
-      if (pressed) notify('Gracias. Marcaste la respuesta como útil')
+      if (pressed) notify('Gracias. Marcaste la respuesta como útil', undefined, 'success')
     } else {
       setPreset(undefined)
       setFeedbackFor(pressed && !sent[index] ? index : null)
@@ -188,7 +204,7 @@ export function AgentMessage({
   const speak = () => {
     const synth = window.speechSynthesis
     if (!synth) {
-      notify('Tu navegador no puede leer en voz alta')
+      notify('Tu navegador no puede leer en voz alta', undefined, 'error')
       return
     }
     if (speaking) {
@@ -243,13 +259,13 @@ export function AgentMessage({
   return (
     <Message data-region={regions?.message} className="group/agent gap-3">
       <Orb className="mt-0.5 size-6 shrink-0" />
-      <MessageContent className="min-w-0 flex-1 max-w-2xl">
+      <MessageContent className={cn('min-w-0 flex-1', !wide && 'max-w-2xl')}>
         {body !== undefined ? (
           <div ref={bodyRef}>{body}</div>
         ) : regenerating ? (
           <AiThinking orb={false} size="md" label="Generando otra versión…" />
         ) : (
-          <div className="text-base leading-relaxed text-pretty" aria-busy={streaming}>
+          <div className={cn('text-base leading-relaxed text-pretty', wide && 'max-w-2xl')} aria-busy={streaming}>
             {words.slice(0, shown).join(' ')}
             {streaming ? <span aria-hidden="true" className={styles.caret} /> : null}
           </div>
@@ -263,7 +279,7 @@ export function AgentMessage({
           {announce}
         </span>
 
-        {streaming ? (
+        {streaming && stopSignal === undefined ? (
           <div className="mt-2">
             <Button
               variant="outline"
@@ -358,19 +374,23 @@ export function AgentMessage({
             >
               <HugeiconsIcon icon={ThumbsDownIcon} className={cn('size-4', vote === 'down' && '[&_path]:fill-foreground/20')} />
             </MessageTip>
-            <MessageTip
-              label="Regenerar"
-              render={
-                <BotonIcono
-                  ref={regenerateRef}
-                  className={ACTION}
-                  aria-label="Generar otra versión"
-                  onClick={regenerate}
-                />
-              }
-            >
-              <HugeiconsIcon icon={RefreshIcon} className="size-4" />
-            </MessageTip>
+            {/* Sin otra versión que mostrar ni cómo pedirla de nuevo, no hay qué regenerar (las respuestas armadas con
+                piezas del agente contextual). */}
+            {onRegenerate || details.alternates.length ? (
+              <MessageTip
+                label="Regenerar"
+                render={
+                  <BotonIcono
+                    ref={regenerateRef}
+                    className={ACTION}
+                    aria-label="Generar otra versión"
+                    onClick={regenerate}
+                  />
+                }
+              >
+                <HugeiconsIcon icon={RefreshIcon} className="size-4" />
+              </MessageTip>
+            ) : null}
 
             {versions.length > 1 ? (
               <div role="group" aria-label="Versiones de la respuesta" className="flex items-center text-[13px] text-muted-foreground tabular-nums">
@@ -415,11 +435,11 @@ export function AgentMessage({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-66">
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => notify('Enlace a esta respuesta copiado')}>
+                  <DropdownMenuItem onClick={() => notify('Enlace a esta respuesta copiado', undefined, 'success')}>
                     <HugeiconsIcon icon={Share08Icon} className="size-4" />
                     Compartir respuesta
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => notify('Tarea creada en Herramientas › Tareas')}>
+                  <DropdownMenuItem onClick={() => notify('Tarea creada en Herramientas › Tareas', undefined, 'success')}>
                     <HugeiconsIcon icon={TaskAdd01Icon} className="size-4" />
                     Crear tarea con esta respuesta
                   </DropdownMenuItem>
@@ -449,7 +469,7 @@ export function AgentMessage({
               downRef.current?.focus()
               setSent((all) => ({ ...all, [index]: true }))
               setFeedbackFor(null)
-              notify('Comentario enviado')
+              notify('Comentario enviado', undefined, 'success')
             }}
           />
         ) : null}

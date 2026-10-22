@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useBlocker, useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft01Icon, ArrowRight01Icon, Logout01Icon, Tick02Icon, ViewIcon } from '@hugeicons/core-free-icons'
+import { Logout01Icon, Tick02Icon, ViewIcon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Stepper,
@@ -18,7 +18,7 @@ import {
 import { STEP_INDICATOR, STEP_LINE } from '@/modules/design-system/drawers/components/drawer-styles'
 import { ChipGuardado, useGuardadoSimulado } from '@/shared/components/ChipGuardado'
 import { notify } from '@/shared/components/notify'
-import { PageActionBar, PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
+import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import {
   BASE_LMS,
   RUTA_CONTENIDOS,
@@ -42,7 +42,7 @@ import {
   type Portada,
 } from './borrador'
 import { ANCLA_AJUSTES } from './ajustes'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { VentanaSalir } from '@/modules/design-system/navegacion/boton-salir-creacion'
 import { DOS_COLUMNAS_RESUMEN } from './columna'
 import { borradorDemo, estaVacio, rutaDemo } from './demo'
 import { sinTocar } from './borrador'
@@ -55,11 +55,12 @@ import { PasoRecursos } from './paso-recursos'
 import { publicarContenido } from './publicar'
 import { useRecursos } from './recursos'
 import { ResumenContenido } from './resumen-contenido'
+import { BarraPasos } from '@/modules/design-system/navegacion/barra-pasos'
 
 // LMS Creator › Crear contenido, Crear evento y Crear ruta: **un solo asistente**, tres clases (`ClaseCreacion`). La
 // experiencia definitiva,
 // inspirada en la P2 y en «Crear vacante» de Cristian. Va dentro del marco normal de la plataforma (con la barra
-// lateral) y es un asistente de cuatro pasos —Información básica, Recursos, Certificado y Ajustes— con el resumen
+// lateral) y es un asistente de cuatro pasos —Información general, Recursos, Certificado y Ajustes— con el resumen
 // «Vista previa» a la derecha. Al terminar, el contenido queda creado en borrador y la pantalla final ofrece
 // publicarlo.
 //
@@ -75,7 +76,7 @@ import { ResumenContenido } from './resumen-contenido'
 const pasosDe = (clase: ClaseCreacion) =>
   [
     {
-      nombre: 'Información básica',
+      nombre: 'Información general',
       descripcion:
         clase === 'ruta'
           ? 'Los datos con los que el colaborador ve y encuentra la ruta.'
@@ -432,7 +433,17 @@ export function AsistenteContenido({ clase = 'contenido' }: { clase?: ClaseCreac
                   En una ruta todavía no: una ruta no tiene páginas propias, sino contenidos, y recorrerla es recorrer
                   cada uno de ellos. */}
               {!ruta ? (
-                <Button variant="outline" onClick={() => navigate(`${BASE_LMS}/vista-colaborador?volver=${encodeURIComponent(window.location.hash)}`)}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Se va con la página que se está editando, no a la portada: quien está en la séptima quiere ver
+                    // **esa**, y obligarle a recorrer las seis anteriores para comprobar un cambio no tiene sentido
+                    // (Dave, 14-oct). El id sale del hash, que es donde el asistente guarda dónde está.
+                    const hash = window.location.hash
+                    const pagina = hash.match(/\/page\/([^/?]+)/)?.[1]
+                    navigate(`${BASE_LMS}/vista-colaborador?volver=${encodeURIComponent(hash)}${pagina ? `&pagina=${pagina}` : ''}`)
+                  }}
+                >
                   <HugeiconsIcon icon={ViewIcon} size={16} aria-hidden="true" />
                   Vista del colaborador
                 </Button>
@@ -537,22 +548,19 @@ export function AsistenteContenido({ clase = 'contenido' }: { clase?: ClaseCreac
                 </StepperContent>
               </Stepper>
 
-              <PageActionBar className="mb-1">
-                {/* El estado del guardado vive junto a «Siguiente», que es donde se está mirando al avanzar. El
-                    guardado es automático: no hace falta un botón, basta con decir en qué va. Aparece en cuanto se
-                    escribe la primera cosa, también en el paso 1; antes de eso no hay nada que guardar. */}
-                {esBorrador ? <ChipGuardado estado={guardado} /> : <span />}
-                <div className="ml-auto flex items-center gap-2">
-                  <Button variant="outline" disabled={paso === 1} onClick={() => irAlPaso((paso - 1) as Paso)}>
-                    <HugeiconsIcon icon={ArrowLeft01Icon} size={16} aria-hidden="true" />
-                    Atrás
-                  </Button>
-                  <Button disabled={!validos[paso]} onClick={() => (ultimo ? crear() : irAlPaso((paso + 1) as Paso))}>
-                    {ultimo ? `Crear ${cosa}` : 'Continuar'}
-                    {ultimo ? null : <HugeiconsIcon icon={ArrowRight01Icon} size={16} aria-hidden="true" />}
-                  </Button>
-                </div>
-              </PageActionBar>
+              {/* La barra de los pasos del sistema (BarraPasos, 13-oct). El guardado es automático: no hace falta un
+                  botón, basta con decir en qué va. Aparece en cuanto se escribe la primera cosa, también en el paso 1. */}
+              <BarraPasos
+                className="mb-1"
+                inicio={esBorrador ? <ChipGuardado estado={guardado} /> : null}
+                paso={paso}
+                onAtras={() => irAlPaso((paso - 1) as Paso)}
+                principal={{
+                  texto: ultimo ? `Crear ${cosa}` : undefined,
+                  deshabilitado: !validos[paso],
+                  onClick: () => (ultimo ? crear() : irAlPaso((paso + 1) as Paso)),
+                }}
+              />
           </>
         </PageContent>
 
@@ -563,30 +571,24 @@ export function AsistenteContenido({ clase = 'contenido' }: { clase?: ClaseCreac
         {/* Salir del asistente. Una sola pregunta, y no es una advertencia: el contenido se guarda desde el primer
             paso, así que no hay nada que perder. Está para que nadie se salga por haber tocado el botón sin querer, y
             para contarle dónde quedó. Solo aparece si se escribió algo; si no, se sale de una (Carlos, 1-oct). */}
-        <DialogoConfirmar
+        <VentanaSalir
           abierto={confirmarSalida}
           onAbiertoChange={setConfirmarSalida}
-          icono={Logout01Icon}
-          titulo="¿Salir de la creación?"
-          descripcion={`${laEl} ${cosa} queda ${guardadoA} como borrador. Puedes retomarl${ruta ? 'a' : 'o'} cuando quieras desde Contenidos.`}
-          cancelar="Seguir aquí"
-          accion="Salir de la creación"
-          onConfirmar={() => {
+          borrador
+          mensaje={`${laEl} ${cosa} queda ${guardadoA} como borrador. Puedes retomarl${ruta ? 'a' : 'o'} cuando quieras desde Contenidos.`}
+          onSalir={() => {
             setConfirmarSalida(false)
             salir()
           }}
         />
 
         {/* La misma pregunta, para las salidas que no pasan por el botón (la barra lateral, «atrás» del navegador). */}
-        <DialogoConfirmar
+        <VentanaSalir
           abierto={salidaBloqueada !== null}
           onAbiertoChange={(abierto) => (abierto ? undefined : salidaBloqueada?.reset())}
-          icono={Logout01Icon}
-          titulo="¿Salir de la creación?"
-          descripcion={`${laEl} ${cosa} queda ${guardadoA} como borrador. Puedes retomarl${ruta ? 'a' : 'o'} cuando quieras desde Contenidos.`}
-          cancelar="Seguir aquí"
-          accion="Salir de la creación"
-          onConfirmar={() => salidaBloqueada?.proceed()}
+          borrador
+          mensaje={`${laEl} ${cosa} queda ${guardadoA} como borrador. Puedes retomarl${ruta ? 'a' : 'o'} cuando quieras desde Contenidos.`}
+          onSalir={() => salidaBloqueada?.proceed()}
         />
       </PageShell>
     </TooltipProvider>

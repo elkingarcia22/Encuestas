@@ -114,17 +114,20 @@ export function PiePaginacion({
         </Text>
       </div>
 
+      {/* Con una sola página no hay a dónde ir: sin «Anterior» ni «Siguiente» (regla «paginador-una-pagina», 13-oct). */}
       <Pagination className="mx-0 w-auto">
         <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              href="#"
-              text="Anterior"
-              aria-label="Página anterior"
-              aria-disabled={estado.pagina === 1}
-              onClick={irA(estado.pagina - 1)}
-            />
-          </PaginationItem>
+          {estado.paginas > 1 ? (
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                text="Anterior"
+                aria-label="Página anterior"
+                aria-disabled={estado.pagina === 1}
+                onClick={irA(estado.pagina - 1)}
+              />
+            </PaginationItem>
+          ) : null}
           {listaDePaginas(estado.pagina, estado.paginas).map((item, indice) =>
             item === 'salto' ? (
               <PaginationItem key={`salto-${indice}`}>
@@ -138,15 +141,17 @@ export function PiePaginacion({
               </PaginationItem>
             ),
           )}
-          <PaginationItem>
-            <PaginationNext
-              href="#"
-              text="Siguiente"
-              aria-label="Página siguiente"
-              aria-disabled={estado.pagina === estado.paginas}
-              onClick={irA(estado.pagina + 1)}
-            />
-          </PaginationItem>
+          {estado.paginas > 1 ? (
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                text="Siguiente"
+                aria-label="Página siguiente"
+                aria-disabled={estado.pagina === estado.paginas}
+                onClick={irA(estado.pagina + 1)}
+              />
+            </PaginationItem>
+          ) : null}
         </PaginationContent>
       </Pagination>
     </div>

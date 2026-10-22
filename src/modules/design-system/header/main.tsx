@@ -23,15 +23,15 @@ import { VerEnAccion } from '../patrones/piezas'
 const NOTE = 'text-[13px] leading-snug text-muted-foreground'
 
 const GUIDE = [
-  { title: 'Siempre igual', text: 'El mismo header en Workspace, Orbit y portal colaborador. Lo único que cambia es el título, que sale solo del menú.' },
-  { title: 'Pantalla enfocada', text: 'Cuando una tarea ocupa toda la pantalla, como el editor: migas en vez de título y, a la derecha, las mismas acciones del header general (Novedades, Notificaciones y Perfil). Sin buscador; «Orbit Flow» va junto al botón primario de la pantalla.' },
-  { title: 'Cuando falta espacio', text: 'Primero Novedades queda solo con su icono (header de menos de 920px); después el buscador pasa a lupa (menos de 664px). Nunca sale del centro.' },
+  { title: 'Siempre igual', text: 'El mismo header en Workspace, Orbit y portal colaborador: el botón del menú, la miga de pan y las acciones de la derecha. El nombre de la pantalla lo pone la página, no el header.' },
+  { title: 'Pantalla enfocada', text: 'Cuando una tarea ocupa toda la pantalla, como el editor: la miga de pan y, a la derecha, las mismas acciones del header general (Novedades, Notificaciones y Perfil). «Orbit» va junto al botón primario de la pantalla.' },
+  { title: 'Cuando falta espacio', text: 'Novedades queda solo con su icono (header de menos de 920px). El buscador quedó fuera del rediseño (7-oct): sigue en el encabezado actual y pasa a lupa en un header angosto, hasta que ingeniería lo retire.' },
 ]
 
 // Design system › Header: configurador de la barra de arriba. Se elige un caso de uso y se prende o apaga cada parte
-// (menú, título o migas, buscador, acciones, estados y ancho). La vista previa va arriba a lo ancho porque el header
-// es ancho y bajo; marca con nombre lo que es del header y deja como slot lo propio de cada pantalla.
-// El configurador vive dentro de «Marco» (Fundamentos) como pestaña; `conCabecera` lo deja también como página propia.
+// (menú, migas, acciones, estados y ancho; el buscador queda marcado como fuera del rediseño). La vista previa va arriba
+// a lo ancho porque el header es ancho y bajo; marca con nombre lo que es del header y deja como slot lo propio de cada
+// pantalla. El configurador vive dentro de «Marco» (Patrones) como pestaña; `conCabecera` lo deja también como página propia.
 export function ConfiguradorHeader({ conCabecera = false }: { conCabecera?: boolean } = {}) {
   const navigate = useNavigate()
   const [caseId, setCaseId] = useState(HEADER_CASES[0].id)
@@ -65,7 +65,7 @@ export function ConfiguradorHeader({ conCabecera = false }: { conCabecera?: bool
     <>
       {conCabecera ? (
         <PageHeader
-        kicker="Design system · Patrones"
+        kicker="Design system · Patrones · Marco"
         title="Header"
         description="La barra de arriba de cada pantalla. Arma uno pieza por pieza: lo azul con nombre es parte del header y se ve igual en todo el producto; lo gris rayado es un slot, lo propio de cada pantalla. El header de verdad está arriba de esta página: pásale el cursor y ábrele los menús."
         actions={
@@ -113,7 +113,7 @@ export function ConfiguradorHeader({ conCabecera = false }: { conCabecera?: bool
                   />
                   <span className={NOTE}>
                     {general
-                      ? 'Workspace, Orbit y portal: tres columnas, con el buscador siempre al centro.'
+                      ? 'Workspace, Orbit y portal: el menú con su miga de pan a la izquierda y las acciones a la derecha.'
                       : 'Una tarea a pantalla completa, como el editor: todo en una fila y sin buscador.'}
                   </span>
                 </ControlSection>
@@ -125,16 +125,16 @@ export function ConfiguradorHeader({ conCabecera = false }: { conCabecera?: bool
                     value={config.left}
                     onChange={set('left')}
                     options={[
-                      { value: 'title', label: 'Título' },
                       { value: 'crumbs', label: 'Migas de pan' },
                       { value: 'back', label: 'Volver y título' },
                     ]}
                   />
                 </ControlSection>
 
-                <ControlSection title="Buscador">
+                <ControlSection title="Buscador (fuera del rediseño)">
                   {general ? (
                     <>
+                      <span className={NOTE}>Quedó fuera del rediseño (7-oct): no se amplía ni se suma a pantallas nuevas. Se muestra solo porque el encabezado actual todavía lo trae.</span>
                       <Choice
                         value={config.search}
                         onChange={set('search')}
@@ -165,13 +165,14 @@ export function ConfiguradorHeader({ conCabecera = false }: { conCabecera?: bool
                       <SwitchRow label="Punto sin leer" checked={config.unread} onChange={set('unread')} />
                     </div>
                   ) : null}
+                  <SwitchRow label="Centro de procesos" checked={config.processes} onChange={set('processes')} />
                   <SwitchRow label="Perfil" checked={config.profile} onChange={set('profile')} />
                   {general ? (
-                    // 1 oct: ayuda pasó al menú de perfil y procesos se abre desde Notificaciones.
-                    <span className={NOTE}>Centro de ayuda vive en el menú de perfil y el Centro de procesos se abre desde Notificaciones: ninguno tiene botón propio.</span>
+                    // 1 oct: ayuda pasó al menú de perfil. 13 oct: procesos vuelve a tener su botón (Charlie).
+                    <span className={NOTE}>Centro de ayuda vive en el menú de perfil. El Centro de procesos tiene su botón a la derecha de Notificaciones y también se abre desde ellas.</span>
                   ) : (
                     <Text as="span" size="sm" variant="muted">
-                      «Orbit Flow» no va en el header: va al final de la fila de acciones, a la derecha del botón primario de la pantalla.
+                      «Orbit» no va en el header: va al final de la fila de acciones, a la derecha del botón primario de la pantalla.
                     </Text>
                   )}
                 </ControlSection>
@@ -195,7 +196,7 @@ export function ConfiguradorHeader({ conCabecera = false }: { conCabecera?: bool
                       { value: 'phone', label: 'Celular · 390px' },
                     ]}
                   />
-                  <span className={NOTE}>Mira debajo de la vista previa qué pasa con el buscador y Novedades a cada ancho.</span>
+                  <span className={NOTE}>Mira debajo de la vista previa qué pasa con Novedades a cada ancho.</span>
                 </ControlSection>
               </div>
             </div>

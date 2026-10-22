@@ -26,7 +26,7 @@ import {
 } from '@ubits/flux-ui'
 import { Badge } from '@/shared/components/Badge'
 import { FramePanel } from '@ubits/flux-ui'
-import { Marco } from '../../vacantes/detalle/candidato/components/piezas'
+import { Marco } from '@/modules/design-system/patrones/ficha'
 import { VEREDICTO_BADGE, VEREDICTO_TEXTO, type Criterio, type Veredicto } from '../datos'
 
 // Los requisitos de la vacante frente a la hoja de vida de una persona: qué concluyó la IA, de dónde lo sacó y

@@ -5,7 +5,6 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  Badge,
   Frame,
   FrameDescription,
   FrameHeader,
@@ -21,6 +20,7 @@ import {
   ItemTitle,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { questionTypeLabel, questionTypeMark, scaleTypeLabel } from '../../modelo/questionCatalog'
 import { countQuestions } from '../../modelo/sectionTree'
 import type { SurveyDraft, SurveyQuestion, SurveySection } from '../../modelo/surveyBuilderTypes'
@@ -58,12 +58,15 @@ function Cifra({ icono, valor, etiqueta }: { icono: IconSvgElement; valor: strin
 function Preguntas({ preguntas, desde = 1 }: { preguntas: readonly SurveyQuestion[]; desde?: number }) {
   if (preguntas.length === 0) return null
   return (
+    // gap-0!, px-0! y font-normal!: filas pegadas, a ras del panel y con el número en letra normal; el tema de la lista no
+    // se cambia con clases normales (ficha instalacion-estilos-sin-capa en ai-tools/flux-ui/diferencias.json).
     <ItemGroup className="gap-0!">
       {preguntas.map((pregunta, indice) => {
         const marca = questionTypeMark(pregunta.type, pregunta.type === 'scale' ? pregunta.scale.kind : null)
         return (
           <div key={pregunta.id}>
             {indice > 0 ? <ItemSeparator /> : null}
+            {/* px-0!: a ras del panel (ficha instalacion-estilos-sin-capa). */}
             <Item size="sm" className="items-start gap-3 px-0!">
               <ItemMedia>
                 <IconTile variant="soft" size="sm" className={TEXTO_POR_TONO[marca.tone]}>
@@ -71,6 +74,7 @@ function Preguntas({ preguntas, desde = 1 }: { preguntas: readonly SurveyQuestio
                 </IconTile>
               </ItemMedia>
               <ItemContent className="min-w-0">
+                {/* font-normal!: el enunciado en letra normal, no en la negrita del título (ficha instalacion-estilos-sin-capa). */}
                 <ItemTitle className="font-normal!">
                   <Text as="span" size="sm" variant="muted" className="tabular-nums">
                     {desde + indice}.
@@ -147,6 +151,8 @@ export function DetallePlantilla({ plantilla }: { plantilla: SurveyDraft }) {
         <Accordion defaultValue={plantilla.sections[0] ? [plantilla.sections[0].id] : []} className="gap-3">
           {plantilla.sections.map((seccion, indice) => (
             <Frame key={seccion.id}>
+              {/* border-0!, py-0! y pb-0!: el acordeón vive dentro del marco gris, que ya pone borde y aire; los del acordeón no
+                  se quitan con clases normales (ficha instalacion-estilos-sin-capa). */}
               <AccordionItem value={seccion.id} className="border-0!">
                 <FrameHeader className="py-0!">
                   <AccordionTrigger>
@@ -165,6 +171,7 @@ export function DetallePlantilla({ plantilla }: { plantilla: SurveyDraft }) {
                     </div>
                   </AccordionTrigger>
                 </FrameHeader>
+                {/* pb-0!: el aire de abajo lo pone el marco (ficha instalacion-estilos-sin-capa). */}
                 <AccordionContent className="pb-0!">
                   <FramePanel className="flex flex-col gap-4">
                     <Preguntas preguntas={seccion.questions} />

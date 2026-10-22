@@ -347,7 +347,7 @@ export const POOL: DatosDiapositiva[] = [
     tagLabel: 'Profundización',
     title: 'La regla de las 24 horas',
     body: 'Abordar una conversación difícil en las primeras 24 horas previene que las emociones se distorsionen y que los desacuerdos escalen silenciosamente.',
-    quoteHighlight: 'Nombrar los hechos en frío reduce el 70% del desgaste posterior en los equipos.',
+    quoteHighlight: 'Nombrar los hechos en frío reduce el 70 % del desgaste posterior en los equipos.',
     image: FOTO_DEMO,
     imagePosition: 'top',
   },
@@ -365,7 +365,7 @@ export const POOL: DatosDiapositiva[] = [
     type: 'keypoint',
     tagLabel: 'Dato clave',
     title: 'Por qué importa',
-    stat: '85%',
+    stat: '85 %',
     statement: 'de los equipos agravó un conflicto al no hablar a tiempo',
     desc: 'Actuar pronto reduce desgaste y recupera ritmo.',
     image: FOTO_DEMO,
@@ -375,7 +375,7 @@ export const POOL: DatosDiapositiva[] = [
     type: 'big_number',
     tagLabel: 'Métrica global',
     title: 'Impacto en productividad',
-    number: '85%',
+    number: '85 %',
     label: 'de los colaboradores',
     body: 'enfrentan desacuerdos en su entorno laboral. La clave está en cómo se gestionan.',
     source: 'Estudio Global de Gestión de Talento',
@@ -601,7 +601,7 @@ export function diapositivaDeEjemplo(type: string): DatosDiapositiva {
 
 /**
  * Plantilla vacía de un tipo (applyPlaceholderSlidesForPreview del prototipo): la estructura del ejemplo con textos
- * de relleno, para que el creador escriba el contenido. La usan «Añadir diapositiva» y el cambio de tipo.
+ * de relleno, para que el creador escriba el contenido. La usan «Agregar diapositiva» y el cambio de tipo.
  */
 export function plantillaVacia(type: string): DatosDiapositiva {
   const x = diapositivaDeEjemplo(type)
@@ -617,8 +617,8 @@ export function plantillaVacia(type: string): DatosDiapositiva {
   if (x.badgeSubtitle != null) x.badgeSubtitle = 'Idea clave sobre el contenido'
   if (x.statement != null) x.statement = b
   if (x.desc != null) x.desc = 'Descripción breve de apoyo.'
-  if (x.stat != null) x.stat = '00%'
-  if (x.type === 'big_number') x.number = '85%'
+  if (x.stat != null) x.stat = '00 %'
+  if (x.type === 'big_number') x.number = '85 %'
   if (x.label != null) x.label = 'de los participantes'
   if (x.source != null) x.source = 'Fuente del indicador'
   if (x.quoteHighlight != null) x.quoteHighlight = 'Cita destacada sobre el punto principal.'
@@ -802,7 +802,7 @@ export const OPCIONES_OBJETIVO = [
 export const TITULO_POR_DEFECTO = 'Presentación interactiva'
 
 /**
- * Título de la presentación (RN-01): el que se escribió en «Añadir página»; si la idea es un ejemplo, el nombre del
+ * Título de la presentación (RN-01): el que se escribió en «Agregar página»; si la idea es un ejemplo, el nombre del
  * ejemplo; si no, la primera línea de la idea (recortada para que quepa en la portada); sin idea, «Presentación
  * interactiva».
  */

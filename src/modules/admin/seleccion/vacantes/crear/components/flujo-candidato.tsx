@@ -4,7 +4,6 @@ import {
   ArrowDown01Icon,
   Delete02Icon,
   DragDropVerticalIcon,
-  Flowchart01Icon,
   PencilEdit02Icon,
   Settings02Icon,
 } from '@hugeicons/core-free-icons'
@@ -56,6 +55,7 @@ import { iconoDeCategoria } from './iconos-etapas'
 import { CampoNumero } from './piezas'
 import { pendienteEtapa, resumenEtapa, type AjustesCv, type EtapaFlujo } from './etapas'
 import { EtiquetaIA } from '@/modules/design-system/ia/etiqueta-ia'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 type Props = {
   etapas: EtapaFlujo[]
@@ -107,8 +107,8 @@ export function FlujoCandidato({ etapas, onEtapas, onConfigurar, onConfigurarCon
         {etapas.length === 0 ? (
           <Empty className="rounded-xl border border-dashed">
             <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <HugeiconsIcon icon={Flowchart01Icon} aria-hidden="true" />
+              <EmptyMedia variant="default">
+                <ImagenGlass nombre="glass-add" />
               </EmptyMedia>
               <EmptyTitle>El flujo está vacío</EmptyTitle>
               <EmptyDescription>

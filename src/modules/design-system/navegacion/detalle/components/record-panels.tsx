@@ -96,7 +96,7 @@ export function CandidatesPanel({ vacancy }: PanelProps) {
                 <Badge variant="secondary" className="tabular-nums">
                   {candidate.score} / 100
                 </Badge>
-                <Button variant="outline" size="sm" className={WS} onClick={() => notify(`Ficha de ${candidate.name}`)}>
+                <Button variant="outline" size="sm" className={WS} onClick={() => notify(`Ficha de ${candidate.name}`, undefined, 'info')}>
                   Ver ficha
                 </Button>
               </ItemActions>

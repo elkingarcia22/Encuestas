@@ -1,40 +1,27 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Alert02Icon, Search01Icon, WeightScaleIcon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, WeightScaleIcon } from '@hugeicons/core-free-icons'
 import {
   Alert,
   AlertAction,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
-  Checkbox,
   Field,
   FieldContent,
   FieldDescription,
   FieldLabel,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemSeparator,
-  ItemTitle,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
   Switch,
-  Text,
 } from '@ubits/flux-ui'
 import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
+import { FilaElegible, ListaElegible } from '@/modules/design-system/listas/lista-elegible'
+import { Badge } from '@/shared/components/Badge'
 import { SinResultados } from '@/shared/components/SinResultados'
-import { TextoCompleto } from '@/shared/components/TextoCompleto'
-import { Paginacion } from '../../../../encuestas/components/tabla-piezas'
 import { EncabezadoPaso } from '../../../../encuestas/components/pasos-drawer'
 import type { Collaborator } from '../../../../encuestas/modelo/collaborators'
 import { SEGMENT_LABELS, formatCount, segmentCounts } from '../../../../encuestas/modelo/participants'
@@ -42,9 +29,8 @@ import type { SegmentKey } from '../../../../encuestas/modelo/surveyBuilderTypes
 import { TOTAL_WEIGHT } from '../../../modelo/constructor/cicloBuilderTypes'
 import { sourceLabels, type PersonLoad } from '../../../modelo/constructor/weightConflicts'
 
-// Fase 1 del panel de asignación: a quién le llegan estos objetivos. Las listas son las de «Participantes» de Encuestas
-// (buscador, casilla de la página, «Ver elegidos», filas con casilla y paginador en español), armadas aquí porque las de
-// Encuestas escriben una selección de participantes y estas una lista de destinatarios: en grupos, el grupo que ya lleva
+// Fase 1 del panel de asignación: a quién le llegan estos objetivos. Las listas son la pieza del sistema ListaElegible, la
+// de «Participantes» de Encuestas (war room del 13-oct: lista y no tabla), con lo propio de los destinatarios: en grupos, el grupo que ya lleva
 // objetivos por otra asignación se puede marcar (sale «Ya tiene objetivos» y el choque se reparte con «Repartir el
 // peso»); en individual, quien ya está en otra asignación individual ni aparece. Arriba, el aviso de carga previa
 // cuando alguien de los marcados ya reparte peso por otra vía, y en grupos «Sincronizar con el grupo».
@@ -52,17 +38,6 @@ import { sourceLabels, type PersonLoad } from '../../../modelo/constructor/weigh
 const SEGMENTOS = (Object.entries(SEGMENT_LABELS) as [SegmentKey, string][]).map(([value, label]) => ({ value, label }))
 
 const enPagina = <T,>(lista: readonly T[], actual: number, porPagina: number) => lista.slice((actual - 1) * porPagina, actual * porPagina)
-
-function Buscador({ valor, onValor, placeholder }: { valor: string; onValor: (valor: string) => void; placeholder: string }) {
-  return (
-    <InputGroup className="min-w-56 flex-1">
-      <InputGroupAddon>
-        <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
-      </InputGroupAddon>
-      <InputGroupInput value={valor} onChange={(evento) => onValor(evento.target.value)} placeholder={placeholder} aria-label={placeholder} />
-    </InputGroup>
-  )
-}
 
 /** Lo que reparten ya las personas marcadas, con sus dos salidas: quedarse con el hueco libre o repartir su 100 %. */
 export function AvisoCargaPrevia({ cargas, libre, onRepartir, onUsarLibre }: { cargas: readonly PersonLoad[]; libre: number; onRepartir: () => void; onUsarLibre: () => void }) {
@@ -196,106 +171,92 @@ function ListaGrupos({
     onElegidos(todaLaPagina ? elegidos.filter((grupo) => !pagina.has(grupo)) : [...new Set([...elegidos, ...pagina])])
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Buscador
-          valor={busqueda}
-          onValor={(valor) => {
-            setBusqueda(valor)
-            setActual(1)
-          }}
-          placeholder="Busca un grupo por su nombre"
-        />
-        {/* Los grupos son de una sola categoría a la vez: cambiarla quita los elegidos. */}
-        <Select
-          value={segmentBy}
-          onValueChange={(valor) => {
-            onSegmentBy(valor as SegmentKey)
-            setActual(1)
-          }}
-          items={SEGMENTOS}
-        >
-          <SelectTrigger className="w-48" aria-label="Agrupar por">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SEGMENTOS.map((segmento) => (
-              <SelectItem key={segmento.value} value={segmento.value}>
-                {segmento.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+  // La lista para elegir del sistema (ListaElegible, la de Elkin en Participantes de Encuestas; war room del 13-oct).
+  const limpiar = () => {
+    setBusqueda('')
+    setSoloElegidos(false)
+    setActual(1)
+  }
 
-      {grupos.length === 0 ? (
-        // «Ver elegidos» cuenta como filtro: limpiar quita la búsqueda y vuelve a la lista completa.
-        <SinResultados
-          busqueda={busqueda}
-          filtrosActivos={soloElegidos ? 1 : 0}
-          onLimpiar={() => {
-            setBusqueda('')
-            setSoloElegidos(false)
-            setActual(1)
-          }}
-        />
-      ) : (
+  return (
+    <ListaElegible
+      id="asignacion-grupos"
+      nombre="grupos"
+      resumen={`${formatCount(grupos.length)} ${grupos.length === 1 ? 'grupo' : 'grupos'} por ${SEGMENT_LABELS[segmentBy].toLowerCase()}`}
+      buscador={{
+        valor: busqueda,
+        placeholder: 'Busca un grupo por su nombre',
+        onValor: (valor) => {
+          setBusqueda(valor)
+          setActual(1)
+        },
+      }}
+      herramientas={
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Checkbox checked={todaLaPagina} onCheckedChange={alternarPagina} aria-label="Marcar los grupos de esta página" />
-              <Text as="span" size="sm" variant="muted">
-                {formatCount(grupos.length)} {grupos.length === 1 ? 'grupo' : 'grupos'} por {SEGMENT_LABELS[segmentBy].toLowerCase()}
-              </Text>
-            </div>
-            <Button variant={soloElegidos ? 'secondary' : 'ghost'} size="sm" aria-pressed={soloElegidos} onClick={() => setSoloElegidos(!soloElegidos)}>
-              Ver elegidos ({formatCount(elegidos.length)})
-            </Button>
-          </div>
-          <ItemGroup className="gap-0! rounded-xl border">
-            {visibles.map(([grupo, cuantos], indice) => (
-              <div key={grupo}>
-                {indice > 0 ? <ItemSeparator /> : null}
-                <Item size="sm" className="gap-3" data-state={marcados.has(grupo) ? 'selected' : undefined}>
-                  <Checkbox checked={marcados.has(grupo)} onCheckedChange={() => alternar(grupo)} aria-label={`Marcar el grupo ${grupo}`} />
-                  <ItemContent>
-                    <TextoCompleto texto={grupo}>
-                      <ItemTitle className="truncate">{grupo}</ItemTitle>
-                    </TextoCompleto>
-                    <ItemDescription>
-                      {formatCount(cuantos)} {cuantos === 1 ? 'persona' : 'personas'}
-                    </ItemDescription>
-                  </ItemContent>
-                  {tomados.has(grupo) ? (
-                    <ItemActions>
-                      <Badge variant="warning-light" size="xs">
-                        <HugeiconsIcon icon={Alert02Icon} aria-hidden="true" />
-                        Ya tiene objetivos
-                      </Badge>
-                    </ItemActions>
-                  ) : null}
-                </Item>
-              </div>
-            ))}
-          </ItemGroup>
-          <Paginacion
-            id="asignacion-grupos"
-            actual={actual}
-            total={grupos.length}
-            porPagina={porPagina}
-            onCambiarPagina={setActual}
-            onCambiarPorPagina={(valor) => {
-              setPorPagina(valor)
+          {/* Los grupos son de una sola categoría a la vez: cambiarla quita los elegidos. */}
+          <Select
+            value={segmentBy}
+            onValueChange={(valor) => {
+              onSegmentBy(valor as SegmentKey)
               setActual(1)
             }}
-          />
+            items={SEGMENTOS}
+          >
+            <SelectTrigger className="w-48" aria-label="Agrupar por">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SEGMENTOS.map((segmento) => (
+                <SelectItem key={segmento.value} value={segmento.value}>
+                  {segmento.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant={soloElegidos ? 'secondary' : 'outline'}
+            aria-pressed={soloElegidos}
+            onClick={() => {
+              setSoloElegidos(!soloElegidos)
+              setActual(1)
+            }}
+          >
+            {soloElegidos ? 'Ver todos los grupos' : `Ver elegidos (${formatCount(elegidos.length)})`}
+          </Button>
         </>
-      )}
-    </div>
+      }
+      casillaPagina={{
+        marcada: todaLaPagina,
+        parcial: !todaLaPagina && visibles.some(([grupo]) => marcados.has(grupo)),
+        onCambio: alternarPagina,
+        etiqueta: 'Marcar los grupos de esta página',
+      }}
+      paginacion={{ pagina: actual, setPagina: setActual, porPagina, setPorPagina, total: grupos.length }}
+      // «Ver elegidos» cuenta como filtro: limpiar quita la búsqueda y vuelve a la lista completa.
+      vacio={<SinResultados busqueda={busqueda} filtrosActivos={soloElegidos ? 1 : 0} onLimpiar={limpiar} />}
+    >
+      {visibles.map(([grupo, cuantos]) => (
+        <FilaElegible
+          key={grupo}
+          marcada={marcados.has(grupo)}
+          onCambio={() => alternar(grupo)}
+          etiqueta={`Marcar el grupo ${grupo}`}
+          titulo={grupo}
+          detalle={`${formatCount(cuantos)} ${cuantos === 1 ? 'persona' : 'personas'}`}
+          resaltada
+          lateral={
+            tomados.has(grupo) ? (
+              <Badge variant="warning-light" size="xs">
+                <HugeiconsIcon icon={Alert02Icon} aria-hidden="true" />
+                Ya tiene objetivos
+              </Badge>
+            ) : undefined
+          }
+        />
+      ))}
+    </ListaElegible>
   )
 }
-
 const coincide = (persona: Collaborator, q: string) => `${persona.name} ${persona.username} ${persona.email} ${persona.area} ${persona.leader ?? ''}`.toLowerCase().includes(q)
 
 function ListaPersonas({ personas, elegidos, onElegidos }: { personas: readonly Collaborator[]; elegidos: readonly string[]; onElegidos: (elegidos: readonly string[]) => void }) {
@@ -316,16 +277,37 @@ function ListaPersonas({ personas, elegidos, onElegidos }: { personas: readonly 
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <Buscador
-        valor={busqueda}
-        onValor={(valor) => {
+    <ListaElegible
+      id="asignacion-personas"
+      nombre="personas"
+      buscador={{
+        valor: busqueda,
+        placeholder: 'Busca por nombre, usuario, correo, área o líder',
+        onValor: (valor) => {
           setBusqueda(valor)
           setActual(1)
-        }}
-        placeholder="Busca por nombre, usuario, correo, área o líder"
-      />
-      {resultado.length === 0 ? (
+        },
+      }}
+      herramientas={
+        <Button
+          variant={soloElegidos ? 'secondary' : 'outline'}
+          aria-pressed={soloElegidos}
+          onClick={() => {
+            setSoloElegidos(!soloElegidos)
+            setActual(1)
+          }}
+        >
+          {soloElegidos ? 'Ver todas las personas' : `Ver elegidas (${formatCount(elegidos.length)})`}
+        </Button>
+      }
+      casillaPagina={{
+        marcada: paginaCompleta,
+        parcial: !paginaCompleta && visibles.some((persona) => marcados.has(persona.id)),
+        onCambio: alternarPagina,
+        etiqueta: 'Seleccionar esta página',
+      }}
+      paginacion={{ pagina: actual, setPagina: setActual, porPagina, setPorPagina, total: resultado.length }}
+      vacio={
         <SinResultados
           busqueda={busqueda}
           filtrosActivos={soloElegidos ? 1 : 0}
@@ -335,50 +317,23 @@ function ListaPersonas({ personas, elegidos, onElegidos }: { personas: readonly 
             setActual(1)
           }}
         />
-      ) : (
-        <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Checkbox checked={paginaCompleta} onCheckedChange={alternarPagina} aria-label="Seleccionar esta página" />
-              <Text as="span" size="sm" variant="muted">
-                {formatCount(resultado.length)} {resultado.length === 1 ? 'persona' : 'personas'}
-              </Text>
-            </div>
-            <Button variant={soloElegidos ? 'secondary' : 'ghost'} size="sm" aria-pressed={soloElegidos} onClick={() => setSoloElegidos(!soloElegidos)}>
-              Ver elegidas ({formatCount(elegidos.length)})
-            </Button>
-          </div>
-          <ItemGroup className="gap-0! rounded-xl border">
-            {visibles.map((persona, indice) => (
-              <div key={persona.id}>
-                {indice > 0 ? <ItemSeparator /> : null}
-                <Item size="sm" className="gap-3" data-state={marcados.has(persona.id) ? 'selected' : undefined}>
-                  <Checkbox checked={marcados.has(persona.id)} onCheckedChange={() => alternar(persona.id)} aria-label={`Seleccionar a ${persona.name}`} />
-                  <ItemContent>
-                    <Persona nombre={persona.name} detalle={persona.email} />
-                  </ItemContent>
-                  <ItemActions>
-                    <Badge variant="outline" size="xs">
-                      {persona.area}
-                    </Badge>
-                  </ItemActions>
-                </Item>
-              </div>
-            ))}
-          </ItemGroup>
-          <Paginacion
-            id="asignacion-personas"
-            actual={actual}
-            total={resultado.length}
-            porPagina={porPagina}
-            onCambiarPagina={setActual}
-            onCambiarPorPagina={(valor) => {
-              setPorPagina(valor)
-              setActual(1)
-            }}
-          />
-        </>
-      )}
-    </div>
+      }
+    >
+      {visibles.map((persona) => (
+        <FilaElegible
+          key={persona.id}
+          marcada={marcados.has(persona.id)}
+          onCambio={() => alternar(persona.id)}
+          etiqueta={`Seleccionar a ${persona.name}`}
+          contenido={<Persona nombre={persona.name} detalle={persona.email} />}
+          resaltada
+          lateral={
+            <Badge variant="outline" size="xs">
+              {persona.area}
+            </Badge>
+          }
+        />
+      ))}
+    </ListaElegible>
   )
 }

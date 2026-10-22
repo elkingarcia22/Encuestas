@@ -6,7 +6,6 @@ import {
   Building03Icon,
   Csv01Icon,
   Delete02Icon,
-  LogoutSquare01Icon,
   MinusSignIcon,
   PlusSignIcon,
   UserGroupIcon,
@@ -16,7 +15,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardAction,
@@ -42,8 +40,9 @@ import {
   NumberFieldGroup,
   NumberFieldIncrement,
   NumberFieldInput,
-  toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify, notifyAction } from '@/shared/components/notify'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { ChipGuardado } from '@/shared/components/ChipGuardado'
 import { Hint } from '@/shared/components/Hint'
@@ -51,7 +50,6 @@ import { PageActionBar } from '@/shared/components/PageShell'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { BotonSalirCreacion } from '@/modules/design-system/navegacion/boton-salir-creacion'
 
-import { DialogoConfirmar, RegistroConfirmar } from '../../../estados/confirmaciones'
 import { PantallaDeError } from '../../../estados/errores-sistema'
 import { registroQueNoExiste, registroSinEdicion } from '../../../estados/errores-sistema-datos'
 import { RangoDeFechas, type Rango } from '../../../formularios/rango-de-fechas'
@@ -92,7 +90,7 @@ export function Component() {
   const editando = id ? planes.find((p) => p.id === id) : undefined
   const tipo: TipoPlan = editando?.tipo ?? (parametros.get('tipo') === 'competencias' ? 'competencias' : 'contenidos')
   const textos = TIPOS[tipo]
-  // El borrador que arma Orbit Flow en la lista («Abrir en "Crear plan"») llega ya puesto para revisarlo antes de guardar.
+  // El borrador que arma Orbit en la lista («Abrir en "Crear plan"») llega ya puesto para revisarlo antes de guardar.
   const borrador = (useLocation().state as { borrador?: Borrador } | null)?.borrador
 
   const [nombre, setNombre] = useState(editando?.nombre ?? borrador?.nombre ?? '')
@@ -102,7 +100,6 @@ export function Component() {
   const [errores, setErrores] = useState<Errores>({})
   const [enviado, setEnviado] = useState(false)
   const [agregando, setAgregando] = useState(false)
-  const [saliendo, setSaliendo] = useState(false)
   const [tocado, setTocado] = useState(false)
 
   // Un plan que no existe, o uno No vigente (no se edita, RN-07 y RN-10).
@@ -156,7 +153,7 @@ export function Component() {
       const nuevo: Plan = { id: `p-${Date.now()}`, tipo, estado: 'Planeado', ...datos }
       setPlanes((todos) => [nuevo, ...todos])
     }
-    toast.add({ type: 'success', title: `${textos.singular} guardado correctamente.` })
+    notify(`${textos.singular} guardado correctamente.`, undefined, 'success')
     navigate(ruta())
   }
 
@@ -165,19 +162,18 @@ export function Component() {
     setAsignaciones((todas) => todas.filter((a) => a.id !== asignacion.id))
     setTocado(true)
     // Se deshace con un clic: se quita sin preguntar y el aviso trae «Deshacer».
-    toast.add({
-      type: 'success',
-      title: 'Asignación quitada',
-      description: tituloDe(asignacion),
-      actionProps: {
-        children: 'Deshacer',
+    notifyAction(
+      'Asignación quitada',
+      tituloDe(asignacion),
+      {
+        label: 'Deshacer',
         onClick: () => setAsignaciones((todas) => [...todas.slice(0, indice), asignacion, ...todas.slice(indice)]),
       },
-    })
+      'success',
+    )
   }
 
   const hayCambios = tocado || nombre !== (editando?.nombre ?? '') || (!editando && !!rango)
-  const pedirSalir = () => (hayCambios ? setSaliendo(true) : navigate(ruta()))
   const lista = Object.values(errores).filter(Boolean) as string[]
 
   return (
@@ -192,7 +188,15 @@ export function Component() {
           ) : null
         }
         descripcion={editando ? `Edita el ${textos.singular.toLowerCase()}. Los cambios llegan a quienes ya lo tienen asignado.` : undefined}
-        acciones={<BotonSalirCreacion texto={editando ? 'Salir de la edición' : 'Salir de la creación'} onClick={pedirSalir} />}
+        // 13-oct: la ventana es la del sistema («¿Salir sin guardar?»). Un plan no tiene borrador: «Guardar» lo crea o lo
+        // actualiza de una vez, así que la ventana tiene dos salidas, sin «Guardar y salir».
+        acciones={
+          <BotonSalirCreacion
+            texto={editando ? 'Salir de la edición' : 'Salir de la creación'}
+            onClick={() => navigate(ruta())}
+            salida={{ conCambios: hayCambios }}
+          />
+        }
       />
 
       {enviado && lista.length ? (
@@ -343,9 +347,10 @@ export function Component() {
           pulsa) y guardar a la derecha. Sin «Cancelar»: la única salida es la de junto al título (regla de creación,
           6-oct). Con un formulario corto baja hasta el final de la pantalla. */}
       <PageActionBar className="mt-auto">
-        <ChipGuardado estado={hayCambios ? 'editando' : 'guardado'} />
+        {/* Sin borrador real: «Cambios sin guardar» en cuanto hay algo cambiado, hasta que se guarda (13-oct, I-276). */}
+        {hayCambios ? <ChipGuardado estado="editando" /> : <span />}
         <div className="ml-auto flex items-center gap-2">
-          <Button onClick={guardar}>Guardar</Button>
+          <Button onClick={guardar}>{editando ? 'Guardar cambios' : 'Guardar'}</Button>
         </div>
       </PageActionBar>
 
@@ -359,39 +364,6 @@ export function Component() {
           limpiar('asignaciones')
         }}
       />
-
-      {/* Salir con cambios es preguntar antes de hacer algo: DialogoConfirmar con sus tres salidas y en su tamaño normal
-          (en el chico los tres botones no caben en una fila). El título es fijo; el plan va en la tarjeta. */}
-      <DialogoConfirmar
-        abierto={saliendo}
-        onAbiertoChange={setSaliendo}
-        icono={LogoutSquare01Icon}
-        titulo={editando ? '¿Salir de la edición?' : '¿Salir de la creación?'}
-        descripcion={
-          editando
-            ? 'Tienes cambios sin guardar. Si sales ahora, el plan queda como estaba.'
-            : 'Tienes cambios sin guardar. Si sales ahora, el plan no se crea.'
-        }
-        cancelar="Seguir editando"
-        otra={{
-          texto: 'Salir sin guardar',
-          onClick: () => {
-            setSaliendo(false)
-            navigate(ruta())
-          },
-        }}
-        accion="Guardar y salir"
-        onConfirmar={() => {
-          setSaliendo(false)
-          guardar()
-        }}
-      >
-        <RegistroConfirmar
-          nombre={nombre.trim() || 'Plan sin nombre'}
-          detalle={`${textos.singular} · ${editando ? 'en edición' : 'nuevo'}`}
-          estado="Cambios sin guardar"
-        />
-      </DialogoConfirmar>
 
     </div>
   )

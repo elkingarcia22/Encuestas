@@ -13,7 +13,7 @@ import {
   type VacanteUI,
 } from '../../../propuestas/datos'
 import type { Movimiento } from '../../../propuestas/movimientos'
-import type { Grupo } from '../../../propuestas/grupos-atencion'
+import { grupoDe as grupoComun, type Grupo, type InfoGrupo } from '@/modules/design-system/metricas/grupos-atencion'
 import { bolsaDe, creditos, historialCon, registroDeCreditos } from '../../../propuestas/creditos'
 import { almacenDeLotes, cuentasDe } from '../../../propuestas/importacion'
 import { claveAsi, claveDe } from './estado'
@@ -25,6 +25,11 @@ import { vacantesDeLaSesion } from './acciones'
 // Encuestas (su rama, 30 sep) —Críticas, Necesitan atención y Acción manual— más un cuarto con lo que propone la IA.
 // Cuando su rama llegue, las dos versiones se unifican en una sola pieza.
 //
+// 13 oct (reunión con la PM y el TL): «Necesitan atención» y «Acción manual» son una sola columna, «Esperando acción»
+// —todo lo que espera que alguien del equipo lo mueva—, el mismo nombre que el filtro de la vacante y la cifra de Mis
+// candidatos. Las críticas quedan para lo que tiene que ver con créditos (lo que se puede sacar ya). Las sugerencias de
+// la IA siguen, por confirmar: nunca repiten lo que ya está en otra columna (IN-12).
+//
 // Todo sale de los datos de la exploración (las vacantes, la gente en proceso y lo que se movió en la sesión): nada
 // inventado. Las reglas, de la más grave a la menos:
 //
@@ -32,16 +37,14 @@ import { vacantesDeLaSesion } from './acciones'
 // - `sin-creditos`: un agente de IA se quedó sin créditos y sus vacantes están en pausa (IN-07).
 // - `entrevista-vencida`: la invitación a Serena AI ya venció (pasaron PLAZO_ENTREVISTA días) y nadie la renovó (IN-11).
 // - `entrevista-vence`: la invitación vence en AVISO_ENTREVISTA días o menos.
-// - `se-pierden`: gente que espera una respuesta del equipo hace DIAS_SE_PIERDE días o más. Se va con otra oferta.
 //
-// Necesitan atención — señales que conviene leer antes de que se vuelvan críticas:
+// Esperando acción — lo que espera que alguien del equipo lo mueva, de lo más urgente a lo menos:
+// - `se-pierden`: gente que espera una respuesta del equipo hace DIAS_SE_PIERDE días o más. Se va con otra oferta.
 // - `cv-sin-revisar`: hojas de vida que llevan DIAS_SIN_REVISAR días o más sin que nadie las mire.
 // - `estancadas`: las vacantes publicadas que pasaron DIAS_ESTANCADA días abiertas, juntas en un solo asunto (IN-25).
 // - `sin-candidatos`: publicadas hace DIAS_SIN_CANDIDATOS días o más sin una sola aplicación (el aviso de Elkin, IN-29).
 // - `fuera-del-portal`: vacantes publicadas pero escondidas del portal de empleo: nadie nuevo puede aplicar.
 // - `cerradas-con-gente`: gente que sigue en proceso en vacantes ya cerradas y nunca supo en qué quedó (IN-30).
-//
-// Acción manual — pasos que la plataforma no da sola:
 // - `borradores`: vacantes que nadie ha publicado.
 // - `assessment`: pruebas terminadas que esperan que alguien las revise.
 // - `antecedentes`: verificaciones de antecedentes o certificados pendientes.
@@ -63,8 +66,15 @@ export const DIAS_SIN_CANDIDATOS = 10
 export const DIAS_POSPONE = 3
 export { DIAS_ESTANCADA }
 
-// Los grupos los comparte con el tablero de Créditos (5 oct).
-export { GRUPOS, grupoDe, type Grupo, type InfoGrupo } from '../../../propuestas/grupos-atencion'
+// Los grupos los comparte con el tablero de Créditos (5 oct). En Vacantes son tres: «Acción manual» se juntó con
+// «Necesitan atención» bajo el nombre «Esperando acción» (13 oct).
+export type { Grupo, InfoGrupo }
+export const GRUPOS_VACANTES: Grupo[] = ['critico', 'atencion', 'ia']
+export const NOMBRES_VACANTES: Partial<Record<Grupo, string>> = { atencion: 'Esperando acción' }
+export const grupoDe = (grupo: Grupo): InfoGrupo => {
+  const info = grupoComun(grupo)
+  return grupo === 'atencion' ? { ...info, titulo: 'Esperando acción', corto: 'Lo que espera que alguien lo mueva', vacio: 'Nada espera una acción tuya' } : info
+}
 
 // Lo que se puede hacer con cada persona o vacante de un asunto. Las de contexto se resuelven en el panel (escribir,
 // reenviar, devolver al portal, rechazar y avisar, marcar como revisada o dejarla así); las directas llevan a su sección
@@ -271,7 +281,7 @@ export function asuntosDe({
     const primera = sePierden.find((c) => quedan.some((elemento) => elemento.id === c.id)) ?? sePierden[0]
     cerrar({
       id: 'se-pierden',
-      grupo: 'critico',
+      grupo: 'atencion',
       titulo: `${personas(quedan.length || sePierden.length)} ${plural(quedan.length || sePierden.length, 'espera', 'esperan')} tu respuesta hace ${DIAS_SE_PIERDE} días o más`,
       resumen: `Las puedes perder: ${primera.candidato.nombre} lleva ${dias(primera.dias)}.`,
       datos: [
@@ -287,7 +297,7 @@ export function asuntosDe({
     })
   }
 
-  /* Necesitan atención ------------------------------------------------------------------------------------------- */
+  /* Esperando acción --------------------------------------------------------------------------------------------- */
 
   const sinRevisar = esperan
     .filter((c) => c.etapa === 'cv' && c.dias >= DIAS_SIN_REVISAR && c.dias < DIAS_SE_PIERDE)
@@ -413,7 +423,7 @@ export function asuntosDe({
     })
   }
 
-  /* Acción manual ------------------------------------------------------------------------------------------------ */
+  /* Esperando acción: los pasos que la plataforma no da sola ------------------------------------------------------ */
 
   const borradores = vacantes.filter((vacante) => vacante.estado === 'Borrador')
   if (borradores.length) {
@@ -428,7 +438,7 @@ export function asuntosDe({
     borradores.forEach((vacante) => porQuien.set(vacante.reclutador.nombre || 'Sin asignar', (porQuien.get(vacante.reclutador.nombre || 'Sin asignar') ?? 0) + 1))
     cerrar({
       id: 'borradores',
-      grupo: 'manual',
+      grupo: 'atencion',
       titulo: `${quedan.length || borradores.length} ${plural(quedan.length || borradores.length, 'borrador sin publicar', 'borradores sin publicar')}`,
       resumen: `Nadie los ve fuera del equipo: ${algunos(borradores.map((vacante) => vacante.titulo))}.`,
       datos: [
@@ -449,7 +459,7 @@ export function asuntosDe({
     const quedan = pendientesDe('assessment', elementos)
     cerrar({
       id: 'assessment',
-      grupo: 'manual',
+      grupo: 'atencion',
       titulo: `${quedan.length || porRevisarPrueba.length} ${plural(quedan.length || porRevisarPrueba.length, 'prueba por revisar', 'pruebas por revisar')}`,
       resumen: `${lista(porRevisarPrueba.map((c) => c.candidato.nombre))} ya ${plural(porRevisarPrueba.length, 'terminó', 'terminaron')}.`,
       datos: [{ termino: 'Pruebas', valor: String(quedan.length || porRevisarPrueba.length) }],
@@ -465,7 +475,7 @@ export function asuntosDe({
     const quedan = pendientesDe('antecedentes', elementos)
     cerrar({
       id: 'antecedentes',
-      grupo: 'manual',
+      grupo: 'atencion',
       titulo: `${quedan.length || antecedentes.length} ${plural(quedan.length || antecedentes.length, 'verificación de antecedentes pendiente', 'verificaciones de antecedentes pendientes')}`,
       resumen: antecedentes.map((c) => `${c.candidato.nombre}: ${c.candidato.accion?.toLowerCase() ?? 'pendiente'}`).join(' · '),
       datos: [{ termino: 'Personas', valor: String(quedan.length || antecedentes.length) }],
@@ -498,7 +508,7 @@ export function asuntosDe({
     const total = (quedan.length ? quedan : lotes).reduce((suma, elemento) => suma + ((elemento as (typeof lotes)[number]).dudosos ?? 0), 0)
     cerrar({
       id: 'hojas-dudosas',
-      grupo: 'manual',
+      grupo: 'atencion',
       titulo: `${total} ${plural(total, 'CV importado por confirmar', 'CVs importados por confirmar')}`,
       resumen: `La IA no estuvo segura de algunos datos en ${quedan.length || lotes.length} ${plural(quedan.length || lotes.length, 'lote', 'lotes')}.`,
       datos: [

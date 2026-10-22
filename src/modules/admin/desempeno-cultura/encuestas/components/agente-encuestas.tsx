@@ -25,13 +25,13 @@ export function AgenteEncuestas({ encuestas, onCrear, onClose }: { encuestas: re
       bajas.length ? (
         <div className="flex flex-col gap-3">
           <AgentNote>
-            {cuantas(bajas.length)} en curso {plural(bajas.length, 'va', 'van')} por debajo del {PARTICIPACION_BAJA}% de participación:
+            {cuantas(bajas.length)} en curso {plural(bajas.length, 'va', 'van')} por debajo del {PARTICIPACION_BAJA} % de participación:
           </AgentNote>
-          <AgentList items={bajas.map((encuesta) => `${encuesta.name} · ${encuesta.progress}%`)} />
+          <AgentList items={bajas.map((encuesta) => `${encuesta.name} · ${encuesta.progress} %`)} />
           <AgentNote>Un recordatorio a quienes no han respondido suele subirla antes del cierre.</AgentNote>
         </div>
       ) : (
-        <AgentNote>Ninguna encuesta en curso va por debajo del {PARTICIPACION_BAJA}% de participación.</AgentNote>
+        <AgentNote>Ninguna encuesta en curso va por debajo del {PARTICIPACION_BAJA} % de participación.</AgentNote>
       ),
       1400,
     )
@@ -40,7 +40,7 @@ export function AgenteEncuestas({ encuestas, onCrear, onClose }: { encuestas: re
     thread.ask(
       '¿Cómo va la participación?',
       <AgentNote>
-        Hay {cuantas(enCurso.length)} en curso, con una participación promedio del {promedio}%.
+        Hay {cuantas(enCurso.length)} en curso, con una participación promedio del {promedio} %.
       </AgentNote>,
       1400,
     )

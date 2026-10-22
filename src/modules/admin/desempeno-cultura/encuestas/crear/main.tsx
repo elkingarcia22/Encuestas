@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Alert02Icon, ArrowLeft01Icon, ArrowRight01Icon, Logout01Icon, UserGroupIcon, ViewIcon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, UserGroupIcon, ViewIcon } from '@hugeicons/core-free-icons'
 import { useBlocker, useLocation, useNavigate, useParams } from 'react-router'
-import { Alert, AlertDescription, Button, Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle, Text } from '@ubits/flux-ui'
+import { Alert, AlertDescription, Button, Text } from '@ubits/flux-ui'
 import { OPENING_SOON_DAYS as DIAS_AVISO_SIN_PARTICIPANTES } from '../modelo/riesgos'
 import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { BotonSalirCreacion, VentanaSalir } from '@/modules/design-system/navegacion/boton-salir-creacion'
 import { notify, notifyAction } from '@/shared/components/notify'
 import { fechaCorta } from '@/modules/design-system/patrones/formato'
 import { setRightPanelOpen } from '@/shared/components/right-panel-store'
 import { useHuecoDerecho, usePantallaGrande } from '@/modules/admin/seleccion/vacantes/detalle/components/agente-acoplado'
-import { PageActionBar, PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
+import { AgentDock } from '@/modules/design-system/agente-contextual/components/agent-kit'
+import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { ChipGuardado, type EstadoGuardado } from '@/shared/components/ChipGuardado'
 import { agregarEncuesta, encuestaPorId, useEncuestas } from '../components/almacen'
 import { nombreRepetido } from '../components/demograficos/nombre-repetido'
@@ -41,9 +43,10 @@ import { ResumenEncuesta } from './components/resumen-encuesta'
 // El constructor de encuestas: cinco pasos en su propia pantalla, armado igual que «Crear vacante»: los
 // pasos en una fila arriba, el trabajo a la izquierda, el panel «Así va la encuesta» a la derecha y la
 // barra de acciones fija abajo. Los pasos obligatorios se recorren en orden —el candado es real— y
-// «Finalizar» revisa los cinco a la vez. Se abre en blanco, desde una plantilla o para editar una
+// «Crear encuesta» (o «Guardar encuesta» al editar) revisa los cinco a la vez. Se abre en blanco, desde una plantilla o para editar una
 // encuesta de la lista.
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { BarraPasos } from '@/modules/design-system/navegacion/barra-pasos'
 
 const RUTA_ENCUESTAS = '/admin/desempeno-cultura/encuestas'
 const SEGUNDOS_AUTOGUARDADO = 3
@@ -117,20 +120,14 @@ function NoEncontrada({ plantilla }: { plantilla: boolean }) {
     <PageShell>
       <PageHeader back={{ label: 'Encuestas', to: RUTA_ENCUESTAS }} title={plantilla ? 'Crear encuesta' : 'Editar encuesta'} />
       <PageContent>
-        <Empty className="py-16">
-          <EmptyHeader>
-            <EmptyMedia variant="default">
-              <ImagenGlass nombre="glass-search" />
-            </EmptyMedia>
-            <EmptyTitle>{plantilla ? 'No encontramos esta plantilla' : 'No encontramos esta encuesta'}</EmptyTitle>
-            <EmptyDescription>{plantilla ? 'Puede que se haya quitado del catálogo. Vuelve a la lista para elegir otra.' : 'Puede que se haya eliminado. Vuelve a la lista para elegir otra.'}</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button variant="outline" onClick={() => navigate(RUTA_ENCUESTAS)}>
-              Volver a encuestas
-            </Button>
-          </EmptyContent>
-        </Empty>
+        {/* El vacío del sistema (PrimeraVez) con su ilustración glass y la salida a la lista. */}
+        <PrimeraVez
+          className="py-16"
+          icono="glass-search"
+          titulo={plantilla ? 'No encontramos esta plantilla' : 'No encontramos esta encuesta'}
+          descripcion={plantilla ? 'Puede que se haya quitado del catálogo. Vuelve a la lista para elegir otra.' : 'Puede que se haya eliminado. Vuelve a la lista para elegir otra.'}
+          accion={{ texto: 'Volver a encuestas', onClick: () => navigate(RUTA_ENCUESTAS) }}
+        />
       </PageContent>
     </PageShell>
   )
@@ -144,21 +141,14 @@ function Finalizada({ id }: { id: string }) {
     <PageShell>
       <PageHeader back={{ label: 'Encuestas', to: RUTA_ENCUESTAS }} title="Editar encuesta" />
       <PageContent>
-        <Empty className="py-16">
-          <EmptyHeader>
-            <EmptyMedia variant="default">
-              <ImagenGlass nombre="glass-lock" />
-            </EmptyMedia>
-            <EmptyTitle>Esta encuesta ya finalizó</EmptyTitle>
-            <EmptyDescription>No se puede editar porque ya cerró y sus resultados no pueden cambiar. Puedes ver sus resultados o duplicarla desde la lista para hacer una nueva.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent className="flex-row justify-center gap-2">
-            <Button variant="outline" onClick={() => navigate(RUTA_ENCUESTAS)}>
-              Volver a encuestas
-            </Button>
-            <Button onClick={() => navigate(`${RUTA_ENCUESTAS}/${id}/resultados`)}>Ver resultados</Button>
-          </EmptyContent>
-        </Empty>
+        {/* El vacío del sistema (PrimeraVez): la salida es ver sus resultados; «Encuestas» queda en la miga de arriba. */}
+        <PrimeraVez
+          className="py-16"
+          icono="glass-lock"
+          titulo="Esta encuesta ya finalizó"
+          descripcion="No se puede editar porque ya cerró y sus resultados no pueden cambiar. Puedes ver sus resultados o duplicarla desde la lista para hacer una nueva."
+          accion={{ texto: 'Ver resultados', onClick: () => navigate(`${RUTA_ENCUESTAS}/${id}/resultados`) }}
+        />
       </PageContent>
     </PageShell>
   )
@@ -228,8 +218,8 @@ function Constructor() {
     return Number.isNaN(dias) || dias > DIAS_AVISO_SIN_PARTICIPANTES ? null : dias
   }, [borrador.startDate, borrador.participants])
 
-  // El agente que crea la encuesta, acoplado a la derecha: llega abierto desde el agente del inicio de Encuestas.
-  // Cerrarlo solo lo esconde: la conversación (y lo que esté creando) sigue en memoria.
+  // El agente que crea la encuesta, acoplado a la derecha: llega abierto desde el agente del inicio de Encuestas (la
+  // cabecera ya no lleva botón de Orbit, Elkin). Cerrarlo solo lo esconde: la conversación (y lo que esté creando) sigue al volver a abrirlo.
   const [agente, setAgente] = useState<{ abierto: boolean } | null>(() => (pedido?.agente ? { abierto: true } : null))
   const [revelar, setRevelar] = useState<{ id: string; vez: number } | null>(null)
   // La sección que la IA está creando ahora: su etiqueta dice «Creando…».
@@ -254,8 +244,10 @@ function Constructor() {
   // En curso ya tiene respuestas: sus preguntas, su visibilidad y sus datos demográficos se ven, pero no se cambian.
   const enCurso = estadoEnLista === 'En progreso' || borrador.status === 'live'
   const saliendo = useRef(false)
-  // Toda salida del constructor pregunta, aunque ya se haya autoguardado; solo Finalizar sale directo.
-  const bloqueoSalida = useBlocker(({ currentLocation, nextLocation }) => !saliendo.current && currentLocation.pathname !== nextLocation.pathname)
+  // ¿Se cambió algo en esta visita? Sin cambios se sale directo (regla «salir-con-cambios»); con cambios, toda salida
+  // (el botón, la barra lateral, «atrás») pasa por la ventana del sistema. «Crear/Guardar encuesta» sale directo.
+  const [cambiado, setCambiado] = useState(false)
+  const bloqueoSalida = useBlocker(({ currentLocation, nextLocation }) => cambiado && !saliendo.current && currentLocation.pathname !== nextLocation.pathname)
   const salidaBloqueada = bloqueoSalida.state === 'blocked' ? bloqueoSalida : null
 
   const estado = useMemo(() => estadoDelBorrador(borrador, visitados), [borrador, visitados])
@@ -268,6 +260,7 @@ function Constructor() {
   const cambiar = (cambio: Partial<SurveyDraft>) => {
     setBorrador((actual) => ({ ...actual, ...cambio }))
     setTocado(true)
+    setCambiado(true)
     setEstadoGuardado('editando')
   }
 
@@ -315,7 +308,7 @@ function Constructor() {
     if (indiceDe(destino) <= indiceDe(paso) || pasoAlcanzable(destino, estado)) return irA(destino)
     const pendiente = primerPendiente(estado, destino)
     if (pendiente?.paso === 'general') setConErrores(true)
-    notify(pendiente?.mensaje ?? 'Completa los pasos anteriores para desbloquear este paso.')
+    notify(pendiente?.mensaje ?? 'Completa los pasos anteriores para desbloquear este paso.', undefined, 'warning')
   }
 
   const siguiente = STEPPER_ORDER[indiceDe(paso) + 1]
@@ -343,7 +336,7 @@ function Constructor() {
         setMarcadas(new Set(preguntasIncompletas(borrador.sections)))
         setSenalada(primeraIncompleta(borrador.sections))
       }
-      return notify(pendiente?.mensaje ?? 'Completa este paso para continuar.')
+      return notify(pendiente?.mensaje ?? 'Completa este paso para continuar.', undefined, 'warning')
     }
     if (paso === 'demographics' && faltaDecidirDemograficos) return setAvisoSinDemograficos('continuar')
     if (siguiente) irA(siguiente)
@@ -365,7 +358,7 @@ function Constructor() {
       if (pendientes.includes('sections')) setMarcadas(new Set(preguntasIncompletas(borrador.sections)))
       if (pendientes[0] === 'sections') setSenalada(primeraIncompleta(borrador.sections))
       if (pendientes[0] === 'demographics' && normaSinDatos) return avisarNorma()
-      return notify(mensaje)
+      return notify(mensaje, undefined, 'warning')
     }
     if (faltaDecidirDemograficos) return setAvisoSinDemograficos('finalizar')
     publicar()
@@ -378,6 +371,7 @@ function Constructor() {
     notify(
       'Encuesta guardada',
       estadoEnLista === 'Borrador' ? `«${borrador.name.trim()}» quedó en la lista como «Por iniciar».` : `Los cambios de «${borrador.name.trim()}» quedaron guardados.`,
+      'success',
     )
     navigate(RUTA_ENCUESTAS)
   }
@@ -410,6 +404,7 @@ function Constructor() {
   const cambiarPorIa = (cambio: (actual: SurveySection[]) => SurveySection[]) => {
     setBorrador((actual) => ({ ...actual, sections: cambio(actual.sections as SurveySection[]) }))
     setTocado(true)
+    setCambiado(true)
     setEstadoGuardado('editando')
   }
 
@@ -419,7 +414,9 @@ function Constructor() {
     const puesto: { nombre?: string; tipo?: SurveyKind } = {}
     if (borrador.kind === null) puesto.tipo = tipo
     if (borrador.name.trim() === '') {
-      const base = `${NOMBRE_POR_TIPO[borrador.kind ?? tipo]} · ${new Date().toLocaleDateString('es', { month: 'long', year: 'numeric' })}`
+      // El mes y el año con la fecha del sistema (fechaCorta, «19 oct 2026»), sin el día: «oct 2026».
+      const mesYAnio = fechaCorta(new Date().toISOString()).split(' ').slice(1).join(' ')
+      const base = `${NOMBRE_POR_TIPO[borrador.kind ?? tipo]} · ${mesYAnio}`
       const usados = todas.filter((encuesta) => encuesta.id !== idEnLista.current).map((encuesta) => encuesta.name)
       let nombre = base
       for (let vez = 2; nombreRepetido(nombre, usados); vez += 1) nombre = `${base} (${vez})`
@@ -463,11 +460,9 @@ function Constructor() {
                 Vista previa
               </Button>
             ) : null}
-            {/* Pasa por el mismo freno que cualquier otra salida: siempre pregunta antes de salir. */}
-            <Button variant="outline" onClick={() => navigate(RUTA_ENCUESTAS)}>
-              <HugeiconsIcon icon={Logout01Icon} aria-hidden="true" />
-              {id ? 'Salir de la edición' : 'Salir de la creación'}
-            </Button>
+            {/* La salida del sistema. Pasa por el mismo freno que cualquier otra salida: sin cambios sale directo; con
+                cambios, la ventana de salir de abajo (una sola para el botón, la barra lateral y «atrás»). */}
+            <BotonSalirCreacion texto={id ? 'Salir de la edición' : 'Salir de la creación'} onClick={() => navigate(RUTA_ENCUESTAS)} />
           </>
         }
       />
@@ -537,40 +532,41 @@ function Constructor() {
         {/* La barra de acciones del Workspace (la de Crear contenido): flotante al fondo, con el estado del guardado a la
             izquierda —es automático, solo se informa— y Atrás y Continuar o Finalizar a la derecha. Con la sombra
             suave, para que no se vea ajena al resto de la interfaz. Sticky: con un paso corto baja hasta el final (mt-auto). */}
-        <PageActionBar className="mt-auto!">
-          {tocado ? <ChipGuardado estado={estadoGuardado} /> : null}
-          {falloGuardado ? (
+        {/* La barra de los pasos del sistema (BarraPasos, 13-oct): «Atrás» desde el paso 2 y «Continuar». */}
+        <BarraPasos
+          className="mt-auto!"
+          inicio={
             <>
-              <Text as="span" size="sm" variant="destructive" role="alert">
-                No se pudo guardar
-              </Text>
-              <Button variant="outline" size="sm" onClick={reintentarGuardado}>
-                Reintentar
-              </Button>
+              {tocado ? <ChipGuardado estado={estadoGuardado} /> : null}
+              {falloGuardado ? (
+                <>
+                  <Text as="span" size="sm" variant="destructive" role="alert">
+                    No se pudo guardar
+                  </Text>
+                  <Button variant="outline" size="sm" onClick={reintentarGuardado}>
+                    Reintentar
+                  </Button>
+                </>
+              ) : null}
             </>
-          ) : null}
-          <div className="ml-auto flex items-center gap-2">
-            {/* Como en Crear contenido: «Volver» siempre a la vista, apagado en el primer paso. */}
-            <Button variant="outline" disabled={indiceDe(paso) === 0} onClick={() => irA(STEPPER_ORDER[indiceDe(paso) - 1])}>
-              <HugeiconsIcon icon={ArrowLeft01Icon} aria-hidden="true" />
-              Volver
-            </Button>
-            {ultimo ? (
-              <Button onClick={finalizar}>Finalizar</Button>
-            ) : (
-              <Button onClick={continuar}>
-                Continuar
-                <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />
-              </Button>
-            )}
-          </div>
-        </PageActionBar>
+          }
+          paso={indiceDe(paso) + 1}
+          onAtras={() => irA(STEPPER_ORDER[indiceDe(paso) - 1])}
+          // Guardar a mano: lo mismo que hace el autoguardado, sin esperar los 3 segundos. Al editar una encuesta ya
+          // publicada no sale: su botón es «Guardar encuesta» (22-oct, como en Objetivos).
+          onGuardar={estadoEnLista === 'Borrador' ? reintentarGuardado : undefined}
+          guardarDeshabilitado={estadoGuardado === 'guardando'}
+          // El verbo del flujo: «Finalizar» queda solo para cerrar una encuesta en curso (lista de Encuestas).
+          // «Publicar» al terminar una creación (también un borrador que se retoma, 21-oct); «Guardar encuesta» al editar una ya publicada.
+          principal={{ texto: ultimo ? (estadoEnLista === 'Borrador' ? 'Publicar' : 'Guardar encuesta') : undefined, onClick: ultimo ? finalizar : continuar }}
+        />
       </PageContent>
 
-      {/* Cerrado, el panel se esconde pero sigue montado: la conversación y lo que esté creando no se pierden. */}
+      {/* Cerrado, el panel se esconde pero sigue montado: la conversación y lo que esté creando no se pierden. Va en el
+          hueco de Orbit del sistema (AgentDock, 13-oct): entra y sale igual que en las demás pantallas. */}
       {hueco && agente
         ? createPortal(
-            <div className={acoplado ? 'flex h-full shrink-0' : 'hidden'}>
+            <AgentDock open={acoplado} mantener>
               <PanelCrearConIa
                 nombreEncuesta={borrador.name}
                 tipo={borrador.kind}
@@ -586,7 +582,7 @@ function Constructor() {
                 onDeshacerGenerales={deshacerGeneralesPorIa}
                 onClose={() => setAgente({ abierto: false })}
               />
-            </div>,
+            </AgentDock>,
             hueco,
           )
         : null}
@@ -608,7 +604,7 @@ function Constructor() {
         }}
         icono={UserGroupIcon}
         titulo="¿Continuar sin datos demográficos?"
-        descripcion={`Sin ellos no podrás filtrar los resultados de «${borrador.name.trim() || 'Encuesta sin título'}» por área, sede, antigüedad u otro dato: solo verás los datos generales de la encuesta.`}
+        descripcion={<>Sin ellos no podrás filtrar los resultados de <strong className="font-semibold">{borrador.name.trim() || 'Encuesta sin título'}</strong> por área, sede, antigüedad u otro dato: solo verás los datos generales de la encuesta.</>}
         cancelar="Agregar datos demográficos"
         accion="Continuar sin ellos"
         onConfirmar={() => {
@@ -623,21 +619,19 @@ function Constructor() {
       {/* Salir del constructor: la estructura de «¿Salir de la creación?» de Crear contenido (Elkin, 14-oct): icono, título,
           descripción y dos botones. Si hay cambios sin guardar, salir los guarda; con la encuesta de prueba que falla, si no
           se puede guardar, no sale. La X (o Escape) cierra y se queda en el constructor. */}
-      <DialogoConfirmar
+      <VentanaSalir
         abierto={salidaBloqueada !== null}
         onAbiertoChange={(abierto) => (abierto ? undefined : salidaBloqueada?.reset())}
-        icono={Logout01Icon}
-        titulo={id ? '¿Salir de la edición?' : '¿Salir de la creación?'}
-        descripcion={
+        texto={id ? 'Salir de la edición' : 'Salir de la creación'}
+        borrador
+        mensaje={
           estadoEnLista !== 'Borrador'
             ? `Los cambios de «${borrador.name.trim() || 'Encuesta sin título'}» quedan guardados. Puedes retomarla cuando quieras desde Encuestas.`
             : encuestaPorId(id ?? idNuevo) || (estadoGuardado !== 'guardado' && borrador.name.trim() !== '')
               ? 'La encuesta queda guardada como borrador. Puedes retomarla cuando quieras desde Encuestas.'
-              : 'Todavía no has hecho cambios, así que esta encuesta no se guardará.'
+              : 'Todavía no tiene nombre, así que lo que llevas no se guardará al salir.'
         }
-        cancelar="Seguir aquí"
-        accion={id ? 'Salir de la edición' : 'Salir de la creación'}
-        onConfirmar={() => {
+        onSalir={() => {
           if (estadoGuardado !== 'guardado') {
             if (falla) {
               salidaBloqueada?.reset()

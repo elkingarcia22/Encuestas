@@ -120,7 +120,7 @@ const PERFIL_A_MANO: Record<string, Partial<Perfil>> = {
   },
   'natalia-gomez': {
     reubicacion: true,
-    logros: ['Maneja 38 droguerías independientes y creció su cartera 22% en 2025.', 'Vendió crédito de libranza a afiliados de empresas.'],
+    logros: ['Maneja 38 droguerías independientes y creció su cartera 22 % en 2025.', 'Vendió crédito de libranza a afiliados de empresas.'],
     documentos: [
       { nombre: 'CV - Natalia Gómez.pdf', tipo: 'CV', detalle: '2 páginas · 174 KB · subido al postularse' },
       { nombre: 'Carta de recomendación - Colsubsidio.pdf', tipo: 'Recomendación', detalle: '1 página · 88 KB · subida el 16 sep' },
@@ -224,7 +224,7 @@ export function evaluacionCV(c: Candidato, v: Vacante): EvaluacionCV {
         : {
             nombre: 'Rango salarial',
             cumple: c.pretension <= tope,
-            detalle: `Pide ${pesos(c.pretension)}; se acepta hasta ${MARGEN_SALARIAL}% sobre el tope (${pesos(Math.round(tope * 10) / 10)}).`,
+            detalle: `Pide ${pesos(c.pretension)}; se acepta hasta ${MARGEN_SALARIAL} % sobre el tope (${pesos(Math.round(tope * 10) / 10)}).`,
           },
       {
         nombre: 'Ex empleados',
@@ -486,7 +486,7 @@ const ROLEPLAYS: Record<string, Roleplay> = {
       { quien: 'agente', momento: '00:00', texto: 'Aló, habla Camila, de compras.' },
       { quien: 'candidato', momento: '00:04', texto: 'Camila, buenos días. Soy Sebastián. Tenemos el mejor precio del mercado en genéricos y quiero que lo pruebe.' },
       { quien: 'agente', momento: '00:15', texto: 'Gracias, pero ya tengo proveedor y estoy conforme.' },
-      { quien: 'candidato', momento: '00:21', texto: 'Le entiendo, pero nuestro precio es 8% más bajo. Es plata que se ahorra cada mes.' },
+      { quien: 'candidato', momento: '00:21', texto: 'Le entiendo, pero nuestro precio es 8 % más bajo. Es plata que se ahorra cada mes.' },
       { quien: 'agente', momento: '00:34', texto: 'El precio no es lo que más me preocupa, la verdad.' },
       {
         quien: 'candidato',
@@ -526,7 +526,7 @@ export function resumenEvaluacion(etapa: EtapaEvaluada, c: Candidato, v: Vacante
 
   if (etapa === 'cv') {
     const cv = evaluacionCV(c, v)
-    return { estado: cv.pasa ? 'aprobo' : 'no-alcanza', linea: `Match ${cv.match}% · confianza ${cv.confianza.toLowerCase()} · mínimo ${cv.umbral}%` }
+    return { estado: cv.pasa ? 'aprobo' : 'no-alcanza', linea: `Match ${cv.match} % · confianza ${cv.confianza.toLowerCase()} · mínimo ${cv.umbral} %` }
   }
   if (etapa === 'psicometricas') {
     const psico = psicometricaDe(c)

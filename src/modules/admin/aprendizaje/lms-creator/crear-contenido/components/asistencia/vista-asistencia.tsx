@@ -1,6 +1,7 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Calendar03Icon, Clock01Icon } from '@hugeicons/core-free-icons'
-import { Badge, Frame, FrameHeader, FramePanel, FrameTitle, Heading, Separator, Text } from '@ubits/flux-ui'
+import { Frame, FrameHeader, FramePanel, FrameTitle, Heading, Separator, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import type { DatosAsistencia, SesionAsistencia } from '../borrador'
 import { textoPlano } from '../borrador'
 import { diaDeSesion, horarioDeSesion, nombrePorDefecto } from './sesiones'

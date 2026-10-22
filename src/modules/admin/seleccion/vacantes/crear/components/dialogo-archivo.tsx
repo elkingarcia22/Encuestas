@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
-import { Cancel01Icon, CloudUploadIcon, File01Icon, TextAlignLeftIcon } from '@hugeicons/core-free-icons'
+import { Cancel01Icon, File01Icon, TextAlignLeftIcon } from '@hugeicons/core-free-icons'
 import {
   Attachment,
   AttachmentAction,
@@ -27,6 +27,7 @@ import {
   Textarea,
 } from '@ubits/flux-ui'
 import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 type Metodo = null | 'archivo' | 'texto'
 type EstadoArchivo = 'vacio' | 'subiendo' | 'listo'
@@ -146,8 +147,8 @@ function ZonaArchivo({ estado, onEstado }: { estado: EstadoArchivo; onEstado: (e
     return (
       <Empty className="rounded-xl border border-dashed py-10">
         <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <HugeiconsIcon icon={CloudUploadIcon} aria-hidden="true" />
+          <EmptyMedia variant="default">
+            <ImagenGlass nombre="glass-arrow-up-square" />
           </EmptyMedia>
           <EmptyTitle>Arrastra tu archivo aquí</EmptyTitle>
           <EmptyDescription>PDF, Word o TXT, hasta 10 MB</EmptyDescription>

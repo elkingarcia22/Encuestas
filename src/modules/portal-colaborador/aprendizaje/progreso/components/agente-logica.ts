@@ -1,5 +1,6 @@
 import { BDS_CONTENIDOS_UBITS, CONTENIDOS } from '@/shared/bd'
 import { COMPETENCIAS, HOY, PLANES, USUARIO_ID as LIDER_ID, type Registro } from '../../zona-de-estudio/components/datos'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // La lógica del «Agente de planes» (HU-progreso, RN-05): sin IA de verdad, como en el prototipo. Lee las respuestas con
 // reglas (nombres del equipo, fechas dichas con naturalidad, títulos del catálogo, competencias y horas) y guarda el
@@ -168,7 +169,7 @@ export const quienes = (b: Pick<Borrador, 'personas' | 'todos'>) =>
       ? b.personas[0].nombre
       : b.personas.length <= 3
         ? enLista(b.personas.map((p) => p.nombre))
-        : `${b.personas.length} personas de tu equipo`
+        : `${b.personas.length} ${plural(b.personas.length, 'persona', 'personas')} de tu equipo`
 
 // ── Contenidos y competencias ────────────────────────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { Image01Icon, LinkSquare02Icon } from '@hugeicons/core-free-icons'
-import { Button, Field, FieldDescription, FieldTitle } from '@ubits/flux-ui'
+import { Image01Icon } from '@hugeicons/core-free-icons'
+import { Field, FieldDescription, FieldTitle } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
 import { AdjuntoCsv } from '@/modules/design-system/estados/procesos'
 import { REQUISITOS, VACIO, listo, type Archivo, type TipoImagen } from './datos'
@@ -38,22 +37,14 @@ export function CampoImagen({ tipo, imagen, value, onChange }: { tipo: TipoImage
         onElegir={() => onChange({ estado: 'cargando', nombre: req.archivo, progreso: 0 })}
         onQuitar={() => {
           onChange(VACIO)
-          if (value.estado === 'listo') notify('Imagen eliminada', 'Guarda los cambios para aplicarlo.')
+          if (value.estado === 'listo') notify('Imagen eliminada', 'Guarda los cambios para aplicarlo.', 'success')
         }}
       />
 
       <FieldDescription>
         {req.medida} · {req.peso}
       </FieldDescription>
-      <Button
-        variant="link"
-        size="sm"
-        className="w-fit px-0"
-        onClick={() => notify(req.recomendacion, 'Se abre la guía de UBITS en otra pestaña.')}
-      >
-        {req.recomendacion}
-        <HugeiconsIcon icon={LinkSquare02Icon} size={14} />
-      </Button>
+      {/* 13-oct (nada-que-finja): el enlace a la guía de recomendaciones solo avisaba que la abría; sin guía a la que llevar, se quita. */}
     </Field>
   )
 }

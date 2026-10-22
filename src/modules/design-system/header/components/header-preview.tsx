@@ -8,6 +8,7 @@ import {
   LifebuoyIcon,
   Notification01Icon,
   PartyIcon,
+  Queue02Icon,
   Search01Icon,
   SidebarLeftIcon,
   Sun03Icon,
@@ -51,8 +52,8 @@ import styles from './header-preview.module.css'
 // réplicas para poder marcar cada parte con su nombre (data-region) y mostrar un menú abierto a pedido. El buscador
 // abre el ⌘K real y Novedades abre la ventana real.
 
-// Lo que el header real reserva para las acciones al achicar el buscador (AppHeader: 207px con Novedades completo y
-// 122px solo con iconos) y 14px entre columnas. Se cuenta como 34px por botón, Novedades de 119px y 10px entre ellos,
+// Lo que el header real reserva para las acciones al achicar el buscador (AppHeader: 251px con Novedades completo y
+// 166px solo con iconos) y 14px entre columnas. Se cuenta como 34px por botón, Novedades de 119px y 10px entre ellos,
 // que da esas mismas cifras. Los botones se dibujan como en el real (auditoría, 5 oct): Novedades, campana y lupa de
 // 32px, menú de 30px, foto de 34px y 8px entre acciones.
 const ICON_W = 34
@@ -69,6 +70,7 @@ const LUPA_BELOW = 624
 const HINT: Record<RightAction, string> = {
   news: 'Lo nuevo en Ubits',
   notifications: 'Notificaciones',
+  processes: 'Centro de procesos',
   profile: 'Tu perfil',
 }
 
@@ -344,7 +346,7 @@ export function HeaderPreview({
           size="icon-sm"
           aria-label="Cerrar menú"
           className={cn('size-7.5!', HEADER_ICON)}
-          onClick={() => notify('Abre o cierra la barra lateral')}
+          onClick={() => notify('Abre o cierra la barra lateral', undefined, 'info')}
         >
           <HugeiconsIcon icon={SidebarLeftIcon} size={16} />
         </Button>
@@ -364,7 +366,7 @@ export function HeaderPreview({
             variant="ghost"
             size="sm"
             className="shrink-0 text-muted-foreground!"
-            onClick={() => notify(`Volver a ${s.back}`)}
+            onClick={() => notify(`Volver a ${s.back}`, undefined, 'info')}
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
             {s.back}
@@ -381,7 +383,7 @@ export function HeaderPreview({
               <Button
                 variant="link"
                 className="h-auto! shrink-0 p-0! font-normal text-muted-foreground! no-underline! hover:text-foreground!"
-                onClick={() => notify(`Ir a ${label}`)}
+                onClick={() => notify(`Ir a ${label}`, undefined, 'info')}
               >
                 {label}
               </Button>
@@ -468,6 +470,18 @@ export function HeaderPreview({
           dot={v.unread}
           onClick={toggle('notifications')}
           below={below('notifications', 'notifications')}
+        />
+      ) : null}
+      {v.right.includes('processes') ? (
+        <IconAction
+          region={RIGHT_NAME.processes}
+          label={HINT.processes}
+          icon={Queue02Icon}
+          chip={chip('processes')}
+          pressed
+          open={false}
+          onClick={() => notify('Aquí se abre el Centro de procesos')}
+          below={below('processes')}
         />
       ) : null}
       {v.right.includes('profile') ? (

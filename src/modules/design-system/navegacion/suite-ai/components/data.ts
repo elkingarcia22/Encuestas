@@ -20,7 +20,7 @@ export const ROLES: Role[] = [
     holder: 'Titular: Martha López · puesto crítico sin reemplazo',
     risk: 'Riesgo medio',
     candidates: [
-      { name: 'Andrés Pardo', role: 'Ejecutivo comercial B2B', readiness: 'ahora', fit: 81, why: 'Maneja 40% de las cuentas del canal' },
+      { name: 'Andrés Pardo', role: 'Ejecutivo comercial B2B', readiness: 'ahora', fit: 81, why: 'Maneja 40 % de las cuentas del canal' },
       { name: 'Luisa Cárdenas', role: 'Analista de canal', readiness: '12', fit: 67, why: '360 de 4,3 · terminó el programa de líderes' },
     ],
   },

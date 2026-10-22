@@ -351,7 +351,7 @@ function dressForModel(
   // Con varios objetivos de la empresa elegidos se reparten en orden: el
   // primero al primero, y vuelta a empezar. Repartir es lo que hace que la
   // tanda cubra el norte entero en vez de amontonarse en su primera línea.
-  const alignedTo = alignTo.length === 0 ? null : alignTo[index % alignTo.length];
+  const alignedTo = alignTo.length === 0 ? [] : [alignTo[index % alignTo.length]];
 
   // Un modelo que no cuelga nada que mida —KPI— igual admite un plan de
   // seguimiento: se escribe como acciones y nunca toca el avance, que sigue

@@ -27,13 +27,13 @@ const MENSAJES: Mensaje[] = [
     id: 'welcome',
     titulo: 'Mensaje de bienvenida',
     descripcion: 'Propósito, duración y confidencialidad. En blanco, no se muestra.',
-    placeholder: 'Añade un mensaje de bienvenida aquí',
+    placeholder: 'Agrega un mensaje de bienvenida aquí',
   },
   {
     id: 'closing',
     titulo: 'Mensaje de cierre',
     descripcion: 'Agradecimiento y próximos pasos. En blanco, no se muestra.',
-    placeholder: 'Añade un mensaje de cierre aquí',
+    placeholder: 'Agrega un mensaje de cierre aquí',
   },
 ]
 
@@ -95,6 +95,7 @@ export function PasoPaginas({ borrador, onCambio, falla = false }: { borrador: S
       id === 'welcome' ? 'Reescribimos el mensaje de bienvenida' : 'Reescribimos el mensaje de cierre',
       'Si preferías el que tenías, puedes recuperarlo.',
       { label: 'Deshacer', onClick: () => cambiar(id, anterior) },
+      'success',
     )
   }
 
@@ -105,6 +106,8 @@ export function PasoPaginas({ borrador, onCambio, falla = false }: { borrador: S
       </Text>
       {MENSAJES.map((mensaje) => (
         <Frame key={mensaje.id}>
+          {/* «!»: la cabecera del marco en fila (título a la izquierda, botón a la derecha); la clase sola no le gana a la
+              librería (diferencias.json › card-header-en-fila-sin-espacio-propio e instalacion-estilos-sin-capa). */}
           <FrameHeader className="flex-row! items-center! justify-between! gap-3!">
             <div className="flex min-w-0 flex-col gap-1">
               <FrameTitle>{mensaje.titulo}</FrameTitle>

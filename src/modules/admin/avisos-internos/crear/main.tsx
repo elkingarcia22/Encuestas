@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useBlocker, useNavigate, useParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Alert02Icon, CheckmarkCircle02Icon, Image01Icon, Logout01Icon, Megaphone01Icon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, CheckmarkCircle02Icon, Image01Icon, Megaphone01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Field,
   FieldLabel,
@@ -21,13 +20,14 @@ import {
   Text,
   Textarea,
   cn,
-  toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { formatBytes, useFileUpload } from '@ubits/flux-ui/hooks'
+import { notify } from '@/shared/components/notify'
 import { PageActionBar, PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { ChipGuardado, useGuardadoSimulado } from '@/shared/components/ChipGuardado'
 import { AdjuntoCsv } from '@/modules/design-system/estados/procesos'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { BotonSalirCreacion, VentanaSalir } from '@/modules/design-system/navegacion/boton-salir-creacion'
 import { COSTO, useBorrador } from '@/modules/admin/aprendizaje/lms-creator/crear-contenido/components/borrador'
 import { GeneradorImagenIa } from '@/modules/admin/aprendizaje/lms-creator/crear-contenido/components/generador-imagen-ia'
 import { TokenBadge } from '@/modules/admin/aprendizaje/lms-creator/crear-contenido/components/tokens'
@@ -93,7 +93,6 @@ export function Component() {
     const m = aviso?.multimedia
     return m?.tipo === 'video' ? 'video' : m?.tipo === 'imagen' && m.prompt ? 'ia' : 'imagen'
   })
-  const [confirmarSalida, setConfirmarSalida] = useState(false)
   // El borrador que se va guardando solo: el que se abrió, o el que se crea con lo primero que se escribe.
   const borradorId = useRef<string | null>(publicado ? null : (aviso?.id ?? null))
   const [hayBorrador, setHayBorrador] = useState(Boolean(borradorId.current))
@@ -174,8 +173,6 @@ export function Component() {
     saliendo.current = true
     navigate(RUTA_LISTA)
   }
-  const pedirSalir = () => (tocado ? setConfirmarSalida(true) : salir())
-
   function nuevoAviso(estado: 'Publicado' | 'Borrador') {
     return {
       ...datos,
@@ -197,7 +194,7 @@ export function Component() {
     if (aviso && publicado) {
       // Uno que ya se ve: se aplican los cambios y sigue en el estado que tenía.
       guardarAviso({ ...aviso, ...datos, historial: [registro('Editó la publicación'), ...aviso.historial] })
-      toast.add({ type: 'success', title: 'Aviso actualizado', description: `Se guardaron los cambios de «${datos.titulo.trim()}».` })
+      notify('Aviso actualizado', `Se guardaron los cambios de «${datos.titulo.trim()}».`, 'success')
     } else {
       const borrador = borradorId.current ? buscarAviso(borradorId.current) : undefined
       guardarAviso(
@@ -205,28 +202,18 @@ export function Component() {
           ? { ...borrador, ...datos, estado: 'Publicado', historial: [registro('Publicó el aviso'), ...borrador.historial] }
           : nuevoAviso('Publicado'),
       )
-      toast.add({
-        type: 'success',
-        title: editando ? 'Aviso publicado' : 'Aviso creado',
-        description: `«${datos.titulo.trim()}» ya se ve en el inicio de los colaboradores.`,
-      })
+      notify(editando ? 'Aviso publicado' : 'Aviso creado', `«${datos.titulo.trim()}» ya se ve en el inicio de los colaboradores.`, 'success')
     }
     navigate(RUTA_LISTA)
   }
 
-  // Lo que dice la confirmación de salir. Con borrador no es una advertencia: no hay nada que perder, está para que
-  // nadie se salga sin querer y para contarle dónde quedó. Editando uno publicado, sí: los cambios se pierden.
-  const salida = publicado
-    ? {
-        titulo: '¿Salir sin guardar?',
-        descripcion: 'Los cambios que hiciste se perderán y el aviso se queda como está.',
-        accion: 'Salir sin guardar',
-      }
-    : {
-        titulo: editando ? '¿Salir de la edición?' : '¿Salir de la creación?',
-        descripcion: 'El aviso queda guardado como borrador. Puedes retomarlo cuando quieras desde Avisos internos.',
-        accion: editando ? 'Salir de la edición' : 'Salir de la creación',
-      }
+  // Lo que dice la ventana de salir (VentanaSalir, war room del 13-oct). Un aviso en borrador se guarda solo y la bajada
+  // cuenta dónde queda. Editando uno publicado no hay borrador: la bajada avisa que los cambios se pierden.
+  const salida = {
+    conCambios: tocado,
+    retomarEn: 'Avisos internos',
+    mensaje: publicado ? 'Los cambios que hiciste se perderán y el aviso se queda como está.' : undefined,
+  }
 
   return (
     <PageShell width="default">
@@ -243,10 +230,11 @@ export function Component() {
           <div className="flex flex-wrap items-center gap-2">
             {/* La insignia de tokens solo cuando se está usando la IA, como en «Agregar portada». */}
             {pestana === 'ia' ? <TokenBadge tokens={tokens} /> : null}
-            <Button variant="outline" onClick={pedirSalir}>
-              <HugeiconsIcon icon={Logout01Icon} size={16} aria-hidden="true" />
-              {editando ? 'Salir de la edición' : 'Salir de la creación'}
-            </Button>
+            <BotonSalirCreacion
+              texto={editando ? 'Salir de la edición' : 'Salir de la creación'}
+              onClick={salir}
+              salida={{ ...salida, alGuardarYSalir: publicado ? undefined : salir }}
+            />
           </div>
         }
       />
@@ -444,30 +432,15 @@ export function Component() {
         </PageActionBar>
       </PageContent>
 
-      <DialogoConfirmar
-        abierto={confirmarSalida}
-        onAbiertoChange={setConfirmarSalida}
-        icono={Logout01Icon}
-        titulo={salida.titulo}
-        descripcion={salida.descripcion}
-        cancelar="Seguir aquí"
-        accion={salida.accion}
-        onConfirmar={() => {
-          setConfirmarSalida(false)
-          salir()
-        }}
-      />
-
-      {/* La misma pregunta, para las salidas que no pasan por el botón (la barra lateral, «atrás» del navegador). */}
-      <DialogoConfirmar
+      {/* La misma ventana del botón, para las salidas que no pasan por él (la barra lateral, «atrás» del navegador). */}
+      <VentanaSalir
         abierto={salidaBloqueada !== null}
         onAbiertoChange={(abierto) => (abierto ? undefined : salidaBloqueada?.reset())}
-        icono={Logout01Icon}
-        titulo={salida.titulo}
-        descripcion={salida.descripcion}
-        cancelar="Seguir aquí"
-        accion={salida.accion}
-        onConfirmar={() => salidaBloqueada?.proceed()}
+        texto={editando ? 'Salir de la edición' : 'Salir de la creación'}
+        borrador={!publicado}
+        retomarEn={salida.retomarEn}
+        mensaje={salida.mensaje}
+        onSalir={() => salidaBloqueada?.proceed()}
       />
     </PageShell>
   )

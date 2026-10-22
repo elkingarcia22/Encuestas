@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
-import { ArrowUp01Icon, Copy01Icon, Delete02Icon, InformationCircleIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { ArrowUp01Icon, Copy01Icon, Delete02Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Field,
@@ -17,13 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
   Switch,
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverTrigger,
   Item,
   Text,
 } from '@ubits/flux-ui'
+import { BotonAyuda } from '@/shared/components/BotonAyuda'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { CampoRespuesta, type Respuesta } from '../../../components/vista-previa/campo-respuesta'
 import { CampoEnunciado } from './campo-enunciado'
@@ -36,10 +33,13 @@ import {
   changeQuestionType,
   changeScaleType,
   hasEndLabels,
+  DEPTH_WHY_DEFAULT,
   hasOptions,
   needsRatingType,
+  supportsDepthWhy,
   supportsDontKnow,
   supportsFollowUps,
+  supportsOther,
 } from '../../../modelo/questionCatalog'
 import type { QuestionType, RatingType, ScaleType, SurveyQuestion } from '../../../modelo/surveyBuilderTypes'
 import { LIMITE_ENUNCIADO, LIMITE_OPCION_PREGUNTA, cercaDelTope, contador, cortoDeMinimo } from '../../../modelo/limites-texto'
@@ -47,6 +47,12 @@ import { LIMITE_ENUNCIADO, LIMITE_OPCION_PREGUNTA, cercaDelTope, contador, corto
 // El formulario de una pregunta, abierto en su propio sitio de la lista. No hay «guardar»: cada
 // tecla se escribe en la encuesta. Cambiar el tipo no borra lo configurado: apaga lo que no aplica
 // y lo recupera al volver. Los errores aparecen cuando ya se intentó finalizar.
+
+// Los «!» de este formulario son tres, siempre los mismos: el fondo sólido de los campos (bg-background!), que la
+// librería deja transparentes y se pierden sobre el gris de la fila (diferencias.json › input-group-fondo-solido y
+// select-trigger-fondo-solido); el rojo de los botones de quitar (text-destructive!), que los botones sin borde no traen
+// (diferencias.json › button-ghost-tonos); y el ancho y la alineación de las filas con interruptor (w-auto!,
+// items-center!, items-stretch!), que la clase sola no le gana a la librería (diferencias.json › instalacion-estilos-sin-capa).
 
 // Cada opción lleva el icono del catálogo (el mismo que marca la fila de la pregunta): ayuda a reconocerla en la lista.
 const aOpciones = <T extends string>(lista: readonly { value: T; label: string; icon?: IconSvgElement }[]) => lista.map(({ value, label, icon }) => ({ value, label, icon }))
@@ -76,6 +82,7 @@ function Selector<T extends string>({
     <Field data-invalid={invalido || undefined} className={className}>
       <FieldLabel htmlFor={id}>{etiqueta}</FieldLabel>
       <Select value={valor ?? ''} onValueChange={(nuevo) => onCambio(nuevo as T)} items={opciones}>
+        {/* «!»: fondo sólido; la librería lo deja transparente (diferencias.json › select-trigger-fondo-solido). */}
         <SelectTrigger className="bg-background!" id={id} aria-invalid={invalido}>
           {/* El valor elegido lleva su icono, como en la lista de opciones. */}
           <SelectValue placeholder={etiqueta}>
@@ -141,7 +148,7 @@ export function EditorPregunta({
 
   // Lo rojo se marca al intentar avanzar, agregar o guardar, y solo lo que ya estaba en pantalla en ese momento: si después se cambia
   // el tipo de pregunta o de escala y aparecen campos nuevos, salen normales hasta el siguiente intento.
-  const estructura = `${pregunta.type}|${sinTipo}|${escala.kind}|${escala.followUpEnabled}`
+  const estructura = `${pregunta.type}|${sinTipo}|${escala.kind}|${escala.followUpEnabled}|${pregunta.depthWhyEnabled === true}`
   const [visto, setVisto] = useState({ intento, estructura })
   if (visto.intento !== intento) setVisto({ intento, estructura })
   const conErroresVivos = conErrores && visto.estructura === estructura
@@ -153,6 +160,8 @@ export function EditorPregunta({
   const sinEtiquetaMinima = conErroresVivos && esEscala && hasEndLabels(escala.kind) && escala.minLabel.trim() === ''
   const sinEtiquetaMaxima = conErroresVivos && esEscala && hasEndLabels(escala.kind) && escala.maxLabel.trim() === ''
   const profundidadVacia = (banda: 'detractors' | 'neutrals' | 'promoters') => conErroresVivos && esEscala && escala.followUpEnabled && escala.followUps[banda].trim() === ''
+  const conPorQue = !sinTipo && supportsDepthWhy(pregunta)
+  const porQueVacia = conErroresVivos && conPorQue && pregunta.depthWhyEnabled === true && (pregunta.depthWhyText ?? '').trim() === ''
   const opcionesMal = conErroresVivos && hasOptions(pregunta.type) && (pregunta.options.length < MIN_OPTIONS || pregunta.options.some((opcion) => opcion.label.trim() === ''))
 
   return (
@@ -208,11 +217,13 @@ export function EditorPregunta({
         <FieldGroup className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={sinEtiquetaMinima || undefined}>
             <FieldLabel htmlFor={`pregunta-${id}-minimo`}>Etiqueta mínima</FieldLabel>
+            {/* «!»: fondo sólido; la librería lo deja transparente (diferencias.json › input-group-fondo-solido). */}
             <Input className="bg-background!" id={`pregunta-${id}-minimo`} value={escala.minLabel} aria-invalid={sinEtiquetaMinima} placeholder="Escribe aquí la etiqueta mínima" onChange={(evento) => cambiarEscala({ minLabel: evento.target.value })} />
             {sinEtiquetaMinima ? <FieldError>Este campo es obligatorio</FieldError> : null}
           </Field>
           <Field data-invalid={sinEtiquetaMaxima || undefined}>
             <FieldLabel htmlFor={`pregunta-${id}-maximo`}>Etiqueta máxima</FieldLabel>
+            {/* «!»: fondo sólido; la librería lo deja transparente (diferencias.json › input-group-fondo-solido). */}
             <Input className="bg-background!" id={`pregunta-${id}-maximo`} value={escala.maxLabel} aria-invalid={sinEtiquetaMaxima} placeholder="Escribe aquí la etiqueta máxima" onChange={(evento) => cambiarEscala({ maxLabel: evento.target.value })} />
             {sinEtiquetaMaxima ? <FieldError>Este campo es obligatorio</FieldError> : null}
           </Field>
@@ -238,6 +249,7 @@ export function EditorPregunta({
               <div key={opcion.id} className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <Input
+                  // «!»: fondo sólido; la librería lo deja transparente (diferencias.json › input-group-fondo-solido).
                   className="bg-background!"
                   value={opcion.label}
                   maxLength={LIMITE_OPCION_PREGUNTA.max}
@@ -248,6 +260,7 @@ export function EditorPregunta({
                 />
                 <BotonIcono
                   aria-label={`Eliminar opción ${indice + 1}`}
+                  // «!»: rojo de quitar; el ghost no trae tono rojo (diferencias.json › button-ghost-tonos).
                   className="text-destructive!"
                   disabled={pregunta.options.length <= MIN_OPTIONS}
                   onClick={() => onCambio({ ...pregunta, options: pregunta.options.filter((actual) => actual.id !== opcion.id) })}
@@ -259,6 +272,15 @@ export function EditorPregunta({
               {cercaDelTope(opcion.label.length, LIMITE_OPCION_PREGUNTA.max) ? <FieldDescription>{contador(opcion.label.length, LIMITE_OPCION_PREGUNTA.max)}</FieldDescription> : null}
               </div>
             ))}
+            {/* «Otro» va al final de la lista, fijo: no se reescribe. Quitarlo apaga el interruptor de abajo. */}
+            {pregunta.allowOther ? (
+              <div className="flex items-center gap-2">
+                <Input className="bg-background!" value="Otro" disabled aria-label="Opción Otro" />
+                <BotonIcono aria-label="Quitar la opción Otro" className="text-destructive!" onClick={() => onCambio({ ...pregunta, allowOther: false })}>
+                  <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
+                </BotonIcono>
+              </div>
+            ) : null}
           </div>
           <div>
             <Button variant="outline" size="sm" onClick={() => onCambio({ ...pregunta, options: [...pregunta.options, buildOption()] })}>
@@ -270,20 +292,33 @@ export function EditorPregunta({
         </FieldSet>
       ) : null}
 
+      {conPorQue && pregunta.depthWhyEnabled ? (
+        <FieldSet>
+          {pregunta.depthWhyEnabled ? (
+            <Field data-invalid={porQueVacia || undefined}>
+              <FieldLabel htmlFor={`pregunta-${id}-por-que-texto`}>Pregunta de seguimiento</FieldLabel>
+              <Input
+                // «!»: fondo sólido; la librería lo deja transparente (diferencias.json › input-group-fondo-solido).
+                className="bg-background!"
+                id={`pregunta-${id}-por-que-texto`}
+                aria-invalid={porQueVacia}
+                value={pregunta.depthWhyText ?? ''}
+                placeholder={DEPTH_WHY_DEFAULT}
+                onChange={(evento) => onCambio({ ...pregunta, depthWhyText: evento.target.value })}
+              />
+              {porQueVacia ? <FieldError>Este campo es obligatorio</FieldError> : null}
+            </Field>
+          ) : null}
+        </FieldSet>
+      ) : null}
+
       {esEscala && supportsFollowUps(escala.kind) ? (
         <FieldSet>
           {/* Como los demás interruptores del editor: el interruptor, el nombre y la explicación en la ayuda (i). */}
           <Field orientation="horizontal" className="w-auto! items-center!">
             <Switch id={`pregunta-${id}-profundidad`} checked={escala.followUpEnabled} onCheckedChange={(followUpEnabled) => cambiarEscala({ followUpEnabled })} />
-            <FieldLabel htmlFor={`pregunta-${id}-profundidad`}>Preguntas de profundidad</FieldLabel>
-            <Popover>
-              <PopoverTrigger render={<BotonIcono size="icon-xs" aria-label="Qué son las preguntas de profundidad" />}>
-                <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-72">
-                <PopoverDescription>Un seguimiento distinto para quien califica bajo, medio o alto. Alimenta la vista «Profundidad» de los resultados.</PopoverDescription>
-              </PopoverContent>
-            </Popover>
+            <FieldLabel className="whitespace-nowrap" htmlFor={`pregunta-${id}-profundidad`}>Preguntas de profundidad</FieldLabel>
+            <BotonAyuda etiqueta="Qué son las preguntas de profundidad">Un seguimiento distinto para quien califica bajo, medio o alto. Alimenta la vista «Profundidad» de los resultados.</BotonAyuda>
           </Field>
           {escala.followUpEnabled ? (
             <div className="flex flex-col gap-3">
@@ -297,6 +332,7 @@ export function EditorPregunta({
                 <Field key={banda} data-invalid={profundidadVacia(banda) || undefined}>
                   <FieldLabel htmlFor={`pregunta-${id}-${banda}`}>{etiqueta}</FieldLabel>
                   <Input
+                    // «!»: fondo sólido; la librería lo deja transparente (diferencias.json › input-group-fondo-solido).
                     className="bg-background!"
                     id={`pregunta-${id}-${banda}`}
                     aria-invalid={profundidadVacia(banda)}
@@ -312,25 +348,48 @@ export function EditorPregunta({
         </FieldSet>
       ) : null}
 
-      {/* La misma rejilla de dos columnas que los desplegables: «no sabe / no responde» bajo la escala y «Obligatoria»
-          bajo la valoración. Sin el de «no sabe», «Obligatoria» se corre a la primera columna. */}
-      <div className="grid items-center gap-4 sm:grid-cols-2">
-        {conNoSabe ? (
+      {/* Todos los interruptores de la pregunta en una sola fila (se parte solo si el panel es angosto); cada etiqueta, en una línea. */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {supportsOther(pregunta.type) && !sinTipo ? (
+            <Field orientation="horizontal" className="w-auto! items-center!">
+              <Switch id={`pregunta-${id}-otro`} checked={pregunta.allowOther === true} onCheckedChange={(allowOther) => onCambio({ ...pregunta, allowOther })} />
+              <FieldLabel className="whitespace-nowrap" htmlFor={`pregunta-${id}-otro`}>Habilitar «Otro»</FieldLabel>
+              <BotonAyuda etiqueta="Qué hace la opción Otro">Suma «Otro» al final de las opciones. Quien la elija verá un campo para escribir la suya.</BotonAyuda>
+            </Field>
+          ) : null}
+          {conPorQue ? (
+            // «!»: la fila del interruptor a su ancho; la clase sola no le gana a la librería (diferencias.json › instalacion-estilos-sin-capa).
+            <Field orientation="horizontal" className="w-auto! items-center!">
+              <Switch
+                id={`pregunta-${id}-por-que`}
+                checked={pregunta.depthWhyEnabled === true}
+                onCheckedChange={(depthWhyEnabled) => onCambio({ ...pregunta, depthWhyEnabled, depthWhyText: depthWhyEnabled && !(pregunta.depthWhyText ?? '').trim() ? DEPTH_WHY_DEFAULT : pregunta.depthWhyText })}
+              />
+              <FieldLabel className="whitespace-nowrap" htmlFor={`pregunta-${id}-por-que`}>Pregunta de profundidad</FieldLabel>
+              <BotonAyuda etiqueta="Qué es la pregunta de profundidad">Después de responder, pregunta por qué eligió esa opción u opciones. Alimenta la vista «Profundidad» de los resultados.</BotonAyuda>
+            </Field>
+          ) : null}
+          {conNoSabe ? (
+            // «!»: la fila del interruptor a su ancho; la clase sola no le gana a la librería (diferencias.json › instalacion-estilos-sin-capa).
+            <Field orientation="horizontal" className="w-auto!">
+              <Switch id={`pregunta-${id}-nsnr`} checked={escala.allowDontKnow} onCheckedChange={(allowDontKnow) => cambiarEscala({ allowDontKnow })} />
+              <FieldLabel className="whitespace-nowrap" htmlFor={`pregunta-${id}-nsnr`}>Agregar opción no sabe / no responde</FieldLabel>
+            </Field>
+          ) : null}
+          {/* «!»: la fila del interruptor a su ancho; la clase sola no le gana a la librería (diferencias.json › instalacion-estilos-sin-capa). */}
           <Field orientation="horizontal" className="w-auto!">
-            <Switch id={`pregunta-${id}-nsnr`} checked={escala.allowDontKnow} onCheckedChange={(allowDontKnow) => cambiarEscala({ allowDontKnow })} />
-            <FieldLabel htmlFor={`pregunta-${id}-nsnr`}>Añadir opción no sabe / no responde</FieldLabel>
+            <Switch id={`pregunta-${id}-obligatoria`} checked={pregunta.required} onCheckedChange={(required) => onCambio({ ...pregunta, required })} />
+            <FieldLabel className="whitespace-nowrap" htmlFor={`pregunta-${id}-obligatoria`}>Obligatoria</FieldLabel>
           </Field>
-        ) : null}
-        <Field orientation="horizontal" className={conNoSabe ? 'w-auto! sm:col-start-2' : 'w-auto!'}>
-          <Switch id={`pregunta-${id}-obligatoria`} checked={pregunta.required} onCheckedChange={(required) => onCambio({ ...pregunta, required })} />
-          <FieldLabel htmlFor={`pregunta-${id}-obligatoria`}>Obligatoria</FieldLabel>
-        </Field>
+        </div>
         {enPanel ? null : (
         <div className="flex items-center justify-end gap-1 sm:col-span-2">
           <Button variant="ghost" size="sm" onClick={onDuplicar}>
             <HugeiconsIcon icon={Copy01Icon} aria-hidden="true" />
             Duplicar
           </Button>
+          {/* «!»: rojo de quitar; el ghost no trae tono rojo (diferencias.json › button-ghost-tonos). */}
           <Button variant="ghost" size="sm" className="text-destructive!" onClick={onEliminar}>
             <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
             Eliminar pregunta

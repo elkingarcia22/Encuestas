@@ -3,7 +3,6 @@ import { Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Alert02Icon, ArrowDown01Icon, CheckmarkCircle02Icon, PlayCircleIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbList,
@@ -34,6 +33,7 @@ import {
   TabsTrigger,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { PageHeader } from '@/shared/components/PageShell'
 
 import { EN_ACCION } from './en-accion'
@@ -247,8 +247,11 @@ export function VerEnAccion({ pagina }: { pagina: string }) {
 // «acciones» (opcional) va a la derecha, p. ej. el botón que abre el patrón en pantallas reales.
 export function EncabezadoPatron({
   titulo,
-  antetitulo = 'Design system · Patrones',
-  etiqueta = <Badge variant="success-light">Todo en la librería</Badge>,
+  // 13-oct: el antetítulo por defecto es el grupo del menú donde viven estas páginas (Componentes: Estados, Tablas,
+  // Formularios, Métricas); las de otro grupo lo dicen. La etiqueta ya no presume de «todo en la librería»: las páginas
+  // documentan piezas del proyecto (BotonIcono, DialogoConfirmar, TablaDatos…) hechas sobre ella.
+  antetitulo = 'Design system · Componentes',
+  etiqueta = <Badge variant="success-light">Piezas del proyecto sobre la librería</Badge>,
   acciones,
   children,
 }: {

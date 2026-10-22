@@ -11,7 +11,7 @@ import { SECTIONS } from './components/sections'
 
 const META = [
   { icon: File02Icon, label: 'Versión 3.2' },
-  { icon: Calendar03Icon, label: 'Actualizada el 2 sep 2026' },
+  { icon: Calendar03Icon, label: 'Actualizada el 2 sept 2026' },
   { icon: UserIcon, label: 'Sara Gómez · Gestión humana' },
   { icon: Clock01Icon, label: '6 min de lectura' },
 ]
@@ -70,7 +70,7 @@ export function Component() {
           ))}
           actions={
             <>
-              <Button variant="outline" className={WS} onClick={() => notify('Descargando la política en PDF')}>
+              <Button variant="outline" className={WS} onClick={() => notify('Descargando la política en PDF', undefined, 'info')}>
                 <HugeiconsIcon icon={Download04Icon} size={16} />
                 Descargar PDF
               </Button>
@@ -79,7 +79,7 @@ export function Component() {
                 disabled={confirmed}
                 onClick={() => {
                   setConfirmed(true)
-                  notify('Lectura confirmada · queda en tu historial')
+                  notify('Lectura confirmada · queda en tu historial', undefined, 'success')
                 }}
               >
                 {confirmed ? <HugeiconsIcon icon={Tick02Icon} size={16} /> : null}

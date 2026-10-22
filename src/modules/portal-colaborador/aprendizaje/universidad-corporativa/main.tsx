@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { FilterIcon, FlashIcon, MoreHorizontalIcon, Mortarboard01Icon, Search01Icon } from '@hugeicons/core-free-icons'
+import { FilterIcon, FlashIcon, MoreHorizontalIcon, Mortarboard01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +16,7 @@ import {
   Text,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { PageContent, PageShell } from '@/shared/components/PageShell'
 import { PrimeraVez, demoVacia } from '@/shared/components/PrimeraVez'
@@ -24,11 +24,11 @@ import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
 import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
-import { fechaCorta } from '@/modules/design-system/patrones/formato'
+import { fechaCorta, plural } from '@/modules/design-system/patrones/formato'
 import { CambioDeVista, MarcoCuadricula, ModalFiltros, type VistaLista } from '@/modules/admin/aprendizaje/lms-creator/contenidos/components/controles-lista'
 import { nombreCategoria } from '@/shared/bd'
 import { SinResultados } from '@/shared/components/SinResultados'
-import { abrirContenido, type Sesion } from '../zona-de-estudio/components/datos'
+import { type Sesion } from '../zona-de-estudio/components/datos'
 import { opcionesCalendario, TarjetaSesion } from '../zona-de-estudio/components/pestana-eventos'
 import { categoriaDeEnlace, CRITERIOS, listaVisible, sesionesCatalogo, SIN_FILTROS, type Filtros, type Item } from './components/datos'
 
@@ -95,7 +95,7 @@ const texto = (valor: string) => (
   </Text>
 )
 
-// Una sesión que todavía no empieza se añade al calendario desde su «⋯», como en Zona de estudio › Eventos.
+// Una sesión que todavía no empieza se agrega al calendario desde su «⋯», como en Zona de estudio › Eventos.
 function AccionesFila({ fila }: { fila: FilaTabla }) {
   if (!fila.sesion || fila.sesion.enVivo) return null
   return (
@@ -105,7 +105,7 @@ function AccionesFila({ fila }: { fila: FilaTabla }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuGroup>
-          <DropdownMenuLabel>Añadir a mi calendario</DropdownMenuLabel>
+          <DropdownMenuLabel>Agregar a mi calendario</DropdownMenuLabel>
           {opcionesCalendario(fila.sesion).map((o) => (
             <DropdownMenuItem key={o.etiqueta} onClick={o.accion}>
               <HugeiconsIcon icon={o.icono} size={16} aria-hidden="true" />
@@ -124,21 +124,21 @@ const COLUMNAS: DataGridListConfig<FilaTabla>['columns'] = [
   {
     accessorKey: 'titulo',
     header: 'Nombre del contenido',
-    size: 320,
+    // 13-oct (tabla-cabe): las columnas suman 1.040 px (eran 1.130) y caben en los 1.104 del marco.
+    size: 300,
     cell: ({ row }) => (
       <CeldaTitulo
         titulo={row.original.titulo}
         detalle={row.original.detalle}
         imagen={row.original.imagen}
         sinImagen={<HugeiconsIcon icon={Mortarboard01Icon} size={16} aria-hidden="true" />}
-        onClick={abrirContenido}
       />
     ),
   },
   {
     accessorKey: 'tipo',
     header: 'Tipo de contenido',
-    size: 160,
+    size: 150,
     cell: ({ row }) => (
       <span className="flex items-center gap-2">
         {texto(row.original.tipo)}
@@ -150,10 +150,10 @@ const COLUMNAS: DataGridListConfig<FilaTabla>['columns'] = [
       </span>
     ),
   },
-  { accessorKey: 'categoria', header: 'Categoría', size: 180, cell: ({ row }) => texto(row.original.categoria) },
-  { accessorKey: 'nivel', header: 'Nivel', size: 120, cell: ({ row }) => texto(row.original.nivel) },
-  { accessorKey: 'minutos', header: 'Duración', size: 150, cell: ({ row }) => texto(row.original.duracion) },
-  { accessorKey: 'idioma', header: 'Idioma', size: 110, cell: ({ row }) => texto(row.original.idioma) },
+  { accessorKey: 'categoria', header: 'Categoría', size: 170, cell: ({ row }) => texto(row.original.categoria) },
+  { accessorKey: 'nivel', header: 'Nivel', size: 110, cell: ({ row }) => texto(row.original.nivel) },
+  { accessorKey: 'minutos', header: 'Duración', size: 120, cell: ({ row }) => texto(row.original.duracion) },
+  { accessorKey: 'idioma', header: 'Idioma', size: 100, cell: ({ row }) => texto(row.original.idioma) },
   {
     id: 'acciones',
     header: 'Acciones',
@@ -234,6 +234,8 @@ export function Component() {
     },
     search: { placeholder: 'Buscar contenidos o sesiones', onSearch: alBuscar },
     emptyState: { type: 'no-results', customComponent: <SinResultados busqueda={busqueda} filtrosActivos={chips.length} onLimpiar={limpiarTodo} /> },
+    // Las columnas ya suman lo que mide el marco: sin cambio de ancho para que no se salgan de él.
+    layout: { resizable: false },
   }
 
   return (
@@ -269,8 +271,7 @@ export function Component() {
             <PrimeraVez
               icono="glass-discovery"
               titulo="Tu empresa todavía no publicó contenidos"
-              descripcion="Aquí vas a ver lo que tu empresa cree para su universidad corporativa. Mientras tanto, explora el catálogo de UBITS."
-              accion={{ texto: 'Explorar catálogo', icono: Search01Icon, onClick: () => navigate('/portal-colaborador/aprendizaje/catalogo') }}
+              descripcion="Aquí vas a ver lo que tu empresa cree para su universidad corporativa."
             />
             </FramePanel>
           </Frame>
@@ -282,7 +283,7 @@ export function Component() {
               <Button
                 variant={chips.length ? 'secondary' : 'outline'}
                 size="sm"
-                aria-label={chips.length ? `Filtrar, ${chips.length} criterios aplicados` : 'Filtrar'}
+                aria-label={chips.length ? `Filtrar, ${chips.length} ${plural(chips.length, 'criterio aplicado', 'criterios aplicados')}` : 'Filtrar'}
                 onClick={() => {
                   setPendientes(filtros)
                   setModal(true)
@@ -336,7 +337,6 @@ export function Component() {
                           nivel={item.tarjeta.nivel}
                           duracion={item.tarjeta.duracion}
                           idioma={item.tarjeta.idioma}
-                          onClick={abrirContenido}
                         />
                       ),
                     )}

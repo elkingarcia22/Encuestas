@@ -41,7 +41,6 @@ function Crear() {
   })
   return (
     <CreacionVacante
-      pasosEnTarjeta
       volverA={RUTA}
       migas={[{ label: 'Inicio', path: '/admin' }, { label: 'Selección' }, { label: 'Vacantes', path: RUTA }, { label: aqui }]}
       inicial={inicial}
@@ -49,6 +48,8 @@ function Crear() {
         const nueva = agregarVacante(vacanteDesdeCreacion(vacante))
         navigate(`${RUTA}/${nueva.id}`, { state: { publicada: true } })
       }}
+      // Salir de la creación deja la vacante en la lista como borrador, que es lo que promete la ventana de salida.
+      alSalir={esPlantilla ? undefined : (vacante) => agregarVacante({ ...vacanteDesdeCreacion(vacante), estado: 'Borrador' })}
     />
   )
 }
@@ -67,7 +68,6 @@ function Editar({ vacanteId }: { vacanteId: string }) {
     return (
       <CreacionVacante
         key={vacante.id}
-        pasosEnTarjeta
         inicial={inicial}
         pasoInicial={llegada?.paso ?? pasoPendiente(vacante)}
         volverA={volverA}
@@ -85,6 +85,8 @@ function Editar({ vacanteId }: { vacanteId: string }) {
           cambiarVacantes([vacante], { estado: 'Publicada', oculta: false })
           navigate(`${RUTA}/${vacante.id}`, { state: { publicada: true, invitaciones: salieron } })
         }}
+        // Salir sin publicar guarda lo cambiado en el mismo borrador.
+        alSalir={(cambiada) => guardarEdicion(vacante, cambiada)}
       />
     )
   return (
@@ -92,7 +94,6 @@ function Editar({ vacanteId }: { vacanteId: string }) {
       // La clave cambia con la vacante: si se pasa de editar una a editar otra, el formulario arranca de cero.
       key={vacante.id}
       modo="editar"
-      pasosEnTarjeta
       inicial={inicial}
       pasoInicial={llegada?.paso}
       volverA={volverA}

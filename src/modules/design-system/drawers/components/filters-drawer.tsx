@@ -86,7 +86,7 @@ export function FiltersDrawer({ open, onOpenChange }: Props) {
             className={WS}
             disabled={results === 0}
             onClick={() => {
-              notify(`Mostrando ${results} vacantes`)
+              notify(`Mostrando ${results} vacantes`, undefined, 'info')
               onOpenChange(false)
             }}
           >

@@ -11,8 +11,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Badge,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { AREAS, CIUDADES, PAISES } from './datos'
 import type { CamposSeccion } from './formulario'

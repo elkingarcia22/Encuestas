@@ -99,7 +99,7 @@ export function DetalleVacante({ vacante, candidatos }: { vacante: Vacante; cand
       <Frame>
         <FrameHeader className="[--frame-panel-header-gap:--spacing(1)]">
           <FrameTitle>Flujo del candidato</FrameTitle>
-          <FrameDescription>{etapas.length} etapas, en el orden en que el candidato las completa</FrameDescription>
+          <FrameDescription>{etapas.length} {plural(etapas.length, 'etapa', 'etapas')}, en el orden en que el candidato las completa</FrameDescription>
         </FrameHeader>
         <FramePanel>
           <Timeline value={etapas.length}>

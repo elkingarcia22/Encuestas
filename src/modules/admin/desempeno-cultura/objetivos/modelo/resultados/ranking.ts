@@ -1,5 +1,5 @@
 import type { Corte } from './lecturas'
-import { nivelDe, riesgoDe, type NivelId, type PersonaSeguida, type ResultadosCiclo, type Riesgo } from './seguimiento'
+import { nivelDe, riesgoDe, type NivelVista, type PersonaSeguida, type ResultadosCiclo, type Riesgo } from './seguimiento'
 
 // El ranking de un ciclo (portado del prototipo «configuración objetivos», 9-oct): por persona o por el grupo de «Ver
 // por», de mayor a menor avance. Trae los dos cuidados del prototipo:
@@ -16,7 +16,7 @@ export interface FilaRanking {
   etiqueta: string
   detalle: string
   avance: number
-  nivel: NivelId
+  nivel: NivelVista
   riesgo: Riesgo
   bloqueada: boolean
   /** La persona, cuando la fila es de una sola (para abrir su ficha). */
@@ -49,7 +49,7 @@ export function ranking(r: ResultadosCiclo, modo: ModoRanking, corte: Corte): Fi
       etiqueta: grupo,
       detalle: `${personas.length} ${personas.length === 1 ? 'persona' : 'personas'}`,
       avance,
-      nivel: nivelDe(avance),
+      nivel: nivelDe(avance, r.niveles),
       riesgo: riesgoDe(avance, r.calendario, r.abierto),
       bloqueada: personas.length < MINIMO_GRUPO,
       persona: null,

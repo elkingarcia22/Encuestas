@@ -20,12 +20,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   Field,
+  FieldDescription,
   FieldLabel,
   Item,
   ItemContent,
   ItemDescription,
   ItemMedia,
   ItemTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Separator,
   Text,
   Textarea,
@@ -36,10 +42,12 @@ import { Hint } from '@/shared/components/Hint'
 import { PageActionBar } from '@/shared/components/PageShell'
 import { notify } from '@/shared/components/notify'
 import { cumplidosDe, siguienteEtapaDe, tituloEtapa, type Candidatura, type VacanteUI } from '../../propuestas/datos'
-import { DialogoEscribir } from '../../propuestas/components/dialogo-escribir'
 import type { Bloqueo, Cambio } from '../../propuestas/components/use-proceso'
 import { QUIEN_MUEVE, registroDeMovimientos } from '../../propuestas/movimientos'
 import { noSeGuardo } from '../../propuestas/simular'
+import { motion } from 'motion/react'
+import { CifraAnimada } from '../../propuestas/components/cifra-animada'
+import { RESORTE } from '../../propuestas/components/animacion'
 
 // Trabajar con varias personas a la vez en la bandeja (24 sep, Nicolás: «construye algo mejor con esas selecciones
 // múltiples, que las acciones masivas sean más, la opción de seleccionar todo tampoco la veo»). Antes la barra decía
@@ -91,6 +99,27 @@ export function SeleccionarTodas({
 // ── La barra y sus ventanas ──
 type Ventana = 'correo' | 'opinion' | null
 
+const PLANTILLAS = [
+  {
+    id: 'entrevista',
+    titulo: 'Invitación a entrevista',
+    texto:
+      'Hola {nombre}, gracias por tu interés en la vacante de {vacante}. Queremos conocerte: responde este correo con dos horarios que te queden bien esta semana.',
+  },
+  {
+    id: 'documentos',
+    titulo: 'Solicitud de documentos',
+    texto:
+      'Hola {nombre}, para seguir con tu proceso en {vacante} necesitamos tu certificado laboral y tu documento de identidad. Puedes responder este correo con los archivos.',
+  },
+  {
+    id: 'actualizacion',
+    titulo: 'Actualización del proceso',
+    texto:
+      'Hola {nombre}, te escribimos para contarte que tu proceso en {vacante} sigue avanzando. Te avisaremos apenas tengamos novedades.',
+  },
+]
+
 export function BarraEnLote({
   vacante,
   marcadas,
@@ -112,6 +141,8 @@ export function BarraEnLote({
   bloqueo?: Bloqueo | null
 }) {
   const [ventana, setVentana] = useState<Ventana>(null)
+  const [plantilla, setPlantilla] = useState(PLANTILLAS[0].id)
+  const [mensaje, setMensaje] = useState(PLANTILLAS[0].texto)
   const [revisores, setRevisores] = useState<string[]>([])
   const [pedido, setPedido] = useState('')
 
@@ -125,6 +156,8 @@ export function BarraEnLote({
   })
 
   const abrir = (cual: Ventana) => {
+    setPlantilla(PLANTILLAS[0].id)
+    setMensaje(PLANTILLAS[0].texto)
     setRevisores([])
     setPedido('')
     setVentana(cual)
@@ -166,10 +199,20 @@ export function BarraEnLote({
           un azul marino fijo que no es del tema (su variante clara no existe, aunque se declare) y deja las acciones como
           iconos sueltos. Nicolás, 24 sep: «hazle un glow up, para mí se ve horrible». Ahora: a quién se le aplica (sus
           caras), qué se puede hacer (con nombre), rechazar aparte y avanzar como la acción principal. */}
-      <PageActionBar className="absolute bottom-4 left-1/2 z-20 mt-0 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 max-md:fixed max-md:bottom-3 gap-2 py-2 pr-2 pl-3 animate-in fade-in slide-in-from-bottom-4 duration-200">
+      {/* Sube desde abajo con resorte al elegir a la primera persona y baja al soltar a la última (va dentro de un
+          `AnimatePresence` en la página); la cuenta cambia contando (15 oct, glow up de movimiento). */}
+      <motion.div
+        // Dónde flota lo decide la página (pegada abajo mientras el tablero se ve).
+        className="w-max max-w-full"
+        initial={{ opacity: 0, y: 28, scale: 0.94 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 22, scale: 0.96, transition: { duration: 0.18 } }}
+        transition={RESORTE}
+      >
+      <PageActionBar className="mt-0 gap-2 py-2 pr-2 pl-3">
         <div className="flex items-center gap-2.5 pr-1" role="status">
           <Text as="span" size="sm" weight="medium" className="whitespace-nowrap tabular-nums">
-            {cuantas} {cuantas === 1 ? 'seleccionada' : 'seleccionadas'}
+            <CifraAnimada valor={cuantas} duracion={0.35} /> {cuantas === 1 ? 'seleccionada' : 'seleccionadas'}
           </Text>
         </div>
 
@@ -226,15 +269,22 @@ export function BarraEnLote({
           </BotonIcono>
         </Hint>
       </PageActionBar>
+      </motion.div>
 
-      {/* Escribirles a todas con una plantilla que se puede ajustar; cada una recibe su nombre. Es la ventana compartida
-          (`DialogoEscribir`, la misma del expediente y del detalle de la vacante: H-250); lo de aquí es lo que pasa al enviar. */}
-      <DialogoEscribir
-        abierto={ventana === 'correo'}
+      {/* Escribirles a todas con una plantilla que se puede ajustar; cada una recibe su nombre. */}
+      <VentanaDeAccion
+        open={ventana === 'correo'}
         onOpenChange={(abierta) => !abierta && setVentana(null)}
-        destinatarios={quienes}
-        onEnviar={function enviar(titulo) {
-          if (noSeGuardo(`lote-correo:${marcadas.map((c) => c.id).join(',')}:${titulo ?? ''}`, 'No pudimos enviar los correos', () => enviar(titulo), 'No salió ninguno.')) return
+        size="wide"
+        title={`Escribirle a ${personas(cuantas)}`}
+        sub="Cada correo sale por separado y con el nombre de quien lo recibe. Sale al confirmar."
+        items={quienes}
+        confirmLabel={`Enviar ${cuantas === 1 ? 'el correo' : `${cuantas} correos`}`}
+        pendingLabel="Enviando…"
+        confirmDisabled={!mensaje.trim()}
+        onConfirm={function escribir() {
+          const titulo = PLANTILLAS.find((p) => p.id === plantilla)?.titulo
+          if (noSeGuardo(`lote-correo:${marcadas.map((c) => c.id).join(',')}:${plantilla}`, 'No pudimos enviar los correos', escribir, 'No salió ninguno.')) return setVentana(null)
           // Cada correo queda en el historial de su persona, con quién lo mandó y la plantilla (VA-34).
           const cuando = Date.now()
           registroDeMovimientos.agregar(
@@ -252,8 +302,38 @@ export function BarraEnLote({
             })),
           )
           notify(`Enviaste ${cuantas === 1 ? '1 correo' : `${cuantas} correos`}`, titulo ? `«${titulo}».` : undefined, 'success')
+          setVentana(null)
         }}
-      />
+      >
+        <div className="flex flex-col gap-4">
+          <Field>
+            <FieldLabel>Plantilla</FieldLabel>
+            <Select
+              value={plantilla}
+              onValueChange={(valor) => {
+                setPlantilla(valor as string)
+                setMensaje(PLANTILLAS.find((p) => p.id === valor)?.texto ?? '')
+              }}
+            >
+              <SelectTrigger className="w-full" aria-label="Plantilla del correo">
+                <SelectValue>{(valor: string) => PLANTILLAS.find((p) => p.id === valor)?.titulo}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {PLANTILLAS.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.titulo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field>
+            <FieldLabel>Mensaje</FieldLabel>
+            <Textarea value={mensaje} onChange={(evento) => setMensaje(evento.target.value)} rows={5} />
+            <FieldDescription>{'{nombre}'} y {'{vacante}'} se cambian por los datos de cada persona.</FieldDescription>
+          </Field>
+        </div>
+      </VentanaDeAccion>
 
       {/* Pedir opinión: a quién del equipo de la vacante y qué se quiere que miren. */}
       <VentanaDeAccion

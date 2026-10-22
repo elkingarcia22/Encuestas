@@ -1,6 +1,7 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Link04Icon, MouseScroll01Icon, Scissor01Icon } from '@hugeicons/core-free-icons'
-import { Badge, Text } from '@ubits/flux-ui'
+import { Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import type { AlignmentLevel } from '../../../modelo/constructor/alignmentGraph'
 import { LEYENDA, VISUAL_NODO } from './visual'
 

@@ -11,6 +11,7 @@ import {
   type Plan,
   type Registro,
 } from '../../zona-de-estudio/components/datos'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Datos de Progreso (HU-progreso): el equipo de María Alejandra, sus planes vigentes, los indicadores y los rankings.
 // Salen de la misma base de planes que la Zona de estudio.
@@ -55,7 +56,7 @@ export function resumenPlan(plan: Plan, id: string) {
     etiqueta = `${horasMinutos(hechos)} de ${horasMinutos(total)}`
   } else {
     const { hechos, total } = conteoContenidos(plan, id)
-    etiqueta = `${hechos}/${total} contenidos`
+    etiqueta = `${hechos}/${total} ${plural(total, 'contenido', 'contenidos')}`
   }
   return { pct, etiqueta, cierre: `Cierre: ${fechaCorta(plan.fechaFinIso)}` }
 }

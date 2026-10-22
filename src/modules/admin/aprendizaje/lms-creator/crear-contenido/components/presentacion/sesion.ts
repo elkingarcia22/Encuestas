@@ -1,6 +1,6 @@
 // Sesión del flujo «Agregar presentación interactiva»: setup → editor. Cada paso tiene su propia URL y el estado viaja
 // en la sesión del navegador (sessionStorage), así ir y volver entre el setup y el editor conserva el borrador de
-// estructura y las diapositivas. Se borra al generar, al cerrar o al volver a «Añadir página».
+// estructura y las diapositivas. Se borra al generar, al cerrar o al volver a «Agregar página».
 
 import {
   ACENTO_POR_DEFECTO,

@@ -29,13 +29,13 @@ export const VACANCIES: Vacancy[] = [
     area: 'Analítica',
     owner: 'Laura Méndez',
     location: 'Bogotá · híbrido',
-    published: 'Publicada el 2 sep',
+    published: 'Publicada el 2 sept',
     status: 'En entrevistas',
     progress: 62,
     salary: '$6,5 – 8 M',
     mode: 'Híbrido, 3 días en oficina',
     openings: 2,
-    closing: '30 sep',
+    closing: '30 sept',
     description:
       'Construirá los tableros de talento y formación con el equipo de Gestión humana: modelos de rotación, seguimiento de planes de carrera y reportes mensuales para la gerencia.',
     skills: ['SQL', 'Power BI', 'Python', 'Estadística', 'Comunicación'],
@@ -53,10 +53,10 @@ export const VACANCIES: Vacancy[] = [
       { name: 'Camila Torres', role: 'Analista de datos freelance', stage: 'Filtro inicial', score: 69 },
     ],
     activity: [
-      { date: '2 sep', title: 'Vacante publicada', text: 'En el portal de empleo y LinkedIn.' },
-      { date: '6 sep', title: 'Filtro inicial cerrado', text: '18 personas pasaron a la prueba técnica.' },
-      { date: '10 sep', title: 'Prueba técnica calificada', text: 'Andrés Pardo evaluó 9 pruebas.' },
-      { date: '12 sep', title: 'Entrevistas agendadas', text: '5 entrevistas con Laura Méndez.' },
+      { date: '2 sept', title: 'Vacante publicada', text: 'En el portal de empleo y LinkedIn.' },
+      { date: '6 sept', title: 'Filtro inicial cerrado', text: '18 personas pasaron a la prueba técnica.' },
+      { date: '10 sept', title: 'Prueba técnica calificada', text: 'Andrés Pardo evaluó 9 pruebas.' },
+      { date: '12 sept', title: 'Entrevistas agendadas', text: '5 entrevistas con Laura Méndez.' },
       { date: 'Hoy', title: 'Oferta en preparación', text: 'Valentina Rojas es la candidata recomendada.' },
     ],
     team: [
@@ -70,7 +70,7 @@ export const VACANCIES: Vacancy[] = [
     area: 'Ventas',
     owner: 'Andrés Pardo',
     location: 'Medellín · presencial',
-    published: 'Publicada el 8 sep',
+    published: 'Publicada el 8 sept',
     status: 'Filtro inicial',
     progress: 24,
     salary: '$4 M + comisiones',
@@ -93,8 +93,8 @@ export const VACANCIES: Vacancy[] = [
       { name: 'Felipe Duarte', role: 'Vendedor corporativo', stage: 'Filtro inicial', score: 64 },
     ],
     activity: [
-      { date: '8 sep', title: 'Vacante publicada', text: 'En el portal de empleo, LinkedIn y Computrabajo.' },
-      { date: '11 sep', title: '42 postulaciones', text: 'Orbit ordenó las hojas de vida por afinidad.' },
+      { date: '8 sept', title: 'Vacante publicada', text: 'En el portal de empleo, LinkedIn y Computrabajo.' },
+      { date: '11 sept', title: '42 postulaciones', text: 'Orbit ordenó las hojas de vida por afinidad.' },
       { date: 'Ayer', title: 'Filtro inicial en curso', text: 'Andrés Pardo revisó 20 perfiles.' },
     ],
     team: [
@@ -113,7 +113,7 @@ export const VACANCIES: Vacancy[] = [
     salary: '$5,2 M',
     mode: 'Presencial, turnos rotativos',
     openings: 1,
-    closing: '20 sep',
+    closing: '20 sept',
     description:
       'Liderará el equipo de 14 operarios del centro de distribución de Cali: inventarios, despachos y cumplimiento de los indicadores de seguridad.',
     skills: ['Inventarios', 'Liderazgo', 'WMS', 'Seguridad industrial'],
@@ -131,7 +131,7 @@ export const VACANCIES: Vacancy[] = [
     activity: [
       { date: '20 ago', title: 'Vacante publicada', text: 'Solo en el portal interno durante la primera semana.' },
       { date: '28 ago', title: 'Entrevistas en planta', text: 'Visita guiada con el gerente de operaciones.' },
-      { date: '11 sep', title: 'Oferta enviada', text: 'Andrés Gil tiene hasta el viernes para responder.' },
+      { date: '11 sept', title: 'Oferta enviada', text: 'Andrés Gil tiene hasta el viernes para responder.' },
     ],
     team: [
       { name: 'Sara Gómez', role: 'Responsable' },
@@ -143,7 +143,7 @@ export const VACANCIES: Vacancy[] = [
     area: 'Tecnología',
     owner: 'Laura Méndez',
     location: 'Remoto · Colombia',
-    published: 'Publicada el 11 sep',
+    published: 'Publicada el 11 sept',
     status: 'Publicada',
     progress: 8,
     salary: '$9 – 11 M',
@@ -165,7 +165,7 @@ export const VACANCIES: Vacancy[] = [
       { name: 'Sofía Mejía', role: 'Product designer', stage: 'Filtro inicial', score: 76 },
     ],
     activity: [
-      { date: '11 sep', title: 'Vacante publicada', text: 'En el portal de empleo y comunidades de diseño.' },
+      { date: '11 sept', title: 'Vacante publicada', text: 'En el portal de empleo y comunidades de diseño.' },
       { date: 'Hace 3 días', title: 'Primeras postulaciones', text: '3 portafolios por revisar.' },
     ],
     team: [

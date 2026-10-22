@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
-import { Badge } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 
 /**
  * **Una condición de la actividad**: lo que hay que saber antes de empezar y tener a mano mientras se hace.

@@ -40,6 +40,7 @@ import {
 import { Composer } from '@/modules/admin/suite-ai/shared/composer'
 
 import { CONECTORES, ruta } from './data'
+import { AvisoOrbit } from '@/modules/design-system/ia/aviso-orbit'
 
 // Campo para escribirle al agente, como en el concepto: atajos arriba, franja opcional dentro
 // (novedad o contexto), «+» con archivos y conectores, «Voz» y enviar. El cuadro es Composer.
@@ -121,11 +122,7 @@ export function Compositor({
         footerStart={<MenuAgregar onArchivo={() => setAdjunto('subiendo')} />}
       />
       {aviso ? (
-        <div className="text-center">
-          <Text as="span" variant="muted" size="xs">
-            El agente puede cometer errores. Antes de ejecutar verás el impacto.
-          </Text>
-        </div>
+        <AvisoOrbit />
       ) : null}
     </div>
   )

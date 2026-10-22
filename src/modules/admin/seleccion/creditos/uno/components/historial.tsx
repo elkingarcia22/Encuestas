@@ -21,8 +21,8 @@ import {
   type Movimiento,
 } from '../../../propuestas/creditos'
 import { IconoAgente } from '../../../propuestas/components/creditos-ui'
-import { useCarga } from '../../../propuestas/components/carga'
-import { FiltroChip } from '../../../propuestas/components/filtro-chip'
+import { useCarga } from '@/modules/design-system/estados/carga'
+import { FiltroChip } from '@/modules/design-system/navegacion/filtro-chip'
 
 // El historial (25 sep). Hoy es un muro de tarjetas iguales en 17 páginas, con los análisis gratis de Evaluación CV
 // tapando lo que cuesta. Aquí es una tabla que se lee de un vistazo —cuándo, qué pasó y cuánto costó— y arranca con

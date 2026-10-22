@@ -1,8 +1,9 @@
 import { useMemo, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowDownRight01Icon, ArrowRight01Icon, ArrowUpRight01Icon } from '@hugeicons/core-free-icons'
-import { Badge } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ColumnaIndicador, DetalleIndicador, FilaIndicadores } from '@/modules/design-system/graficos/fila-indicadores'
+import { DonaReparto, numero } from '@/modules/design-system/graficos/piezas'
 import { deltaTone, formatDelta, formatPercent } from '../modelo/favorabilityScale'
 import { OPEN_STATUS } from '../modelo/homeMetrics'
 import { buildHomePulse, formatSurveyCount, type PulseMetric } from '../modelo/homePulse'
@@ -10,7 +11,6 @@ import { COVERAGE_DAYS, companyCoverage } from '../modelo/cobertura'
 import { CLOSING_SOON_DAYS, PARTICIPATION_TARGET, closeBucketOf } from '../modelo/surveyListFilters'
 import type { SurveyListItem } from '../modelo/types'
 import { AnilloAvance, Tendencia } from './graficos'
-import { DonaEstados } from './graficos-pulso'
 import { QueMide } from './que-mide'
 
 // Las tres lecturas del home: cuántas encuestas están en marcha, cómo va la participación frente a
@@ -89,10 +89,10 @@ function TarjetaCobertura({ encuestas }: { encuestas: readonly SurveyListItem[] 
       }
       cifra={formatPercent(cobertura.value)}
       variacion={diferencia !== null ? <Diferencia valor={diferencia} texto={formatDelta(diferencia)} /> : undefined}
-      grafico={<AnilloAvance valor={cobertura.value} color="var(--primary)" etiqueta={titulo} tamano={48} texto={`${cobertura.reached.toLocaleString('es-CO')} de ${cobertura.total.toLocaleString('es-CO')}`} />}
+      grafico={<AnilloAvance valor={cobertura.value} color="var(--primary)" etiqueta={titulo} tamano={48} texto={`${numero(cobertura.reached)} de ${numero(cobertura.total)}`} />}
       pie={
         <DetalleIndicador>
-          {cobertura.reached.toLocaleString('es-CO')} de {cobertura.total.toLocaleString('es-CO')} personas · últimos {COVERAGE_DAYS} días
+          {numero(cobertura.reached)} de {numero(cobertura.total)} personas · últimos {COVERAGE_DAYS} días
         </DetalleIndicador>
       }
     />
@@ -125,10 +125,13 @@ function TarjetaEnCurso({ encuestas }: { encuestas: readonly SurveyListItem[] })
       }
       cifra={String(enCurso)}
       grafico={
-        <DonaEstados
-          tramos={[
-            { clave: 'enCurso', etiqueta: 'En progreso', valor: enCurso, color: 'var(--info)' },
-            { clave: 'porIniciar', etiqueta: 'Por iniciar', valor: porIniciar, color: 'var(--warning)' },
+        <DonaReparto
+          etiqueta="Encuestas en curso por estado"
+          tamano={48}
+          formato={(valor) => `${numero(valor)} ${valor === 1 ? 'encuesta' : 'encuestas'}`}
+          segmentos={[
+            { id: 'enCurso', etiqueta: 'En progreso', valor: enCurso, color: 'var(--info)' },
+            { id: 'porIniciar', etiqueta: 'Por iniciar', valor: porIniciar, color: 'var(--warning)' },
           ]}
         />
       }
@@ -149,7 +152,7 @@ export function PulsoEncuestas({ encuestas }: { encuestas: readonly SurveyListIt
       <TarjetaEnCurso encuestas={encuestas} />
       <TarjetaPulso
         etiqueta="Participación"
-        ayuda={`Promedio de la tasa de respuesta de las encuestas lanzadas, en curso o finalizadas. La curva sigue la participación de cada una, de la que cerró antes a la más reciente, y la línea punteada es la meta del ${PARTICIPATION_TARGET}%. La insignia compara el promedio con la medición anterior.`}
+        ayuda={`Promedio de la tasa de respuesta de las encuestas lanzadas, en curso o finalizadas. La curva sigue la participación de cada una, de la que cerró antes a la más reciente, y la línea punteada es la meta del ${PARTICIPATION_TARGET} %. La insignia compara el promedio con la medición anterior.`}
         metrica={pulso.participation}
         formato={formatPercent}
         formatoDiferencia={formatDelta}

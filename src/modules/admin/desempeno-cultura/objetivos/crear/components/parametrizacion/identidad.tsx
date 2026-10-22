@@ -1,9 +1,11 @@
 import { Field, FieldDescription, FieldError, FieldLabel, Input, Switch, Textarea } from '@ubits/flux-ui'
-import { RangoDeFechas, type Rango } from '@/modules/design-system/formularios/rango-de-fechas'
+import { CampoFecha, RangoDeFechas, type Rango } from '@/modules/design-system/formularios/rango-de-fechas'
+import { Hint } from '@/shared/components/Hint'
 import { CICLO_PERIOD_LABELS, CICLO_PERIOD_MONTHS, MAX_CICLO_DESCRIPTION_LENGTH, type CicloDraft, type CicloPeriod } from '../../../modelo/constructor/cicloBuilderTypes'
 import { addMonths, parseISODate, toISODate } from '../../../modelo/constructor/cicloDates'
 import { setupPeriodOptions } from '../../../modelo/constructor/cicloSetup'
 import { Pregunta, TarjetasOpcion } from './opciones'
+import { MARGEN_BARRA, useMostrarAlAbrir } from '../mostrar-al-abrir'
 
 // Bloque 1 · Identidad y tiempos: nombre, descripción opcional, duración y fechas. Elegir una duración calcula el
 // cierre desde el inicio; mover a mano el cierre a otra fecha vuelve la duración «Personalizado», y cambiar el inicio
@@ -11,22 +13,32 @@ import { Pregunta, TarjetasOpcion } from './opciones'
 
 const COMPLETA = 'Completa este campo'
 
+const hoy = () => {
+  const fecha = new Date()
+  fecha.setHours(0, 0, 0, 0)
+  return fecha
+}
+
 const DIAS: Readonly<Record<CicloPeriod, string>> = { mes: '30 días', bimestre: '60 días', trimestre: '90 días', semestre: '180 días', anio: '365 días', personalizado: 'A medida' }
 
 export function BloqueIdentidad({
   borrador,
   onCambio,
   conErrores,
+  nombreDuplicado = false,
   descripcionActiva,
   onDescripcionActiva,
 }: {
   borrador: CicloDraft
   onCambio: (cambio: Partial<CicloDraft>) => void
   conErrores: boolean
+  /** Otro ciclo ya se llama así: se dice debajo del nombre desde que se escribe, como en Crear encuesta. */
+  nombreDuplicado?: boolean
   descripcionActiva: boolean
   onDescripcionActiva: (activa: boolean) => void
 }) {
   const faltaNombre = conErrores && borrador.name.trim() === ''
+  const nombreConError = faltaNombre || nombreDuplicado
   const faltaDuracion = conErrores && borrador.period === null
   const faltanFechas = conErrores && (!borrador.startDate || !borrador.endDate)
   const alReves = conErrores && borrador.startDate && borrador.endDate && borrador.endDate < borrador.startDate
@@ -56,15 +68,25 @@ export function BloqueIdentidad({
     }
     onCambio({ startDate: toISODate(inicio), endDate: toISODate(cierre) })
   }
+  const enCurso = borrador.status === 'live'
+  // En curso: mover el cierre a otra fecha que la de la duración la vuelve «Personalizado», como en el rango.
+  const elegirCierre = (fecha: Date | undefined) => {
+    const meses = borrador.period ? CICLO_PERIOD_MONTHS[borrador.period] : null
+    const inicio = parseISODate(borrador.startDate)
+    const fuera = meses !== null && inicio && fecha && toISODate(fecha) !== toISODate(addMonths(inicio, meses))
+    onCambio({ endDate: fecha ? toISODate(fecha) : '', ...(fuera ? { period: 'personalizado' as const } : {}) })
+  }
+  const [campoDescripcion, mostrarDescripcion] = useMostrarAlAbrir()
 
   return (
     <>
       <div className="flex flex-col gap-3">
-        <Field data-invalid={faltaNombre || undefined}>
+        <Field data-invalid={nombreConError || undefined}>
           <FieldLabel htmlFor="ciclo-nombre">Nombre del ciclo</FieldLabel>
-          <Input id="ciclo-nombre" value={borrador.name} onChange={(evento) => onCambio({ name: evento.target.value })} placeholder="Por ejemplo: Objetivos comerciales Q1" aria-invalid={faltaNombre || undefined} />
-          {faltaNombre ? <FieldError>{COMPLETA}</FieldError> : null}
+          <Input id="ciclo-nombre" value={borrador.name} onChange={(evento) => onCambio({ name: evento.target.value })} placeholder="Por ejemplo: Objetivos comerciales Q1" aria-invalid={nombreConError || undefined} />
+          {faltaNombre ? <FieldError>{COMPLETA}</FieldError> : nombreDuplicado ? <FieldError>Ya existe un ciclo con este nombre. Ponle otro para distinguirlos.</FieldError> : null}
         </Field>
+        {/* Campo en fila que ocupa solo lo suyo: el tema le da ancho completo y la clase sola no le gana (diferencias.json › instalacion-estilos-sin-capa). */}
         <Field orientation="horizontal" className="w-auto!">
           <Switch
             id="ciclo-con-descripcion"
@@ -72,14 +94,15 @@ export function BloqueIdentidad({
             onCheckedChange={(activa) => {
               onDescripcionActiva(activa)
               if (!activa) onCambio({ description: '' })
+              else mostrarDescripcion()
             }}
           />
-          <FieldLabel htmlFor="ciclo-con-descripcion">Añadir descripción</FieldLabel>
+          <FieldLabel htmlFor="ciclo-con-descripcion">Agregar descripción</FieldLabel>
         </Field>
       </div>
 
       {descripcionActiva ? (
-        <Field>
+        <Field ref={campoDescripcion} className={MARGEN_BARRA}>
           <FieldLabel htmlFor="ciclo-descripcion">Descripción</FieldLabel>
           <Textarea
             id="ciclo-descripcion"
@@ -95,8 +118,9 @@ export function BloqueIdentidad({
         </Field>
       ) : null}
 
-      <Pregunta titulo="Duración" ayuda="Al elegir una, calculamos la fecha de cierre por ti." error={faltaDuracion ? 'Elige una duración' : null}>
+      <Pregunta titulo="Duración" ayuda={enCurso ? 'El ciclo ya está en curso: la duración no cambia. Mueve solo la fecha de cierre.' : 'Al elegir una, calculamos la fecha de cierre por ti.'} error={faltaDuracion ? 'Elige una duración' : null}>
         <TarjetasOpcion
+          deshabilitado={enCurso}
           nombre="ciclo-duracion"
           columnas={5}
           valor={borrador.period}
@@ -106,11 +130,32 @@ export function BloqueIdentidad({
         />
       </Pregunta>
 
+      {enCurso ? (
+        // En curso solo se mueve el cierre, como en Encuestas (21-oct): el inicio ya pasó y se ve apagado; el cierre, desde hoy.
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor="ciclo-inicio">Fecha de inicio</FieldLabel>
+            <Hint label="El ciclo ya está en curso: su inicio no cambia.">
+              <span className="flex">
+                <span className="flex-1">
+                  <CampoFecha id="ciclo-inicio" valor={parseISODate(borrador.startDate) ?? undefined} onCambio={() => undefined} deshabilitado />
+                </span>
+              </span>
+            </Hint>
+          </Field>
+          <Field data-invalid={!borrador.endDate || undefined}>
+            <FieldLabel htmlFor="ciclo-cierre">Fecha de cierre</FieldLabel>
+            <CampoFecha id="ciclo-cierre" valor={parseISODate(borrador.endDate) ?? undefined} desde={hoy()} invalido={!borrador.endDate} onCambio={elegirCierre} />
+            {borrador.endDate ? null : <FieldError>{COMPLETA}</FieldError>}
+          </Field>
+        </div>
+      ) : (
       <Field data-invalid={faltanFechas || alReves || undefined} className="md:w-1/2">
         <FieldLabel htmlFor="ciclo-fechas">Fechas del ciclo</FieldLabel>
         <RangoDeFechas id="ciclo-fechas" valor={rango} invalido={faltanFechas || alReves || undefined} placeholder="Elige el inicio y el cierre" onCambio={elegirFechas} />
         {alReves ? <FieldError>El cierre no puede ser antes del inicio</FieldError> : faltanFechas ? <FieldError>{COMPLETA}</FieldError> : null}
       </Field>
+      )}
     </>
   )
 }

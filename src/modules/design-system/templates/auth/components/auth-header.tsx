@@ -27,7 +27,8 @@ export function AuthHeader({
           {title}
         </Heading>
         {description ? (
-          <Text variant="muted" size="sm" className="text-pretty">
+          // as="div": la descripción puede traer párrafos y listas (licencia inactiva), que no caben dentro de un <p>.
+          <Text as="div" variant="muted" size="sm" className="text-pretty">
             {description}
           </Text>
         ) : null}

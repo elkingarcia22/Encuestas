@@ -93,7 +93,7 @@ export function HistoryTab() {
                 {version.text}
                 {version.restore ? (
                   <div className="mt-2">
-                    <Button variant="outline" size="sm" className={PILL} onClick={() => notify('Versión 1 restaurada como borrador')}>
+                    <Button variant="outline" size="sm" className={PILL} onClick={() => notify('Versión 1 restaurada como borrador', undefined, 'success')}>
                       Restaurar esta versión
                     </Button>
                   </div>

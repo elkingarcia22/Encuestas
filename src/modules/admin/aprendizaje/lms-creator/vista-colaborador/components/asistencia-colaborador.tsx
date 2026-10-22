@@ -32,7 +32,7 @@ import { estadoDeSesion, useAhora, ventanaDeSesion, type Confirmaciones, type Es
 // - «Confirmar» solo está en la sesión que está ocurriendo, y solo si el recurso tiene Autoasistencia (RN-02, RN-07).
 // - Con Autoasistencia apagada no hay botón: un aviso dice que el administrador confirma esa asistencia, y la página
 //   sigue bloqueando el avance hasta que la cargue (RN-05b y RN-05c).
-// - Una sesión que aún no empieza no lleva «Pendiente»: lleva «Añadir a mi calendario» (RN-08).
+// - Una sesión que aún no empieza no lleva «Pendiente»: lleva «Agregar a mi calendario» (RN-08).
 // - Una sesión cerrada sin confirmar dice «Expirado» y no ofrece nada (RN-09).
 // - Confirmada: «Confirmado» con la fecha y la hora al pasar el cursor (RN-03).
 
@@ -256,7 +256,7 @@ function AnadirAlCalendario({ sesion, contenido, nombre, desde, hasta }: { sesio
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
         <HugeiconsIcon icon={CalendarAdd01Icon} aria-hidden="true" />
-        Añadir a mi calendario
+        Agregar a mi calendario
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuGroup>

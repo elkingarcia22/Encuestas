@@ -4,9 +4,10 @@ import { Delete02Icon } from '@hugeicons/core-free-icons'
 import { Button, FieldError } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
+import { BotonCancelarPanel } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { createLibraryDemographic, updateLibraryDemographic } from '../../modelo/demographicsLibrary'
 import type { DemographicType } from '../../modelo/surveyBuilderTypes'
-import { BloqueNombre, BloqueOpciones, BloqueTipo } from './campos-demografico'
+import { BloqueNombre, BloqueOpciones } from './campos-demografico'
 import { MENSAJE_NOMBRE_REPETIDO, nombreRepetido, plegarNombre as plegar } from './nombre-repetido'
 import { LIMITE_NOMBRE_DEMOGRAFICO, cortoDeMinimo, mensajeMinimo } from '../../modelo/limites-texto'
 
@@ -43,7 +44,8 @@ export function FormularioDemografico({
 }) {
   const esEdicion = editando !== null
   const [nombre, setNombre] = useState(editando?.label ?? '')
-  const [tipo, setTipo] = useState<DemographicType>(editando?.type ?? 'single')
+  // El tipo de respuesta ya no se elige: al crear es «Opción única» y al editar se conserva el que traía.
+  const tipo: DemographicType = editando?.type ?? 'single'
   const [opciones, setOpciones] = useState<readonly string[]>(editando && editando.optionLabels.length > 0 ? editando.optionLabels : ['', ''])
   const [intento, setIntento] = useState(false)
 
@@ -55,6 +57,12 @@ export function FormularioDemografico({
   const nombreCorto = cortoDeMinimo(nombreLimpio, LIMITE_NOMBRE_DEMOGRAFICO.min)
   const pocasOpciones = conTexto.length < MINIMO_OPCIONES
   const listo = !sinNombre && !nombreCorto && !repetido && !pocasOpciones && !opcionRepetida
+  // Hay algo escrito o cambiado frente a lo que había al abrir: cerrar pregunta antes de perderlo (regla «panel-con-cambios»).
+  const opcionesIniciales = editando?.optionLabels ?? []
+  const cambiado =
+    nombreLimpio !== (editando?.label ?? '').trim() ||
+    conTexto.length !== opcionesIniciales.length ||
+    conTexto.some((opcion, posicion) => opcion !== opcionesIniciales[posicion])
 
   const errorNombre = repetido
     ? MENSAJE_NOMBRE_REPETIDO
@@ -70,12 +78,13 @@ export function FormularioDemografico({
     const datos = { label: nombreLimpio, type: tipo, optionLabels: conTexto }
     const resultado = esEdicion ? updateLibraryDemographic(editando.key, datos) : createLibraryDemographic(datos)
     if (!resultado) {
-      notify(esEdicion ? 'No se pudo guardar el demográfico' : 'No se pudo crear el demográfico', 'Revisa que el nombre no esté repetido.')
+      notify(esEdicion ? 'No se pudo guardar el demográfico' : 'No se pudo crear el demográfico', 'Revisa que el nombre no esté repetido.', 'error')
       return
     }
     notify(
       esEdicion ? 'Demográfico actualizado' : 'Demográfico creado',
       esEdicion ? `«${resultado.label}» se actualizó correctamente.` : `«${resultado.label}» ya está disponible para segmentar.`,
+      'success',
     )
     onGuardado()
   }
@@ -85,6 +94,7 @@ export function FormularioDemografico({
       open={abierto}
       onOpenChange={onAbiertoChange}
       size="md"
+      conCambios={cambiado}
       title={esEdicion ? 'Editar dato demográfico' : 'Crear dato demográfico'}
       description={
         esEdicion
@@ -93,23 +103,14 @@ export function FormularioDemografico({
       }
       footer={
         <>
-          {/* Eliminar abajo a la izquierda, en el rojo del design system (Botones › Peligro): abre la confirmación. */}
-          {esEdicion && onEliminar ? (
-            <Button variant="destructive" className="mr-auto" onClick={onEliminar}>
-              <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" data-icon="inline-start" />
-              Eliminar
-            </Button>
-          ) : null}
-          <Button variant="outline" onClick={() => onAbiertoChange(false)}>
-            Cancelar
-          </Button>
+          {/* «Cancelar» pasa por la misma pregunta que la X y Escape cuando hay algo escrito. */}
+          <BotonCancelarPanel />
           <Button onClick={guardar} disabled={repetido}>{esEdicion ? 'Guardar cambios' : 'Crear demográfico'}</Button>
         </>
       }
     >
       <div className="flex flex-col gap-6">
         <BloqueNombre id="demografico-nombre" valor={nombre} onCambio={setNombre} error={errorNombre} />
-        <BloqueTipo id="demografico-tipo" valor={tipo} onCambio={setTipo} />
         <BloqueOpciones
           opciones={opciones.map((texto, indice) => ({ clave: String(indice), texto }))}
           minimo={MINIMO_OPCIONES}
@@ -123,6 +124,14 @@ export function FormularioDemografico({
             </>
           }
         />
+        {/* Eliminar va en el cuerpo, al final y en el rojo del design system (Botones › Peligro): el pie lleva como mucho dos
+            botones (regla «panel-volver-arriba», 13-oct). Abre la confirmación. */}
+        {esEdicion && onEliminar ? (
+          <Button variant="destructive" className="self-start" onClick={onEliminar}>
+            <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" data-icon="inline-start" />
+            Eliminar dato demográfico
+          </Button>
+        ) : null}
       </div>
     </DrawerShell>
   )

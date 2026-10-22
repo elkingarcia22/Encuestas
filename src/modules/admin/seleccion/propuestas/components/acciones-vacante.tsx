@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowDown01Icon, Delete02Icon, MoreHorizontalIcon, PencilEdit02Icon, Share08Icon, ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons'
+import { ArrowDown01Icon, Copy01Icon, Delete02Icon, Link01Icon, MoreHorizontalIcon, PencilEdit02Icon, Share08Icon, Tick02Icon, ViewIcon, ViewOffIcon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarFallback,
@@ -14,13 +14,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  Field,
+  FieldDescription,
+  FieldLabel,
   Heading,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
   RadioGroup,
   RadioGroupItem,
-  Text,
 } from '@ubits/flux-ui'
+import { enlaceVacante } from '../../vacantes/components/datos'
 import { Badge } from '@/shared/components/Badge'
-import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
+import { ActionDialog } from '@/shared/components/ActionDialog'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { notify, notifyAction } from '@/shared/components/notify'
@@ -34,7 +41,7 @@ import {
   type VacanteUI,
 } from '../datos'
 import { CompartirVacante, EditarVacante, enProcesoDe } from './editar-vacante'
-import { DialogoEliminarVacantes, DialogoEstadoVacante, EnlaceParaCandidatos, type CambioDeEstado } from './dialogos-vacante'
+import { DialogoCompartirVacante as DialogoCompartirConPermisos, DialogoEliminarVacantes, DialogoEstadoVacante, type CambioDeEstado } from './dialogos-vacante'
 import type { PermisoVacante } from '../permisos'
 import { noSeGuardo } from '../simular'
 
@@ -52,8 +59,8 @@ import { noSeGuardo } from '../simular'
 //   con las caras de quien ya tiene acceso y lo que se usa poco o no tiene vuelta atrás (editar, sacar del portal,
 //   eliminar) dentro de «⋯».
 //
-// 29 sep, reunión con Elkin: a la vista quedan solo las tres acciones que más se usan —Compartir, Importar CVs y
-// Orbit Flow—; «Editar» casi no se usa y pasó al menú «⋯», como primera opción.
+// 29 sep, reunión con Elkin: a la vista quedan solo las tres acciones que más se usan —Compartir, Importar CVs y el
+// Agente IA—; «Editar» casi no se usa y pasó al menú «⋯», como primera opción.
 //
 // 7 oct (IN-04, IN-05, IN-06): las ventanas de cambiar el estado, compartir y eliminar viven en `dialogos-vacante.tsx`
 // y son las mismas que usa la lista del inicio. Cerrar pregunta cómo terminó, reabrir empieza de cero y guarda la vez
@@ -227,37 +234,76 @@ export function EstadoVacante({
   )
 }
 
-// La única ventana de «Compartir» de una vacante (auditoría del 8-oct, H-220 y H-248; el 9-oct Cristian dejó esta sola y le
-// sumó lo de Nicolás): la abren la cabecera de la vacante, el menú «⋯» de cada fila de las listas y el detalle. Título
-// fijo; el nombre de la vacante va en el cuerpo. Con el enlace para candidatos arriba (por el id de la vacante, con los
-// canales LinkedIn, WhatsApp y Correo) solo si la vacante está publicada, y con la lista del equipo y sus permisos debajo.
-// Es una `VentanaDeAccion` (la misma API de `ActionDialog`): dentro de un panel se abre como una vista suya.
+// Las pantallas viejas de Vacantes (el detalle y la lista de Elkin) y la lista sin ruta `exploraciones/uno/vacantes`
+// usan esta ventana de Cristian (auditoría del 8-oct). Las de Selección (cabecera de la vacante e inicio de Vacantes) usan
+// la de `dialogos-vacante.tsx`, que además respeta quién puede cambiar el acceso (VA-11) y se abre dentro del panel.
+// Cuánto se queda «Copiado» en el botón antes de volver a «Copiar».
+const MS_COPIADO = 2000
+
+// El enlace público de la vacante con el botón de copiar pegado al campo (el mismo de la ventana de Compartir de
+// Cristian y Elkin). Fuera del portal, el enlace existe pero no recibe a nadie: se dice.
+function EnlaceParaCandidatos({ titulo, oculta }: { titulo: string; oculta: boolean }) {
+  const enlace = enlaceVacante(titulo)
+  const [copiado, setCopiado] = useState(false)
+  const campo = useId()
+
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(enlace)
+      setCopiado(true)
+      window.setTimeout(() => setCopiado(false), MS_COPIADO)
+      notify('Copiamos el enlace de la vacante', undefined, 'success')
+    } catch {
+      notify('No pudimos copiar el enlace', 'Selecciónalo en el campo y cópialo a mano.', 'error')
+    }
+  }
+
+  return (
+    <Field className="pb-2">
+      <FieldLabel htmlFor={campo}>Enlace para candidatos</FieldLabel>
+      <InputGroup>
+        <InputGroupAddon>
+          <HugeiconsIcon icon={Link01Icon} aria-hidden="true" />
+        </InputGroupAddon>
+        <InputGroupInput id={campo} readOnly value={enlace} onFocus={(evento) => evento.target.select()} />
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton variant="secondary" size="xs" onClick={copiar}>
+            <HugeiconsIcon icon={copiado ? Tick02Icon : Copy01Icon} aria-hidden="true" />
+            {copiado ? 'Copiado' : 'Copiar'}
+          </InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
+      <FieldDescription>
+        {oculta
+          ? 'Está fuera del portal: quien abra el enlace no puede postularse hasta que la devuelvas.'
+          : 'Compártelo para que los candidatos se postulen directamente.'}
+      </FieldDescription>
+    </Field>
+  )
+}
+
+// La única ventana de «Compartir» de una vacante (auditoría del 8-oct, H-220 y H-248): la abren la cabecera de la
+// vacante, el menú «⋯» de cada fila de las listas y el detalle. Título fijo; el nombre de la vacante va en el cuerpo.
+// Con el enlace para candidatos arriba solo si la vacante está publicada.
 export function DialogoCompartirVacante({
   abierto,
   onAbiertoChange,
-  id,
   titulo,
   conEnlace,
   oculta = false,
   equipo,
   onEquipo,
-  administra = true,
-  duena,
 }: {
   abierto: boolean
   onAbiertoChange: (abierto: boolean) => void
-  id: string
   titulo: string
   conEnlace: boolean
   oculta?: boolean
   equipo: Miembro[]
   onEquipo: (equipo: Miembro[]) => void
-  // Solo la dueña cambia quién tiene acceso (VA-11): quien no administra ve la lista, sin poder cambiarla.
-  administra?: boolean
-  duena?: string
 }) {
   return (
-    <VentanaDeAccion
+    <ActionDialog
       open={abierto}
       onOpenChange={onAbiertoChange}
       title="Compartir vacante"
@@ -269,30 +315,9 @@ export function DialogoCompartirVacante({
       }
       cancelLabel="Listo"
     >
-      {conEnlace ? <EnlaceParaCandidatos id={id} titulo={titulo} oculta={oculta} /> : null}
-      {administra ? (
-        <CompartirVacante titulo={titulo} equipo={equipo} onEquipo={onEquipo} />
-      ) : (
-        <div className="flex flex-col gap-2">
-          <Text as="p" size="sm" weight="medium">
-            Con acceso ({equipo.length})
-          </Text>
-          {equipo.map((miembro) => (
-            <div key={miembro.correo} className="flex items-baseline justify-between gap-3">
-              <Text as="span" size="sm">
-                {miembro.nombre}
-              </Text>
-              <Text as="span" size="sm" variant="muted">
-                {miembro.permiso}
-              </Text>
-            </div>
-          ))}
-          <Text as="p" size="sm" variant="muted">
-            Solo {duena ?? 'la dueña del proceso'} cambia quién tiene acceso.
-          </Text>
-        </div>
-      )}
-    </VentanaDeAccion>
+      {conEnlace ? <EnlaceParaCandidatos titulo={titulo} oculta={oculta} /> : null}
+      <CompartirVacante titulo={titulo} equipo={equipo} onEquipo={onEquipo} />
+    </ActionDialog>
   )
 }
 
@@ -319,7 +344,6 @@ export function BotonCompartirVacante({
       <DialogoCompartirVacante
         abierto={abierto}
         onAbiertoChange={setAbierto}
-        id={vacante.id}
         titulo={vacante.titulo}
         conEnlace={vacante.estado !== 'Borrador'}
         oculta={vacante.estado === 'Pausada'}
@@ -335,7 +359,6 @@ export function AccionesVacante({
   vacante,
   onCambio,
   onEliminar,
-  onRestaurar,
   primario,
   onEditar,
   compartir,
@@ -344,9 +367,6 @@ export function AccionesVacante({
   vacante: VacanteUI
   onCambio: (cambio: Partial<VacanteUI>) => void
   onEliminar?: () => void
-  // Opcional: qué hacer si le dan a «Deshacer» después de eliminar. Sin esto el aviso lo dice pero no la devuelve,
-  // y el deshacer sería mentira.
-  onRestaurar?: () => void
   // El botón azul de la pantalla («Importar CVs»). Entra aquí para que la fila quede completa en el orden de las
   // reglas: «⋯» · terciario · secundario · primario · IA (el «⋯» primero, a la izquierda de todo).
   primario?: ReactNode
@@ -396,19 +416,9 @@ export function AccionesVacante({
     setEliminando(false)
     if (noSeGuardo(`eliminar:${vacante.id}`, `No pudimos eliminar «${vacante.titulo}»`, eliminar, 'Sigue con su proceso.')) return
     onEliminar?.()
-    // El hueco que ningún ATS cubre: en Greenhouse, Lever o Ashby borrar una vacante es definitivo y el proceso
-    // completo se va con ella. Aquí el aviso se queda un momento con la puerta abierta.
-    notifyAction(
-      `«${vacante.titulo}» eliminada`,
-      enProceso ? `Con ${enProceso} ${enProceso === 1 ? 'persona' : 'personas'} en proceso.` : undefined,
-      {
-        label: 'Deshacer',
-        onClick: () => {
-          onRestaurar?.()
-          notify(`«${vacante.titulo}» está de vuelta`, 'Con su proceso y su equipo.', 'success')
-        },
-      }, 'success',
-    )
+    // Eliminar es definitivo, como en Greenhouse, Lever o Ashby (13 oct, PM: cancela entrevistas y devuelve créditos):
+    // sin «Deshacer»; por eso la ventana pide escribir «eliminar».
+    notify(`«${vacante.titulo}» eliminada`, enProceso ? `Con ${enProceso} ${enProceso === 1 ? 'persona' : 'personas'} en proceso.` : undefined, 'success')
   }
 
   return (
@@ -477,14 +487,10 @@ export function AccionesVacante({
 
       {/* ── Compartir ── (con el enlace para candidatos arriba: al publicar se abre esta misma y se manda el enlace de una
           vez, 29 sep, reunión con Elkin) */}
-      <DialogoCompartirVacante
+      <DialogoCompartirConPermisos
+        vacante={vacante}
         abierto={compartiendo}
-        onAbiertoChange={setCompartiendo}
-        id={vacante.id}
-        titulo={vacante.titulo}
-        conEnlace={publicada}
-        oculta={vacante.oculta}
-        equipo={vacante.equipo}
+        onAbierto={setCompartiendo}
         onEquipo={(equipo) => onCambio({ equipo })}
         administra={administra}
         duena={permiso?.duena?.nombre}

@@ -11,12 +11,14 @@ import {
   type CicloPeriod,
   type MeasureType,
   type Objective,
+  type ObjectiveSet,
 } from './constructor/cicloBuilderTypes'
 import { addMonths, parseISODate, toISODate } from './constructor/cicloDates'
 import { DEFAULT_OBJECTIVE_MODEL_RULES, OBJECTIVE_MODEL_PRESETS } from './constructor/objectiveModel'
 import { objectiveSetsReach } from './constructor/objectiveSets'
 import type { Ciclo, EstadoCiclo, Periodo } from './ciclos'
 import { PLANTILLAS_CICLO, type Medida, type ObjetivoPlantilla, type PlantillaCiclo } from './plantillas'
+import type { DatosCargaCiclo, FilaObjetivo } from './carga/carga-objetivos'
 
 // El puente entre la lista de ciclos del home y el constructor: cómo nace un borrador (en blanco, desde una plantilla
 // o desde una fila que ya existe) y cómo vuelve a la lista cuando se guarda. Es el `cicloDraftFromRow` y el
@@ -93,7 +95,7 @@ const MEDIDA_A: Readonly<Record<Medida, MeasureType>> = { Dinero: 'money', Numé
 /** «$500.000.000» → «500.000.000», «12 %» → «12»: las cifras de la plantilla en el formato de los campos del constructor. */
 const cifra = (valor: string | null) => (valor ?? '').replace(/[$%\s]/g, '')
 
-function objetivoDePlantilla(objetivo: ObjetivoPlantilla, alignedTo: string | null = null): Objective {
+function objetivoDePlantilla(objetivo: ObjetivoPlantilla, alineadoA: string | null = null): Objective {
   return {
     ...createBlankObjective(objetivo.peso),
     title: objetivo.nombre,
@@ -102,7 +104,7 @@ function objetivoDePlantilla(objetivo: ObjetivoPlantilla, alignedTo: string | nu
     direction: objetivo.sentido === 'Reducir' ? 'decrease' : objetivo.sentido === 'Aumentar' ? 'increase' : null,
     initialValue: cifra(objetivo.actual),
     targetValue: cifra(objetivo.meta),
-    alignedTo,
+    alignedTo: alineadoA ? [alineadoA] : [],
   }
 }
 
@@ -112,22 +114,68 @@ export interface InicioDesdePlantilla {
   semillas: readonly CicloBuilderAssignmentSeed[]
 }
 
-/** Usar una plantilla: nombre, periodo, descripción y objetivos de empresa ya puestos. Los de grupo y los individuales
- *  viajan como semillas alineadas, por posición, a los de empresa recién creados. */
-export function borradorDesdePlantilla(plantilla: PlantillaCiclo): InicioDesdePlantilla {
-  const base = createBlankCicloDraft()
-  const periodo = PERIODO_A[plantilla.periodo]
-  const empresa = plantilla.empresa.map((objetivo) => objetivoDePlantilla(objetivo))
-  const alineados = (lista: readonly ObjetivoPlantilla[]) => lista.map((objetivo, indice) => objetivoDePlantilla(objetivo, empresa[indice]?.id ?? null))
-  const meses = { mes: 1, bimestre: 2, trimestre: 3, semestre: 6, anio: 12, personalizado: 3 }[periodo]
-  const inicio = parseISODate(base.startDate) ?? new Date()
-  const cierre = addMonths(inicio, meses)
+function objetivoDeCarga(fila: FilaObjetivo): Objective {
   return {
-    borrador: { ...base, name: plantilla.nombre, period: periodo, endDate: toISODate(cierre), description: plantilla.descripcion, useCompanyObjectives: null, companyObjectives: empresa },
-    semillas: [
-      { kind: 'grupal', objectives: alineados(plantilla.grupo) },
-      { kind: 'individual', objectives: alineados(plantilla.individual) },
-    ],
+    ...createBlankObjective(fila.peso || 1),
+    id: fila.id || `obj-${Math.random().toString(36).slice(2, 9)}`,
+    title: (fila.tituloNuevo || fila.titulo || '').trim(),
+    description: '',
+    measure: 'numeric',
+    direction: fila.sentido === 'reducir' ? 'decrease' : 'increase',
+    initialValue: String(fila.inicial),
+    targetValue: String(fila.meta),
+    alignedTo: [],
+  }
+}
+
+/** Un ciclo creado desde un archivo cargado: participantes preseleccionados y objetivos individuales asignados. */
+export function borradorDesdeCarga(datos: DatosCargaCiclo): InicioDesdePlantilla {
+  const base = createBlankCicloDraft()
+  const hoy = new Date()
+  const cierre = addMonths(hoy, 3)
+
+  const personasValidas = datos.grupos.map((g) => g.persona).filter((p): p is NonNullable<typeof p> => Boolean(p))
+  const personasIds = personasValidas.map((p) => p.id)
+
+  const sets: ObjectiveSet[] = datos.grupos
+    .filter((g) => g.persona !== null)
+    .map((g) => ({
+      id: `set-${g.persona!.id}`,
+      kind: 'individual',
+      targetIds: [g.persona!.id],
+      objectives: g.objetivos.map(objetivoDeCarga),
+    }))
+
+  const nombreLimpio = datos.archivo.replace(/\.[^/.]+$/, '').trim()
+  const nombreCiclo = nombreLimpio ? `Ciclo · ${nombreLimpio}` : 'Ciclo desde archivo'
+
+  const borrador: CicloDraft = {
+    ...base,
+    name: nombreCiclo,
+    period: 'trimestre',
+    startDate: toISODate(hoy),
+    endDate: toISODate(cierre),
+    description: `Ciclo creado a partir de la carga del archivo ${datos.archivo}.`,
+    objectiveModel: 'smart',
+    modelRules: OBJECTIVE_MODEL_PRESETS.smart,
+    objectiveCreator: 'hr',
+    participants: {
+      ...DEFAULT_PARTICIPANTS,
+      mode: 'individual',
+      selectedIds: personasIds,
+    },
+    useCompanyObjectives: false,
+    useGroupObjectives: false,
+    useIndividualObjectives: true,
+    useCustomObjectives: false,
+    assignment: { groupSegmentBy: 'area', groupsAutoInclude: false },
+    objectiveSets: sets,
+    _lastStep: 'general',
+  }
+
+  return {
+    borrador,
+    semillas: [],
   }
 }
 
@@ -182,6 +230,8 @@ export function borradorDeCiclo(ciclo: Ciclo): CicloDraft {
     modelRules: OBJECTIVE_MODEL_PRESETS.smart,
     objectiveCreator: 'hr',
     participants: { ...base.participants, mode: 'groups', groupSegmentBy: 'area', selectedGroups: [area] },
+    // Trae objetivos de la empresa: la pregunta «Objetivos de la empresa» llega contestada con «Sí».
+    useCompanyObjectives: empresa.length > 0,
     companyObjectives: empresa,
     useGroupObjectives: true,
     useIndividualObjectives: false,

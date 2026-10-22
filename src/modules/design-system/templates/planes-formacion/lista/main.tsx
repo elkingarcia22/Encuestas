@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Delete02Icon, Edit02Icon, MoreHorizontalIcon, PlusSignIcon, ViewIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +15,12 @@ import {
   Tabs,
   TabsContent,
   Text,
-  toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify } from '@/shared/components/notify'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
@@ -227,27 +229,33 @@ function TablaPlanes({ tipo }: { tipo: TipoPlan }) {
     // Primera vez (no hay ningún plan de este tipo) o sin resultados (la búsqueda no encontró).
     emptyState: vacio
       ? {
+          // 13-oct (I-182): con la ilustración glass del sistema, como el vacío de Tareas y Objetivos.
           type: 'empty',
-          title: `Todavía no hay ${textos.plural.toLowerCase()}`,
-          description:
-            tipo === 'competencias'
-              ? 'Asigna horas de formación por competencia a toda la empresa, a grupos o a personas. Cada asignación admite hasta 8 competencias.'
-              : 'Asigna contenidos a toda la empresa, a grupos o a personas, y mira quién los terminó.',
-          action: { id: 'crear', label: `Crear ${textos.singular.toLowerCase()}`, variant: 'primary', onClick: () => navigate(`${ruta('nuevo')}?tipo=${tipo}`) },
+          customComponent: (
+            <PrimeraVez
+              icono="glass-add"
+              titulo={`Todavía no hay ${textos.plural.toLowerCase()}`}
+              descripcion={
+                tipo === 'competencias'
+                  ? 'Asigna horas de formación por competencia a toda la empresa, a grupos o a personas. Cada asignación admite hasta 8 competencias.'
+                  : 'Asigna contenidos a toda la empresa, a grupos o a personas, y mira quién los terminó.'
+              }
+              accion={{ texto: `Crear ${textos.singular.toLowerCase()}`, onClick: () => navigate(`${ruta('nuevo')}?tipo=${tipo}`) }}
+            />
+          ),
         }
       : {
           type: 'no-results',
-          title: 'No se encontraron resultados',
-          description: 'Prueba con otro nombre o quita el filtro de estado.',
-          action: {
-            id: 'limpiar',
-            label: 'Limpiar filtros',
-            variant: 'outline',
-            onClick: () => {
-              setBusqueda('')
-              setFiltros([])
-            },
-          },
+          customComponent: (
+            <SinResultados
+              busqueda={busqueda}
+              filtrosActivos={filtros.filter((f) => Array.isArray(f.value) && f.value.length > 0).length}
+              onLimpiar={() => {
+                setBusqueda('')
+                setFiltros([])
+              }}
+            />
+          ),
         },
     // Cabecera de la tabla del sistema: sin título dentro del marco (el título es el de la página), el conteo a la
     // izquierda y encabezados de 40 px con asidero. RN-09: el progreso no está en vivo; se dice junto al número de planes.
@@ -277,7 +285,7 @@ function TablaPlanes({ tipo }: { tipo: TipoPlan }) {
           const nombre = eliminando?.nombre
           setPlanes((todos) => todos.filter((p) => p.id !== eliminando?.id))
           setEliminando(null)
-          toast.add({ type: 'success', title: 'Plan eliminado', description: `«${nombre}» ya no aparece en la Zona de estudio de nadie.` })
+          notify('Plan eliminado', `«${nombre}» ya no aparece en la Zona de estudio de nadie.`, 'success')
         }}
       />
     </>
@@ -303,7 +311,7 @@ export function Component() {
               <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
               Crear {TIPOS[tipo].singular.toLowerCase()}
             </Button>
-            {/* La IA es el agente contextual: «Orbit Flow» abre su panel a la derecha, sobre esta lista, no otra página.
+            {/* La IA es el agente contextual: «Orbit» abre su panel a la derecha, sobre esta lista, no otra página.
                 El botón de IA va al final. */}
             {agente.disponible ? <ReopenAgentButton onClick={agente.abrir} /> : null}
           </>

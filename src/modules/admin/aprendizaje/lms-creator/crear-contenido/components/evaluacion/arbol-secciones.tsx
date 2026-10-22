@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowDown01Icon, Cancel01Icon, Delete02Icon, DragDropVerticalIcon, Edit02Icon, MoreVerticalIcon, PlusSignIcon, Tick02Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -10,11 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   Heading,
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
   Separator,
   Frame,
   FramePanel,
@@ -30,6 +24,8 @@ import {
   Text,
   cn,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import type { Pregunta } from '../borrador'
@@ -48,7 +44,7 @@ import { RespuestasEnLectura, TarjetaPregunta, type AccionPregunta } from './tar
  * parte se pueda abrir desde su lado:
  *
  * - **Siempre hay al menos una sección**: la página nace con la suya y lo que se añade entra ahí.
- * - **Un solo botón «Añadir»** por sección, con menú; si tiene subsecciones, la pregunta pregunta en cuál entra.
+ * - **Un solo botón «Agregar»** por sección, con menú; si tiene subsecciones, la pregunta pregunta en cuál entra.
  * - **Las asas se ven siempre**, y se arrastran secciones, subsecciones y preguntas.
  * - Una pregunta que no se edita es **una fila**: número, enunciado y tipo.
  */
@@ -111,7 +107,7 @@ export function ArbolSecciones(props: Props) {
  * **La anatomía es la del creador de encuestas, fila por fila** (comparado contra su pantalla, 9-oct):
  *
  * - **Una sección de primer nivel es un contenedor**: su cabecera con el asa, el número y el título; una línea; su
- *   contenido; otra línea; y un **pie** que dice qué tiene a la izquierda y lleva «Añadir» a la derecha.
+ *   contenido; otra línea; y un **pie** que dice qué tiene a la izquierda y lleva «Agregar» a la derecha.
  * - **Una subsección es una fila de acordeón sin caja**, con el **chevron antes del asa** y su contenido sangrado.
  * - **El título es un `Heading` de nivel 6** y la descripción, un `Text` de 14 px: antes eran un texto mediano y una
  *   línea de 12, y la fila se leía más floja que la suya.
@@ -196,17 +192,14 @@ function NodoSeccion({ entrada, ...props }: Props & { entrada: EntradaSeccion })
           <>
             <Separator />
             {vacia && !soloLectura ? (
-              <Empty className="py-8">
-                <EmptyHeader>
-                  <EmptyTitle>Esta sección está vacía</EmptyTitle>
-                  <EmptyDescription>Agrega una pregunta para empezar.</EmptyDescription>
-                </EmptyHeader>
-                <EmptyContent className="flex-row justify-center gap-2">
-                  <Button variant="outline" onClick={() => onAnadirPregunta(section.id)}>
-                    Crear pregunta
-                  </Button>
-                </EmptyContent>
-              </Empty>
+              // Vacío con su ilustración glass (13-oct).
+              <PrimeraVez
+                className="py-8"
+                icono="glass-paper-plus"
+                titulo="Esta sección está vacía"
+                descripcion="Agrega una pregunta para empezar."
+                accion={{ texto: 'Crear pregunta', onClick: () => onAnadirPregunta(section.id) }}
+              />
             ) : (
               <>
                 <div className="px-5 py-3">
@@ -222,7 +215,7 @@ function NodoSeccion({ entrada, ...props }: Props & { entrada: EntradaSeccion })
                       </Text>
                       <Button variant="outline" className="shrink-0" onClick={() => onAnadirPregunta(section.id)}>
                         <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
-                        Añadir pregunta
+                        Agregar pregunta
                       </Button>
                     </div>
                   </>
@@ -434,7 +427,7 @@ function FilasPreguntas({
                   </Button>
                   <Button variant="outline" onClick={() => onTerminarEdicion(true)}>
                     <HugeiconsIcon icon={Tick02Icon} aria-hidden="true" />
-                    {nueva === pregunta.id ? 'Agregar' : 'Guardar'}
+                    {nueva === pregunta.id ? 'Agregar' : 'Guardar cambios'}
                   </Button>
                 </div>
               </div>

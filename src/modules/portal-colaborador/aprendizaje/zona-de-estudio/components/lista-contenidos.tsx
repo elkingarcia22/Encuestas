@@ -14,14 +14,14 @@ import {
   type DataGridListConfig,
 } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
-import { notify } from '@/shared/components/notify'
+import { saveBlob, slugify } from '@/modules/admin/desempeno-cultura/encuestas/modelo/descargas/libro'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
 import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { CambioDeVista, MarcoCuadricula, type VistaLista } from '@/modules/admin/aprendizaje/lms-creator/contenidos/components/controles-lista'
-import { abrirContenido, filtrar, type Tarjeta } from './datos'
+import { filtrar, type Tarjeta } from './datos'
 
 // La lista de contenidos de Plan de contenidos, Exclusivo para mí e Historial y certificados, con el mismo cambio
 // «Tabla | Cuadrícula» de LMS Creator › Contenidos (decisión 2a de Cristian, 9-oct: «puedo verlo como tabla o como
@@ -38,7 +38,15 @@ type Columnas = DataGridListConfig<Fila>['columns']
 const estadoCertificado = (t: Tarjeta) => (!t.conCertificado ? 'No aplica' : t.progreso >= 100 ? 'Disponible' : 'Pendiente')
 const descargable = (t: Tarjeta) => t.conCertificado && t.progreso >= 100
 
-const noDisponible = () => notify('Esta acción aún no está disponible en el Playground.', undefined, 'info')
+// 13-oct (nada-que-finja): baja un archivo de verdad con los datos del certificado, en vez de avisar que no se puede; y los
+// contenidos no se abren (la experiencia de estudio no existe todavía), así que ya no parecen botones.
+const escapar = (texto: string) => texto.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+const descargarCertificado = (t: Tarjeta) =>
+  saveBlob(
+    `certificado-${slugify(t.titulo)}.html`,
+    'text/html;charset=utf-8',
+    `<!doctype html><html lang="es"><meta charset="utf-8"><title>Certificado</title><body style="font-family:sans-serif;text-align:center;padding:64px"><h1>Certificado de finalización</h1><p>Se certifica que completaste</p><h2>${escapar(t.titulo)}</h2><p>${escapar(t.proveedor)} · ${escapar(t.duracion)}</p></body></html>`,
+  )
 
 const unicos = (valores: string[]) => [...new Set(valores.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'))
 const opciones = (valores: string[]) => unicos(valores).map((v) => ({ label: v, value: v }))
@@ -89,7 +97,7 @@ function AccionesFila({ fila }: { fila: Fila }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-52">
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={noDisponible}>
+          <DropdownMenuItem onClick={() => descargarCertificado(fila)}>
             <HugeiconsIcon icon={Download04Icon} size={16} aria-hidden="true" />
             Descargar certificado
           </DropdownMenuItem>
@@ -109,7 +117,7 @@ function OpcionesTarjeta({ t }: { t: Tarjeta }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={noDisponible}>
+          <DropdownMenuItem onClick={() => descargarCertificado(t)}>
             <HugeiconsIcon icon={Download04Icon} size={16} />
             Descargar certificado
           </DropdownMenuItem>
@@ -124,19 +132,20 @@ function OpcionesTarjeta({ t }: { t: Tarjeta }) {
 const NOMBRE: Columnas[number] = {
   accessorKey: 'titulo',
   header: 'Nombre del contenido',
-  size: 320,
+  // 13-oct (tabla-cabe): la tabla de Zona de estudio suma 1.090 px (eran 1.140) y las del historial 950: caben en los
+  // 1.104 del marco.
+  size: 300,
   cell: ({ row }) => (
     <CeldaTitulo
       titulo={row.original.titulo}
       detalle={row.original.proveedor}
       imagen={row.original.imagen}
       sinImagen={<HugeiconsIcon icon={Mortarboard01Icon} size={16} aria-hidden="true" />}
-      onClick={abrirContenido}
     />
   ),
 }
 const TIPO: Columnas[number] = { accessorKey: 'tipo', header: 'Tipo de contenido', size: 150, cell: ({ row }) => texto(row.original.tipo) }
-const NIVEL: Columnas[number] = { accessorKey: 'nivel', header: 'Nivel', size: 120, cell: ({ row }) => texto(row.original.nivel) }
+const NIVEL: Columnas[number] = { accessorKey: 'nivel', header: 'Nivel', size: 110, cell: ({ row }) => texto(row.original.nivel) }
 const PROGRESO: Columnas[number] = { accessorKey: 'progreso', header: 'Progreso', size: 160, cell: ({ row }) => <CeldaProgreso fila={row.original} /> }
 
 const COLUMNAS: Columnas = [
@@ -144,8 +153,8 @@ const COLUMNAS: Columnas = [
   TIPO,
   { accessorKey: 'competencia', header: 'Competencia', size: 170, cell: ({ row }) => texto(row.original.competencia) },
   NIVEL,
-  { accessorKey: 'minutos', header: 'Duración', size: 110, cell: ({ row }) => texto(row.original.duracion) },
-  { accessorKey: 'idioma', header: 'Idioma', size: 110, cell: ({ row }) => texto(row.original.idioma) },
+  { accessorKey: 'minutos', header: 'Duración', size: 100, cell: ({ row }) => texto(row.original.duracion) },
+  { accessorKey: 'idioma', header: 'Idioma', size: 100, cell: ({ row }) => texto(row.original.idioma) },
   PROGRESO,
 ]
 
@@ -190,7 +199,6 @@ function Cuadricula({ tarjetas, acciones }: { tarjetas: Tarjeta[]; acciones?: (t
           idioma={t.idioma}
           progreso={t.progreso}
           acciones={acciones?.(t)}
-          onClick={abrirContenido}
         />
       ))}
     </div>
@@ -301,6 +309,8 @@ export function ListaContenidos({
     },
     search: { placeholder: 'Buscar contenidos', onSearch: alBuscar },
     emptyState: { type: 'no-results', customComponent: <SinResultados busqueda={busqueda} filtrosActivos={filtrosPuestos} onLimpiar={limpiar} /> },
+    // Las columnas ya suman lo que mide el marco: sin cambio de ancho para que no se salgan de él.
+    layout: { resizable: false },
   }
 
   return (

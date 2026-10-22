@@ -37,6 +37,8 @@ export function PestanaComentarios({ comparativo }: { comparativo: Comparativo }
   return (
     <>
       <Frame spacing="sm" className="[--frame-gap:0px]">
+        {/* Los «!» ponen la cabecera en fila (título a la izquierda, controles a la derecha): la del marco es una columna y las
+            clases normales no le ganan al tema (ficha instalacion-estilos-sin-capa en ai-tools/flux-ui/diferencias.json). */}
         <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
           <div>
             <FrameTitle>Positividad por sección</FrameTitle>
@@ -95,7 +97,7 @@ export function PestanaComentarios({ comparativo }: { comparativo: Comparativo }
                           <div className="flex flex-col gap-0.5">
                             <div className="flex items-center gap-1.5">
                               <Text as="span" size="sm" weight="semibold" className={columna.isBase ? 'text-primary tabular-nums' : 'tabular-nums'}>
-                                {reparto.positivo}%
+                                {reparto.positivo} %
                               </Text>
                               {columna.isBase || !enBase ? null : <Cambio valor={reparto.positivo - enBase.positivo} sufijo=" pp" decimales={1} frente="la base" enCelda ayuda="Diferencia frente a la base" />}
                             </div>

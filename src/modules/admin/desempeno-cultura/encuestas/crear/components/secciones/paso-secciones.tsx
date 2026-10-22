@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Delete02Icon, LibraryIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { Delete02Icon, LibraryIcon } from '@hugeicons/core-free-icons'
 import { Button, cn, Kanban, KanbanColumnContent, KanbanItem, KanbanOverlay, Text } from '@ubits/flux-ui'
 import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
-import { notify } from '@/shared/components/notify'
+import { notify, notifyAction } from '@/shared/components/notify'
 import { buildBlankQuestion, buildQuestion, isQuestionComplete } from '../../../modelo/questionCatalog'
 import { appendChild, countDescendants, countQuestions, findSection, flattenSections, patchSection, pathIds, removeSection, type SectionTreeEntry } from '../../../modelo/sectionTree'
 import { MAX_SECTION_DEPTH, type SurveyQuestion, type SurveySection } from '../../../modelo/surveyBuilderTypes'
@@ -13,7 +13,7 @@ import { APAGADO, ArbolContexto, NIVEL, type Arbol, type PedidoBorrado } from '.
 import { BancoPreguntas } from './banco-preguntas'
 import { ImportarSecciones } from './importar-secciones'
 import { FilaFantasma } from './lista-preguntas'
-import { NodoSeccion } from './nodo-seccion'
+import { MenuAnadir, NodoSeccion } from './nodo-seccion'
 import { AvisoEnCurso, EnCurso } from '../aviso-en-curso'
 import { MOTIVO_EN_CURSO, MOTIVO_NORMATIVA, MotivoBloqueo } from '../en-curso'
 
@@ -149,15 +149,20 @@ export function PasoSecciones({
     setEditandoSeccion(nueva.id)
   }
 
+  const crearSeccion = () => {
+    const nueva = nuevaSeccion()
+    crearSubseccionEn([...secciones, nueva], nueva)
+  }
+
   const crearSubseccion = (padre: SectionTreeEntry) => {
-    if (padre.depth >= MAX_SECTION_DEPTH) return notify(`Alcanzaste el máximo de ${MAX_SECTION_DEPTH} niveles`)
+    if (padre.depth >= MAX_SECTION_DEPTH) return notify(`Alcanzaste el máximo de ${MAX_SECTION_DEPTH} niveles`, undefined, 'warning')
     // Una sección con preguntas sueltas que recibe su primera subsección las pasa a ella: sección o subsección tienen
     // preguntas, no las dos cosas mezcladas.
     const sueltas = padre.section.questions
     const nueva = { ...nuevaSeccion(), questions: sueltas }
     const conHija = appendChild(secciones, padre.section.id, nueva)
     crearSubseccionEn(sueltas.length > 0 ? patchSection(conHija, padre.section.id, { questions: [] }) : conHija, nueva)
-    if (sueltas.length > 0) notify(`Las ${sueltas.length} ${sueltas.length === 1 ? 'pregunta pasó' : 'preguntas pasaron'} a la nueva subsección`)
+    if (sueltas.length > 0) notify(`Las ${sueltas.length} ${sueltas.length === 1 ? 'pregunta pasó' : 'preguntas pasaron'} a la nueva subsección`, undefined, 'info')
   }
 
   const agregarPreguntas = (duena: SectionTreeEntry, preguntas: ReturnType<typeof buildQuestion>[]) => {
@@ -200,7 +205,7 @@ export function PasoSecciones({
       if (actual && !isQuestionComplete({ ...actual, statement: actual.statement.replace(/<[^>]*>/g, '').trim() })) {
         setIntentadas((previas) => [...new Set([...previas, id])])
         setIntento((previo) => previo + 1)
-        notify('Completa los campos obligatorios', 'La pregunta necesita enunciado, tipo y lo que depende de ese tipo.')
+        notify('Completa los campos obligatorios', 'La pregunta necesita enunciado, tipo y lo que depende de ese tipo.', 'warning')
         return
       }
     }
@@ -231,6 +236,7 @@ export function PasoSecciones({
     recien,
     editandoSeccion,
     setEditandoSeccion,
+    crearSeccion,
     crearSubseccion,
     crearPregunta,
     conIa,
@@ -253,13 +259,13 @@ export function PasoSecciones({
       cambiar(removeSection(secciones, seccionPorBorrar.section.id))
       if (editandoSeccion === seccionPorBorrar.section.id) setEditandoSeccion(null)
       setEditando(null)
-      notify(seccionPorBorrar.depth === 1 ? 'Sección eliminada' : 'Subsección eliminada')
+      notify(seccionPorBorrar.depth === 1 ? 'Sección eliminada' : 'Subsección eliminada', undefined, 'success')
     }
     if (pedidoBorrado.tipo === 'pregunta' && preguntaPorBorrar) {
       const duena = findSection(secciones, pedidoBorrado.seccionId)
       if (duena) cambiar(patchSection(secciones, duena.section.id, { questions: duena.section.questions.filter((pregunta) => pregunta.id !== pedidoBorrado.id) }))
       setEditando(null)
-      notify('Pregunta eliminada')
+      notify('Pregunta eliminada', undefined, 'success')
     }
     setPedidoBorrado(null)
   }
@@ -273,8 +279,8 @@ export function PasoSecciones({
   }
 
   const raices = entradas.filter((entrada) => entrada.depth === 1)
-  // Mientras se edita un título o una pregunta, lo demás del paso queda apagado.
-  const ocupado = editandoSeccion !== null || editando !== null
+  // Mientras se edita una pregunta, lo demás del paso queda apagado.
+  const ocupado = editando !== null
   const destinoBanco = elegida ? findSection(secciones, primeraHoja(elegida.section).id) : null
   const nombreElegida = destinoBanco ? `${destinoBanco.numbering} ${destinoBanco.section.title.trim() || NIVEL[destinoBanco.depth]}` : 'la encuesta'
   const contenedores = useMemo(() => contenedoresDe(secciones), [secciones])
@@ -283,8 +289,8 @@ export function PasoSecciones({
     <MotivoBloqueo.Provider value={enCurso ? MOTIVO_EN_CURSO : MOTIVO_NORMATIVA}>
     <ArbolContexto.Provider value={arbol}>
       {/* Como Participantes y Datos demográficos: sin marco que lo envuelva todo. Arriba el resumen y las herramientas
-          que traen preguntas de fuera; debajo, cada sección en su propio contenedor, y al final «Añadir sección». Las
-          acciones de crear viven en cada sección, así no dependen de cuál esté seleccionada. */}
+          que traen preguntas de fuera; debajo, cada sección en su propio contenedor. Un único botón «Agregar» suma
+          preguntas, subsecciones o secciones nuevas sin duplicar controles. */}
       {/* Un solo contexto de arrastre para todo el árbol: así una pregunta se puede soltar en otra sección. Nada se mueve
           hasta soltar (onMove); las secciones solo se reordenan entre hermanas y lo que no vale se ignora. */}
       <Kanban
@@ -298,7 +304,9 @@ export function PasoSecciones({
           cambiar(arbolDesde(secciones, siguientes))
           const ahora = seccionDe(siguientes, String(event.active.id))
           const destino = ahora && ahora !== seccionDe(contenedores, String(event.active.id)) ? findSection(secciones, ahora) : null
-          if (destino) notify('Pregunta movida', `Ahora está en ${destino.numbering} ${destino.section.title.trim() || NIVEL[destino.depth].toLowerCase() + ' sin título'}.`)
+          // Mover se deshace: «Deshacer» devuelve el árbol a como estaba antes de soltar.
+          const antes = secciones
+          if (destino) notifyAction('Pregunta movida', `Ahora está en ${destino.numbering} ${destino.section.title.trim() || NIVEL[destino.depth].toLowerCase() + ' sin título'}.`, { label: 'Deshacer', onClick: () => cambiar([...antes]) }, 'success')
         }}
         getItemValue={(elemento) => elemento.id}
       >
@@ -307,7 +315,7 @@ export function PasoSecciones({
           {/* El recuento de secciones y preguntas ya lo lleva el panel «Así va la encuesta»; aquí va qué hacen los botones. */}
           {bloqueo ? null : (
             <Text as="p" variant="muted" size="sm">
-              Suma preguntas ya hechas, del banco o desde un archivo.
+              Suma preguntas ya hechas, del banco o desde un archivo. Para que la IA cree o ajuste secciones, pídeselo a Orbit.
             </Text>
           )}
           <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -321,8 +329,8 @@ export function PasoSecciones({
             <EnCurso bloqueado={bloqueo}>
               <BotonIaSecundario disabled={bloqueo} onClick={() => setImportar(true)}>Importar con IA</BotonIaSecundario>
             </EnCurso>
-            {/* «Crear con IA» ya no va aquí (Elkin, 14-oct): la encuesta la crea el agente (desde el
-                inicio de Encuestas) y se ve crecer en este paso. */}
+            {/* «Crear con IA» ya no va aquí (Elkin, 14-oct): la encuesta la crea el agente (Orbit, desde el inicio de
+                Encuestas) y se ve crecer en este paso. */}
           </div>
         </div>
         <KanbanColumnContent value={RAIZ} className="gap-4">
@@ -332,21 +340,11 @@ export function PasoSecciones({
             </KanbanItem>
           ))}
         </KanbanColumnContent>
-        <div className={ocupado ? APAGADO : undefined} inert={ocupado}>
-          <EnCurso bloqueado={bloqueo}>
-            <Button
-              variant="outline"
-              disabled={bloqueo}
-              onClick={() => {
-                const nueva = nuevaSeccion()
-                crearSubseccionEn([...secciones, nueva], nueva)
-              }}
-            >
-              <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
-              Añadir sección
-            </Button>
-          </EnCurso>
-        </div>
+        {abiertas.length === 0 && elegida ? (
+          <div className={ocupado ? APAGADO : undefined} inert={ocupado}>
+            <MenuAnadir entrada={elegida} />
+          </div>
+        ) : null}
         {/* Lo que se ve bajo el cursor: solo la pregunta; una sección se mueve ella misma. */}
         <KanbanOverlay>{({ value }) => <FilaFantasma pregunta={buscarPregunta(contenedores, String(value))} />}</KanbanOverlay>
       </Kanban>
@@ -373,12 +371,12 @@ export function PasoSecciones({
         onAbiertoChange={setBanco}
         destino={nombreElegida}
         onAgregar={(textos) => {
-          if (!destinoBanco) return notify('Selecciona una sección para añadir preguntas.')
+          if (!destinoBanco) return notify('Selecciona una sección para agregar preguntas.', undefined, 'warning')
           agregarPreguntas(
             destinoBanco,
             textos.map((texto) => buildQuestion({ statement: texto, isBankQuestion: true })),
           )
-          notify(textos.length === 1 ? 'Se añadió 1 pregunta.' : `Se añadieron ${textos.length} preguntas.`)
+          notify(textos.length === 1 ? 'Se agregó 1 pregunta.' : `Se agregaron ${textos.length} preguntas.`, undefined, 'success')
         }}
       />
 

@@ -1,6 +1,7 @@
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { MinusSignIcon, ThumbsDownIcon, ThumbsUpIcon } from '@hugeicons/core-free-icons'
-import { Badge, ToggleGroup, ToggleGroupItem } from '@ubits/flux-ui'
+import { ToggleGroup, ToggleGroupItem } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import type { Sentiment } from '../../modelo/questionResponses'
 import { SENTIMENT_LABELS, SENTIMENT_ORDER } from '../../modelo/sentimiento'
 

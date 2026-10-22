@@ -7,7 +7,6 @@ import {
   CheckmarkCircle02Icon,
   Download01Icon,
   File01Icon,
-  LogoutSquare01Icon,
   Tick02Icon,
   UserGroupIcon,
 } from '@hugeicons/core-free-icons'
@@ -16,7 +15,6 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -39,15 +37,16 @@ import {
   StepperTitle,
   StepperTrigger,
   Text,
-  toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify } from '@/shared/components/notify'
+import { SinResultados } from '@/shared/components/SinResultados'
 import { PageActionBar } from '@/shared/components/PageShell'
 import { ChipGuardado } from '@/shared/components/ChipGuardado'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { BotonSalirCreacion } from '@/modules/design-system/navegacion/boton-salir-creacion'
 
-import { DialogoConfirmar, RegistroConfirmar } from '../../../estados/confirmaciones'
 import { AdjuntoCsv, ProcesoEnCurso, type Subida } from '../../../estados/procesos'
 import { useTemporizadores } from '../../../estados/temporizadores'
 import { PantallaDeError } from '../../../estados/errores-sistema'
@@ -270,7 +269,6 @@ export function Component() {
   const [orden, setOrden] = useState<string | undefined>(undefined)
   const [actual, setActual] = useState(1)
   const [porPagina, setPorPagina] = useState(10)
-  const [saliendo, setSaliendo] = useState(false)
   // El proceso vive en el layout; esta pantalla solo lo muestra si es el de su misma acción.
   const propio = masivo?.accion === accion ? masivo : null
   const proceso = propio?.estado ?? 'quieto'
@@ -343,7 +341,6 @@ export function Component() {
 
   // Hay avance si ya pasó del primer paso o subió el archivo; quien solo entró a mirar se va de una.
   const hayAvance = proceso === 'quieto' && (paso > 1 || subida !== 'idle')
-  const pedirSalir = () => (hayAvance ? setSaliendo(true) : navigate(ruta()))
 
   const reiniciar = () => {
     cerrarMasivo()
@@ -368,25 +365,39 @@ export function Component() {
         setActual(1)
       },
     },
+    // Sin resultados con la ilustración glass del sistema y «Limpiar» (13-oct, I-182).
     emptyState: {
       type: 'no-results',
-      title: 'No se encontraron filas',
-      description: 'Prueba con otro dato o quita el filtro de estado.',
-      action: {
-        id: 'limpiar',
-        label: 'Limpiar filtros',
-        variant: 'outline',
-        onClick: () => {
-          setBusqueda('')
-          setFiltros([])
-        },
-      },
+      customComponent: (
+        <SinResultados
+          busqueda={busqueda}
+          filtrosActivos={filtros.filter((f) => Array.isArray(f.value) && f.value.length > 0).length}
+          onLimpiar={() => {
+            setBusqueda('')
+            setFiltros([])
+          }}
+        />
+      ),
     },
   }
 
   return (
     <div className="flex flex-1 flex-col gap-6 pt-2">
-      <EncabezadoPantalla titulo={textos.titulo} descripcion={textos.descripcion} acciones={<BotonSalirCreacion onClick={pedirSalir} />} />
+      <EncabezadoPantalla
+        titulo={textos.titulo}
+        descripcion={textos.descripcion}
+        // 13-oct: la ventana es la del sistema. La carga masiva no tiene borrador que guardar: dos salidas, y no se
+        // promete un «Avance guardado» que no existe.
+        acciones={
+          <BotonSalirCreacion
+            onClick={() => navigate(ruta())}
+            salida={{
+              conCambios: hayAvance,
+              mensaje: 'Tienes una carga sin terminar. Si sales ahora, el archivo y las correcciones se pierden.',
+            }}
+          />
+        }
+      />
 
       <Card>
         <CardContent className="flex flex-col gap-8">
@@ -425,7 +436,7 @@ export function Component() {
                         <ItemDescription>Columnas en el orden correcto. Hasta 3.000 filas.</ItemDescription>
                       </ItemContent>
                       <ItemActions>
-                        <Button variant="outline" size="sm" onClick={() => toast.add({ type: 'success', title: 'Se descargó la plantilla' })}>
+                        <Button variant="outline" size="sm" onClick={() => notify('Se descargó la plantilla', undefined, 'success')}>
                           Descargar plantilla
                         </Button>
                       </ItemActions>
@@ -439,7 +450,7 @@ export function Component() {
                         <ItemDescription>Cómo llenar cada columna y los errores más comunes.</ItemDescription>
                       </ItemContent>
                       <ItemActions>
-                        <Button variant="ghost" size="sm" onClick={() => toast.add({ type: 'info', title: 'Se abriría el instructivo en otra pestaña' })}>
+                        <Button variant="ghost" size="sm" onClick={() => notify('Se abriría el instructivo en otra pestaña', undefined, 'info')}>
                           Ver
                         </Button>
                       </ItemActions>
@@ -479,14 +490,14 @@ export function Component() {
                         idle: '',
                         uploading: `Subiendo · ${porcentaje} %`,
                         processing: 'Validando la información…',
-                        done: `${filas.length} filas correctas`,
-                        error: `${filas.length} filas · ${conError} ${plural(conError, 'tiene', 'tienen')} errores que puedes corregir en la revisión`,
+                        done: `${filas.length} ${plural(filas.length, 'fila correcta', 'filas correctas')}`,
+                        error: `${filas.length} ${plural(filas.length, 'fila', 'filas')} · ${conError} ${plural(conError, 'tiene', 'tienen')} errores que puedes corregir en la revisión`,
                       }[subida]
                     }
                     porcentaje={porcentaje}
                     onElegir={subir}
                     onQuitar={quitar}
-                    onDescargarErrores={() => toast.add({ type: 'info', title: 'Se descargó el detalle de errores' })}
+                    onDescargarErrores={() => notify('Se descargó el detalle de errores', undefined, 'info')}
                   />
                 </div>
               </StepperContent>
@@ -639,7 +650,8 @@ export function Component() {
       <PageActionBar className="mt-auto justify-between">
         {proceso === 'quieto' ? (
           <>
-            <ChipGuardado estado={hayAvance ? 'editando' : 'guardado'} />
+            {/* Sin borrador real: «Cambios sin guardar» en cuanto hay avance, hasta que se termina la carga (13-oct, I-276). */}
+            {hayAvance ? <ChipGuardado estado="editando" /> : <span />}
             <div className="ml-auto flex items-center gap-2">
               {paso > 1 ? (
                 <Button variant="outline" onClick={() => setPaso(paso - 1)}>
@@ -671,31 +683,6 @@ export function Component() {
           </Text>
         )}
       </PageActionBar>
-
-      {/* Salir con avance es preguntar antes de hacer algo: DialogoConfirmar con sus tres salidas y en su tamaño normal. */}
-      <DialogoConfirmar
-        abierto={saliendo}
-        onAbiertoChange={setSaliendo}
-        icono={LogoutSquare01Icon}
-        titulo="¿Salir de la creación?"
-        descripcion="Tienes una carga sin terminar. Si sales ahora sin guardar, el archivo y las correcciones se pierden."
-        cancelar="Seguir editando"
-        otra={{
-          texto: 'Salir sin guardar',
-          onClick: () => {
-            setSaliendo(false)
-            navigate(ruta())
-          },
-        }}
-        accion="Guardar y salir"
-        onConfirmar={() => {
-          setSaliendo(false)
-          toast.add({ type: 'info', title: 'Avance guardado', description: 'Puedes retomar la carga cuando quieras.' })
-          navigate(ruta())
-        }}
-      >
-        <RegistroConfirmar nombre={textos.titulo} detalle={`Carga masiva · paso ${paso} de ${PASOS.length}`} estado="Cambios sin guardar" />
-      </DialogoConfirmar>
     </div>
   )
 }

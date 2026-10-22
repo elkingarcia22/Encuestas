@@ -1,21 +1,13 @@
 import { useState } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { Tick02Icon, UserArrowLeftRightIcon } from '@hugeicons/core-free-icons'
 import {
   Badge,
-  Button,
+  Checkbox,
   Field,
   FieldLabel,
   Heading,
-  IconTile,
   Input,
-  Stepper,
-  StepperIndicator,
-  StepperItem,
-  StepperNav,
-  StepperSeparator,
-  StepperTitle,
-  StepperTrigger,
+  Label,
+  Switch,
   Tabs,
   TabsContent,
   TabsList,
@@ -26,7 +18,6 @@ import {
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import { FeedbackDialog } from '@/shared/components/FeedbackDialog'
 import { notify } from '@/shared/components/notify'
-import { STEP_INDICATOR, STEP_LINE } from '../../drawers/components/drawer-styles'
 import { RegistroVentana } from './ventana-parts'
 import { VENTANA_CASES } from './ventana-config'
 
@@ -72,42 +63,63 @@ function Datos({ filas }: { filas: { label: string; value: string }[] }) {
   )
 }
 
-// Confirmar: el registro en la primera línea y a quiénes afecta.
-function ConfirmarEjemplo(props: Bind) {
-  const s = muestra('confirmar')
+// Elegir de una lista (13-oct): marcar a quiénes llega algo. La lista para elegir es contenido, por eso va en ActionDialog;
+// confirmar sin más (aunque afecte a muchas personas) es DialogoConfirmar con RegistroConfirmar.
+function ElegirEjemplo({ open, onOpenChange }: Bind) {
+  const s = muestra('elegir')
+  const [marcadas, setMarcadas] = useState<string[]>(['LM'])
+  const cambiar = (abrir: boolean) => {
+    if (!abrir) setMarcadas(['LM'])
+    onOpenChange(abrir)
+  }
+  const alternar = (ini: string, marcada: boolean) => setMarcadas((antes) => (marcada ? [...antes, ini] : antes.filter((otra) => otra !== ini)))
   return (
     <ActionDialog
-      {...props}
-      size="sm"
-      media={
-        <IconTile variant="elevated" size="xl">
-          <HugeiconsIcon icon={UserArrowLeftRightIcon} aria-hidden="true" />
-        </IconTile>
-      }
+      open={open}
+      onOpenChange={cambiar}
       title={s.title}
       sub={s.sub}
       lead={<RegistroVentana s={s} />}
-      items={MOVE}
       note={s.note}
-      confirmLabel={s.confirm}
+      confirmLabel={marcadas.length ? `${s.confirm} a ${marcadas.length}` : s.confirm}
+      confirmDisabled={!marcadas.length}
       pendingLabel={s.pending}
-      onConfirm={() => notify('3 candidatos movidos a Entrevistas')}
-    />
+      onConfirm={() => notify('Contenido asignado', `Lo ven ${marcadas.length} ${marcadas.length === 1 ? 'persona' : 'personas'} en su Zona de estudio.`, 'success')}
+    >
+      <ul className="divide-y rounded-xl border">
+        {MOVE.map((persona) => (
+          <li key={persona.ini}>
+            <Label className="flex cursor-pointer items-center gap-3 px-4 py-3 font-normal">
+              <Checkbox checked={marcadas.includes(persona.ini)} onCheckedChange={(valor) => alternar(persona.ini, valor === true)} />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <Text as="span" size="sm" weight="medium">
+                  {persona.title}
+                </Text>
+                <Text as="span" variant="muted" size="xs">
+                  {persona.meta}
+                </Text>
+              </span>
+            </Label>
+          </li>
+        ))}
+      </ul>
+    </ActionDialog>
   )
 }
 
-// Formulario: dos campos y el registro arriba.
+// Formulario: dos campos y el registro arriba. El clic afuera no cierra: un clic perdido no borra lo escrito.
 function FormularioEjemplo(props: Bind) {
   const s = muestra('formulario')
   return (
     <ActionDialog
       {...props}
+      dismissible={false}
       title={s.title}
       sub={s.sub}
       lead={<RegistroVentana s={s} />}
       confirmLabel={s.confirm}
       pendingLabel={s.pending}
-      onConfirm={() => notify('Nota guardada')}
+      onConfirm={() => notify('Nota guardada', undefined, 'success')}
     >
       <Field>
         <FieldLabel htmlFor="nota-titulo">Título</FieldLabel>
@@ -121,21 +133,13 @@ function FormularioEjemplo(props: Bind) {
   )
 }
 
-// Formulario ancho: dos columnas y el clic afuera no cierra.
-function FormularioAnchoEjemplo(props: Bind) {
-  const s = muestra('formulario-ancho')
-  const campos = [
-    { id: 'vac-cargo', label: 'Cargo', valor: 'Analista de datos' },
-    { id: 'vac-area', label: 'Área', valor: 'Analítica' },
-    { id: 'vac-ciudad', label: 'Ciudad', valor: 'Bogotá' },
-    { id: 'vac-modalidad', label: 'Modalidad', valor: 'Híbrida' },
-    { id: 'vac-salario', label: 'Salario mensual', valor: '$ 6.800.000' },
-    { id: 'vac-cupos', label: 'Personas a contratar', valor: '2' },
-  ]
+// Ajuste corto (13-oct): dos interruptores. Reemplaza a «Formulario ancho» (6 campos) y «Con pasos», que eran crear o
+// editar dentro de una ventana: lo largo va en una página.
+function AjusteEjemplo(props: Bind) {
+  const s = muestra('ajuste')
   return (
     <ActionDialog
       {...props}
-      size="wide"
       dismissible={false}
       title={s.title}
       sub={s.sub}
@@ -143,24 +147,32 @@ function FormularioAnchoEjemplo(props: Bind) {
       note={s.note}
       confirmLabel={s.confirm}
       pendingLabel={s.pending}
-      onConfirm={() => notify('Vacante actualizada')}
+      onConfirm={() => notify('Preferencias guardadas', undefined, 'success')}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
-        {campos.map((campo) => (
-          <Field key={campo.id}>
-            <FieldLabel htmlFor={campo.id}>{campo.label}</FieldLabel>
-            <Input id={campo.id} defaultValue={campo.valor} />
-          </Field>
-        ))}
+      <div className="divide-y rounded-xl border">
+        <Label className="flex items-center justify-between gap-4 px-4 py-3 font-normal">
+          <span className="flex flex-col">
+            <Text as="span" size="sm" weight="medium">
+              Aviso por cada postulación nueva
+            </Text>
+            <Text as="span" variant="muted" size="xs">
+              Te llega un correo cuando alguien se postula.
+            </Text>
+          </span>
+          <Switch defaultChecked />
+        </Label>
+        <Label className="flex items-center justify-between gap-4 px-4 py-3 font-normal">
+          <span className="flex flex-col">
+            <Text as="span" size="sm" weight="medium">
+              Resumen semanal
+            </Text>
+            <Text as="span" variant="muted" size="xs">
+              Un solo correo los lunes con lo que pasó en la vacante.
+            </Text>
+          </span>
+          <Switch />
+        </Label>
       </div>
-      <Field>
-        <FieldLabel htmlFor="vac-descripcion">Descripción del cargo</FieldLabel>
-        <Textarea
-          id="vac-descripcion"
-          rows={4}
-          defaultValue="Buscamos a alguien que convierta datos en decisiones: tableros, modelos sencillos y conversaciones con las áreas."
-        />
-      </Field>
     </ActionDialog>
   )
 }
@@ -179,7 +191,7 @@ function PantallaCompletaEjemplo(props: Bind) {
       note={s.note}
       confirmLabel={s.confirm}
       pendingLabel={s.pending}
-      onConfirm={() => notify('Carta de oferta enviada')}
+      onConfirm={() => notify('Carta de oferta enviada', undefined, 'success')}
     >
       <div className="rounded-xl bg-muted/60 p-4 sm:p-8">
         <div className="mx-auto flex max-w-xl flex-col gap-4 rounded-lg bg-background p-8 shadow-sm ring-1 ring-foreground/5">
@@ -190,7 +202,7 @@ function PantallaCompletaEjemplo(props: Bind) {
             Carta de oferta
           </Heading>
           <Text as="span" variant="muted" size="sm">
-            Bogotá, 15 sep 2026
+            Bogotá, 15 sept 2026
           </Text>
           <Text as="p" size="sm">
             Hola Laura: después de conocerte en el proceso, queremos invitarte a unirte al equipo de Analítica. Estas son las
@@ -198,7 +210,7 @@ function PantallaCompletaEjemplo(props: Bind) {
           </Text>
           <Datos filas={OFFER} />
           <Text as="p" size="sm">
-            Si estás de acuerdo, responde este correo antes del 22 sep 2026. Cualquier duda, escríbenos: con gusto la
+            Si estás de acuerdo, responde este correo antes del 22 sept 2026. Cualquier duda, escríbenos: con gusto la
             resolvemos.
           </Text>
           <Text as="p" size="sm">
@@ -208,79 +220,6 @@ function PantallaCompletaEjemplo(props: Bind) {
           </Text>
         </div>
       </div>
-    </ActionDialog>
-  )
-}
-
-// Con pasos: los pasos abren el cuerpo, la flecha vuelve al anterior y el pie avanza.
-function PasosEjemplo({ open, onOpenChange }: Bind) {
-  const s = muestra('pasos')
-  const [paso, setPaso] = useState(1)
-  const cambiar = (abrir: boolean) => {
-    if (!abrir) setPaso(1)
-    onOpenChange(abrir)
-  }
-  const ultimo = paso === s.steps.length
-
-  return (
-    <ActionDialog
-      open={open}
-      onOpenChange={cambiar}
-      dismissible={false}
-      title={s.title}
-      sub={s.sub}
-      onBack={paso > 1 ? () => setPaso(paso - 1) : undefined}
-      footer={
-        <>
-          <Button variant="outline" disabled={paso === 1} onClick={() => setPaso(paso - 1)}>
-            Atrás
-          </Button>
-          <Button
-            onClick={() => {
-              if (ultimo) {
-                cambiar(false)
-                notify('Evaluación publicada')
-              } else {
-                setPaso(paso + 1)
-              }
-            }}
-          >
-            {ultimo ? 'Publicar' : 'Siguiente'}
-          </Button>
-        </>
-      }
-    >
-      <Stepper value={paso} indicators={{ completed: <HugeiconsIcon icon={Tick02Icon} className="size-3.5" /> }}>
-        <StepperNav className="w-full">
-          {s.steps.map((etiqueta, indice) => (
-            <StepperItem key={etiqueta} step={indice + 1} completed={indice + 1 < paso} className="flex-1 last:flex-none">
-              <StepperTrigger className="gap-2" tabIndex={-1} aria-controls={undefined}>
-                <StepperIndicator className={STEP_INDICATOR}>{indice + 1}</StepperIndicator>
-                <StepperTitle className="text-sm whitespace-nowrap">{etiqueta}</StepperTitle>
-              </StepperTrigger>
-              {indice < s.steps.length - 1 ? <StepperSeparator className={`mx-3 flex-1 ${STEP_LINE}`} /> : null}
-            </StepperItem>
-          ))}
-        </StepperNav>
-      </Stepper>
-      {paso === 1 ? (
-        <Field>
-          <FieldLabel htmlFor="eval-nombre">Nombre de la evaluación</FieldLabel>
-          <Input id="eval-nombre" defaultValue="Prueba técnica de SQL" />
-        </Field>
-      ) : null}
-      {paso === 2 ? (
-        <Field>
-          <FieldLabel htmlFor="eval-preguntas">Preguntas</FieldLabel>
-          <Textarea id="eval-preguntas" rows={4} defaultValue={'1. ¿Qué hace un LEFT JOIN?\n2. ¿Cuándo usarías una función de ventana?'} />
-        </Field>
-      ) : null}
-      {paso === 3 ? (
-        <Field>
-          <FieldLabel htmlFor="eval-cierre">Fecha de cierre</FieldLabel>
-          <Input id="eval-cierre" defaultValue="30 oct 2026" />
-        </Field>
-      ) : null}
     </ActionDialog>
   )
 }
@@ -298,7 +237,7 @@ function PestanasEjemplo(props: Bind) {
       lead={<RegistroVentana s={s} />}
       confirmLabel={s.confirm}
       pendingLabel={s.pending}
-      onConfirm={() => notify('Laura Méndez pasó a Entrevistas')}
+      onConfirm={() => notify('Laura Méndez pasó a Entrevistas', undefined, 'success')}
     >
       <Tabs defaultValue="respuestas" className="gap-4">
         <TabsList variant="line">
@@ -334,9 +273,9 @@ function PestanasEjemplo(props: Bind) {
         <TabsContent value="historial">
           <Datos
             filas={[
-              { label: 'Se postuló', value: '3 sep 2026' },
-              { label: 'Pasó el filtro inicial', value: '5 sep 2026' },
-              { label: 'Presentó la prueba técnica', value: '12 sep 2026' },
+              { label: 'Se postuló', value: '3 sept 2026' },
+              { label: 'Pasó el filtro inicial', value: '5 sept 2026' },
+              { label: 'Presentó la prueba técnica', value: '12 sept 2026' },
             ]}
           />
         </TabsContent>
@@ -351,11 +290,10 @@ export function ExampleModals({ open, onOpenChange }: { open: string | null; onO
 
   return (
     <>
-      <ConfirmarEjemplo {...bind('confirmar')} />
+      <ElegirEjemplo {...bind('elegir')} />
       <FormularioEjemplo {...bind('formulario')} />
-      <FormularioAnchoEjemplo {...bind('formulario-ancho')} />
+      <AjusteEjemplo {...bind('ajuste')} />
       <PantallaCompletaEjemplo {...bind('pantalla-completa')} />
-      <PasosEjemplo {...bind('pasos')} />
       <PestanasEjemplo {...bind('pestanas')} />
       {/* La ventana real de la barra lateral, no una copia (decisión 21 de la auditoría, 5-oct). */}
       <FeedbackDialog {...bind('feedback')} />

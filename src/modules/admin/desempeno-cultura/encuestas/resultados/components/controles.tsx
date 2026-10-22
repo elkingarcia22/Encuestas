@@ -2,7 +2,6 @@ import { Fragment } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { ArrowDown01Icon, FilterIcon, InformationCircleIcon, SlidersHorizontalIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Checkbox,
   DropdownMenu,
@@ -31,9 +30,10 @@ import {
   TabsList,
   TabsTrigger,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
-import { FiltroChip } from '@/modules/admin/seleccion/propuestas/components/filtro-chip'
+import { FiltroChip } from '@/modules/design-system/navegacion/filtro-chip'
 import type { ScaleTone } from '../../modelo/favorabilityScale'
 import type { SegmentDefinition } from '../../modelo/surveyResults'
 import { FONDO_ESCALA, TEXTO_ESCALA } from './escala'
@@ -114,6 +114,7 @@ export function Filtros({ estado, activo, etiqueta = 'Filtros' }: { estado: Filt
                     {segmento.label}
                   </FieldLabel>
                   <Select value={valor} onValueChange={(nuevo) => estado.aplicarFiltro(segmento.key, nuevo === SIN_FILTRO ? '' : (nuevo as string))} items={items}>
+                    {/* El selector es transparente y sobre el gris se pierde: fondo blanco forzado. Ficha: diferencias.json › select-trigger-fondo-solido. */}
                     <SelectTrigger id={`filtro-${segmento.key}`} size="sm" className="min-w-0 flex-1 bg-background!">
                       <SelectValue />
                     </SelectTrigger>
@@ -219,6 +220,7 @@ export function Personalizar({
             <div className="flex flex-col gap-2">
               {escala.map((banda) => (
                 <Casilla key={banda.id} id={`resaltar-${banda.id}`} marcada={resaltadas.has(banda.id)} onCambio={() => onResaltar(banda.id)}>
+                  {/* La insignia toma el color del tramo de la escala: sin el contorno de «outline», que el tema pinta sin capa y solo se quita con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
                   <Badge variant="outline" size="sm" className="!border-0" style={{ backgroundColor: FONDO_ESCALA[banda.tone], color: TEXTO_ESCALA[banda.tone] }}>
                     {banda.range}
                   </Badge>
@@ -275,6 +277,7 @@ export function PersonalizarFavorabilidad({
         <div className="flex flex-col gap-2">
           {escala.map((banda) => (
             <Casilla key={banda.id} id={`filtrar-${banda.id}`} marcada={marcadas.has(banda.id)} onCambio={() => onAlternar(banda.id)}>
+              {/* La insignia toma el color del tramo de la escala: sin el contorno de «outline», que el tema pinta sin capa y solo se quita con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
               <Badge variant="outline" size="sm" className="!border-0" style={{ backgroundColor: FONDO_ESCALA[banda.tone], color: TEXTO_ESCALA[banda.tone] }}>
                 {banda.range}
               </Badge>
@@ -377,6 +380,7 @@ export function LeyendaEscala({ titulo, descripcion, escala }: { titulo: string;
         <div className="grid grid-cols-[auto_1fr] items-center gap-x-2 gap-y-2">
           {escala.map((banda) => (
             <Fragment key={banda.id}>
+              {/* La insignia toma el color del tramo de la escala: sin el contorno de «outline», que el tema pinta sin capa y solo se quita con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
               <Badge variant="outline" size="sm" className="min-w-16 justify-center justify-self-start whitespace-nowrap !border-0" style={{ backgroundColor: FONDO_ESCALA[banda.tone], color: TEXTO_ESCALA[banda.tone] }}>
                 {banda.range}
               </Badge>

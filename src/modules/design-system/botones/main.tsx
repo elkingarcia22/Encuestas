@@ -35,7 +35,6 @@ import {
 } from '@ubits/flux-ui'
 import { BotonAyuda } from '@/shared/components/BotonAyuda'
 import { BotonIa } from '@/shared/components/BotonIa'
-import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { CloseButton } from '@/shared/components/CloseButton'
 import { Demo, EncabezadoPatron, VerEnAccion, PestanasDePatron, Reglas, SectionIntro, type Regla } from '../patrones/piezas'
@@ -49,7 +48,6 @@ const PESTANAS = [
   { valor: 'variantes', etiqueta: 'Todas las variantes' },
   { valor: 'tamanos', etiqueta: 'Tamaños' },
   { valor: 'icono-estados', etiqueta: 'Con icono y estados' },
-  { valor: 'ia', etiqueta: 'Botón de IA' },
   { valor: 'reglas', etiqueta: 'Reglas' },
 ]
 
@@ -71,7 +69,7 @@ const NIVELES: Nivel[] = [
 ]
 
 const REGLAS: Regla[] = [
-  { titulo: 'Un solo primario', detalle: 'Si hay dos acciones importantes, una de ellas es secundaria. Varios azules juntos no dicen cuál es la principal.' },
+  { titulo: 'Un solo primario', detalle: 'El primario se reserva para cuando hay una sola acción principal. Con dos llamados a la acción del mismo nivel, los dos van como secundarios (regla del 1-oct). Varios azules juntos no dicen cuál es la principal.' },
   { titulo: 'El primario va al final', detalle: 'En encabezados, pies de tarjeta y diálogos, primero los secundarios y a la derecha el primario.' },
   {
     titulo: 'El «⋯» va primero',
@@ -86,16 +84,9 @@ const REGLAS: Regla[] = [
   { titulo: 'Solo icono, con nombre', detalle: 'Un botón de solo icono lleva su nombre para lectores de pantalla y una ayuda flotante al pasar el cursor.' },
 ]
 
+// Los pendientes del botón de IA pasaron a Orbit › Piezas de IA › Pendientes (13-oct). El del terciario de IA se quitó:
+// ese botón se retiró el 5-oct.
 const PENDIENTES: Regla[] = [
-  {
-    titulo: 'Botón de IA en la librería',
-    detalle:
-      'Hoy el único primario de IA es BotonIa, el del degradado del prototipo en pastilla, y la segunda acción de IA es BotonIaSecundario; los otros botones de IA que había se borraron el 5-oct. El Storybook de la librería trae un botón de IA propio que no viene en la versión instalada y usa otro degradado (naranja → rosa → morado → azul): cuando lo publiquen, se decide si BotonIa pasa a usarlo.',
-  },
-  {
-    titulo: 'Terciario de IA',
-    detalle: 'El primario y el secundario van en pastilla; el terciario («Preguntar al agente», sin borde) todavía usa la esquina normal. Falta confirmarlo con Carlos.',
-  },
   { titulo: 'Uso del relleno gris', detalle: 'Definir si la variante secondary tiene un lugar en UBITS o se deja fuera.' },
 ]
 
@@ -126,8 +117,8 @@ function Jerarquia() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Pie de un formulario</CardTitle>
-            <CardDescription>Cancelar como secundario y el primario al final.</CardDescription>
+            <CardTitle>Pie de una ventana</CardTitle>
+            <CardDescription>Cancelar como secundario y el primario al final. «Cancelar» es de las ventanas y los paneles: crear o editar en una página no lo lleva en la barra.</CardDescription>
           </CardHeader>
           <CardContent>
             <Text variant="muted" size="sm">
@@ -187,16 +178,29 @@ function Jerarquia() {
           <CardContent className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
               <Text as="span" size="sm" weight="medium">
-                Nueva vacante
+                Detalles de la evaluación
               </Text>
               <Text as="span" variant="muted" size="xs">
-                Se guarda como borrador hasta que la publiques.
+                Lo que se evaluó y cómo, solo para consultar.
               </Text>
             </div>
             <CloseButton label="Cerrar" />
           </CardContent>
         </Card>
       </div>
+
+      {/* La pestaña «Botón de IA» repetía Orbit › Piezas de IA › Botones; desde el 13-oct solo se enlaza. */}
+      <Alert variant="info">
+        <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
+        <AlertTitle>Los botones de IA viven en Orbit</AlertTitle>
+        <AlertDescription>
+          <p>
+            Los de IA (el degradado, el secundario con el orbe y «Orbit Flow») tienen su propia jerarquía y sus reglas en{' '}
+            <Link to="/design-system/ia/botones">Orbit › Piezas de IA › Botones</Link>. Aquí solo importa que van al final de
+            la fila y no se mezclan con esta jerarquía: si la acción no la hace la IA, usa primario, secundario o terciario.
+          </p>
+        </AlertDescription>
+      </Alert>
     </div>
   )
 }
@@ -253,7 +257,7 @@ function Tamanos() {
         <AlertDescription>
           <p>
             Los botones de la barra superior miden 32 px (la foto de perfil, 34 px) y el de la empresa, con el plan bajo el nombre, cerca de 50 px. Son parte del estilo del marco (ver
-            Fundamentos › Marco › Medidas). En las pantallas se usan los tamaños de esta página.
+            Patrones › Marco › Medidas). En las pantallas se usan los tamaños de esta página.
           </p>
         </AlertDescription>
       </Alert>
@@ -406,59 +410,12 @@ function IconoYEstados() {
   )
 }
 
-// Los dos botones de IA del sistema, de verdad (decisión 10 de la auditoría, 5-oct).
-function PestanaIa() {
-  return (
-    <div className="flex flex-col gap-6">
-      <SectionIntro
-        title="Botón de IA"
-        description="Es el único botón con degradado, y los de IA son los únicos en pastilla. Se documenta completo en Orbit, junto con las demás piezas de la IA."
-      />
-      <div className="grid gap-4 md:grid-cols-2">
-        <Demo title="Primario de IA · BotonIa" description="El degradado en pastilla. Uno solo por vista, para la acción principal que hace la IA." centrado>
-          <div className="flex justify-center py-4">
-            <BotonIa>Generar plan con IA</BotonIa>
-          </div>
-        </Demo>
-        <Demo title="Secundario de IA · BotonIaSecundario" description="Contorno con el orbe, en pastilla. Para la segunda acción de IA de la misma vista." centrado>
-          <div className="flex justify-center py-4">
-            <BotonIaSecundario>Resumir con IA</BotonIaSecundario>
-          </div>
-        </Demo>
-      </div>
-      <Demo
-        title="Al final de la fila"
-        description="Los de IA van a la derecha de todo, después del primario. Si en la fila está «Orbit Flow», el botón del agente, ese va el último."
-        centrado
-      >
-        <div className="flex flex-wrap items-center justify-center gap-2 py-4">
-          <Button variant="outline">Cancelar</Button>
-          <Button>Guardar cambios</Button>
-          <BotonIaSecundario>Resumir con IA</BotonIaSecundario>
-          <BotonIa>Generar plan con IA</BotonIa>
-        </div>
-      </Demo>
-      <Alert variant="info">
-        <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
-        <AlertTitle>Vive en Orbit</AlertTitle>
-        <AlertDescription>
-          <p>
-            La jerarquía de la IA (primario, secundario y las propuestas), sus reglas y sus capturas están en{' '}
-            <Link to="/design-system/ia/botones">Orbit › Piezas de IA</Link>. Aquí solo interesa que no se mezcla con
-            la jerarquía normal: si la acción no la hace la IA, usa primario, secundario o terciario.
-          </p>
-        </AlertDescription>
-      </Alert>
-    </div>
-  )
-}
-
 export function Component() {
   return (
     <div className="flex flex-col gap-6">
       <EncabezadoPatron titulo="Botones" antetitulo="Design system · Componentes" acciones={<VerEnAccion pagina="botones" />}>
-        Qué botón usar en cada caso: cuánto pesa la acción, qué tamaño lleva, dónde va el icono y cuándo se usa el de IA.
-        Todo es el Button de flux-ui tal como viene.
+        Qué botón usar en cada caso: cuánto pesa la acción, qué tamaño lleva y dónde va el icono. Todo es el Button de
+        flux-ui tal como viene; los botones de IA están en Orbit.
       </EncabezadoPatron>
 
       <Tabs defaultValue="jerarquia">
@@ -474,9 +431,6 @@ export function Component() {
         </TabsContent>
         <TabsContent value="icono-estados" className="pt-6">
           <IconoYEstados />
-        </TabsContent>
-        <TabsContent value="ia" className="pt-6">
-          <PestanaIa />
         </TabsContent>
         <TabsContent value="reglas" className="pt-6">
           <div className="flex flex-col gap-6">

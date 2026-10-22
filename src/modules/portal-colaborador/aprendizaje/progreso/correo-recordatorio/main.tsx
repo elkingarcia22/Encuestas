@@ -5,7 +5,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -19,6 +18,7 @@ import {
   Separator,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { PageShell } from '@/shared/components/PageShell'
 import { FullscreenTemplate } from '@/modules/design-system/templates/fullscreen-template'
 
@@ -78,7 +78,7 @@ export function Component() {
                       <div className="flex items-center gap-3">
                         <Progress value={p.avance} aria-label={`Avance de ${p.nombre}`} className="flex-1" />
                         <Text as="span" size="sm" weight="semibold" className="tabular-nums">
-                          {p.avance}%
+                          {p.avance} %
                         </Text>
                       </div>
                     </Item>

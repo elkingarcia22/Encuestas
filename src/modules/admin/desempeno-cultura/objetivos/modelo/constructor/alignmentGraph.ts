@@ -193,15 +193,12 @@ export function buildAlignmentGraph(
     });
   });
 
-  /** La alineación viva de un objetivo, o null si apunta a algo que ya no está. */
-  const livingAlignment = (objective: Objective): string | null =>
-    objective.alignedTo !== null && companyIds.has(objective.alignedTo)
-      ? objective.alignedTo
-      : null;
+  /** Las alineaciones vivas de un objetivo (puede tener varias, 22-oct): solo las que apuntan a algo que sigue ahí. */
+  const livingAlignment = (objective: Objective): readonly string[] => objective.alignedTo.filter((destino) => companyIds.has(destino));
 
-  const alignmentOf = (ref: ObjectiveRef): string | null => {
+  const alignmentOf = (ref: ObjectiveRef): readonly string[] => {
     const objective = objectiveById.get(`${ref.setId}:${ref.objectiveId}`);
-    return objective ? livingAlignment(objective) : null;
+    return objective ? livingAlignment(objective) : [];
   };
 
   const contributors =
@@ -299,7 +296,7 @@ interface ContributorLayer {
 
 function objectiveNodes(
   draft: AlignmentSource,
-  livingAlignment: (objective: Objective) => string | null
+  livingAlignment: (objective: Objective) => readonly string[]
 ): ContributorLayer {
   const nodes: AlignmentNode[] = [];
   const edges: AlignmentEdge[] = [];
@@ -318,23 +315,23 @@ function objectiveNodes(
         badge: `${objective.weight} %`,
         note: set.kind === "individual" ? "Individual" : "Grupal",
         objectiveRefs: [{ setId: set.id, objectiveId: objective.id }],
-        alignedTo: aligned === null ? [] : [aligned],
+        alignedTo: aligned,
         width: NODE_WIDTH,
         height: NODE_HEIGHT.objective,
         x: 0,
         y: 0,
       });
 
-      if (aligned !== null) {
+      aligned.forEach((destino, n) => {
         edges.push({
-          id: `e:${id}`,
+          id: n === 0 ? `e:${id}` : `e:${id}:${destino}`,
           from: id,
-          to: companyNodeId(aligned),
+          to: companyNodeId(destino),
           strength: 1,
           refs: [{ setId: set.id, objectiveId: objective.id }],
           removable: true,
         });
-      }
+      });
     });
   });
 
@@ -346,7 +343,7 @@ function objectiveNodes(
 function targetNodes(
   draft: AlignmentSource,
   segmentBy: SegmentKey,
-  alignmentOf: (ref: ObjectiveRef) => string | null
+  alignmentOf: (ref: ObjectiveRef) => readonly string[]
 ): ContributorLayer {
   const nodes: AlignmentNode[] = [];
   const edges: AlignmentEdge[] = [];
@@ -355,9 +352,7 @@ function targetNodes(
     const refs = refsOfSet(set);
     const perCompany = new Map<string, ObjectiveRef[]>();
     refs.forEach((ref) => {
-      const aligned = alignmentOf(ref);
-      if (aligned === null) return;
-      perCompany.set(aligned, [...(perCompany.get(aligned) ?? []), ref]);
+      alignmentOf(ref).forEach((aligned) => perCompany.set(aligned, [...(perCompany.get(aligned) ?? []), ref]));
     });
 
     set.targetIds.forEach((targetId) => {
@@ -408,7 +403,7 @@ interface PersonEntry {
 function personNodes(
   draft: AlignmentSource,
   segmentBy: SegmentKey,
-  alignmentOf: (ref: ObjectiveRef) => string | null,
+  alignmentOf: (ref: ObjectiveRef) => readonly string[],
   search: string
 ): ContributorLayer {
   const byPerson = new Map<string, PersonEntry>();
@@ -479,9 +474,7 @@ function personNodes(
 
     const perCompany = new Map<string, ObjectiveRef[]>();
     entry.refs.forEach((ref) => {
-      const aligned = alignmentOf(ref);
-      if (aligned === null) return;
-      perCompany.set(aligned, [...(perCompany.get(aligned) ?? []), ref]);
+      alignmentOf(ref).forEach((aligned) => perCompany.set(aligned, [...(perCompany.get(aligned) ?? []), ref]));
     });
 
     nodes.push({

@@ -1,7 +1,8 @@
 import { useState, type KeyboardEvent } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowDown01Icon, BookmarkAdd02Icon, ChartDecreaseIcon, ChartIncreaseIcon, Delete02Icon, PencilEdit02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
-import { Badge, Button, Heading, Input, Text, cn } from '@ubits/flux-ui'
+import { ArrowDown01Icon, ChartDecreaseIcon, ChartIncreaseIcon, Delete02Icon, PencilEdit02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
+import { Button, Heading, Input, Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger, Text, cn } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { TextoCompleto } from '@/shared/components/TextoCompleto'
@@ -9,7 +10,7 @@ import { MEASURE_META, formatRawValue, type Objective } from '../../../modelo/co
 import { MAX_TITULO } from './campo-titulo'
 
 // La cabecera de la tarjeta, siempre a la vista: plegar, el estado (lista, pendiente o con error), «Objetivo 2» con el
-// vocabulario del modelo, las marcas de IA y, a la derecha, guardar en el banco y eliminar. Plegada, debajo van el
+// vocabulario del modelo, las marcas de IA y, a la derecha, eliminar. Plegada, debajo van el
 // título (que se edita en el sitio con el lápiz, como el de una sección en encuestas) y el resumen: medida, desde →
 // hasta, peso y lo que falta.
 
@@ -56,26 +57,29 @@ export function CabeceraTarjeta({
   etiqueta,
   abierta,
   onAlternar,
+  plegable = true,
   incidencia,
   conPeso,
   tituloInvalido,
   onTitulo,
-  puedeGuardar,
-  onGuardar,
   onEliminar,
+  confirmarEliminar,
 }: {
   objetivo: Objective
   /** «Objetivo 2», «Indicador 1», «Objetivo de la empresa 3»… */
   etiqueta: string
   abierta: boolean
   onAlternar: () => void
+  /** Sin la flecha de plegar: la tarjeta va siempre abierta (el detalle de la ventana de la asignación). */
+  plegable?: boolean
   incidencia: string | null
   conPeso: boolean
   tituloInvalido: boolean
   onTitulo: (titulo: string) => void
-  puedeGuardar: boolean
-  onGuardar: () => void
   onEliminar: () => void
+  /** La pregunta antes de eliminar, en un globo pegado a la papelera (Elkin, 20-oct): ni ventana al centro ni el panel
+   *  entero. Sin ella (una tarjeta en blanco), la papelera elimina directo con `onEliminar`. */
+  confirmarEliminar?: { abierto: boolean; onAbierto: (abierto: boolean) => void; titulo: string; descripcion: string; onConfirmar: () => void }
 }) {
   const [editando, setEditando] = useState(false)
   const nombre = objetivo.title.trim() || etiqueta
@@ -90,6 +94,7 @@ export function CabeceraTarjeta({
         {editando ? (
           <Input
             aria-label="Título del objetivo"
+            // Fondo blanco: el campo es transparente y se pierde sobre el gris (diferencias.json › input-group-fondo-solido).
             className="w-full bg-background! font-medium"
             value={objetivo.title}
             maxLength={MAX_TITULO}
@@ -103,6 +108,7 @@ export function CabeceraTarjeta({
         ) : (
           <>
             <TextoCompleto texto={nombre}>
+              {/* Sin título, el nombre provisional va en gris: el color del tema del Heading no se cambia sin «!» (diferencias.json › instalacion-estilos-sin-capa). */}
               <Heading as="h3" level={6} className={cn('truncate', !objetivo.title.trim() && 'text-muted-foreground!')}>
                 {nombre}
               </Heading>
@@ -126,20 +132,36 @@ export function CabeceraTarjeta({
               <HugeiconsIcon icon={Tick02Icon} aria-hidden="true" />
             </Button>
           ) : null}
-          {puedeGuardar ? (
-            <Hint label="Guardar en el banco">
-              <BotonIcono aria-label={`Guardar ${nombre} en el banco`} onClick={onGuardar}>
-                <HugeiconsIcon icon={BookmarkAdd02Icon} aria-hidden="true" />
+          {/* Rojo de borrar: los botones sin borde no traen tono rojo (diferencias.json › button-ghost-tonos). */}
+          {confirmarEliminar ? (
+            <Popover open={confirmarEliminar.abierto} onOpenChange={confirmarEliminar.onAbierto}>
+              <PopoverTrigger render={<BotonIcono aria-label={`Eliminar ${nombre}`} className="text-destructive!" />}>
+                <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80">
+                <PopoverHeader>
+                  <PopoverTitle>{confirmarEliminar.titulo}</PopoverTitle>
+                  <PopoverDescription>{confirmarEliminar.descripcion}</PopoverDescription>
+                </PopoverHeader>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => confirmarEliminar.onAbierto(false)}>
+                    Cancelar
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={confirmarEliminar.onConfirmar}>
+                    Eliminar
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <Hint label="Eliminar">
+              <BotonIcono aria-label={`Eliminar ${nombre}`} className="text-destructive!" onClick={onEliminar}>
+                <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
               </BotonIcono>
             </Hint>
-          ) : null}
-          <Hint label="Eliminar">
-            <BotonIcono aria-label={`Eliminar ${nombre}`} className="text-destructive!" onClick={onEliminar}>
-              <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
-            </BotonIcono>
-          </Hint>
+          )}
         </div>
-        {editando ? null : (
+        {editando || !plegable ? null : (
           <BotonIcono aria-label={abierta ? 'Contraer objetivo' : 'Expandir objetivo'} aria-expanded={abierta} onClick={onAlternar}>
             <HugeiconsIcon icon={ArrowDown01Icon} aria-hidden="true" className={cn('transition-transform', abierta && 'rotate-180')} />
           </BotonIcono>

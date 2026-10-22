@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Queue02Icon, Search01Icon } from '@hugeicons/core-free-icons'
 import { useLocation } from 'react-router'
@@ -18,12 +18,13 @@ import { PageBreadcrumbs } from '@/shared/components/PageShell'
 import { usePageCrumbs } from '@/shared/components/page-crumbs'
 import { getBreadcrumbs } from '@/shared/layouts/nav-config'
 
-// Header de 60px: plegar + título a la izquierda, buscador al centro y a la derecha novedades, notificaciones y perfil
-// (avatar circular aparte). Ayuda pasó al menú de perfil y Procesos se ocultó (1 oct). Todas las acciones menos el buscador llevan su nombre en un tooltip.
+// Header de 60px: plegar + título a la izquierda, buscador al centro y a la derecha novedades, notificaciones, procesos
+// y perfil (avatar circular aparte). Ayuda pasó al menú de perfil (1 oct); Procesos se ocultó el 1 oct y volvió el
+// 13 oct. Todas las acciones menos el buscador llevan su nombre en un tooltip.
 //
 // El buscador queda siempre en el centro exacto: el header es una grilla de tres columnas con las dos de los lados
 // del mismo ancho. Para que las acciones de la derecha nunca se salgan de su columna, el buscador mide como mucho
-// el ancho del header menos dos veces lo que ocupan las acciones (207px con Novedades completo, 122px solo con
+// el ancho del header menos dos veces lo que ocupan las acciones (251px con Novedades completo, 166px solo con
 // iconos) y los dos espacios entre columnas (28px). Con el header angosto (menos de 55rem, p. ej. con un panel a toda
 // la derecha) Novedades queda solo con su icono; por debajo de 39rem el buscador pasa a ser una lupa.
 export function AppHeader() {
@@ -59,7 +60,7 @@ export function AppHeader() {
           <Button
             variant="outline"
             size="sm"
-            className="h-9 w-[min(21.25rem,calc(100cqw_-_442px))] justify-start gap-2 px-3 font-normal text-muted-foreground @max-[55rem]:w-[min(21.25rem,calc(100cqw_-_272px))] @max-[39rem]:hidden"
+            className="h-9 w-[min(21.25rem,calc(100cqw_-_530px))] justify-start gap-2 px-3 font-normal text-muted-foreground @max-[55rem]:w-[min(21.25rem,calc(100cqw_-_360px))] @max-[39rem]:hidden"
             onClick={() => palette.setOpen(true)}
           >
             <HugeiconsIcon icon={Search01Icon} size={16} className="shrink-0" />
@@ -88,10 +89,11 @@ export function AppHeader() {
   )
 }
 
-// Acciones de la derecha de la barra superior (novedades, notificaciones y perfil) con los dos paneles
+// Acciones de la derecha de la barra superior (novedades, notificaciones, procesos y perfil) con los dos paneles
 // que abren. Se exporta porque el editor de LMS dibuja su propia barra y debe llevar exactamente las mismas (18 sep).
 export function HeaderActions() {
   const [processes, setProcesses] = useState(false)
+  const processesRef = useRef<HTMLButtonElement>(null)
   const [changelog, setChangelog] = useState(false)
   // El Centro de procesos vuelve a la barra (Elkin, 14-oct): siempre a la vista para seguir una carga desde cualquier
   // página; sin nada en proceso abre su vacío del design system. El punto avisa que algo sigue corriendo.
@@ -100,17 +102,21 @@ export function HeaderActions() {
 
   return (
     <>
-      <ProcessCenter open={processes} onOpenChange={setProcesses} />
-      <ChangelogDialog open={changelog} onOpenChange={setChangelog} />
+      <ProcessCenter open={processes} onOpenChange={setProcesses} ancla={processesRef} />
+      <ChangelogDialog open={changelog} onOpenChange={setChangelog} onOpenProcesses={() => setProcesses(true)} />
       <div className="flex items-center justify-end gap-2 max-[33rem]:gap-1.5">
           <NovedadesButton onClick={() => setChangelog(true)} />
+          {/* Un solo botón de procesos (al unir los PR del 16-oct: Elkin lo devolvió el 14 y Carlos el 13): en azul
+              mientras el centro está abierto, el panel se ancla a él y el punto avisa que algo sigue corriendo. */}
           <Hint label="Centro de procesos">
             <Button
+              ref={processesRef}
               variant="outline"
               size="icon-sm"
               className={cn('relative', HEADER_ICON)}
               aria-label={enCurso ? `Centro de procesos, ${enCurso} en curso` : 'Centro de procesos'}
-              onClick={() => setProcesses(true)}
+              aria-pressed={processes}
+              onClick={() => setProcesses((v) => !v)}
             >
               <HugeiconsIcon icon={Queue02Icon} size={18} className="size-4.5" />
               {/* El punto avisa que algo sigue corriendo, como el de notificaciones sin leer. */}
@@ -118,7 +124,7 @@ export function HeaderActions() {
             </Button>
           </Hint>
           <NotificationsPopover onOpenProcesses={() => setProcesses(true)} onOpenChangelog={() => setChangelog(true)} />
-          {/* Procesos también se abre desde las notificaciones («Abrir procesos»). */}
+
           <ProfilePopover />
         </div>
     </>

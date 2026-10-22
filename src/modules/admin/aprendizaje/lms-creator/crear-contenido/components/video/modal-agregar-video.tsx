@@ -36,7 +36,7 @@ const PESTANAS: { valor: Pestana; etiqueta: string }[] = [
 type Props = {
   abierto: boolean
   onCerrar: () => void
-  /** «Volver» a «Añadir página»; sin él no se muestra la flecha. */
+  /** «Volver» a «Agregar página»; sin él no se muestra la flecha. */
   onVolver?: () => void
   onListo: (paginaId: string) => void
   // ── Las perillas del lab (`/admin/aprendizaje/lms-creator/lab-modal-video`) ──

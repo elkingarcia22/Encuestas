@@ -286,7 +286,7 @@ export const ACCIONES_RAPIDAS: { titulo: string; lineas: [string, string]; glass
   { titulo: 'Crear encuesta', lineas: ['Crear', 'encuesta'], glass: { nombre: 'glass-document', categoria: 'archivos' }, destino: 'encuestas' },
   { titulo: 'Gestionar usuarios', lineas: ['Gestionar', 'usuarios'], glass: { nombre: 'glass-profile', categoria: 'cuenta-y-seguridad' }, destino: 'gestion-de-usuarios' },
   { titulo: 'Métricas de aprendizaje', lineas: ['Métricas de', 'aprendizaje'], glass: { nombre: 'glass-chart', categoria: 'datos' }, destino: 'metricas' },
-  { titulo: 'Lanzar anuncio', lineas: ['Lanzar', 'anuncio'], glass: { nombre: 'glass-volume', categoria: 'multimedia' }, destino: 'avisos-internos' },
+  { titulo: 'Publicar aviso', lineas: ['Publicar', 'aviso'], glass: { nombre: 'glass-volume', categoria: 'multimedia' }, destino: 'avisos-internos' },
 ]
 
 // Módulos del formulario de Feedback.
@@ -308,7 +308,7 @@ export const PENDIENTES: Record<string, Hoy> = {
   'universidad-corporativa': { hoy: 'Personalizar la universidad', ruta: '/university-customization/:empresa', que: 'Nombre, título, descripción e imagen de la universidad corporativa, con vista previa en vivo.' },
   'lms-ai': { hoy: 'Ai Studio', ruta: '/ai-studio/home/resources', que: 'Recursos generados con IA: generar video y generador de guion, con créditos y días restantes.' },
   planes: { hoy: 'Planes de formación', ruta: '/creator/training-plan/content-plan', que: 'Planes de contenidos y de competencias con fechas, avance y estado vigente o no vigente. 86 planes en la cuenta.', hu: 'HU-LMS-005' },
-  grupos: { hoy: 'Grupos de usuarios', ruta: '/creator/groups', que: 'Añadir grupo y asistente de IA. Grupos automáticos por ciudad, país y nombre de usuario. 13 grupos en la cuenta.', hu: 'HU-LMS-006 y HU-LMS-009 (chat IA de grupos)' },
+  grupos: { hoy: 'Grupos de usuarios', ruta: '/creator/groups', que: 'Agregar grupo y asistente de IA. Grupos automáticos por ciudad, país y nombre de usuario. 13 grupos en la cuenta.', hu: 'HU-LMS-006 y HU-LMS-009 (chat IA de grupos)' },
   'descarga-certificados': { hoy: 'Certificados', ruta: '/certificate-management/:empresa', que: 'Plantillas de certificado (UBITS y de la empresa) y descarga masiva.', hu: 'HU-LMS-007' },
   'configuracion-certificados': { hoy: 'Certificados', ruta: '/certificate-management/:empresa', que: 'Crear, editar y eliminar plantillas de certificado.' },
   diagnostico: { hoy: 'Diagnóstico del administrador', ruta: '/assessments/admin', que: 'Assessments de competencias.', estado: 'Módulo inactivo en la empresa recorrida.' },

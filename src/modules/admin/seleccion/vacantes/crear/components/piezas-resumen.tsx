@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Alert02Icon, CheckmarkCircle02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
-import { Badge, Frame, FrameHeader, FramePanel, FrameTitle, Heading, Progress, Text } from '@ubits/flux-ui'
+import { Frame, FrameHeader, FramePanel, FrameTitle, Heading, Progress, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { TextoCompleto } from '@/shared/components/TextoCompleto'
 import { plural } from '@/modules/design-system/patrones/formato'
 

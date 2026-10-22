@@ -8,7 +8,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Frame,
   FrameHeader,
@@ -19,6 +18,7 @@ import {
   Heading,
   cn,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import {
   ArrowUpRight01Icon,
   CheckmarkCircle02Icon,
@@ -48,6 +48,7 @@ import {
   type FaseRoleplay,
   type ResultadoRoleplay,
 } from './estudio'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // ── El roleplay desde el lado del colaborador ─────────────────────────────────────────────────────────────────────
 //
@@ -456,7 +457,7 @@ function Resultado({
                 {practica ? 'Práctica completada' : resultado.aprobado ? '¡Aprobaste!' : 'No alcanzaste los objetivos'}
               </Heading>
               <Text as="p" size="sm" variant="muted">
-                {resultado.alcanzados} de {total} objetivos alcanzados
+                {resultado.alcanzados} de {total} {plural(total, 'objetivo alcanzado', 'objetivos alcanzados')}
               </Text>
             </div>
           </div>

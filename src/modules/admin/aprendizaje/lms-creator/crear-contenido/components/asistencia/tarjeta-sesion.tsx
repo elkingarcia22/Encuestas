@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Delete02Icon } from '@hugeicons/core-free-icons'
-import { Badge, Card, CardContent, Field, FieldLabel, Input, Textarea } from '@ubits/flux-ui'
+import { Card, CardContent, Field, FieldLabel, Input, Textarea } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
@@ -117,7 +118,7 @@ export function TarjetaSesion({
             rows={3}
             className="min-h-20"
             value={sesion.descripcion}
-            placeholder="Añade una descripción para la sesión"
+            placeholder="Agrega una descripción para la sesión"
             onChange={(e) => onCambio({ descripcion: e.target.value })}
           />
         </Field>

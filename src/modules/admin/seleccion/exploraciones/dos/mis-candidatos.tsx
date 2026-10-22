@@ -1,143 +1,130 @@
+import { MotionConfig } from 'motion/react'
 import { createPortal } from 'react-dom'
 import { AgentDock, ReopenAgentButton } from '@/modules/design-system/agente-contextual/components/agent-kit'
 import { AgenteBase } from '../../propuestas/components/agente-seleccion'
 import { useHuecoDerecho } from '../../vacantes/detalle/components/agente-acoplado'
-import { createContext, useContext, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeft01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons'
-import { Button, ButtonGroup, Progress, Text, type DataGridListConfig } from '@ubits/flux-ui'
+import {
+  ArrowLeft01Icon,
+  Cancel01Icon,
+  Delete02Icon,
+  FileImportIcon,
+  Mail01Icon,
+  MoreHorizontalIcon,
+  Search01Icon,
+  UserIcon,
+  UserSharingIcon,
+} from '@hugeicons/core-free-icons'
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Progress,
+  Text,
+  type DataGridListConfig,
+  type ListColumnFilter,
+} from '@ubits/flux-ui'
 import { Badge } from '@/shared/components/Badge'
+import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { PageContent, PageShell } from '@/shared/components/PageShell'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { useVentanasEnPanel } from '@/modules/design-system/drawers/components/drawer-anidado'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
-import { IconoIA } from '@/modules/design-system/ia/icono-ia'
+import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
+import { NavegarRegistros } from '@/modules/design-system/data-grid/partes-tabla'
 import { VACANTES_UI, siguienteEtapaDe } from '../../propuestas/datos'
 import { fechaDeEntrada, hace } from '../../propuestas/personas'
-import {
-  SIN_FILTROS,
-  SITUACION_BADGE,
-  SITUACION_TEXTO,
-  cupoEn,
-  habilidadesQueCoinciden,
-  type Orden,
-  type PersonaViva,
-  type Sentido,
-} from '../../propuestas/base'
+import { SIN_FILTROS, cupoEn, habilidadesQueCoinciden, paisDe, ubicacionDe, type FiltrosBase, type PersonaViva } from '../../propuestas/base'
+import { CaraCandidato } from '../../propuestas/components/cara-candidato'
+import { Revelar, useFilasQueEntran } from '../../propuestas/components/animacion'
 import { AccionesBase, CabeceraCandidatos, PulsoBase } from '../../propuestas/components/cabecera-seleccion'
 import { FichaPersona } from '../../propuestas/components/ficha-persona'
 import { AccionesFicha, EnQueAnda, FichaBase } from '../../propuestas/components/ficha-base'
-import { BarraBase } from '../../propuestas/components/barra-base'
-import {
-  BotonFiltros,
-  BuscadorBase,
-  BusquedasGuardadas,
-  ChipsSituacion,
-  CompararConVacante,
-  FiltrosPuestos,
-  InsigniaEspera,
-  VaciaBase,
-} from '../../propuestas/components/filtros-base'
+import { InsigniaEspera } from '../../propuestas/components/filtros-base'
 import { useBase, type Base } from '../../propuestas/components/use-base'
-import { useCarga } from '../../propuestas/components/carga'
+import { useCarga } from '@/modules/design-system/estados/carga'
+import { SaldoCreditos } from '../../propuestas/components/saldo-creditos'
 
 // Exploración 2 · «Pipeline» — Mis candidatos: la base global de la empresa como la trabaja esta exploración (25 sep).
 //
-// Denso y en volumen, como el pipeline de una vacante: arriba los segmentos de la base (en qué anda la gente) con su
-// cuenta, igual que la barra de etapas de la vacante; debajo, buscar, filtrar y comparar con una vacante; y una tabla
-// donde se marcan varias y se postulan, se etiquetan o se les escribe de una vez. La ficha sale en panel lateral y se
-// pasa a la siguiente sin cerrarla. Lo que se le hace a la gente es lo mismo en las tres exploraciones (`use-base.tsx`).
+// Arriba cómo va la base y, debajo, la tabla del sistema (16 oct, Nicolás: «no veo aún que en vacantes o candidatos estén
+// las tablas como deben ser»): TablaDatos, como Planes de formación y Vacantes. En lo gris, el conteo a la izquierda y a
+// la derecha el buscador y «Personalizar columnas»; cada columna ordena y se filtra desde su encabezado; las acciones con
+// las elegidas salen junto al buscador, y el «⋯» de cada persona en «Acciones». La ficha sale en panel lateral y se pasa
+// a la siguiente sin cerrarla. Lo que se le hace a la gente es lo mismo en todas partes (`use-base.tsx`).
 //
-// Desde el 27 sep es su propia sección del menú, «Candidatos 2» (`/admin/seleccion/candidatos/dos`): su cabecera, sus
-// cifras y su botón lleno, «Importar candidatos».
+// Desde el 27 sep es su propia sección del menú (`/admin/seleccion/candidatos/dos`): su cabecera, sus cifras y su botón
+// lleno, «Importar candidatos».
 
-// A dónde llevan las vacantes que se nombran en una ficha: dentro de la vacante, en la lista de vacantes de la 2.
-// Las vacantes de la 2 se borraron el 1 oct: las personas de aquí llevan a las de Vacantes (la 1), que tienen los mismos ids.
+// A dónde llevan las vacantes que se nombran en una ficha: las de Vacantes (la 1), que tienen los mismos ids.
 const RUTA = '/admin/seleccion/exploraciones/uno'
 const RUTA_BASE = '/admin/seleccion/candidatos/dos'
+const BUSCAR = 'Nombre, cargo o lo que sabe'
 
-// ── El orden ──
-//
-// Solo Persona, Experiencia, En la base y la vacante comparada ordenan: son los órdenes de la base (`ORDENES`). Cada uno
-// va en una dirección —la A a la Z, más experiencia, lo más reciente, lo que más sirve—, que es lo que se busca; la
-// flecha contraria del encabezado le da la vuelta (MC-51: el otro sentido de la misma columna).
-const ORDEN_DE_COLUMNA: Record<string, Orden> = { nombre: 'nombre', anios: 'experiencia', dias: 'recientes', ajuste: 'ajuste' }
-// Si cada orden va, de por sí, de mayor a menor en su columna («En la base» cuenta días: lo más reciente es lo menor).
-const DE_MAYOR_A_MENOR: Record<Orden, boolean> = { nombre: false, experiencia: true, recientes: false, ajuste: true }
+// Qué pasa si se la postula a la vacante comparada, dicho corto para la celda.
+const YA_EN_LA_VACANTE = { 'ya-esta': 'Ya está ahí', descartada: 'Se descartó ahí', contratada: 'La contrataron ahí' } as const
 
-// Lo que las celdas necesitan de la pantalla (las columnas van fuera del componente, y las de la librería no deben cambiar de
-// identidad en cada dibujo): la base con lo que se busca, cuál ficha está abierta y cómo se abre.
+/* Lo que necesitan las celdas ---------------------------------------------------------------------------------------- */
+
 const ContextoBase = createContext<{ base: Base | null; abiertaId: string | null; onAbrir: (persona: PersonaViva) => void }>({
   base: null,
   abiertaId: null,
-  onAbrir: () => {},
+  onAbrir: () => undefined,
 })
 
-// ── Las celdas ──
-//
-// El «w-0 min-w-full» de cada una: la tabla mide cada columna por lo que lleva y, sin esto, un texto largo la ensancha en
-// vez de cortarse con «…».
-
-// La celda que nombra a la persona: el nombre (abre su ficha) con lo que pide atención al lado, el correo en la línea gris y,
-// si se buscó algo que sabe hacer, por qué salió. El `data-persona` es para abrirla al tocar la fila; el `data-abierta`, para
-// pintar la fila de la ficha que está abierta.
+// Sin círculo de iniciales (5 oct, Nicolás: «no deberíamos tener esos avatares en las tablas»): el nombre, que abre la
+// ficha, y debajo lo que pide atención y el correo (en la misma línea del nombre lo cortaban); si la búsqueda coincide
+// con lo que sabe, lo dice.
 function CeldaPersona({ persona }: { persona: PersonaViva }) {
   const { base, abiertaId, onAbrir } = useContext(ContextoBase)
-  const sabe = base?.filtros.texto.trim() ? habilidadesQueCoinciden(persona, base.filtros.texto) : []
+  const texto = base?.filtros.texto.trim() ?? ''
+  const sabe = texto ? habilidadesQueCoinciden(persona, texto) : []
   return (
-    // Sin círculo de iniciales (5 oct, Nicolás: «no deberíamos tener esos avatares en las tablas porque no las podemos sacar
-    // de ningún lado»): el producto no tiene fotos de los candidatos.
-    <span className="flex w-0 min-w-full flex-col gap-0.5" data-persona={persona.id} data-abierta={abiertaId === persona.id ? '' : undefined}>
+    <span className="flex w-0 min-w-full flex-col gap-0.5" data-abierta={abiertaId === persona.id || undefined}>
+      {/* El nombre como enlace dentro de la celda, sin el alto ni el relleno de botón (diferencias.json › button-enlace-en-linea). */}
+      <Button variant="link" size="sm" className="h-auto! min-w-0 shrink justify-start! p-0!" onClick={() => onAbrir(persona)}>
+        <span className="truncate">{persona.nombre}</span>
+      </Button>
       <span className="flex min-w-0 items-center gap-1.5">
-        {/* Botón: la fila abre con el ratón, y el nombre se alcanza con Tab y abre con Enter. */}
-        <Button variant="link" size="sm" className="h-auto! min-w-0 shrink justify-start! p-0!" onClick={() => onAbrir(persona)}>
-          <span className="truncate">{persona.nombre}</span>
-        </Button>
         <InsigniaEspera persona={persona} />
         {persona.duplicadoDe ? (
           <Badge variant="warning-light" className="shrink-0">
             Posible duplicado
           </Badge>
         ) : null}
+        <Text as="span" variant="muted" size="xs" className="truncate">
+          {sabe.length ? `Sabe ${sabe.slice(0, 2).join(', ')}` : persona.correo}
+        </Text>
       </span>
-      <Text as="span" variant="muted" size="xs" className="truncate">
-        {persona.correo}
-      </Text>
-      {/* Por qué salió: lo que sabe hacer que coincide con la búsqueda. */}
-      {sabe.length ? (
-        <span className="flex flex-wrap gap-1 pt-0.5">
-          {sabe.slice(0, 3).map((habilidad) => (
-            <Badge key={habilidad} variant="info-light">
-              Sabe {habilidad}
-            </Badge>
-          ))}
-        </span>
-      ) : null}
     </span>
   )
 }
 
-// Qué tanto sirve para la vacante comparada y, si no se la puede postular ahí, por qué.
-function CeldaAjuste({ persona }: { persona: PersonaViva }) {
+// La vacante con que Orbit Flow la compara: qué tanto encaja y, si no puede entrar, por qué.
+function CeldaPara({ persona }: { persona: PersonaViva }) {
   const { base } = useContext(ContextoBase)
-  const paraVacante = base?.paraVacante
-  if (!paraVacante || !persona.ajuste) return null
-  const cupo = cupoEn(persona.vivos, paraVacante)
-  // La barra encima de su cuenta y no al lado: así la columna mide lo que la cuenta y la tabla cabe sin moverse de lado.
+  const vacante = base?.paraVacante
+  if (!vacante || !persona.ajuste) return null
+  const cupo = cupoEn(persona.vivos, vacante)
   return (
-    <span className="flex w-0 min-w-full flex-col gap-1">
-      <Progress
-        value={persona.ajuste.total ? (persona.ajuste.cumple / persona.ajuste.total) * 100 : 0}
-        aria-label={`Cumple ${persona.ajuste.cumple} de ${persona.ajuste.total} requisitos de ${paraVacante.titulo}`}
-        className="w-full"
-      />
-      {/* La cuenta es de la IA (Orbit Flow compara con los requisitos de la vacante): lleva el orbe. */}
-      <span className="flex items-center gap-1.5">
-        <IconoIA />
-        <Text as="span" size="sm" className="truncate tabular-nums">
-          {persona.ajuste.cumple} de {persona.ajuste.total} {persona.ajuste.total === 1 ? 'requisito' : 'requisitos'}
+    <span className="flex flex-col gap-1">
+      <span className="flex items-center gap-2">
+        <Progress
+          value={persona.ajuste.total ? (persona.ajuste.cumple / persona.ajuste.total) * 100 : 0}
+          aria-label={`Cumple ${persona.ajuste.cumple} de ${persona.ajuste.total} requisitos de ${vacante.titulo}`}
+          className="w-12"
+        />
+        <Text as="span" size="sm" className="whitespace-nowrap tabular-nums">
+          {persona.ajuste.cumple} de {persona.ajuste.total}
         </Text>
       </span>
       {cupo && !cupo.puede ? (
@@ -149,85 +136,106 @@ function CeldaAjuste({ persona }: { persona: PersonaViva }) {
   )
 }
 
-// Qué pasa si se la postula a la vacante comparada, dicho corto para la celda.
-const YA_EN_LA_VACANTE = { 'ya-esta': 'Ya está ahí', descartada: 'Se descartó ahí', contratada: 'La contrataron ahí' } as const
+// El «⋯» de cada persona: lo mismo que el pie de su ficha.
+function MenuPersona({ persona }: { persona: PersonaViva }) {
+  const { base, onAbrir } = useContext(ContextoBase)
+  if (!base) return null
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<BotonIcono aria-label={`Acciones de ${persona.nombre}`} />}>
+        <HugeiconsIcon icon={MoreHorizontalIcon} aria-hidden="true" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => onAbrir(persona)}>
+            <HugeiconsIcon icon={UserIcon} aria-hidden="true" />
+            Ver ficha
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => base.postular([persona])}>
+            <HugeiconsIcon icon={UserSharingIcon} aria-hidden="true" />
+            Postular a una vacante
+          </DropdownMenuItem>
+          {/* Apagado y con el porqué: si se escondiera, parecería que falta. */}
+          <DropdownMenuItem disabled={persona.noContactar} onClick={() => base.escribir([persona])}>
+            <HugeiconsIcon icon={Mail01Icon} aria-hidden="true" />
+            <span className="flex flex-col">
+              Escribirle
+              {persona.noContactar ? (
+                <Text as="span" variant="muted" size="xs">
+                  Pidió no recibir correos
+                </Text>
+              ) : null}
+            </span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={() => base.eliminar([persona])}>
+          <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
+          Eliminar candidato
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
 
-// Las columnas de la tabla del sistema (`TablaDatos`, decisión 1 de la auditoría, 5-oct; el 9 oct, decisión 4a de Cristian,
-// vuelve a ella desde la `MarcoTabla` propia). Fuera del componente, en dos juegos: las etiquetas se van al comparar con una
-// vacante (su columna deja sitio al ajuste, que con «Para Analista de datos» en el encabezado hacía que la tabla se saliera:
-// la vacante ya se lee arriba, en «Comparar con una vacante»).
-const COLUMNAS_INICIO: DataGridListConfig<PersonaViva>['columns'] = [
-  { accessorKey: 'nombre', header: 'Persona', size: 230, cell: ({ row }) => <CeldaPersona persona={row.original} /> },
-  {
-    accessorKey: 'cargo',
-    header: 'Cargo actual',
-    size: 170,
-    enableSorting: false,
-    cell: ({ row }) => (
-      <span className="flex w-0 min-w-full flex-col gap-0.5">
-        {/* Lo que no vino se dice así, no como un dato (MC-15). */}
-        <Text as="span" size="sm" variant={row.original.cargo ? undefined : 'muted'} className="truncate">
-          {row.original.cargo || 'Sin cargo registrado'}
-        </Text>
-        <Text as="span" variant="muted" size="xs" className="truncate">
-          {[row.original.empresa, row.original.ciudad].filter(Boolean).join(' · ') || 'Sin empresa ni ciudad'}
-        </Text>
-      </span>
-    ),
-  },
-  {
-    accessorKey: 'anios',
-    header: 'Experiencia',
-    size: 120,
-    cell: ({ row }) => (
-      <Text as="span" size="sm" className="tabular-nums">
-        {row.original.aniosDesconocidos ? '—' : row.original.anios === 1 ? '1 año' : `${row.original.anios} años`}
-      </Text>
-    ),
-  },
-  {
-    accessorKey: 'situacion',
-    header: 'En qué anda',
-    size: 200,
-    enableSorting: false,
-    cell: ({ row }) => (
-      <div className="w-0 min-w-full">
-        <EnQueAnda persona={row.original} ruta={RUTA} />
-      </div>
-    ),
-  },
-]
-const COLUMNA_ETIQUETAS: DataGridListConfig<PersonaViva>['columns'][number] = {
-  accessorKey: 'etiquetas',
-  header: 'Etiquetas',
-  size: 160,
+/* Las columnas ------------------------------------------------------------------------------------------------------- */
+
+// La celda toma el ancho de su columna sin empujarla: lo largo se corta con «…» y la tabla cabe con el «⋯» a la vista
+// (regla tabla-cabe). Es lo mismo que hace `CeldaTitulo`.
+const Ajustada = ({ children }: { children: ReactNode }) => <div className="w-0 min-w-full">{children}</div>
+
+// Fuera del componente: si cambian en cada pintada, el globo del filtro se cierra al marcar. Con la vacante comparada se
+// suma su columna y se va «Experiencia» (sigue en la ficha) para que la tabla quepa con el «⋯» a la vista.
+const COLUMNA_PERSONA: DataGridListConfig<PersonaViva>['columns'][number] = {
+  accessorKey: 'nombre',
+  header: 'Persona',
+  size: 250,
+  cell: ({ row }) => <CeldaPersona persona={row.original} />,
+}
+const COLUMNA_CARGO: DataGridListConfig<PersonaViva>['columns'][number] = {
+  accessorKey: 'cargo',
+  header: 'Cargo actual',
+  size: 190,
   enableSorting: false,
   cell: ({ row }) => (
-    <div className="flex w-0 min-w-full flex-wrap items-center gap-1">
-      {row.original.etiquetas.slice(0, 2).map((una) => (
-        <Badge key={una} variant="secondary" className="max-w-full truncate">
-          {una}
-        </Badge>
-      ))}
-      {row.original.etiquetas.length > 2 ? (
-        <Badge variant="outline" className="tabular-nums">
-          y {row.original.etiquetas.length - 2} más
-        </Badge>
-      ) : null}
-      {row.original.etiquetas.length ? null : (
-        <Text as="span" variant="muted" size="xs">
-          Sin etiquetas
-        </Text>
-      )}
-    </div>
+    <span className="flex w-0 min-w-full flex-col gap-0.5">
+      {/* Lo que no vino se dice así, no como un dato (MC-15). */}
+      <Text as="span" size="sm" variant={row.original.cargo ? undefined : 'muted'} className="truncate">
+        {row.original.cargo || 'Sin cargo registrado'}
+      </Text>
+      <Text as="span" variant="muted" size="xs" className="truncate">
+        {[row.original.empresa, row.original.ciudad].filter(Boolean).join(' · ') || 'Sin empresa ni ciudad'}
+      </Text>
+    </span>
+  ),
+}
+const COLUMNA_EXPERIENCIA: DataGridListConfig<PersonaViva>['columns'][number] = {
+  accessorKey: 'anios',
+  header: 'Experiencia',
+  size: 130,
+  cell: ({ row }) => (
+    <Text as="span" size="sm" className="tabular-nums">
+      {row.original.aniosDesconocidos ? '—' : row.original.anios === 1 ? '1 año' : `${row.original.anios} años`}
+    </Text>
+  ),
+}
+const COLUMNA_PROCESOS: DataGridListConfig<PersonaViva>['columns'][number] = {
+  accessorKey: 'procesos',
+  header: 'En qué anda',
+  size: 230,
+  enableSorting: false,
+  cell: ({ row }) => (
+    <Ajustada>
+      <EnQueAnda persona={row.original} ruta={RUTA} />
+    </Ajustada>
   ),
 }
 const COLUMNA_EN_LA_BASE: DataGridListConfig<PersonaViva>['columns'][number] = {
   accessorKey: 'dias',
   header: 'En la base',
   size: 130,
+  // Con la fecha al pasar el cursor (MC-50).
   cell: ({ row }) => (
-    // Con la fecha al pasar el cursor (MC-50).
     <Hint label={`Entró el ${fechaDeEntrada(row.original.dias)}`}>
       <Text as="span" variant="muted" size="sm">
         {hace(row.original.dias)}
@@ -235,18 +243,62 @@ const COLUMNA_EN_LA_BASE: DataGridListConfig<PersonaViva>['columns'][number] = {
     </Hint>
   ),
 }
-// «Ajuste», como «Ver su ajuste» en la ficha.
-const COLUMNA_AJUSTE: DataGridListConfig<PersonaViva>['columns'][number] = {
+const COLUMNA_PARA: DataGridListConfig<PersonaViva>['columns'][number] = {
   accessorKey: 'ajuste',
-  header: 'Ajuste',
-  size: 170,
-  cell: ({ row }) => <CeldaAjuste persona={row.original} />,
+  header: 'Para la vacante',
+  size: 150,
+  cell: ({ row }) => <CeldaPara persona={row.original} />,
 }
-const COLUMNAS_NORMAL = [...COLUMNAS_INICIO, COLUMNA_ETIQUETAS, COLUMNA_EN_LA_BASE]
-const COLUMNAS_COMPARANDO = [...COLUMNAS_INICIO, COLUMNA_EN_LA_BASE, COLUMNA_AJUSTE]
+const COLUMNA_ACCIONES: DataGridListConfig<PersonaViva>['columns'][number] = {
+  id: 'acciones',
+  header: 'Acciones',
+  size: 96,
+  enableSorting: false,
+  enableResizing: false,
+  ...SIN_ARRASTRE,
+  cell: ({ row }) => <MenuPersona persona={row.original} />,
+}
+const COLUMNAS = [COLUMNA_PERSONA, COLUMNA_CARGO, COLUMNA_EXPERIENCIA, COLUMNA_PROCESOS, COLUMNA_EN_LA_BASE, COLUMNA_ACCIONES]
+const COLUMNAS_PARA = [COLUMNA_PERSONA, COLUMNA_CARGO, COLUMNA_PROCESOS, COLUMNA_EN_LA_BASE, COLUMNA_PARA, COLUMNA_ACCIONES]
+
+// El orden que pide el encabezado, en el idioma de la base: cada columna tiene su sentido de siempre (la A a la Z, más
+// experiencia, lo más reciente, lo que más sirve) y el otro es «inverso» (MC-51).
+const ORDEN_DE: Record<string, { orden: FiltrosBase['orden']; normal: 'asc' | 'desc' }> = {
+  nombre: { orden: 'nombre', normal: 'asc' },
+  anios: { orden: 'experiencia', normal: 'desc' },
+  dias: { orden: 'recientes', normal: 'asc' },
+  ajuste: { orden: 'ajuste', normal: 'desc' },
+}
+
+// 13 oct (reunión con la PM y el TL): la bolsa es para buscar gente. Se filtra quién pide atención (esperando acción,
+// posibles duplicados) desde «Persona», dónde vive (país o ciudad: «si me pones ciudad, me tienes que poner país») desde
+// «Cargo actual», quién está en algún proceso desde «En qué anda» y quién entró este mes desde «En la base».
+type Filtro = { id: string; value: unknown }
+const valorDe = (filtros: Filtro[], columna: string) => filtros.find((filtro) => filtro.id === columna)?.value
+const filtrosDeLaBase = (filtros: Filtro[]): Partial<FiltrosBase> => {
+  const persona = valorDe(filtros, 'nombre')
+  const marcados = Array.isArray(persona) ? persona.map(String) : []
+  const lugar = String(valorDe(filtros, 'cargo') ?? '')
+  const [tipo, nombre] = lugar.split(':')
+  return {
+    esperan: marcados.includes('esperan'),
+    duplicados: marcados.includes('duplicados'),
+    pais: tipo === 'pais' ? nombre : tipo === 'ciudad' ? paisDe(nombre) : SIN_FILTROS.pais,
+    ciudad: tipo === 'ciudad' ? nombre : SIN_FILTROS.ciudad,
+    enProceso: valorDe(filtros, 'procesos') === true,
+    recientes: valorDe(filtros, 'dias') === true,
+  }
+}
+
+// La tabla no avisa del clic en una fila: el contenedor se lo pasa al nombre, que abre la ficha.
+const abrirFila = (evento: MouseEvent<HTMLElement>) => {
+  const tocado = evento.target as HTMLElement
+  if (tocado.closest('a, button, input, label, [role="checkbox"], [role="menuitem"], [aria-haspopup]')) return
+  if (window.getSelection()?.toString()) return
+  tocado.closest('tbody tr')?.querySelector<HTMLElement>('td button:not([role="checkbox"])')?.click()
+}
 
 export function Component() {
-  const [marcadas, setMarcadasLibre] = useState<string[]>([])
   // `?persona=<id>` abre su ficha al llegar: desde la vacante se trae aquí para borrar sus datos (CA-18).
   const [parametros] = useSearchParams()
   const [abiertaId, setAbiertaId] = useState<string | null>(() => parametros.get('persona'))
@@ -254,17 +306,15 @@ export function Component() {
   const hueco = useHuecoDerecho()
   // Segundo nivel del panel: su candidatura en una vacante («Ver su ajuste»), guardada por la vacante.
   const [ajusteEn, setAjusteEn] = useState<string | null>(null)
-  // Cuando lo elegido cambia por fuera de las casillas (la «x» de la barra, «Elegir las N…», al terminar una acción), la
-  // tabla tarda una pintada en enterarse y, mientras, avisa lo que tenía marcado antes. Esos avisos se ignoran hasta que
-  // la tabla dice lo mismo que la pantalla; si no, cada una corrige a la otra sin fin.
-  const esperandoTabla = useRef(false)
-  const setMarcadas = (siguientes: string[] | ((antes: string[]) => string[])) =>
-    setMarcadasLibre((antes) => {
-      const despues = typeof siguientes === 'function' ? siguientes(antes) : siguientes
-      if (despues.length === antes.length && despues.every((id, i) => id === antes[i])) return antes
-      esperandoTabla.current = true
-      return despues
-    })
+  // Lo elegido lo lleva la tabla; un objeto nuevo aquí lo suelta.
+  const [elegidas, setElegidas] = useState<PersonaViva[]>([])
+  const [sinSeleccion, setSinSeleccion] = useState<Record<string, boolean>>({})
+  // Se sube para volver a montar la tabla sin búsqueda ni filtros («Limpiar»).
+  const [version, setVersion] = useState(0)
+  const elegidasAhora = useRef<PersonaViva[]>([])
+  useEffect(() => {
+    elegidasAhora.current = elegidas
+  }, [elegidas])
 
   const base = useBase({
     ruta: RUTA,
@@ -272,28 +322,18 @@ export function Component() {
       setAjusteEn(null)
       setAbiertaId(id)
     },
-    // Solo se limpia la selección si la acción fue sobre las marcadas; una acción desde la ficha la deja como estaba (MC-14).
-    alTerminar: (ids) => setMarcadas((antes) => (ids.length && ids.every((id) => antes.includes(id)) ? antes.filter((id) => !ids.includes(id)) : antes)),
+    // Solo se sueltan las elegidas si la acción fue sobre ellas; una acción desde la ficha las deja como estaban (MC-14).
+    alTerminar: (ids) => {
+      if (ids.length && ids.every((id) => elegidasAhora.current.some((persona) => persona.id === id))) setSinSeleccion({})
+    },
   })
   const { filtradas, paginacion, paraVacante } = base
 
-  // Lo que la tabla dejó puesto con sus encabezados: qué orden y en qué sentido. Si el orden cambia por fuera (las cifras
-  // de arriba limpian todo; comparar con una vacante ordena por lo que más sirve), la tabla se vuelve a montar para que
-  // su flecha no diga otra cosa.
-  const para = base.filtros.paraVacante
-  const [tabla, setTabla] = useState({ orden: null as Orden | null, sentido: 'normal' as Sentido, para, montaje: 0 })
-  if ((tabla.orden !== null && (tabla.orden !== base.filtros.orden || tabla.sentido !== base.filtros.sentido)) || tabla.para !== para) {
-    setTabla({ orden: null, sentido: 'normal', para, montaje: tabla.montaje + 1 })
-  }
-
   const porId = useMemo(() => new Map(base.todas.map((persona) => [persona.id, persona])), [base.todas])
-  const marcadasSet = useMemo(() => new Set(marcadas), [marcadas])
-  // Quien se eliminó o se unió deja de estar elegida sola: se leen de la base de hoy.
-  const elegidas = marcadas.map((id) => porId.get(id)).filter((persona): persona is PersonaViva => Boolean(persona))
   const abierta = abiertaId ? (porId.get(abiertaId) ?? null) : null
   const candidatura = abierta && ajusteEn ? base.candidaturaDe(abierta, ajusteEn) : null
   // Lo que se pide desde la ficha (postular, escribir, rechazar, eliminar…) se abre dentro de ella, como drawer anidado;
-  // desde la tabla o la barra, en la ventana de siempre (8 oct: desde un panel no se abre una ventana encima).
+  // desde la tabla, en la ventana de siempre (8 oct: desde un panel no se abre una ventana encima).
   const ventanasEnFicha = useVentanasEnPanel(base.ocupado, abierta !== null)
   // El recorrido de la ficha queda fijo al abrirla (MC-49): postular a alguien de «Libres» la saca de la lista, pero las
   // flechas siguen con quien venía.
@@ -304,15 +344,6 @@ export function Component() {
     const persona = id ? porId.get(id) : undefined
     if (persona) abrir(persona, enRecorrido)
   }
-  // Elegidas que no se ven con lo que está puesto (MC-02): la barra lo dice.
-  const visibles = useMemo(() => new Set(filtradas.map((persona) => persona.id)), [filtradas])
-  const ocultas = marcadas.filter((id) => !visibles.has(id))
-
-  const paginaEntera = paginacion.filas.length > 0 && paginacion.filas.every((persona) => marcadasSet.has(persona.id))
-  const todasElegidas = filtradas.length > 0 && filtradas.every((persona) => marcadasSet.has(persona.id))
-  const marcar = (ids: string[], si: boolean) => setMarcadas((antes) => (si ? [...new Set([...antes, ...ids])] : antes.filter((id) => !ids.includes(id))))
-  // Las casillas de la tabla: quien está marcada en cualquier página sigue marcada al volver a ella.
-  const seleccion = useMemo(() => Object.fromEntries(marcadas.map((id) => [id, true])), [marcadas])
 
   // Abrir la ficha; con las flechas del panel la tabla acompaña y pasa a la página de quien se está viendo.
   const abrir = (persona: PersonaViva, lista?: string[]) => {
@@ -323,153 +354,194 @@ export function Component() {
     if (donde >= 0) paginacion.setPagina(Math.floor(donde / paginacion.porPagina) + 1)
   }
 
-  // Toda la fila abre la ficha, no solo el nombre. `DataGridList` no deja pasar el clic por fila a su grilla, así que se
-  // escucha en el marco y se busca la persona de la fila tocada. Lo que ya hace algo propio —el nombre, la casilla, los
-  // enlaces de «En qué anda», los botones— se queda con su clic, y seleccionar texto tampoco abre nada.
-  const abrirDesdeFila = (evento: MouseEvent<HTMLDivElement>) => {
-    const destino = evento.target as HTMLElement
-    if (destino.closest('a, button, input, label, [role="checkbox"], [role="menuitem"], [aria-haspopup]')) return
-    const celda = destino.closest('td')
-    if (!celda || celda.querySelector('[role="checkbox"], [aria-haspopup]')) return
-    if (window.getSelection()?.toString()) return
-    const id = celda.closest('tr')?.querySelector<HTMLElement>('[data-persona]')?.dataset.persona
-    const persona = id ? porId.get(id) : undefined
-    if (persona) abrir(persona)
+  // La página que se ve, la misma lista mientras nada cambie: la tabla vuelve a contar lo elegido cada vez que cambia.
+  const { pagina, porPagina } = paginacion
+  const enPagina = useMemo(() => filtradas.slice((pagina - 1) * porPagina, pagina * porPagina), [filtradas, pagina, porPagina])
+
+  // La tabla carga al entrar y cada vez que cambia lo que se consulta (25 sep, las cargas de Selección).
+  const cargando = useCarga({ filtros: base.filtros, lote: base.loteVisto?.id ?? null, pagina, porPagina })
+
+  // Orbit Flow también busca (OF-59): lo que pone se ve en el buscador de la tabla, que solo avisa lo que se escribe en
+  // él. Si el texto cambió por otro lado, se escribe en el campo.
+  const envoltura = useRef<HTMLDivElement>(null)
+  const escrito = useRef(base.filtros.texto)
+  // Las filas entran en cascada cada vez que llega una página, una búsqueda, un filtro o un orden nuevo.
+  useFilasQueEntran(envoltura, { filtros: base.filtros, lote: base.loteFiltro, pagina, porPagina }, !cargando)
+  useEffect(() => {
+    if (base.filtros.texto === escrito.current) return
+    escrito.current = base.filtros.texto
+    const campo = envoltura.current?.querySelector<HTMLInputElement>(`input[placeholder="${BUSCAR}"]`)
+    if (campo) campo.value = base.filtros.texto
+  }, [base.filtros.texto])
+
+  const limpiar = () => {
+    base.limpiar()
+    escrito.current = ''
+    setVersion((antes) => antes + 1)
   }
 
-  // La tabla carga al entrar y cada vez que cambia lo que se consulta: los chips, la búsqueda, los filtros, el orden, la
-  // vacante con que se compara, el lote o la página (25 sep, las cargas de Selección). Los filtros de encima y la cabecera
-  // de la tabla se quedan quietos; las filas, mientras, son el esqueleto de la tabla del sistema.
-  const cargando = useCarga({ filtros: base.filtros, lote: base.loteVisto?.id ?? null, pagina: paginacion.pagina, porPagina: paginacion.porPagina })
+  // Las opciones de ubicación salen de quien hay en la base: cada país y, debajo, sus ciudades.
+  const { paises, ciudades } = base
+  const columnFilters = useMemo<ListColumnFilter[]>(
+    () => [
+      {
+        id: 'nombre',
+        label: 'Persona',
+        type: 'select',
+        multiple: true,
+        options: [
+          { label: 'Esperando acción', value: 'esperan' },
+          { label: 'Posibles duplicados', value: 'duplicados' },
+        ],
+      },
+      {
+        id: 'cargo',
+        label: 'Ubicación',
+        type: 'select',
+        options: paises.flatMap((pais) => [
+          { label: `${pais} (todo el país)`, value: `pais:${pais}` },
+          ...ciudades.filter((ciudad) => paisDe(ciudad) === pais).map((ciudad) => ({ label: `${ciudad}, ${pais}`, value: `ciudad:${ciudad}` })),
+        ]),
+      },
+      { id: 'procesos', label: 'En algún proceso', type: 'boolean' },
+      { id: 'dias', label: 'Entraron este mes', type: 'boolean' },
+    ],
+    [paises, ciudades],
+  )
 
-  // La tabla del sistema: el conteo a la izquierda, «Personalizar columnas» a la derecha, el orden en los encabezados, las
-  // casillas de la librería y el pie de páginas en español dentro del marco.
-  const config: Omit<DataGridListConfig<PersonaViva>, 'pagination'> = {
-    frame: { description: filtradas.length === base.todas.length ? undefined : `${filtradas.length} de ${base.todas.length} personas` },
-    columns: paraVacante ? COLUMNAS_COMPARANDO : COLUMNAS_NORMAL,
+  // Lo que la tabla no puede decir con sus controles va en la línea del conteo y, para quitarlo, junto al buscador: la
+  // gente de un lote (al llegar desde una importación), la vacante con que Orbit Flow compara y, si se buscó un nombre,
+  // buscarlo también en cargos y en lo que saben (MC-13).
+  const personas = (n: number) => `${n.toLocaleString('es-CO')} ${n === 1 ? 'persona' : 'personas'}`
+  const conteo = [
+    personas(filtradas.length),
+    base.loteFiltro ? `del lote «${base.loteVisto?.nombre ?? 'importado'}»` : null,
+    paraVacante ? `ordenadas para ${paraVacante.titulo}` : null,
+    base.porNombre && base.enTodoCuantas > filtradas.length ? 'buscando por nombre' : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+  const icono = (forma: typeof UserIcon) => <HugeiconsIcon icon={forma} aria-hidden="true" />
+  // Cuántos filtros están puestos, para la salida de «Sin resultados» (también los que puso Orbit Flow).
+  const { filtros } = base
+  const filtrosPuestos = [
+    filtros.esperan,
+    filtros.duplicados,
+    filtros.pais !== SIN_FILTROS.pais || filtros.ciudad !== SIN_FILTROS.ciudad,
+    filtros.enProceso,
+    filtros.recientes,
+    filtros.etiquetas.length > 0,
+    filtros.experiencia !== SIN_FILTROS.experiencia,
+    base.loteFiltro !== null,
+  ].filter(Boolean).length
+
+  const config: DataGridListConfig<PersonaViva> = {
+    columns: paraVacante ? COLUMNAS_PARA : COLUMNAS,
+    columnFilters,
+    onColumnFiltersChange: (nuevos) => base.cambiar(filtrosDeLaBase(nuevos)),
     sort: {
-      onSortChange: (nuevo) => {
-        const columna = nuevo?.replace(/^-/, '')
-        const orden = columna ? ORDEN_DE_COLUMNA[columna] : paraVacante ? 'ajuste' : SIN_FILTROS.orden
-        // Al revés cuando la flecha pide lo contrario de lo que el orden hace de por sí.
-        const baja = Boolean(nuevo?.startsWith('-'))
-        const sentido: Sentido = columna && baja !== DE_MAYOR_A_MENOR[orden] ? 'inverso' : 'normal'
-        setTabla((antes) => ({ ...antes, orden: columna ? orden : null, sentido }))
-        base.cambiar({ orden, sentido })
+      onSortChange: (orden) => {
+        const campo = orden?.replace(/^-/, '') ?? ''
+        const como = ORDEN_DE[campo]
+        if (!orden || !como) return base.cambiar({ orden: paraVacante ? 'ajuste' : SIN_FILTROS.orden, sentido: 'normal' })
+        const pedido = orden.startsWith('-') ? 'desc' : 'asc'
+        base.cambiar({ orden: como.orden, sentido: pedido === como.normal ? 'normal' : 'inverso' })
       },
     },
-    // Las casillas eligen en la página que se ve; lo elegido en las otras páginas se queda.
-    selection: {
-      onSelectionChange: (enLaPagina) => {
-        const ids = enLaPagina.map((persona) => persona.id)
-        const esperadas = paginacion.filas.filter((persona) => marcadasSet.has(persona.id))
-        // Ya dice lo mismo que la pantalla: no hay nada que cambiar, y si se esperaba a la tabla, ya se puso al día.
-        if (ids.length === esperadas.length && esperadas.every((persona) => ids.includes(persona.id))) {
-          esperandoTabla.current = false
-          return
-        }
-        if (esperandoTabla.current) return
-        const deLaPagina = new Set(paginacion.filas.map((persona) => persona.id))
-        setMarcadasLibre((antes) => [...antes.filter((id) => !deLaPagina.has(id)), ...ids])
+    search: {
+      placeholder: BUSCAR,
+      onSearch: (texto) => {
+        escrito.current = texto
+        base.cambiar({ texto })
       },
     },
     labels: { dragToReorder: 'Arrastrar para reordenar la columna' },
-    // Sus vacíos, con su salida propia (importar, quitar el filtro que más deja fuera, buscar lo que se le parece).
-    emptyState: { type: base.todas.length ? 'no-results' : 'empty', customComponent: <VaciaBase base={base} /> },
+    selection: { onSelectionChange: setElegidas },
+    // Con las elegidas: postularlas a una vacante, escribirles o eliminarlas (13 oct, PM: sin exportar ni etiquetas).
+    bulkActions: [
+      { id: 'postular', label: 'Postular a una vacante', icon: icono(UserSharingIcon), visibility: 'always', onClick: (filas) => base.postular(filas) },
+      { id: 'escribir', label: 'Escribirles', icon: icono(Mail01Icon), visibility: 'always', onClick: (filas) => base.escribir(filas) },
+      { id: 'eliminar', label: 'Eliminar candidatos', variant: 'destructive', icon: icono(Delete02Icon), visibility: 'always', onClick: (filas) => base.eliminar(filas) },
+    ],
+    actions: {
+      secondary: [
+        ...(base.porNombre && base.enTodoCuantas > filtradas.length
+          ? [{ id: 'en-todo', label: `Buscar también en cargos (${base.enTodoCuantas})`, icon: icono(Search01Icon), onClick: base.buscarEnTodo }]
+          : []),
+        ...(paraVacante ? [{ id: 'sin-comparar', label: 'Dejar de comparar', icon: icono(Cancel01Icon), onClick: () => base.cambiar({ paraVacante: null }) }] : []),
+        ...(base.loteFiltro ? [{ id: 'sin-lote', label: 'Ver toda la base', icon: icono(Cancel01Icon), onClick: () => base.setLoteFiltro(null) }] : []),
+      ],
+    },
+    frame: { description: conteo },
+    // Los dos vacíos del design system: la base sin nadie (importar) y nadie con esa búsqueda (limpiar).
+    emptyState: base.todas.length
+      ? {
+          type: 'no-results',
+          customComponent: (
+            <SinResultados
+              busqueda={base.filtros.texto}
+              filtrosActivos={filtrosPuestos}
+              onLimpiar={limpiar}
+            />
+          ),
+        }
+      : {
+          type: 'empty',
+          customComponent: (
+            <PrimeraVez
+              icono="glass-profile"
+              titulo="Tu base de candidatos está vacía"
+              descripcion="Aquí queda todo el que pasa por Selección: quien aplica a una vacante, quien llega en un lote de CVs y quien agregas a mano."
+              accion={{ texto: 'Importar candidatos', icono: FileImportIcon, onClick: base.importar.abrir }}
+            />
+          ),
+        },
   }
 
   return (
+    // Con «reducir movimiento» en el sistema, las animaciones de Selección se quedan quietas.
+    <MotionConfig reducedMotion="user">
     <PageShell>
       {/* «Mis candidatos» es su propia sección (27 sep): su título, su frase y lo principal que se hace aquí, importar. */}
       <CabeceraCandidatos
         ruta={RUTA_BASE}
         acciones={
           <>
+            {/* Los créditos de Selección, a la vista en todo el producto (16 oct). */}
+            <SaldoCreditos />
             <AccionesBase base={base} />
-            {/* Orbit Flow sobre la base (OF-59), al final de la fila. */}
-            {agente ? null : <ReopenAgentButton onClick={() => setAgente(true)} />}
+            {/* Orbit Flow sobre la base (OF-59), al final de la fila. Con los dos de importar son tres llamados a la
+                acción: va solo con el orbe (regla orbit-flow-compacto). */}
+            {agente ? null : <ReopenAgentButton compact onClick={() => setAgente(true)} />}
           </>
         }
       />
 
       <PageContent>
-        {/* Cómo va la base, con la forma de las cifras del inicio de Vacantes (5 oct): cada cifra deja la tabla mostrando eso mismo. */}
-        <PulsoBase base={base} />
+        {/* Cómo va la base, con la forma de las cifras del inicio de Vacantes (5 oct). Las secciones entran en cascada. */}
+        <Revelar>
+          <PulsoBase base={base} />
+        </Revelar>
 
-        {/* Cómo se busca, encima de la tabla: escribir, filtrar a fondo, volver a una búsqueda de antes y, al final por ser
-            de IA, comparar con una vacante; debajo los grupos de la base y lo que se puso en «Filtros». No van en la cabecera
-            de la tabla porque la de la librería no deja poner nada propio, y el buscador tampoco va en el suyo: las búsquedas
-            guardadas y las sugerencias del vacío escriben en él, y el de la tabla no se deja escribir desde fuera. Todo
-            alineado a la izquierda (2 oct, Nicolás: «¿cosas alineadas a la derecha y otras a la izquierda? eso se ve
-            rarísimo»). */}
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <BuscadorBase base={base} className="w-72" />
-            <BotonFiltros base={base} />
-            <BusquedasGuardadas base={base} />
-            <CompararConVacante base={base} />
-          </div>
-          <ChipsSituacion base={base} />
-          <FiltrosPuestos base={base} />
-
-          {/* Lo escrito es un nombre: se buscó por nombre, y se ofrece buscarlo en todo (MC-13). Va aquí y no en el conteo de
-              la tabla, que es solo texto. */}
-          {base.porNombre && base.enTodoCuantas > filtradas.length ? (
-            <div role="status" className="flex flex-wrap items-center gap-x-2 tabular-nums">
-              <Text as="span" variant="muted" size="sm">
-                Buscando por nombre.
-              </Text>
-              <Button variant="link" size="sm" className="h-auto! p-0!" onClick={base.buscarEnTodo}>
-                Buscar «{base.filtros.texto.trim()}» también en cargos y en lo que saben ({base.enTodoCuantas})
-              </Button>
-            </div>
-          ) : null}
-
-          {/* Con la página entera elegida, se ofrece elegir todo lo que coincide (como en el correo). */}
-          {paginaEntera && filtradas.length > paginacion.filas.length ? (
-            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-lg bg-primary/7 px-3 py-2" role="status">
-              <Text as="span" size="sm" className="tabular-nums">
-                {todasElegidas ? `Elegiste las ${filtradas.length} que coinciden.` : `Elegiste las ${paginacion.filas.length} de esta página.`}
-              </Text>
-              <Button
-                variant="link"
-                size="sm"
-                className="h-auto! p-0!"
-                onClick={() => (todasElegidas ? setMarcadas([]) : marcar(filtradas.map((persona) => persona.id), true))}
-              >
-                {todasElegidas ? 'Quitar la selección' : `Elegir las ${filtradas.length} que coinciden`}
-              </Button>
-            </div>
-          ) : null}
-
-          {/* La fila de la ficha abierta, en azul suave (la elegida ya la pinta la tabla), y toda la fila abre la ficha. */}
-          <div className="[&_tbody_tr]:cursor-pointer [&_tbody_tr:has([data-abierta])]:bg-primary/7" onClick={abrirDesdeFila}>
-            <ContextoBase.Provider value={{ base, abiertaId: abierta?.id ?? null, onAbrir: abrir }}>
+        <Revelar orden={1}>
+          <ContextoBase.Provider value={{ base, abiertaId: abierta?.id ?? null, onAbrir: (persona) => abrir(persona) }}>
+            {/* La persona abierta en la ficha, en azul suave en la tabla: nada de gris para marcar. */}
+            <div ref={envoltura} onClick={abrirFila} className="[&_tbody_tr]:cursor-pointer [&_tbody_tr:has([data-abierta])]:bg-primary/7">
               <TablaDatos
-                key={`${para ?? 'sin-comparar'}-${tabla.montaje}`}
-                id="base-dos"
+                key={version}
+                config={config}
+                data={enPagina}
+                isLoading={cargando}
+                initialRowSelection={sinSeleccion}
+                paginacion={{ pagina, setPagina: paginacion.setPagina, porPagina, setPorPagina: paginacion.setPorPagina, total: filtradas.length }}
+                titulo="Tus candidatos"
                 nombre="personas"
                 singular="persona"
-                config={config}
-                data={paginacion.filas}
-                isLoading={cargando}
-                initialRowSelection={seleccion}
-                paginacion={paginacion}
+                id="base-dos"
               />
-            </ContextoBase.Provider>
-          </div>
-        </div>
-
-        {/* Las acciones sobre las elegidas: pegada abajo mientras se recorre la tabla. */}
-        {elegidas.length ? (
-          <BarraBase
-            elegidas={elegidas}
-            base={base}
-            onLimpiar={() => setMarcadas([])}
-            ocultas={ocultas.length}
-            onQuitarOcultas={() => setMarcadas((antes) => antes.filter((id) => visibles.has(id)))}
-          />
-        ) : null}
+            </div>
+          </ContextoBase.Provider>
+        </Revelar>
       </PageContent>
 
       {/* La ficha en panel lateral: se mira a alguien sin perder la tabla y se pasa a la siguiente con las flechas. Con
@@ -486,48 +558,24 @@ export function Component() {
         size="lg"
         // En el celular, todo el ancho menos el margen, como la ficha de la vacante (CA-33).
         style={{ '--drawer-content-width': 'calc(100vw - 1.5rem)' } as CSSProperties}
-        title={candidatura ? 'Candidatura' : (abierta?.nombre ?? '')}
-        description={candidatura ? candidatura.vacante.titulo : abierta ? [abierta.cargo, abierta.empresa].filter(Boolean).join(' · ') || 'Sin cargo registrado' : undefined}
-        badge={
-          abierta && !candidatura ? (
-            <span className="flex items-center gap-1.5">
-              <Badge variant={SITUACION_BADGE[abierta.situacion]}>
-                {SITUACION_TEXTO[abierta.situacion]}
-              </Badge>
-              <InsigniaEspera persona={abierta} />
-            </span>
-          ) : undefined
-        }
+        // Quién es: la cara, el nombre y dónde vive (13 oct, reunión con la PM y el TL). Sin «Libre» ni ningún estado de la
+        // persona (tiene uno en cada proceso) y sin cargo, empresa ni años de experiencia, que no dicen en qué. Dentro de
+        // una de sus vacantes, debajo va esa vacante: aquí no se está en ella.
+        media={abierta ? <CaraCandidato nombre={abierta.nombre} /> : undefined}
+        title={abierta?.nombre ?? ''}
+        description={candidatura ? candidatura.vacante.titulo : abierta ? ubicacionDe(abierta.ciudad) : undefined}
+        badge={abierta && !candidatura ? <InsigniaEspera persona={abierta} /> : undefined}
         navigation={
           abierta && candidatura ? (
             <div className="flex items-center border-b px-3 py-1.5">
+              {/* «Volver» en gris, como lo secundario del panel: el fantasma del tema lo pinta en negro (diferencias.json › button-ghost-tonos). */}
               <Button data-region="Volver" variant="ghost" size="sm" className="text-muted-foreground!" onClick={() => setAjusteEn(null)}>
                 <HugeiconsIcon icon={ArrowLeft01Icon} size={16} />
                 Volver a {abierta.nombre}
               </Button>
             </div>
           ) : abierta && indice >= 0 ? (
-            <div className="flex items-center justify-end border-b px-4 py-1.5">
-              <div data-region="Anterior / siguiente" className="flex items-center gap-2.5">
-                <Text as="span" variant="muted" size="sm" className="tabular-nums">
-                  {indice + 1} de {enRecorrido.length}
-                </Text>
-                <ButtonGroup>
-                  <Button variant="outline" size="icon-xs" aria-label="Persona anterior" disabled={indice <= 0} onClick={() => irA(enRecorrido[indice - 1])}>
-                    <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon-xs"
-                    aria-label="Persona siguiente"
-                    disabled={indice >= enRecorrido.length - 1}
-                    onClick={() => irA(enRecorrido[indice + 1])}
-                  >
-                    <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
-                  </Button>
-                </ButtonGroup>
-              </div>
-            </div>
+            <NavegarRegistros indice={indice} total={enRecorrido.length} nombre="Persona" onIr={(destino) => irA(enRecorrido[destino])} />
           ) : undefined
         }
         // La candidatura trae su propio pie; la ficha, el de la base.
@@ -546,13 +594,15 @@ export function Component() {
                 if (destino) base.mover(candidatura, destino)
               }}
               onRechazar={() => base.rechazar(candidatura, () => setAjusteEn(null))}
+              // Si entró a una etapa con IA sin invitación, se la envía desde aquí (13 oct, PM).
+              onInvitar={candidatura.vacante.estado === 'Cerrada' ? undefined : () => base.invitar(candidatura)}
               onIrA={(id) => setAjusteEn(abierta.vivos.find((proceso) => proceso.candidaturaId === id)?.vacanteId ?? null)}
             />
           </div>
         ) : abierta ? (
           // El perfil trae su propio aire y sus pestañas pegadas arriba: se anula el relleno del cuerpo del panel.
           <div className="-mx-5 -my-4 h-[calc(100%+2rem)]">
-            <FichaBase key={abierta.id} persona={abierta} ruta={RUTA} base={base} onVerCandidatura={(una) => setAjusteEn(una.vacante.id)} />
+            <FichaBase key={abierta.id} persona={abierta} base={base} onVerCandidatura={(una) => setAjusteEn(una.vacante.id)} />
           </div>
         ) : null}
         {ventanasEnFicha ? base.dialogos : null}
@@ -576,6 +626,7 @@ export function Component() {
           )
         : null}
     </PageShell>
+    </MotionConfig>
   )
 }
 

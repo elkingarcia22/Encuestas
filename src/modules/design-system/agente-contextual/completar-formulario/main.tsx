@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Tick02Icon, Undo02Icon } from '@hugeicons/core-free-icons'
+import { Megaphone02Icon, Tick02Icon, Undo02Icon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Card,
@@ -21,6 +21,7 @@ import { Orb } from '@/shared/components/Orb'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { WS } from '../../drawers/components/drawer-styles'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../../navegacion/components/case-frame'
 import {
   AgentCard,
@@ -64,6 +65,7 @@ const STATUS_LABEL: Record<FieldStatus, string> = {
 // Caso · Completar un formulario: el agente llena la vacante desde una descripción y cada campo se revisa.
 export function Component() {
   const [panel, setPanel] = useState<PanelState>('open')
+  const [publicando, setPublicando] = useState(false)
   const [values, setValues] = useState(EMPTY)
   const [status, setStatus] = useState(INITIAL_STATUS)
   const [phase, setPhase] = useState<Phase>('idle')
@@ -162,7 +164,7 @@ export function Component() {
 
   const agentPanel = (
     <ContextPanel
-      context={<span className="text-foreground">Formulario Nueva vacante</span>}
+      context={<span className="text-foreground">Formulario de vacante</span>}
       onClose={() => setPanel('closed')}
       placeholder="Pega la descripción del cargo"
       onSend={send}
@@ -292,7 +294,7 @@ export function Component() {
       hint="El agente llena los campos y cada uno se acepta o se deshace"
       width="default"
       anatomy={false}
-      back={{ label: 'Casos de Orbit Flow', to: '/design-system/agente-contextual' }}
+      back={{ label: 'Casos de Orbit', to: '/design-system/agente-contextual' }}
     >
       <AgentStage state={panel} onOpen={() => setPanel('open')} pending={phase === 'done' && pending > 0} panel={agentPanel}>
         <div className="px-8 py-6">
@@ -302,16 +304,17 @@ export function Component() {
                 { label: 'Inicio', path: '/admin' },
                 { label: 'Selección' },
                 { label: 'Vacantes', path: '/design-system/navegacion/basica' },
-                { label: 'Nueva vacante' },
+                { label: 'Crear vacante' },
               ]}
-              title="Nueva vacante"
+              title="Crear vacante"
               description="Se guarda como borrador hasta que la publiques."
               actions={
                 <>
-                  <Button variant="outline" className={WS} onClick={() => notify('Borrador guardado')}>
+                  <Button variant="outline" className={WS} onClick={() => notify('Borrador guardado', undefined, 'success')}>
                     Guardar borrador
                   </Button>
-                  <Button className={WS} disabled={pending > 0 || !values.name} onClick={() => notify(`Vacante «${values.name}» publicada`)}>
+                  {/* Publicar la vacante la deja a la vista de todos: pregunta antes (13-oct, regla «preguntar-antes»). */}
+                  <Button className={WS} disabled={pending > 0 || !values.name} onClick={() => setPublicando(true)}>
                     Publicar vacante
                   </Button>
                   {panel === 'closed' ? <ReopenAgentButton onClick={() => setPanel('open')} /> : null}
@@ -405,6 +408,22 @@ export function Component() {
           </PageShell>
         </div>
       </AgentStage>
+
+      <DialogoConfirmar
+        abierto={publicando}
+        onAbiertoChange={setPublicando}
+        icono={Megaphone02Icon}
+        titulo="¿Publicar la vacante?"
+        descripcion="Queda a la vista en el portal de empleo y empieza a recibir postulaciones."
+        cancelar="Todavía no"
+        accion="Publicar vacante"
+        onConfirmar={() => {
+          setPublicando(false)
+          notify(`Vacante «${values.name}» publicada`, undefined, 'success')
+        }}
+      >
+        <RegistroConfirmar nombre={values.name || 'Nueva vacante'} detalle="Vacante · se publica ahora" estado="Borrador" tono="neutro" icono={Megaphone02Icon} />
+      </DialogoConfirmar>
     </CaseFrame>
   )
 }

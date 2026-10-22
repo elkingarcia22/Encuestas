@@ -8,6 +8,7 @@ import { COLUMNA_FIJA, LineasGuia, SANGRIA } from '../../../encuestas/resultados
 import { COLOR_POR_TONO, FONDO_ESCALA, TEXTO_ESCALA } from '../../../encuestas/resultados/components/escala'
 import { formatoAvance } from '../../modelo/ciclos'
 import { bandaDe, type CeldaMapa, type FilaMapa } from '../../modelo/resultados/cumplimiento'
+import { useEscala } from './escala-cumplimiento'
 import { MINIMO_GRUPO } from '../../modelo/resultados/ranking'
 
 // Cumplimiento › Mapa de calor (9-oct): el mismo mapa que Favorabilidad en Encuestas —la primera columna fija, el total
@@ -15,6 +16,7 @@ import { MINIMO_GRUPO } from '../../modelo/resultados/ranking'
 // en sus objetivos. Un cruce de menos de tres personas sale reservado, con candado.
 
 function Celda({ celda, fila, grupo }: { celda: CeldaMapa; fila: string; grupo: string }) {
+  const escala = useEscala()
   const nombre = `${fila} · ${grupo}`
   if (celda.avance === null) {
     return (
@@ -34,8 +36,10 @@ function Celda({ celda, fila, grupo }: { celda: CeldaMapa; fila: string; grupo: 
       </Hint>
     )
   }
-  const banda = bandaDe(celda.avance)
+  const banda = bandaDe(celda.avance, escala)
   return (
+    // «!border-0»: la celda de color va sin el contorno de la insignia «outline»; la clase sola no le gana al tema
+    // (diferencias.json › instalacion-estilos-sin-capa). Es el mismo mapa que Favorabilidad de Encuestas.
     <Hint label={`${banda.label} · ${celda.personas} personas`}>
       <Badge variant="outline" className="m-0 h-full min-h-8 w-full justify-center rounded-sm !border-0 tabular-nums" style={{ backgroundColor: FONDO_ESCALA[banda.tone], color: TEXTO_ESCALA[banda.tone] }}>
         {formatoAvance(celda.avance)}
@@ -45,10 +49,13 @@ function Celda({ celda, fila, grupo }: { celda: CeldaMapa; fila: string; grupo: 
 }
 
 function Fila({ fila, columnas, abiertas, onAlternar }: { fila: FilaMapa; columnas: readonly string[]; abiertas: ReadonlySet<string>; onAlternar: (id: string) => void }) {
+  const escala = useEscala()
   const abierta = abiertas.has(fila.id)
   const raiz = fila.nivel === 1
   return (
     <>
+      {/* «!border-b-0» en la fila y sus celdas: el mapa se lee como una rejilla de colores sin la línea de abajo de cada fila
+          de la tabla, que el tema pone y la clase sola no quita (diferencias.json › instalacion-estilos-sin-capa). */}
       <TableRow className="group/fila h-[1px] border-transparent !border-b-0">
         <TableHead scope="row" className={cn(COLUMNA_FIJA, 'w-80 min-w-80 !border-b-0')}>
           <LineasGuia depth={fila.nivel} />
@@ -66,7 +73,7 @@ function Fila({ fila, columnas, abiertas, onAlternar }: { fila: FilaMapa; column
           </div>
         </TableHead>
         <TableCell className="w-20 border-r border-border text-center !border-b-0">
-          <span className="text-sm font-medium tabular-nums" style={{ color: COLOR_POR_TONO[bandaDe(fila.total).tone] }}>
+          <span className="text-sm font-medium tabular-nums" style={{ color: COLOR_POR_TONO[bandaDe(fila.total, escala).tone] }}>
             {formatoAvance(fila.total)}
           </span>
         </TableCell>

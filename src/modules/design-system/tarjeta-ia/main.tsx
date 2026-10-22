@@ -30,7 +30,7 @@ const GUIDE = [
   },
   {
     title: 'El color no rellena',
-    text: 'El halo vive difuminado en las esquinas y el texto siempre queda sobre fondo liso. Al pasar el cursor crece desde su esquina: se mueve el fondo, no la tarjeta.',
+    text: 'El halo es luz pastel a lo ancho del borde de arriba (azul, morado, rosa y naranja) que se apaga antes de llegar al texto, así que el texto siempre queda sobre fondo liso. Al pasar el cursor crece: se mueve el fondo, no la tarjeta.',
   },
   {
     title: 'El texto promete algo concreto',
@@ -62,7 +62,7 @@ export function Component() {
       <PageHeader
         kicker="Design system · Orbit"
         title="Tarjeta de IA"
-        description="La invitación a que la IA haga el trabajo, dentro de una pantalla normal. En el Inicio es «Crear un curso». Lo azul con nombre es parte del componente; lo gris rayado es el resto de la pantalla, que la tarjeta no debe tapar."
+        description="La invitación a que la IA haga el trabajo, dentro de una pantalla normal. Se ve en la plantilla Home operativo, como «Crear un curso»; el Inicio del admin de hoy ya no la lleva. Lo azul con nombre es parte del componente; lo gris rayado es el resto de la pantalla, que la tarjeta no debe tapar."
         actions={<TryButton onClick={() => setTryOpen(true)} />}
       />
       <PageContent className="flex flex-col gap-6">
@@ -95,7 +95,7 @@ export function Component() {
             <ControlSection title="Cómo se ve">
               <SwitchRow label="Halo" checked={config.halo} onChange={(v) => set('halo', v)} />
               <p className={NOTE}>
-                El resplandor de color en las esquinas. Se apaga cuando la pantalla ya tiene otra pieza de IA con color.
+                La luz de color del borde de arriba. Se apaga cuando la pantalla ya tiene otra pieza de IA con color.
               </p>
               <SwitchRow label="Compacta" checked={config.compact} onChange={(v) => set('compact', v)} />
               <p className={NOTE}>Menos aire y sin bajada, para columnas estrechas.</p>

@@ -172,7 +172,7 @@ export function NotificationsPopover({ onOpenProcesses, onOpenChangelog }: Notif
               </ItemMedia>
               <ItemContent>
                 <ItemTitle>Novedades de la v4.2</ItemTitle>
-                <ItemDescription className="line-clamp-1!">Tres mejoras nuevas esta semana</ItemDescription>
+                <ItemDescription className="line-clamp-1!">Cuatro mejoras nuevas esta semana</ItemDescription>
               </ItemContent>
               <HugeiconsIcon icon={ArrowRight01Icon} size={15} className="size-3.75 shrink-0 text-muted-foreground" />
             </Item>

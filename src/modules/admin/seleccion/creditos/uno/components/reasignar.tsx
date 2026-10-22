@@ -18,6 +18,7 @@ import { Badge } from '@/shared/components/Badge'
 import { Hint } from '@/shared/components/Hint'
 import { notifyAction } from '@/shared/components/notify'
 import { plural } from '@/modules/design-system/patrones/formato'
+import { BotonCancelarPanel } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { BarraSegmentada } from '@/modules/design-system/templates/dashboard/components/graficos'
 import {
@@ -36,7 +37,7 @@ import {
   type Bolsa,
 } from '../../../propuestas/creditos'
 import { IconoAgente } from '../../../propuestas/components/creditos-ui'
-import { useAccion } from '../../../propuestas/components/carga'
+import { useAccion } from '@/modules/design-system/estados/carga'
 import { noSeGuardo } from '../../../propuestas/simular'
 
 // Reasignar créditos (25 sep). Lo de hoy era un cajón con −/+ que no decía qué pasaba al cambiar un número, un
@@ -99,14 +100,14 @@ export function ReasignarCreditos({ open, onOpenChange, bolsa }: { open: boolean
       icon={PieChartIcon}
       title="Reasignar créditos"
       description="Reparte la bolsa entre los agentes. Lo usado y lo reservado para procesos en curso no se puede quitar."
+      // 13-oct (I-021): con el reparto cambiado, no se cierra al tocar fuera y pregunta antes de descartar.
+      conCambios={revision.hayCambios}
       footer={
         <div className="flex w-full items-center gap-2">
           <Text as="span" variant="muted" size="sm" role="status" className="min-w-0 flex-1">
             {porQueNo}
           </Text>
-          <Button variant="outline" disabled={accion.enCurso} onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
+          <BotonCancelarPanel disabled={accion.enCurso} alCerrar={() => onOpenChange(false)} />
           <Button disabled={!revision.hayCambios || revision.errores.length > 0 || accion.enCurso} onClick={() => accion.correr(guardar)}>
             {accion.enCurso ? <Spinner /> : null}
             {accion.enCurso ? 'Guardando…' : 'Guardar reparto'}

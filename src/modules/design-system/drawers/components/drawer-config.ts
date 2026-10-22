@@ -8,6 +8,7 @@ import {
   Layers01Icon,
   Menu01Icon,
   Notification03Icon,
+  PencilEdit02Icon,
   UserSearch01Icon,
   WorkflowSquare10Icon,
 } from '@hugeicons/core-free-icons'
@@ -16,7 +17,7 @@ import type { PartInfo } from '../../components/anatomy/anatomy-kit'
 import type { DrawerDirection } from './drawer-shell'
 
 // Drawers de ejemplo con contenido real (se abren desde «Ver ejemplo con contenido»).
-export type ExampleDrawer = 'candidato' | 'filtros' | 'vacante' | 'avisos' | 'agente' | 'proceso' | 'menu' | 'acciones' | 'vista-previa' | 'aviso'
+export type ExampleDrawer = 'candidato' | 'filtros' | 'notas' | 'avisos' | 'agente' | 'proceso' | 'menu' | 'acciones' | 'vista-previa' | 'aviso'
 
 // Todo lo que se puede prender o apagar en un drawer.
 export type DrawerConfig = {
@@ -136,21 +137,23 @@ export const DRAWER_CASES: DrawerCase[] = [
     },
   },
   {
-    id: 'formulario',
-    title: 'Formulario por pasos',
-    // Desde el 5-oct crear y editar van en una página con la barra fija abajo, nunca en un panel (decisión 5 de la
-    // auditoría). El caso se queda para mostrar la pieza, pero dice que no se usa para crear.
-    summary: 'No usar para crear ni editar: eso va en una página con la barra fija abajo (5-oct). Queda solo como referencia de la pieza.',
-    icon: Briefcase06Icon,
-    example: 'vacante',
-    config: { ...BASE, size: 'lg', under: 'steps' },
+    id: 'con-cambios',
+    title: 'Panel con algo escrito',
+    // 13-oct: el caso «Formulario por pasos» (Nueva vacante) se retiró: crear y editar viven en una página, nunca en un
+    // panel (regla «crear-en-pagina»). En su lugar va lo que sí cabe: una nota o un ajuste corto, con `conCambios`.
+    summary:
+      'Una nota o un ajuste corto. Con algo escrito (conCambios) no se cierra al tocar fuera y, al cerrarlo con la X, «Cancelar» o Escape, pregunta «Seguir editando · Descartar» dentro del mismo panel. Crear o editar algo largo no va aquí: va en una página.',
+    icon: PencilEdit02Icon,
+    example: 'notas',
+    config: { ...BASE },
     sample: {
       ...SAMPLE,
-      title: 'Nueva vacante',
-      description: 'Se guarda como borrador hasta que la publiques.',
-      secondary: 'Atrás',
-      primary: 'Siguiente',
-      slot: 'Los campos del paso actual.',
+      icon: PencilEdit02Icon,
+      title: 'Nota para el candidato',
+      description: 'Se guarda en su ficha y la ve todo el equipo de la vacante.',
+      secondary: 'Cancelar',
+      primary: 'Guardar nota',
+      slot: 'El campo para escribir la nota.',
     },
   },
   {
@@ -192,14 +195,14 @@ export const DRAWER_CASES: DrawerCase[] = [
   },
   {
     id: 'agente',
-    title: 'Orbit Flow',
+    title: 'Orbit',
     summary: 'Conversar con el agente sobre lo que está abierto. Botones en pastilla y orbe.',
     icon: ICONO_IA,
     example: 'agente',
     config: { ...BASE, ai: true, media: 'orb', context: true, footer: 'composer' },
     sample: {
       ...SAMPLE,
-      title: 'Orbit Flow',
+      title: 'Orbit',
       description: 'Trabaja sobre la vacante abierta',
       slot: 'La conversación con el agente y sus propuestas.',
     },
@@ -306,7 +309,7 @@ export function panelLabel(c: DrawerConfig) {
 }
 
 const PART_TEXT: Record<string, string> = {
-  Panel: 'Sale desde un borde: derecha para detalle y formularios, izquierda para navegar, abajo para acciones y arriba para avisos.',
+  Panel: 'Sale desde un borde: derecha para ver el detalle de un registro, izquierda para navegar, abajo para acciones y arriba para avisos. Crear o editar algo largo no va en un panel.',
   Tirador: 'En los drawers de abajo y arriba: se arrastra para abrir más o para cerrar.',
   Volver: 'En una vista abierta dentro del drawer: regresa a lo que mostraba antes, sin cerrarlo.',
   'Anterior / siguiente': 'Pasa al registro de al lado sin cerrar el drawer.',
@@ -318,11 +321,11 @@ const PART_TEXT: Record<string, string> = {
   Cerrar: 'La X estándar (CloseButton): círculo claro de 32 px con filo fino, la misma de ventanas y tarjetas. Siempre arriba a la derecha. También se cierra con Esc o con clic afuera.',
   Contexto: 'Franja que dice sobre qué registro se trabaja; clave con el agente.',
   Pestañas: 'Separan la información del registro en partes.',
-  Pasos: 'Un formulario largo en partes, con el avance a la vista.',
+  Pasos: 'Las partes de algo con avance a la vista. Un asistente de creación por pasos no va en un panel: va en una página.',
   Progreso: 'El avance de un proceso que corre en vivo.',
   Pie: 'Los botones del drawer: el principal siempre a la derecha.',
   'Caja de conversación': 'Donde se le escribe al agente sin salir del drawer.',
-  Slot: 'Lo que el caso necesite: ficha, formulario, lista o conversación. No es parte del componente.',
+  Slot: 'Lo que el caso necesite: ficha, nota corta, lista o conversación. No es parte del componente.',
 }
 
 // Partes visibles con la configuración actual, de arriba abajo.

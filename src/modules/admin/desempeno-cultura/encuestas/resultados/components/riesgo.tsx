@@ -4,7 +4,6 @@ import { Search01Icon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarFallback,
-  Badge,
   Card,
   CardContent,
   CardDescription,
@@ -22,9 +21,6 @@ import {
   Item,
   ItemActions,
   ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
   Table,
   TableBody,
   TableCell,
@@ -33,7 +29,9 @@ import {
   TableRow,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { Hint } from '@/shared/components/Hint'
+import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
 import { useCargaProgresiva } from '@/modules/design-system/templates/admin-compartido/lista'
 import { BotonCargarMas, EncabezadoOrdenable, FiltroColumna } from '../../components/tabla-piezas'
 import { formatPercent } from '../../modelo/favorabilityScale'
@@ -51,6 +49,7 @@ import { TarjetaResumen } from './tarjeta-resumen'
 import { TextoCompleto } from '@/shared/components/TextoCompleto'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // NOM 035 · Riesgo psicosocial (Guía III): el nivel de riesgo por categoría, dominio y dimensión,
 // de 0 (nulo) a 5 (muy alto). Se lee al revés que la favorabilidad: aquí un número alto es malo.
@@ -128,9 +127,8 @@ function PreguntasDeRiesgo({ preguntas, oculto }: { preguntas: readonly Question
         {visibles.length === 0 ? (
           <TableRow>
             <TableCell colSpan={3}>
-              <Text size="sm" variant="muted">
-                Ninguna pregunta de esta dimensión cae en los niveles seleccionados.
-              </Text>
+              {/* Sin resultados con su ilustración glass y «Limpiar» (13-oct). */}
+              <SinResultados filtrosActivos={bandas.length > 0 ? 1 : 0} onLimpiar={() => setBandas([])} />
             </TableCell>
           </TableRow>
         ) : (
@@ -141,6 +139,7 @@ function PreguntasDeRiesgo({ preguntas, oculto }: { preguntas: readonly Question
                   {indice + 1}
                 </Text>
               </TableCell>
+              {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
               <TableCell className="whitespace-normal!">
                 <Text as="span" size="sm" weight="medium">
                   {pregunta.statement}
@@ -177,6 +176,7 @@ function Colaboradores({ colaboradores }: { colaboradores: readonly Collaborator
   return (
     <div className="grid items-start gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
       <Frame spacing="sm" className="[--frame-gap:0px]">
+        {/* Más aire entre el conteo y el buscador: con el tema sin capa el espacio solo obedece con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
         <FrameHeader className="gap-3!">
           <div className="flex items-center justify-between gap-2">
             <FrameDescription>
@@ -191,6 +191,7 @@ function Colaboradores({ colaboradores }: { colaboradores: readonly Collaborator
             <InputGroupInput value={busqueda} onChange={(evento) => setBusqueda(evento.target.value)} placeholder="Buscar por nombre" aria-label="Buscar colaboradores" />
           </InputGroup>
         </FrameHeader>
+        {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
         <FramePanel className="max-h-[36rem] overflow-y-auto p-1!">
           {lista.length === 0 ? (
             // «Sin resultados» del sistema, con ilustración, lo buscado y el botón para limpiar (decisión 14).
@@ -214,14 +215,9 @@ function Colaboradores({ colaboradores }: { colaboradores: readonly Collaborator
                   aria-pressed={elegido?.respondent.id === colaborador.respondent.id}
                   className="w-full text-left"
                 >
-                  <ItemMedia>
-                    <Avatar size="sm">
-                      <AvatarFallback>{colaborador.respondent.initials}</AvatarFallback>
-                    </Avatar>
-                  </ItemMedia>
+                  {/* La persona del sistema (Persona): avatar con iniciales, nombre y su línea gris. */}
                   <ItemContent className="min-w-0">
-                    <TextoCompleto texto={colaborador.respondent.name}><ItemTitle className="truncate">{colaborador.respondent.name}</ItemTitle></TextoCompleto>
-                    <TextoCompleto texto={[colaborador.respondent.area, colaborador.respondent.leader].filter(Boolean).join(" · ")}><ItemDescription className="truncate">{[colaborador.respondent.area, colaborador.respondent.leader].filter(Boolean).join(' · ') || 'Sin datos del grupo'}</ItemDescription></TextoCompleto>
+                    <Persona nombre={colaborador.respondent.name} detalle={[colaborador.respondent.area, colaborador.respondent.leader].filter(Boolean).join(' · ') || 'Sin datos del grupo'} />
                   </ItemContent>
                   <ItemActions>{colaborador.risk === null ? null : <Riesgo riesgo={colaborador.risk} conEtiqueta={false} />}</ItemActions>
                 </Item>
@@ -272,6 +268,7 @@ function Colaboradores({ colaboradores }: { colaboradores: readonly Collaborator
                   .sort((a, b) => (b.risk ?? -1) - (a.risk ?? -1))
                   .map((dimension) => (
                     <TableRow key={dimension.id}>
+                      {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                       <TableCell className="whitespace-normal!">{dimension.label}</TableCell>
                       <TableCell className="text-right">
                         {dimension.risk === null ? (
@@ -377,10 +374,11 @@ export function RiesgoPsicosocial({ borrador, resultados, segmento, onSegmento }
         <MapaCalor resultados={resultados} segmentos={segmentos} segmento={activo} estado={estado} escala={ESCALA_RIESGO} extra={cambioVista} />
       ) : (
         <Frame spacing="sm" className="[--frame-gap:0px]">
+          {/* Cabecera del marco en fila (título a la izquierda, controles a la derecha): con el tema sin capa solo obedece con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
           <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
             <div>
               <FrameTitle>{TITULO[vista]}</FrameTitle>
-              <FrameDescription>{vista === 'categorias' ? `${categorias.length} categorías` : `${numero(colaboradores.length)} colaboradores`}</FrameDescription>
+              <FrameDescription>{vista === 'categorias' ? `${categorias.length} ${plural(categorias.length, 'categoría', 'categorías')}` : `${numero(colaboradores.length)} ${plural(colaboradores.length, 'colaborador', 'colaboradores')}`}</FrameDescription>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {cambioVista}

@@ -54,7 +54,7 @@ export function DatumAnswer({ topic, alertOn, onAlert, onUndoAlert }: DatumAnswe
             {topic.alertAction}
           </Button>
         )}
-        <Button variant="outline" className={PILL} onClick={() => notify(topic.peopleAction)}>
+        <Button variant="outline" className={PILL} onClick={() => notify(topic.peopleAction, undefined, 'info')}>
           {topic.peopleAction}
         </Button>
       </div>
@@ -68,7 +68,7 @@ export function AreaAnswer() {
   return (
     <div className="flex flex-col gap-3">
       <div className="text-sm leading-[1.55] text-foreground/80">
-        Operaciones en la planta Funza: 5,8% en agosto, más del doble que el resto de la empresa.
+        Operaciones en la planta Funza: 5,8 % en agosto, más del doble que el resto de la empresa.
       </div>
       <AgentCard title="Rotación por área · agosto">
         <div className="flex flex-col gap-2">

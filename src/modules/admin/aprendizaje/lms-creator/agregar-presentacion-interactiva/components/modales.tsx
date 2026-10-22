@@ -8,7 +8,6 @@ import {
   AttachmentContent,
   AttachmentMedia,
   AttachmentTitle,
-  Badge,
   Button,
   Field,
   Input,
@@ -18,6 +17,7 @@ import {
   ItemTitle,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIa } from '@/shared/components/BotonIa'
 import { Composer } from '@/modules/admin/suite-ai/shared/composer'
 import { CATALOGO_TIPOS, COSTO_REGENERAR, type AcentoId } from '../../crear-contenido/components/presentacion/datos'
@@ -30,7 +30,7 @@ import { ActionDialog } from '@/shared/components/ActionDialog'
 // sistema (ActionDialog, decisión 4 de la auditoría, 5-oct). La confirmación de eliminar usa el DialogoConfirmar del
 // sistema de diseño y la de generar, ConfirmarGeneracion.
 
-/** «Añadir diapositiva»: todos los tipos menos la portada (RN-09). La plantilla nace vacía. */
+/** «Agregar diapositiva»: todos los tipos menos la portada (RN-09). La plantilla nace vacía. */
 export function ModalAnadir({ abierto, onCerrar, onElegir }: { abierto: boolean; onCerrar: () => void; onElegir: (tipo: string) => void }) {
   return (
     <ActionDialog
@@ -39,7 +39,7 @@ export function ModalAnadir({ abierto, onCerrar, onElegir }: { abierto: boolean;
         if (!abrir) onCerrar()
       }}
       size="wide"
-      title="Añadir diapositiva"
+      title="Agregar diapositiva"
       sub="Elige el tipo. La plantilla nace vacía para que escribas el contenido."
     >
       <div className="-mx-1 grid min-h-0 grid-cols-2 gap-2 overflow-auto px-1 min-[1101px]:grid-cols-3" role="list" aria-label="Tipos de diapositiva">

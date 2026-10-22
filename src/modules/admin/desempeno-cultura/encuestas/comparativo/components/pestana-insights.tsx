@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Badge, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { AiThinking } from '@/shared/components/AiThinking'
 import { Hint } from '@/shared/components/Hint'
@@ -74,6 +75,8 @@ function LecturaComparativo({ comparativo }: { comparativo: Comparativo }) {
 
   return (
     <Frame spacing="sm" className="[--frame-gap:0px]">
+      {/* Los «!» ponen la cabecera en fila: la del marco es una columna y las clases normales no le ganan al tema (ficha
+          instalacion-estilos-sin-capa en ai-tools/flux-ui/diferencias.json). */}
       <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
         <div>
           <div className="flex items-center gap-2">
@@ -133,6 +136,8 @@ function LecturaComparativo({ comparativo }: { comparativo: Comparativo }) {
                     celdas={
                       <>
                         <Numero n={indice + 1} />
+                        {/* whitespace-normal!: el hallazgo largo se parte en renglones; la celda de la librería no deja
+                            cambiar su nowrap con una clase normal (ficha instalacion-estilos-sin-capa). */}
                         <TableCell className="whitespace-normal!">
                           <Text as="span" size="sm" weight="medium">
                             {hallazgo.titulo}

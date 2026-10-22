@@ -4,7 +4,6 @@ import { ArrowRight01Icon, InformationCircleIcon, Task01Icon, ToggleOffIcon, Tog
 import {
   Alert,
   AlertDescription,
-  Badge,
   Button,
   Frame,
   FrameDescription,
@@ -17,6 +16,7 @@ import {
   TabsTrigger,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { Hint } from '@/shared/components/Hint'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
@@ -193,6 +193,8 @@ export function Accionables({ resultados }: { resultados: SurveyResults }) {
   // Lo marcado en las listas, para activar varios de una vez con su configuración sugerida.
   const [marcados, setMarcados] = useState<ReadonlySet<string>>(() => new Set())
   const [confirmandoVarios, setConfirmandoVarios] = useState(false)
+  // Activar uno desde su panel también crea tareas para otras personas: se pregunta antes, como en el lote.
+  const [activandoUno, setActivandoUno] = useState<{ id: string; config: ActivationConfig } | null>(null)
 
   const accionables = useMemo(() => buildActionables(resultados), [resultados])
 
@@ -209,7 +211,7 @@ export function Accionables({ resultados }: { resultados: SurveyResults }) {
     setActivaciones((previas) => new Map(previas).set(id, config))
     setPanel(false)
     const accionable = accionables.find((uno) => uno.id === id)
-    notify(nuevo ? 'Accionable activado' : 'Cambios guardados', accionable ? `«${accionable.title}» sale ${LAUNCH_BY_ID[config.launch].label.toLowerCase()} y crea la tarea para ${accionable.task.assignee}.` : undefined)
+    notify(nuevo ? 'Accionable activado' : 'Cambios guardados', accionable ? `«${accionable.title}» sale ${LAUNCH_BY_ID[config.launch].label.toLowerCase()} y crea la tarea para ${accionable.task.assignee}.` : undefined, 'success')
   }
   const marcar = (ids: readonly string[], marcarlos: boolean) =>
     setMarcados((previos) => {
@@ -225,7 +227,7 @@ export function Accionables({ resultados }: { resultados: SurveyResults }) {
       porActivar.forEach((accionable) => siguientes.set(accionable.id, defaultActivation(accionable)))
       return siguientes
     })
-    notify(`${pluralize(porActivar.length, 'accionable activado', 'accionables activados')}`, 'Cada uno sale con su configuración sugerida y crea la tarea para quien debe actuar. Puedes ajustarlo en su detalle.')
+    notify(`${pluralize(porActivar.length, 'accionable activado', 'accionables activados')}`, 'Cada uno sale con su configuración sugerida y crea la tarea para quien debe actuar. Puedes ajustarlo en su detalle.', 'success')
     setMarcados(new Set())
     setConfirmandoVarios(false)
   }
@@ -236,8 +238,9 @@ export function Accionables({ resultados }: { resultados: SurveyResults }) {
       return siguientes
     })
     setPanel(false)
-    notify('Accionable desactivado', 'Las tareas que ya se habían creado se cierran.')
+    notify('Accionable desactivado', 'Las tareas que ya se habían creado se cierran.', 'success')
   }
+  const activandoUnoAccionable = activandoUno ? (accionables.find((accionable) => accionable.id === activandoUno.id) ?? null) : null
   // Desactivar cierra las tareas de otras personas y no se deshace: antes se pregunta (regla del 6-oct, DialogoConfirmar).
   const desactivando = accionables.find((accionable) => accionable.id === desactivandoId) ?? null
   const activacionDesactivando = desactivando ? activaciones.get(desactivando.id) : undefined
@@ -248,15 +251,17 @@ export function Accionables({ resultados }: { resultados: SurveyResults }) {
     <div className="flex flex-col gap-6">
       {/* Como las demás pestañas: un marco con sus controles y, sobre el gris, un bloque plegable por módulo con su tabla. */}
       <Frame spacing="sm" className="[--frame-gap:0px]">
+        {/* Cabecera del marco en fila (título a la izquierda, controles a la derecha): con el tema sin capa solo obedece con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
         <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
           <div>
             <FrameTitle>Accionables</FrameTitle>
             <FrameDescription>{pluralize(accionables.length, 'acción salida', 'acciones salidas')} de estos resultados</FrameDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {/* Pestañas subrayadas, como todas las del sistema (regla 5 de la auditoría). */}
+            {/* Pestaña dentro de pestaña (están dentro de «Accionables» de Resultados): en píldora, no subrayadas
+                (regla «pestanas-anidadas», war room del 13-oct). */}
             <Tabs value={estado} onValueChange={(valor) => setEstado(valor as Estado)}>
-              <TabsList variant="line" aria-label="Estado de los accionables">
+              <TabsList aria-label="Estado de los accionables">
                 <TabsTrigger value="todos">Todos</TabsTrigger>
                 <TabsTrigger value="activos">
                   Activos
@@ -286,7 +291,7 @@ export function Accionables({ resultados }: { resultados: SurveyResults }) {
             <Alert>
               <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
               <AlertDescription>
-                Cada accionable funciona con tareas: se le asigna una a quien debe actuar (el líder, el grupo, el responsable del módulo) y solo queda en check cuando el entregable está completo: el plan terminado, el objetivo aceptado, el
+                Cada accionable funciona con tareas: se le asigna una a quien debe actuar (el líder, el grupo, el responsable del módulo) y solo queda marcada como hecha cuando el entregable está completo: el plan terminado, el objetivo aceptado, el
                 pulso respondido. Mientras tanto sigue abierta y el recordatorio sigue llegando.
               </AlertDescription>
             </Alert>
@@ -337,20 +342,25 @@ export function Accionables({ resultados }: { resultados: SurveyResults }) {
         abierto={panel}
         onAbiertoChange={setPanel}
         activacion={abierto ? (activaciones.get(abierto.id) ?? null) : null}
-        onActivar={(config) => abierto && activar(abierto.id, config)}
+        // Guardar cambios de uno ya activo no crea tareas nuevas; activarlo por primera vez sí, y se confirma.
+        onActivar={(config) => abierto && (activaciones.has(abierto.id) ? activar(abierto.id, config) : setActivandoUno({ id: abierto.id, config }))}
         onDesactivar={() => abierto && setDesactivandoId(abierto.id)}
-      />
-
-      {/* Activar crea tareas para otras personas: antes se pregunta (regla del 8-oct, DialogoConfirmar). */}
+        // Activar o desactivar se pide desde el panel: la pregunta va dentro de él, como vista del mismo (regla «preguntar-dentro-del-panel»).
+        confirmaciones={
+          <>
       <DialogoConfirmar
-        abierto={confirmandoVarios}
-        onAbiertoChange={setConfirmandoVarios}
+        abierto={activandoUno !== null}
+        onAbiertoChange={(abrir) => (abrir ? undefined : setActivandoUno(null))}
         icono={ToggleOnIcon}
-        titulo="¿Activar los accionables?"
-        descripcion={`${porActivar.length === 1 ? `Se activa «${porActivar[0].title}»` : `Se activan ${pluralize(porActivar.length, 'accionable', 'accionables')}`} con su configuración sugerida y cada uno crea la tarea para quien debe actuar. Puedes ajustar cada uno después en su detalle.`}
+        titulo="¿Activar el accionable?"
+        // Como «¿Salir de la creación?» de Crear contenido (Elkin, 14-oct): sin tarjeta del registro, su nombre va en el texto.
+        descripcion={activandoUno && activandoUnoAccionable ? `«${activandoUnoAccionable.title}» sale ${LAUNCH_BY_ID[activandoUno.config.launch].label.toLowerCase()} y crea la tarea para ${activandoUnoAccionable.task.assignee}, que recibirá los recordatorios hasta completar el entregable.` : ''}
         cancelar="Cancelar"
-        accion={`Activar ${pluralize(porActivar.length, 'accionable', 'accionables')}`}
-        onConfirmar={activarVarios}
+        accion="Activar accionable"
+        onConfirmar={() => {
+          if (activandoUno) activar(activandoUno.id, activandoUno.config)
+          setActivandoUno(null)
+        }}
       />
 
       <DialogoConfirmar
@@ -366,6 +376,21 @@ export function Accionables({ resultados }: { resultados: SurveyResults }) {
           if (desactivando) desactivar(desactivando.id)
           setDesactivandoId(null)
         }}
+      />
+          </>
+        }
+      />
+
+      {/* Activar crea tareas para otras personas: antes se pregunta (regla del 8-oct, DialogoConfirmar). */}
+      <DialogoConfirmar
+        abierto={confirmandoVarios}
+        onAbiertoChange={setConfirmandoVarios}
+        icono={ToggleOnIcon}
+        titulo="¿Activar los accionables?"
+        descripcion={`${porActivar.length === 1 ? `Se activa «${porActivar[0].title}»` : `Se activan ${pluralize(porActivar.length, 'accionable', 'accionables')}`} con su configuración sugerida y cada uno crea la tarea para quien debe actuar. Puedes ajustar cada uno después en su detalle.`}
+        cancelar="Cancelar"
+        accion={`Activar ${pluralize(porActivar.length, 'accionable', 'accionables')}`}
+        onConfirmar={activarVarios}
       />
     </div>
   )

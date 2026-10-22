@@ -170,7 +170,7 @@ function TarjetaEscena({ escena, indice, estilo, tituloPresentacion, acento, log
                 onClick={() => setIdeas((lista) => [...lista, ''])}
               >
                 <HugeiconsIcon icon={Add01Icon} size={14} />
-                Añadir idea
+                Agregar idea
               </Button>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" size="sm" onClick={onCancelar}>
@@ -181,7 +181,7 @@ function TarjetaEscena({ escena, indice, estilo, tituloPresentacion, acento, log
                   disabled={!puedeGuardar}
                   onClick={() => onGuardar({ ...escena, titulo: titulo.trim(), ideas: ideas.map((i) => i.trim()).filter(Boolean) })}
                 >
-                  Guardar
+                  Guardar cambios
                 </Button>
               </div>
             </div>

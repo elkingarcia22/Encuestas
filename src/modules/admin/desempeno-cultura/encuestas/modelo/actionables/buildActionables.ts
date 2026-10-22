@@ -57,7 +57,7 @@ interface Signals {
   leaderSegment: SegmentDefinition | null;
 }
 
-const pct = (value: number): string => `${Math.round(value)}%`;
+const pct = (value: number): string => `${Math.round(value)} %`;
 const count = (value: number): string => new Intl.NumberFormat("es-CO").format(value);
 const score1 = (value: number): string => value.toFixed(1).replace(".", ",");
 
@@ -215,7 +215,7 @@ function pulseControl(results: SurveyResults, signals: Signals): Actionable | nu
       assignee: `Cada uno de los ${count(results.participation.invited)} colaboradores`,
       title: "Responder el pulso de control",
       completion:
-        "Queda en check cuando la persona envía el pulso. A quien no lo haya enviado le vuelve el recordatorio con la cadencia elegida.",
+        "Queda completada cuando la persona envía el pulso. A quien no lo haya enviado le vuelve el recordatorio con la cadencia elegida.",
     },
     suggestedLaunch: "in30",
     suggestedCadence: "weekly",
@@ -273,7 +273,7 @@ function focusedPulse(signals: Signals): Actionable | null {
     task: {
       assignee: `Los ${count(group.invited)} de ${group.label}`,
       title: `Responder el diagnóstico de ${group.label}`,
-      completion: "Queda en check cuando la persona envía la encuesta.",
+      completion: "Queda completada cuando la persona envía la encuesta.",
     },
     suggestedLaunch: "in7",
     suggestedCadence: "weekly",
@@ -325,7 +325,7 @@ function detractorPulse(results: SurveyResults): Actionable | null {
       assignee: `Los ${count(nps.detractors)} detractores`,
       title: "Responder el seguimiento anónimo",
       completion:
-        "Queda en check al enviar. El avance se reporta solo como total: nadie ve quién respondió ni quién falta.",
+        "Queda completada al enviar. El avance se reporta solo como total: nadie ve quién respondió ni quién falta.",
     },
     suggestedLaunch: "in7",
     suggestedCadence: "once",
@@ -390,7 +390,7 @@ function leadershipPlan(signals: Signals): Actionable | null {
     task: {
       assignee: `Cada uno de los ${count(leaderCount)} líderes`,
       title: `Completar el plan de formación en ${worst.title}`,
-      completion: `Queda en check solo cuando el líder termina los ${topics.length} cursos del plan. Mientras falte uno, la tarea sigue abierta y el recordatorio sigue llegando.`,
+      completion: `Queda completada solo cuando el líder termina los ${topics.length} cursos del plan. Mientras falte uno, la tarea sigue abierta y el recordatorio sigue llegando.`,
     },
     suggestedLaunch: "now",
     suggestedCadence: "weekly",
@@ -458,7 +458,7 @@ function aiCourse(signals: Signals): Actionable | null {
     task: {
       assignee: `Cada uno de los ${count(leaders.length)} líderes`,
       title: `Completar el curso de ${worst.title}`,
-      completion: `Queda en check cuando el líder termina los ${questions.length} módulos y aprueba la evaluación final.`,
+      completion: `Queda completada cuando el líder termina los ${questions.length} módulos y aprueba la evaluación final.`,
     },
     suggestedLaunch: "in7",
     suggestedCadence: "weekly",
@@ -512,7 +512,7 @@ function groupReinforcement(signals: Signals): Actionable | null {
     task: {
       assignee: `Los ${count(group.invited)} de ${group.label}`,
       title: `Completar la ruta de refuerzo de ${group.label}`,
-      completion: "Queda en check cuando la persona termina los contenidos de la ruta.",
+      completion: "Queda completada cuando la persona termina los contenidos de la ruta.",
     },
     suggestedLaunch: "in7",
     suggestedCadence: "biweekly",
@@ -560,7 +560,7 @@ function contentRequest(signals: Signals): Actionable | null {
     task: {
       assignee: "Experto interno asignado",
       title: "Grabar el curso exprés",
-      completion: "Queda en check cuando el contenido está publicado en la biblioteca.",
+      completion: "Queda completada cuando el contenido está publicado en la biblioteca.",
     },
     suggestedLaunch: "in7",
     suggestedCadence: "weekly",
@@ -579,7 +579,7 @@ function certificateGate(results: SurveyResults): Actionable {
     outcome: "Queda activado el bloqueo: el certificado se emite automáticamente al enviar la encuesta de satisfacción.",
     score: 76,
     rationale:
-      "Garantiza tasa de respuesta cercana al 100% donde sí se puede exigir, que es lo que permite limpiar la calidad de la biblioteca.",
+      "Garantiza tasa de respuesta cercana al 100 % donde sí se puede exigir, que es lo que permite limpiar la calidad de la biblioteca.",
     audience: {
       label: "Quien termina un curso certificable",
       people: 0,
@@ -602,7 +602,7 @@ function certificateGate(results: SurveyResults): Actionable {
     task: {
       assignee: "Quien termina el curso",
       title: "Responder la encuesta del curso",
-      completion: "Queda en check al enviarla, y es lo que libera el certificado.",
+      completion: "Queda completada al enviarla, y es lo que libera el certificado.",
     },
     suggestedLaunch: "now",
     suggestedCadence: "once",
@@ -639,7 +639,7 @@ function climateOkr(results: SurveyResults, signals: Signals): Actionable | null
       members: leader ? [leader] : [],
       memberNoun: "líderes",
     },
-    topics: [`Subir ${worst.title} de ${pct(worst.favorability)} a ${target}%`, `Cerrar la brecha de ${score1(Math.abs(group.gap))} puntos`],
+    topics: [`Subir ${worst.title} de ${pct(worst.favorability)} a ${target} %`, `Cerrar la brecha de ${score1(Math.abs(group.gap))} puntos`],
     evidence: [
       { label: `Promedio de ${group.label}`, value: score1(group.score), target: "favorability" },
       { label: `Favorabilidad de ${worst.title}`, value: pct(worst.favorability), target: "favorability" },
@@ -656,7 +656,7 @@ function climateOkr(results: SurveyResults, signals: Signals): Actionable | null
         },
         {
           id: "kr-1",
-          label: `Subir ${worst.title} de ${pct(worst.favorability)} a ${target}%`,
+          label: `Subir ${worst.title} de ${pct(worst.favorability)} a ${target} %`,
           meta: "Resultado clave · se mide en el pulso de control",
         },
         {
@@ -675,7 +675,7 @@ function climateOkr(results: SurveyResults, signals: Signals): Actionable | null
       assignee: leader ? leader.name : `Líder de ${group.label}`,
       title: "Aceptar el OKR de clima y reportar su avance",
       completion:
-        "Queda en check cuando el objetivo está aceptado en el ciclo y sus tres resultados clave alcanzan la meta.",
+        "Queda completada cuando el objetivo está aceptado en el ciclo y sus tres resultados clave alcanzan la meta.",
     },
     suggestedLaunch: "nextCycle",
     suggestedCadence: "monthly",
@@ -734,7 +734,7 @@ function review360(signals: Signals): Actionable | null {
       assignee: `Cada uno de los ${count(leaders.length)} líderes`,
       title: "Revisar la evidencia precargada de su 360",
       completion:
-        "Queda en check cuando el líder revisa sus comportamientos precargados antes de que el ciclo de 360 abra. Sin esa revisión el ciclo no arranca para él.",
+        "Queda completada cuando el líder revisa sus comportamientos precargados antes de que el ciclo de 360 abra. Sin esa revisión el ciclo no arranca para él.",
     },
     suggestedLaunch: "nextCycle",
     suggestedCadence: "weekly",
@@ -810,7 +810,7 @@ function talentMatrix(results: SurveyResults, signals: Signals): Actionable | nu
       assignee: "Responsable del comité de talento",
       title: "Revisar los líderes marcados antes de la calibración",
       completion:
-        "Queda en check cuando el comité deja constancia, líder por líder, de qué decidió con el clima de su equipo sobre la mesa.",
+        "Queda completada cuando el comité deja constancia, líder por líder, de qué decidió con el clima de su equipo sobre la mesa.",
     },
     suggestedLaunch: "nextCycle",
     suggestedCadence: "monthly",
@@ -861,7 +861,7 @@ function burnoutAssessment(results: SurveyResults, signals: Signals): Actionable
       assignee: `Los ${count(group.invited)} de ${group.label}`,
       title: "Tomar el assessment de burnout",
       completion:
-        "Queda en check al terminarlo. El líder ve cuántos lo tomaron, nunca quiénes ni con qué resultado.",
+        "Queda completada al terminarlo. El líder ve cuántos lo tomaron, nunca quiénes ni con qué resultado.",
     },
     suggestedLaunch: "now",
     suggestedCadence: "weekly",
@@ -910,7 +910,7 @@ function attritionTag(results: SurveyResults, signals: Signals): Actionable | nu
     task: {
       assignee: `Reclutador de ${group.label}`,
       title: "Revisar el proceso de la vacante marcada",
-      completion: "Queda en check cuando el reclutador deja registrado el ajuste al proceso.",
+      completion: "Queda completada cuando el reclutador deja registrado el ajuste al proceso.",
     },
     suggestedLaunch: "in7",
     suggestedCadence: "weekly",
@@ -956,7 +956,7 @@ function interviewTemplates(signals: Signals): Actionable | null {
     task: {
       assignee: "Equipo de selección",
       title: "Aprobar las preguntas nuevas de la plantilla",
-      completion: "Queda en check cuando la plantilla actualizada se publica para los procesos abiertos.",
+      completion: "Queda completada cuando la plantilla actualizada se publica para los procesos abiertos.",
     },
     suggestedLaunch: "in30",
     suggestedCadence: "once",

@@ -1,4 +1,5 @@
-import { Badge, Frame, FrameHeader, FramePanel, FrameTitle, Heading, Separator } from '@ubits/flux-ui'
+import { Frame, FrameHeader, FramePanel, FrameTitle, Heading, Separator } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 // Las filas de datos y la barra «Falta un dato» son las mismas piezas del panel «Así va…» de Vacantes y Encuestas
 // (decisión 21 de la auditoría, 5-oct): antes se repetían aquí a mano.
 import { AvanceObligatorios, ListaDatos } from '@/modules/admin/seleccion/vacantes/crear/components/piezas-resumen'

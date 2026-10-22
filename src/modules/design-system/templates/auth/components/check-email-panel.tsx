@@ -1,3 +1,5 @@
+import { HugeiconsIcon } from '@hugeicons/react'
+import { ArrowLeft02Icon } from '@hugeicons/core-free-icons'
 import { Button, Text } from '@ubits/flux-ui'
 import { AuthHeader } from './auth-header'
 
@@ -33,7 +35,8 @@ export function CheckEmailPanel({
           No recibí el correo
         </Button>
         <Button variant="ghost" size="lg" className="w-full cursor-pointer" onClick={onBackToLogin}>
-          Ir a login
+          <HugeiconsIcon icon={ArrowLeft02Icon} size={16} aria-hidden="true" />
+          Volver a iniciar sesión
         </Button>
       </div>
     </>

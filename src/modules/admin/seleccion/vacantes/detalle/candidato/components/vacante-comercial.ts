@@ -91,7 +91,7 @@ const CANDIDATOS: Candidato[] = [
     habilidades: ['Venta consultiva', 'Salesforce', 'Negociación', 'Retail'],
     requisitos: ['Cumple', 'Cumple', 'Parcial', 'Cumple'],
     resumen:
-      'Ejecutiva de cuenta con 4 años en consumo masivo. En Tecnoquímicas maneja 38 droguerías independientes y creció su cartera 22% en 2025.',
+      'Ejecutiva de cuenta con 4 años en consumo masivo. En Tecnoquímicas maneja 38 droguerías independientes y creció su cartera 22 % en 2025.',
     trayectoria: [
       { cargo: 'Ejecutiva de cuenta', empresa: 'Tecnoquímicas', periodo: 'Feb 2023 – hoy' },
       { cargo: 'Asesora comercial', empresa: 'Colsubsidio', periodo: 'Ene 2021 – ene 2023' },

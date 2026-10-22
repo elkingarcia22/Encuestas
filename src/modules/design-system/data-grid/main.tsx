@@ -32,17 +32,22 @@ import {
   Text,
   ToggleGroup,
   ToggleGroupItem,
-  toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { notify, notifyAction } from '@/shared/components/notify'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
+import { ErrorDeCarga } from '../estados/carga'
+import { DialogoConfirmar, RegistroConfirmar } from '../estados/confirmaciones'
 import { TablaDatos } from './tabla-datos'
 import { TextosCortados } from './textos-cortados'
 import { EncabezadoPatron, PestanasDePatron, Reglas, VerEnAccion, type Regla } from '../patrones/piezas'
-import { fechaCorta, iniciales } from '../patrones/formato'
+import { fechaCorta, iniciales, plural } from '../patrones/formato'
 import { CasoContenidos } from './casos/contenidos'
+import { ContenidosConPortada, TablaConVacioPorDefecto } from './casos/contenidos-con-portada'
 import { CasoEvaluaciones360 } from './casos/evaluaciones-360'
 import { CasoResultados } from './casos/resultados'
-import { CasoSeguimiento } from './casos/seguimiento'
+import { CasoSeguimiento, ConfirmarEliminar } from './casos/seguimiento'
 import { AREAS, COLABORADORES, ESTADOS, type Colaborador } from './data'
 
 type Escenario = 'normal' | 'cargando' | 'vacio' | 'error'
@@ -219,6 +224,9 @@ function PruebaDeOpciones() {
   const [pagina, setPagina] = useState(1)
   const [porPagina, setPorPagina] = useState(10)
   const [seleccion, setSeleccion] = useState<Colaborador[]>([])
+  // Lo que se archivó o eliminó (sale de la lista de verdad) y la acción masiva que está preguntando.
+  const [quitados, setQuitados] = useState<string[]>([])
+  const [pidiendo, setPidiendo] = useState<{ tipo: 'recordatorio' | 'eliminar'; filas: Colaborador[] } | null>(null)
 
   // Arranca como la tabla de Vacantes, que es la del sistema desde el 5-oct: encabezados normales, con asidero para mover
   // y cambiar el ancho, y sin «Fijar». Los interruptores prueban lo demás.
@@ -230,7 +238,10 @@ function PruebaDeOpciones() {
   const [barraFlotante, setBarraFlotante] = useState(false)
   const [encabezadoFijo, setEncabezadoFijo] = useState(false)
 
-  const base = escenario === 'normal' ? COLABORADORES : SIN_DATOS
+  const base = useMemo(
+    () => (escenario === 'normal' ? COLABORADORES.filter((fila) => !quitados.includes(fila.id)) : SIN_DATOS),
+    [escenario, quitados],
+  )
 
   const resultado = useMemo(() => ordenar(filtrar(base, busqueda, filtros), orden), [
     base,
@@ -252,40 +263,27 @@ function PruebaDeOpciones() {
     setPagina(1)
   }
 
+  // El vacío de cada caso va con las piezas del sistema y su ilustración glass, no con el de la librería (regla
+  // «vacios-con-glass», 13-oct): ErrorDeCarga si falló, SinResultados si la búsqueda o los filtros lo dejan todo fuera
+  // y PrimeraVez si todavía no hay nada, como Objetivos y Avisos internos.
   const emptyState: DataGridListConfig<Colaborador>['emptyState'] =
     escenario === 'error'
-      ? {
-          type: 'error',
-          title: 'No pudimos cargar la lista',
-          description: 'Se perdió la conexión con el servidor. Vuelve a intentarlo en unos segundos.',
-          action: {
-            id: 'reintentar',
-            label: 'Reintentar',
-            variant: 'outline',
-            onClick: () => setEscenario('normal'),
-          },
-        }
+      ? { type: 'error', customComponent: <ErrorDeCarga que="la lista" onReintentar={() => setEscenario('normal')} /> }
       : hayFiltrosActivos
         ? {
             type: 'no-results',
-            title: 'Ningún colaborador coincide',
-            description: 'Prueba con otra búsqueda o quita alguno de los filtros activos.',
-            action: {
-              id: 'limpiar',
-              label: 'Limpiar filtros',
-              variant: 'outline',
-              onClick: limpiarTodo,
-            },
+            customComponent: <SinResultados busqueda={busqueda} filtrosActivos={filtros.length} onLimpiar={limpiarTodo} />,
           }
         : {
             type: 'empty',
-            title: 'Todavía no hay colaboradores',
-            description: 'Agrega el primero y aparecerá aquí con su avance de formación.',
-            action: {
-              id: 'agregar',
-              label: 'Agregar colaborador',
-              onClick: () => setEscenario('normal'),
-            },
+            customComponent: (
+              <PrimeraVez
+                icono="glass-add"
+                titulo="Todavía no hay colaboradores"
+                descripcion="Agrega el primero y aparecerá aquí con su avance de formación."
+                accion={{ texto: 'Agregar colaborador', icono: PlusSignIcon, onClick: () => setEscenario('normal') }}
+              />
+            ),
           }
 
   const config: DataGridListConfig<Colaborador> = {
@@ -308,8 +306,12 @@ function PruebaDeOpciones() {
         setPagina(1)
       },
     },
+    // Actualizar de verdad: la tabla vuelve a cargar y regresa con los mismos datos (nada de avisar de algo que no pasó).
     refresh: {
-      onRefresh: () => toast.add({ type: 'info', title: 'Lista actualizada' }),
+      onRefresh: () => {
+        setEscenario('cargando')
+        window.setTimeout(() => setEscenario('normal'), 800)
+      },
     },
     selection: {
       onSelectionChange: setSeleccion,
@@ -319,7 +321,7 @@ function PruebaDeOpciones() {
         id: 'agregar',
         label: 'Agregar colaborador',
         icon: <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />,
-        onClick: () => toast.add({ type: 'info', title: 'Aquí se abriría el formulario' }),
+        onClick: () => notify('Agregar colaborador', undefined, 'info'),
       },
       secondary: [
         {
@@ -327,7 +329,7 @@ function PruebaDeOpciones() {
           label: 'Exportar',
           variant: 'outline',
           icon: <HugeiconsIcon icon={Download01Icon} strokeWidth={2} aria-hidden="true" />,
-          onClick: () => toast.add({ type: 'success', title: 'Exportación generada' }),
+          onClick: () => notify('Exportación generada', undefined, 'success'),
         },
       ],
       item: [
@@ -335,50 +337,48 @@ function PruebaDeOpciones() {
           id: 'ver',
           label: 'Ver perfil',
           icon: <HugeiconsIcon icon={ViewIcon} strokeWidth={2} aria-hidden="true" />,
-          onClick: (filas) =>
-            toast.add({ type: 'info', title: `Perfil de ${filas[0]?.nombre ?? 'la persona'}` }),
+          onClick: (filas) => notify(`Perfil de ${filas[0]?.nombre ?? 'la persona'}`, undefined, 'info'),
         },
         {
           id: 'editar',
           label: 'Editar',
           icon: <HugeiconsIcon icon={Edit02Icon} strokeWidth={2} aria-hidden="true" />,
-          onClick: (filas) =>
-            toast.add({ type: 'info', title: `Editando a ${filas[0]?.nombre ?? 'la persona'}` }),
+          onClick: (filas) => notify(`Editando a ${filas[0]?.nombre ?? 'la persona'}`, undefined, 'info'),
         },
         {
+          // Archivar se puede deshacer: va directo, la fila se va de la lista y el aviso trae «Deshacer» (regla
+          // «preguntar-antes»: lo que se revierte con un clic no pregunta).
           id: 'archivar',
           label: 'Archivar',
           variant: 'destructive',
           icon: <HugeiconsIcon icon={Archive02Icon} strokeWidth={2} aria-hidden="true" />,
-          onClick: (filas) =>
-            toast.add({
-              type: 'success',
-              title: `${filas[0]?.nombre ?? 'La persona'} pasó a archivados`,
-              actionProps: {
-                children: 'Deshacer',
-                onClick: () => toast.add({ type: 'info', title: 'Se restauró el registro' }),
-              },
-            }),
+          onClick: (filas) => {
+            const ids = filas.map((fila) => fila.id)
+            setQuitados((antes) => [...antes, ...ids])
+            notifyAction(
+              `${filas[0]?.nombre ?? 'La persona'} pasó a archivados`,
+              undefined,
+              { label: 'Deshacer', onClick: () => setQuitados((antes) => antes.filter((id) => !ids.includes(id))) },
+              'success',
+            )
+          },
         },
       ],
+      // Las acciones masivas llegan a otras personas o borran: preguntan antes (13-oct). Enviar el recordatorio pide
+      // DialogoConfirmar con RegistroConfirmar; eliminar, escribir la palabra (ConfirmarEliminar).
       bulk: [
         {
           id: 'recordatorio',
           label: 'Enviar recordatorio',
           icon: <HugeiconsIcon icon={Mail01Icon} strokeWidth={2} aria-hidden="true" />,
-          onClick: (filas) =>
-            toast.add({
-              type: 'success',
-              title: `Recordatorio enviado a ${filas.length} personas`,
-            }),
+          onClick: (filas) => setPidiendo({ tipo: 'recordatorio', filas }),
         },
         {
           id: 'eliminar',
           label: 'Eliminar',
           variant: 'destructive',
           icon: <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} aria-hidden="true" />,
-          onClick: (filas) =>
-            toast.add({ type: 'error', title: `Se eliminarían ${filas.length} registros` }),
+          onClick: (filas) => setPidiendo({ tipo: 'eliminar', filas }),
         },
       ],
     },
@@ -391,7 +391,7 @@ function PruebaDeOpciones() {
       pinnable: fijable,
       headerSticky: encabezadoFijo,
     },
-    // Sin título dentro del marco: el título es el de la página y arriba a la izquierda va el conteo (lo pone TablaDatos).
+    // El título va en lo gris sobre el conteo (`titulo`, 16-oct); el conteo lo pone TablaDatos.
     frame: {
       toolbar: barraFlotante ? 'floating' : 'header',
       toolbarPosition: 'absolute',
@@ -477,6 +477,7 @@ function PruebaDeOpciones() {
       </Card>
 
       <TablaDatos
+        titulo="Colaboradores"
         config={config}
         data={escenario === 'cargando' ? [] : paginaActual}
         isLoading={escenario === 'cargando'}
@@ -485,6 +486,45 @@ function PruebaDeOpciones() {
         nombre="colaboradores"
         singular="colaborador"
         id="colaboradores"
+      />
+
+      <DialogoConfirmar
+        abierto={pidiendo?.tipo === 'recordatorio'}
+        onAbiertoChange={(abrir) => {
+          if (!abrir) setPidiendo(null)
+        }}
+        icono={Mail01Icon}
+        titulo="¿Enviar el recordatorio?"
+        descripcion="Les llega por correo con lo que les falta de su plan de formación. Un correo enviado no se puede recoger."
+        cancelar="Todavía no"
+        accion={`Enviar a ${pidiendo?.filas.length ?? 0} ${plural(pidiendo?.filas.length ?? 0, 'persona', 'personas')}`}
+        onConfirmar={() => {
+          const cuantas = pidiendo?.filas.length ?? 0
+          setPidiendo(null)
+          notify('Recordatorio enviado', `Les llegó a ${cuantas} ${plural(cuantas, 'persona', 'personas')}.`, 'success')
+        }}
+      >
+        <RegistroConfirmar
+          nombre="Recordatorio de formación"
+          detalle={pidiendo?.filas.slice(0, 2).map((fila) => fila.nombre).join(', ') ?? ''}
+          estado={`${pidiendo?.filas.length ?? 0} ${plural(pidiendo?.filas.length ?? 0, 'persona', 'personas')}`}
+        />
+      </DialogoConfirmar>
+      <ConfirmarEliminar
+        abierto={pidiendo?.tipo === 'eliminar'}
+        onAbiertoChange={(abrir) => {
+          if (!abrir) setPidiendo(null)
+        }}
+        cantidad={pidiendo?.filas.length ?? 0}
+        sustantivo={['colaborador', 'colaboradores']}
+        titulo="¿Eliminar colaboradores?"
+        descripcion={`Salen de la lista y de todos sus planes. No se pueden recuperar. Vas a eliminar a ${pidiendo?.filas.length ?? 0} ${plural(pidiendo?.filas.length ?? 0, 'persona', 'personas')}.`}
+        onConfirmar={() => {
+          const filas = pidiendo?.filas ?? []
+          setQuitados((antes) => [...antes, ...filas.map((fila) => fila.id)])
+          setPidiendo(null)
+          notify('Colaboradores eliminados', `${filas.length} ${plural(filas.length, 'persona salió', 'personas salieron')} de la lista.`, 'success')
+        }}
       />
 
       <Alert variant="info">
@@ -503,13 +543,13 @@ function PruebaDeOpciones() {
 
       <Alert variant="warning">
         <HugeiconsIcon icon={Alert02Icon} aria-hidden="true" />
-        <AlertTitle>Tres detalles para hablar con el equipo de librería</AlertTitle>
+        <AlertTitle>Cuatro detalles para hablar con el equipo de librería</AlertTitle>
         <AlertDescription>
           <p>
-            Quedaron textos en inglés que no se pueden traducir desde la pantalla: el encabezado
-            del menú de columnas («Toggle Columns») y lo que oye un lector de pantalla en las
-            casillas de selección y en el asa para arrastrar columnas («Select row», «Select all»,
-            «Drag to reorder»).
+            Quedaron textos en inglés que no se pueden traducir desde la pantalla: lo que oye un
+            lector de pantalla en las casillas de selección y en el asa para arrastrar columnas
+            («Select row», «Select all», «Drag to reorder»). El encabezado del menú de columnas ya
+            sale en español («Columnas visibles»).
           </p>
           <p>
             Al encender el encabezado fijo, la tabla pasa a una altura fija de 360 píxeles, así
@@ -550,7 +590,7 @@ const REGLAS_TABLA: Regla[] = [
   },
   {
     titulo: 'Cabecera como Vacantes',
-    detalle: 'Arriba, en lo gris, el conteo a la izquierda y el buscador y «Personalizar columnas» a la derecha. Sin título dentro del marco: lo da la página. Si una pantalla tiene dos tablas, cada una va en su sección con título.',
+    detalle: 'Arriba, en lo gris, el título de la tabla y debajo el conteo a la izquierda, y el buscador y «Personalizar columnas» a la derecha (16-oct, Nicolás: «no me les quites los títulos a las tablas»). Si la página ya la nombra, va sin título.',
   },
   {
     titulo: 'Encabezados con asidero',
@@ -558,7 +598,15 @@ const REGLAS_TABLA: Regla[] = [
   },
   {
     titulo: 'La fila que nombra algo, con o sin imagen',
-    detalle: 'Título y debajo una línea gris (CeldaTitulo). Cuando hay portada, la misma fila con la miniatura a la izquierda: una lista de contenidos con imagen es una tabla, no una cuadrícula de tarjetas. En una columna angosta (un panel lateral) el título puede ir en dos renglones con dosLineas.',
+    detalle: 'Título y debajo una línea gris (CeldaTitulo). Cuando hay portada, la misma fila con la miniatura a la izquierda: una lista de contenidos con portada se puede ver como tabla (TablaDatos con CeldaTitulo) o como tarjetas, con el cambio Tabla/Cuadrícula (CambioDeVista y MarcoCuadricula); en el portal del colaborador arranca en Cuadrícula (regla del 9-oct, abajo en la pestaña Contenidos). Las demás tablas, las de gestionar, son solo TablaDatos. En una columna angosta (un panel lateral) el título puede ir en dos renglones con dosLineas.',
+  },
+  {
+    titulo: 'Cabe en su marco',
+    detalle: 'Con la barra lateral abierta el marco mide 1.104 px. Mientras se maqueta, TablaDatos avisa en la consola si las columnas suman más (regla «tabla-cabe», 8-oct; aviso desde el 13-oct): reparte los anchos, apaga el cambio de ancho si no cabe y deja que la columna de texto se corte con «…» y TextoCompleto. El «⋯» de la fila siempre se ve.',
+  },
+  {
+    titulo: 'Su vacío por defecto',
+    detalle: 'Sin un emptyState propio, TablaDatos muestra el vacío del sistema con su ilustración glass («No hay … para mostrar», sin botón), no el de línea de la librería. Lo mejor es pasarle SinResultados con la búsqueda y «Limpiar» (como Diagnóstico), o PrimeraVez si todavía no hay nada, y ErrorDeCarga si falló (13-oct).',
   },
   {
     // 7-oct: TextoCompleto pasa a ser pieza oficial.
@@ -595,10 +643,12 @@ export function Component() {
       <div className="flex flex-col gap-6">
         <EncabezadoPatron
           titulo="Tablas"
+          antetitulo="Design system · Componentes"
           acciones={<VerEnAccion pagina="data-grid" />}
         >
-          La única tabla del sistema: orden, búsqueda, filtros por columna, paginación en español,
-          selección múltiple con acciones masivas y la cabecera de Vacantes. Pruébala en la primera
+          TablaDatos, la única tabla del sistema, hecha sobre la de la librería: orden, búsqueda, filtros por columna,
+          paginación en español, selección múltiple con acciones masivas, la cabecera de Vacantes y su vacío con
+          ilustración. Pruébala en la primera
           pestaña; las demás son listados reales de UBITS resueltos con ella, cada uno con las reglas
           de su historia de usuario.
         </EncabezadoPatron>
@@ -616,7 +666,11 @@ export function Component() {
             <CasoEvaluaciones360 />
           </TabsContent>
           <TabsContent value="contenidos" className="pt-6">
-            <CasoContenidos />
+            <div className="flex flex-col gap-6">
+              <CasoContenidos />
+              <ContenidosConPortada />
+              <TablaConVacioPorDefecto />
+            </div>
           </TabsContent>
           <TabsContent value="seguimiento" className="pt-6">
             <CasoSeguimiento />

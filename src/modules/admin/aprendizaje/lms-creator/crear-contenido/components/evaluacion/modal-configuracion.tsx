@@ -52,7 +52,7 @@ function Formulario({ abierto, onCerrar, encuesta }: Props & { encuesta: boolean
 
   const guardar = () => {
     setBorrador({ configEvaluacion: borrador })
-    notify('Ajustes guardados.')
+    notify('Ajustes guardados.', undefined, 'success')
     onCerrar()
   }
 
@@ -92,7 +92,7 @@ function Formulario({ abierto, onCerrar, encuesta }: Props & { encuesta: boolean
           <Button variant="outline" onClick={onCerrar}>
             Cancelar
           </Button>
-          <Button onClick={guardar}>Guardar</Button>
+          <Button onClick={guardar}>Guardar cambios</Button>
         </>
       }
     >

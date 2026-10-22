@@ -1,11 +1,14 @@
+import { Link } from 'react-router'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import {
   ArrowReloadHorizontalIcon,
+  ArrowRight01Icon,
   BookOpen01Icon,
   Camera01Icon,
   CloudUploadIcon,
   Exchange01Icon,
   FlowchartIcon,
+  HierarchySquare01Icon,
   LinkSquare02Icon,
   PuzzleIcon,
   SearchVisualIcon,
@@ -19,6 +22,7 @@ import {
   FramePanel,
   FrameTitle,
   Item,
+  ItemActions,
   ItemContent,
   ItemDescription,
   ItemGroup,
@@ -75,9 +79,15 @@ const SKILLS: Skill[] = [
   },
 ]
 
+// Venían en Cómo usar el sistema; desde el 13-oct viven solo aquí y aquella página enlaza.
+const PEDIR: Regla[] = [
+  { titulo: 'En español y por lo que se ve', detalle: '«Una tabla de usuarios con filtro por área y acciones masivas», no «un DataGrid con columnas».' },
+  { titulo: 'La IA ya conoce las reglas', detalle: 'Claude, Cursor, Gemini y Codex leen las mismas reglas y la lista de componentes del proyecto.' },
+]
+
 const AVISOS: Regla[] = [
   { titulo: 'Al abrir la sesión', detalle: 'Se revisa que el catálogo de la librería esté al día y que el acceso no haya caducado (dura unas 12 horas).' },
-  { titulo: 'En cada pedido', detalle: 'Se le recuerda a la IA que toda la interfaz sale de la librería y que los colores son tokens del tema.' },
+  { titulo: 'En cada pedido', detalle: 'Se le recuerda a la IA las reglas vigentes (primero la pieza del proyecto, después la librería) y que los colores son tokens del tema.' },
   { titulo: 'Antes de escribir un archivo', detalle: 'Se bloquea la escritura si aparece otra librería de interfaz o un icono que no sea de Hugeicons.' },
   { titulo: 'Al terminar', detalle: 'Se repasan los cambios de src/ y se avisa lo que quedó fuera de las reglas.' },
 ]
@@ -85,6 +95,9 @@ const AVISOS: Regla[] = [
 const REGLAS_REPO: Regla[] = [
   { titulo: 'AGENTS.md', detalle: 'Las reglas de la maqueta: qué librería, qué iconos, qué colores, qué no se toca y cómo se entrega. Las leen Cursor, Codex, Gemini y Claude.' },
   { titulo: 'CLAUDE.md', detalle: 'Además, para Claude: el mapa del repo, dónde está cada cosa, las trampas que ya nos costaron una tarde y cómo cerrar un trabajo.' },
+  { titulo: 'reglas.json: la fuente única', detalle: 'Desde el 8-oct, las reglas, las piezas del proyecto, las retiradas y lo que falta decidir se escriben una sola vez en ai-tools/reglas/reglas.json. De ahí salen AGENTS.md, el catálogo, el recordatorio de cada mensaje y el grafo; no se editan a mano.' },
+  { titulo: 'ds-ubits: preguntarle al design system', detalle: 'Una herramienta para la IA que busca la pieza con su import y una pantalla que ya la usa (buscar_pieza), da las reglas de un archivo (reglas_para), revisa lo hecho (revisar) y dice qué retirada sigue en uso. Se consulta antes de escribir y al terminar.' },
+  { titulo: 'El grafo de todo el proyecto', detalle: 'ai-tools/grafo resume qué piezas usa cada pantalla, cuál es el dueño de cada archivo y qué quedó sin uso; se explora en Empezar › Grafo.' },
   { titulo: 'Si algo no responde', detalle: 'Casi siempre caducó el acceso a la librería: se corre npm run aws-login y se reinicia el editor.' },
 ]
 
@@ -219,6 +232,22 @@ export function Component() {
             accion={{ texto: 'Abrir el mapa', url: '/grafo/mapa-del-producto.html' }}
           />
         </div>
+        {/* El Grafo salió del menú el 13-oct: es la otra mitad del mapa (el playground, no el producto) y se llega desde aquí. */}
+        <Item variant="outline" render={<Link to="/design-system/grafo" />}>
+          <ItemMedia variant="icon">
+            <HugeiconsIcon icon={HierarchySquare01Icon} aria-hidden="true" />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>El grafo del playground</ItemTitle>
+            <ItemDescription>
+              El mapa de este proyecto: qué piezas hay, qué pantalla usa cada una y cómo se enlazan con el producto real.
+              Es lo primero que lee la IA antes de tocar algo.
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />
+          </ItemActions>
+        </Item>
       </section>
 
       <section className="flex flex-col gap-4">
@@ -241,7 +270,8 @@ export function Component() {
         </ItemGroup>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Reglas titulo="Cómo pedirle las cosas" reglas={PEDIR} />
         <Reglas titulo="Los avisos automáticos" reglas={AVISOS} />
         <Reglas titulo="Dónde están las reglas" reglas={REGLAS_REPO} />
       </div>
@@ -258,7 +288,7 @@ export function Component() {
             </ItemMedia>
             <ItemContent>
               <ItemTitle>ai-tools/</ItemTitle>
-              <ItemDescription>El catálogo de la librería, los seis procedimientos y los avisos automáticos.</ItemDescription>
+              <ItemDescription>El catálogo de la librería, reglas.json (la fuente única), la herramienta ds-ubits, el grafo del proyecto, los seis procedimientos y los avisos automáticos.</ItemDescription>
             </ItemContent>
           </Item>
           <Item variant="outline" className="items-start">
@@ -276,7 +306,7 @@ export function Component() {
             </ItemMedia>
             <ItemContent>
               <ItemTitle>graphify-out/</ItemTitle>
-              <ItemDescription>El mapa del producto, dentro de la misma carpeta de documentos.</ItemDescription>
+              <ItemDescription>El mapa del producto, dentro de la misma carpeta de documentos. El grafo de todo el proyecto vive aparte, en ai-tools/grafo.</ItemDescription>
             </ItemContent>
           </Item>
         </ItemGroup>

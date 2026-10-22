@@ -24,7 +24,7 @@ function fold(value: string): string {
   return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
-/** A row's date as a Date, or null for "-" and anything unparsed. Reads "03 ago 2026" and the system's "9 sept 2026". */
+/** A row's date as a Date, or null for "-" and anything unparsed. Reads "3 ago 2026" and the system's "9 sept 2026". */
 export function parseSurveyDate(raw: string): Date | null {
   const match = /^(\d{1,2})\s+([a-zA-Z]{3,4})\s+(\d{4})$/.exec(raw.trim());
   if (!match) return null;

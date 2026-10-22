@@ -148,7 +148,7 @@ export const expedienteDeSesion = {
     const antes = comentarios.get(clave) ?? []
     const borrada = antes.find((nota) => nota.id === id)
     comentarios.set(clave, antes.filter((nota) => nota.id !== id))
-    const quitar = anotar(clave.split('|')[0], 'Borraste un comentario', { detalle: borrada?.texto, postulacionId: clave.split('|')[1] })
+    const quitar = anotar(clave.split('|')[0], 'Eliminaste un comentario', { detalle: borrada?.texto, postulacionId: clave.split('|')[1] })
     avisar()
     return () => {
       comentarios.set(clave, antes)

@@ -1,5 +1,6 @@
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
-import { Badge, Field, FieldDescription, FieldLabel, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ubits/flux-ui'
+import { Field, FieldDescription, FieldLabel, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 
 // Un campo de selección con su etiqueta: la ficha técnica, la plantilla de certificado y los selectores sueltos del editor.
 // La lista se abre debajo del campo (o arriba si abajo no cabe), nunca encima de él. Si las opciones traen ícono —solo

@@ -1,4 +1,5 @@
-import { Badge, Progress } from '@ubits/flux-ui'
+import { Progress } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { formatMeasureValue, type MeasureType } from '../../../modelo/constructor/cicloBuilderTypes'
 
 // La pista del objetivo con sus marcadores «Inicio», «Piso», «Meta» y «Techo». No hay una barra con marcadores en la

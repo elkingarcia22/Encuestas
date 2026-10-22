@@ -4,7 +4,6 @@ import {
   Archive02Icon,
   Delete02Icon,
   Logout01Icon,
-  LogoutSquare01Icon,
   Megaphone02Icon,
   TaskEdit01Icon,
 } from '@hugeicons/core-free-icons'
@@ -21,7 +20,6 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
   AlertTitle,
-  Badge,
   Button,
   Heading,
   IconTile,
@@ -33,9 +31,11 @@ import {
   TableHeader,
   TableRow,
   Text,
-  toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 
+import { notify, notifyAction } from '@/shared/components/notify'
+import { BotonSalirCreacion } from '../navegacion/boton-salir-creacion'
 import { ConfirmarEliminar } from '../data-grid/casos/seguimiento'
 import { Demo, Reglas, SectionIntro, type Regla } from '../patrones/piezas'
 import { DrawerAnidado } from '../drawers/components/drawer-anidado'
@@ -52,34 +52,34 @@ const ESCALERA = [
   },
   {
     situacion: 'Se pierde trabajo sin guardar',
-    patron: 'Ventana corta con el icono de salir; seguir editando, siempre a mano',
+    patron: 'La ventana de salida (DialogoSalir): dice qué pasa al salir, «Seguir aquí» siempre a mano y la salida en azul',
     ejemplo: 'Salir del hub de Crear evaluación 360°',
   },
   {
     situacion: 'Le llega a otras personas o no se revierte',
-    patron: 'Ventana que dice a quién, a cuántos y qué pasa después',
+    patron: 'DialogoConfirmar con RegistroConfirmar: qué se toca, a cuántas personas llega y qué pasa después',
     ejemplo: 'Activar un aviso interno (correo a toda la empresa)',
   },
   {
-    situacion: 'Borra mucho o para todos',
+    situacion: 'Elimina mucho o para todos',
     patron: 'Escribir una palabra para habilitar el botón',
     ejemplo: 'Eliminar planes o tareas en Seguimiento',
   },
 ]
 
-// Dos ventanas, cada una con su trabajo (Cristian, 6-oct): DialogoConfirmar para preguntar antes de hacer algo
-// (eliminar, salir sin guardar, activar, descartar, enviar), también cuando muestra lo que se pierde; ActionDialog para
-// todo lo que tiene contenido (formularios, listas para elegir —también confirmar a quiénes afecta—, vistas previas,
-// detalles, ajustes). Esto reemplaza la «ventana única» del 5-oct.
+// Dos ventanas, cada una con su trabajo (Cristian, 6-oct; ajustado el 13-oct): DialogoConfirmar para preguntar antes de
+// hacer algo (eliminar, salir sin guardar, activar, descartar, enviar), también cuando afecta a muchas personas: la
+// tarjeta RegistroConfirmar dice qué se toca y a cuántas llega. ActionDialog para todo lo que tiene contenido (formularios
+// cortos, listas para elegir o editar, vistas previas, detalles, ajustes, escribir un correo). Esto reemplaza la
+// «ventana única» del 5-oct y, desde el 13-oct, el «confirmar con la lista de afectados en ActionDialog».
 //
 // El diálogo de los escalones 2 a 4, controlado desde afuera. «disparador» es el
 // AlertDialogTrigger cuando el botón vive junto al diálogo; sin él se abre con «abierto».
 // El botón de acción dice lo que va a pasar y no cierra solo: lo cierra quien confirma.
 // Con «enCurso» («Eliminando…»), al confirmar el botón muestra el spinner y ese texto un momento antes de llamar a
 // `onConfirmar`, y mientras tanto no se cancela ni se confirma dos veces (la respuesta de una acción va en su botón).
-// «otra» es una tercera salida, entre cancelar y la acción, para cuando hay dos formas de seguir: salir de una edición
-// guardando o sin guardar (1 oct, Nicolás: las ventanas de la creación de vacantes, con la pieza del DS). Tampoco cierra
-// sola.
+// «otra» es una tercera salida, entre cancelar y la acción, para cuando hay dos formas de seguir. Tampoco cierra sola.
+// Salir de una creación o una edición no la usa: va en DialogoSalir, con dos salidas (13 oct).
 export function DialogoConfirmar({
   abierto,
   onAbiertoChange,
@@ -198,6 +198,39 @@ export function DialogoConfirmar({
   )
 }
 
+// La ventana para salir de algo, la única (13 oct, Nicolás: «si tenemos algún salir de algo debemos usar ese modal»; es
+// la de Crear contenido). El título repite el botón que la abre («¿Salir de la creación?», «¿Salir de la edición?»,
+// «¿Volver a añadir página?»), la descripción dice qué pasa al salir y el pie lleva «Seguir aquí» y esa misma salida, en
+// azul. Sin tarjeta del registro y sin tercera salida: con borrador, salir lo guarda y la descripción dice dónde queda;
+// sin borrador, dice qué se pierde. Se pregunta solo si hay algo escrito o cambiado; si no, se sale directo.
+export function DialogoSalir({
+  abierto,
+  onAbiertoChange,
+  salida = 'Salir de la creación',
+  descripcion,
+  onSalir,
+}: {
+  abierto: boolean
+  onAbiertoChange: (abierto: boolean) => void
+  // El texto del botón que la abre (BotonSalirCreacion).
+  salida?: string
+  descripcion: ReactNode
+  onSalir: () => void
+}) {
+  return (
+    <DialogoConfirmar
+      abierto={abierto}
+      onAbiertoChange={onAbiertoChange}
+      icono={Logout01Icon}
+      titulo={`¿${salida}?`}
+      descripcion={descripcion}
+      cancelar="Seguir aquí"
+      accion={salida}
+      onConfirmar={onSalir}
+    />
+  )
+}
+
 function SinPreguntar() {
   const [archivado, setArchivado] = useState(false)
 
@@ -221,18 +254,18 @@ function SinPreguntar() {
           disabled={archivado}
           onClick={() => {
             setArchivado(true)
-            toast.add({
-              type: 'success',
-              title: 'Curso archivado',
-              description: 'Ya no aparece en el catálogo.',
-              actionProps: {
-                children: 'Deshacer',
+            notifyAction(
+              'Curso archivado',
+              'Ya no aparece en el catálogo.',
+              {
+                label: 'Deshacer',
                 onClick: () => {
                   setArchivado(false)
-                  toast.add({ type: 'info', title: 'El curso volvió al catálogo' })
+                  notify('El curso volvió al catálogo', undefined, 'info')
                 },
               },
-            })
+              'success',
+            )
           }}
         >
           <HugeiconsIcon icon={Archive02Icon} aria-hidden="true" />
@@ -290,16 +323,17 @@ export function RegistroConfirmar({
   )
 }
 
+// Los dos botones son BotonSalirCreacion, el mismo que va junto al título de cada página de creación o edición (war room
+// del 13-oct, regla «salir-con-cambios»): trae la ventana de salir (VentanaSalir) con `salida`, así que no se arma otra aquí.
 function SalirSinGuardar() {
-  // Dos ventanas: crear (no hay borrador que guardar, dos salidas) y editar (se puede guardar al salir, tres salidas).
+  // La ventana de salida, en sus dos casos: con borrador (salir lo guarda) y sin borrador (salir pierde lo cambiado).
   const [creando, setCreando] = useState(false)
   const [editando, setEditando] = useState(false)
-  const cerrarEdicion = () => setEditando(false)
 
   return (
     <Demo
-      title="2 · Salir sin guardar"
-      description="El borrador de una evaluación 360° solo vive mientras dura la creación. Al salir se avisa en una ventana de 448 px que no se cierra con un clic afuera. Si al salir también se puede guardar (editar algo que ya existe, como en Crear vacante), la misma ventana suma una tercera salida en el pie: «Seguir editando» · «Salir sin guardar» · «Guardar y salir», y pasa a 620 px porque en 448 los tres botones no caben."
+      title="2 · Salir de algo"
+      description="Una sola ventana para salir de una creación o una edición, la de Crear contenido: el icono de salir, el título que repite el botón, una línea que dice qué pasa y dos salidas, «Seguir aquí» y la salida en azul. Con borrador, salir lo guarda y la línea dice dónde queda; sin borrador, dice qué se pierde. Solo aparece si hay algo escrito o cambiado."
     >
       <div className="flex flex-col items-start gap-3">
         <div className="flex items-center gap-2">
@@ -307,58 +341,32 @@ function SalirSinGuardar() {
             Evaluación de desempeño 2026-II
           </Text>
           <Badge variant="warning-light" size="sm">
-            Sin guardar
+            Cambios sin guardar
           </Badge>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" onClick={() => setCreando(true)}>
-            <HugeiconsIcon icon={Logout01Icon} aria-hidden="true" />
-            Salir de la creación
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setEditando(true)}>
-            <HugeiconsIcon icon={Logout01Icon} aria-hidden="true" />
-            Salir de la edición
-          </Button>
+          <BotonSalirCreacion onClick={() => setCreando(true)} />
+          <BotonSalirCreacion texto="Salir de la edición" onClick={() => setEditando(true)} />
         </div>
-        <DialogoConfirmar
+        <DialogoSalir
           abierto={creando}
           onAbiertoChange={setCreando}
-          size="sm"
-          icono={LogoutSquare01Icon}
-          titulo="¿Salir sin guardar?"
-          descripcion="Lo que llevas se pierde: el borrador no se guarda al salir."
-          cancelar="Seguir editando"
-          accion="Salir sin guardar"
-          destructiva
-          onConfirmar={() => {
+          descripcion="La evaluación queda guardada como borrador. Puedes retomarla cuando quieras desde Evaluaciones."
+          onSalir={() => {
             setCreando(false)
-            toast.add({ type: 'info', title: 'Saliste de la creación', description: 'El borrador se descartó.' })
+            notify('Saliste de la creación', 'La evaluación quedó como borrador.')
           }}
-        >
-          <RegistroConfirmar nombre="Evaluación de desempeño 2026-II" detalle="Evaluación 360°" estado="Sin guardar" />
-        </DialogoConfirmar>
-        <DialogoConfirmar
+        />
+        <DialogoSalir
           abierto={editando}
           onAbiertoChange={setEditando}
-          icono={LogoutSquare01Icon}
-          titulo="¿Salir sin guardar los cambios?"
-          descripcion="La evaluación sigue como estaba hasta que guardes. Si sales ahora, se pierde lo que cambiaste."
-          cancelar="Seguir editando"
-          otra={{
-            texto: 'Salir sin guardar',
-            onClick: () => {
-              cerrarEdicion()
-              toast.add({ type: 'info', title: 'Saliste sin guardar', description: 'La evaluación quedó como estaba.' })
-            },
+          salida="Salir de la edición"
+          descripcion="Los cambios que hiciste se pierden y la evaluación se queda como estaba."
+          onSalir={() => {
+            setEditando(false)
+            notify('Saliste de la edición', 'La evaluación quedó como estaba.')
           }}
-          accion="Guardar y salir"
-          onConfirmar={() => {
-            cerrarEdicion()
-            toast.add({ type: 'success', title: 'Cambios guardados' })
-          }}
-        >
-          <RegistroConfirmar nombre="Evaluación de desempeño 2026-II" detalle="Evaluación 360° · en edición" estado="Cambios sin guardar" />
-        </DialogoConfirmar>
+        />
       </div>
     </Demo>
   )
@@ -398,11 +406,7 @@ function ActivarAviso() {
           onConfirmar={() => {
             setAbierto(false)
             setActivo(true)
-            toast.add({
-              type: 'success',
-              title: 'Aviso activado',
-              description: 'Se está enviando a 646 personas.',
-            })
+            notify('Aviso activado', 'Se está enviando a 646 personas.', 'success')
           }}
         >
           <RegistroConfirmar nombre="Cierre de año 2026" detalle="Aviso interno" estado="Borrador" tono="neutro" icono={Megaphone02Icon} />
@@ -441,7 +445,7 @@ function EscribirParaBorrar() {
           titulo="¿Eliminar el plan de formación?"
           descripcion="Las 84 personas que lo tienen lo pierden de su Zona de estudio. Su avance en los contenidos se conserva, pero el plan no se puede recuperar."
           accion="Eliminar plan"
-          onConfirmar={() => toast.add({ type: 'success', title: 'Plan eliminado' })}
+          onConfirmar={() => notify('Plan eliminado', undefined, 'success')}
         />
       </div>
     </Demo>
@@ -450,11 +454,12 @@ function EscribirParaBorrar() {
 
 // Cómo se arma una confirmación (acuerdo del 6-oct: confirmar en DialogoConfirmar, contenido en ActionDialog).
 const COMO_SE_ARMA: Regla[] = [
-  { titulo: 'La ventana de confirmar', detalle: 'DialogoConfirmar para preguntar antes de hacer algo: eliminar, salir sin guardar, activar, descartar, enviar. Icono arriba, texto centrado, el clic afuera no la cierra.' },
-  { titulo: 'Lo que tiene contenido va en ActionDialog', detalle: 'Formularios, listas para elegir, vistas previas, detalles y ajustes. También confirmar con la lista de a quiénes afecta («Mover 3 candidatos»).' },
+  { titulo: 'La ventana de confirmar', detalle: 'DialogoConfirmar para preguntar antes de hacer algo: eliminar, activar, descartar, enviar. Icono arriba, texto alineado a la izquierda, el clic afuera no la cierra.' },
+  { titulo: 'Si afecta a muchas personas, también es DialogoConfirmar', detalle: 'La tarjeta RegistroConfirmar dice qué se toca y a cuántas personas llega («Enviar recordatorio a 84 personas»). Después del sí, el aviso lleva su tipo: notify(título, detalle, "success").' },
+  { titulo: 'Lo que tiene contenido va en ActionDialog', detalle: 'Formularios cortos, listas para elegir o editar, vistas previas, detalles, ajustes y escribir un correo. Crear o editar algo largo no va en una ventana: va en una página.' },
   { titulo: 'El icono de lo que va a pasar', detalle: 'El de salir para abandonar una creación o una edición, la papelera para eliminar, el de la acción para lo demás.' },
   { titulo: 'Título fijo, el registro en el cuerpo', detalle: 'El título dice qué es la ventana («¿Activar el aviso?»); el nombre del registro y lo que se pierde van debajo, en el cuerpo.' },
-  { titulo: 'Tres salidas en el pie', detalle: 'Cuando se puede guardar al salir: «Seguir editando» · «Salir sin guardar» · «Guardar y salir».' },
+  { titulo: 'Salir, siempre con DialogoSalir', detalle: '«¿Salir de la creación?», una línea con lo que pasa, «Seguir aquí» y la salida en azul. Sin tarjeta y sin tercera salida: con borrador, salir lo guarda.' },
   { titulo: 'La respuesta, en el botón', detalle: 'Mientras la acción corre, el botón muestra el spinner y lo que pasa («Activando…»), y la ventana no se cierra ni se confirma dos veces.' },
 ]
 
@@ -514,7 +519,7 @@ export function EstadosConfirmaciones() {
         <AlertTitle>El botón dice exactamente lo que va a pasar</AlertTitle>
         <AlertDescription>
           «Eliminar 3 tareas» o «Activar y enviar a 646 personas», nunca «Aceptar» ni «Sí». Y la salida
-          segura («Cancelar», «Seguir editando») siempre está a mano.
+          segura («Cancelar», «Seguir aquí») siempre está a mano.
         </AlertDescription>
       </Alert>
     </div>

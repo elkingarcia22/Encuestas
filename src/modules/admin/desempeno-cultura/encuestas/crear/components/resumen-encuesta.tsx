@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Badge, Text } from '@ubits/flux-ui'
+import { Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { fechaCorta, plural } from '@/modules/design-system/patrones/formato'
 import {
   AvanceObligatorios,
@@ -156,9 +157,9 @@ function FocoDemograficos({ borrador }: { borrador: SurveyDraft }) {
   // se hacía larga. Cada uno cuenta cuántos datos lleva y, si alguno solo sirve para filtrar, cuántos.
   const filas = ORIGENES.map(({ origen, termino }) => {
     const delOrigen = fields.filter((campo) => campo.source === origen)
-    const soloFiltran = delOrigen.filter((campo) => !campo.visible).length
-    const filtran = soloFiltran === delOrigen.length ? 'solo filtran' : `${soloFiltran} ${plural(soloFiltran, 'solo filtra', 'solo filtran')}`
-    const cuenta = `${delOrigen.length}${soloFiltran ? ` · ${filtran}` : ''}`
+    const sinEdicion = delOrigen.filter((campo) => !campo.visible).length
+    const etiquetaSinEdicion = sinEdicion === delOrigen.length ? 'no permiten edición' : `${sinEdicion} ${plural(sinEdicion, 'no permite edición', 'no permiten edición')}`
+    const cuenta = `${delOrigen.length}${sinEdicion ? ` · ${etiquetaSinEdicion}` : ''}`
     return { termino, valor: delOrigen.length ? cuenta : '' }
   }).filter((fila) => fila.valor)
 
@@ -184,7 +185,7 @@ function FocoSecciones({ borrador, estado, onCambio }: { borrador: SurveyDraft; 
   const entradas = flattenSections(secciones)
   const preguntas = countQuestions(secciones)
   const aviso = !estado.hasSectionWithQuestion
-    ? 'Añade al menos una sección con preguntas.'
+    ? 'Agrega al menos una sección con preguntas.'
     : !estado.allSectionsHaveQuestions
       ? 'Hay secciones sin preguntas.'
       : !estado.allQuestionsComplete

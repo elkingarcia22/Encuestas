@@ -10,7 +10,6 @@ import {
   MoreHorizontalIcon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -29,11 +28,13 @@ import {
   Text,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
 import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { BotonCancelarPanel } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { TablaSeleccion } from '../../../planes-de-formacion/components/tabla-seleccion'
@@ -150,7 +151,7 @@ export function PasoContenidos({ contenidos, panelAbierto, onPanel, onCambio }: 
             // El vacío del sistema, con su ilustración glass, y no un `Empty` armado a mano con un icono de línea.
             <PrimeraVez
               icono="glass-discovery"
-              titulo="Añade contenidos a tu ruta"
+              titulo="Agrega contenidos a tu ruta"
               descripcion="Busca cursos y otros formatos del catálogo para armar el recorrido. La duración de la ruta se calcula sola con lo que agregues."
               accion={{ texto: 'Agregar contenidos', icono: Add01Icon, onClick: () => onPanel(true) }}
             />
@@ -426,11 +427,11 @@ function DrawerElegirContenidos({ abierto, yaEnLaRuta, onCerrar, onAgregar }: Pr
       icon={Layers01Icon}
       title="Agregar contenidos"
       description="Selecciona los contenidos que quieres agregar a esta ruta."
+      // 13-oct (I-041): con algo marcado, no se cierra al tocar fuera y pregunta antes de descartar.
+      conCambios={cuantos > 0}
       footer={
         <>
-          <Button variant="outline" onClick={onCerrar}>
-            Cancelar
-          </Button>
+          <BotonCancelarPanel alCerrar={onCerrar} />
           {/* Deshabilitado hasta que haya algo elegido, y diciendo cuántos: el número evita abrir y cerrar para contar. */}
           <Button disabled={!cuantos} onClick={() => onAgregar(marcados)}>
             {cuantos ? `Agregar ${cuantos.toLocaleString('es-CO')} ${plural(cuantos, 'contenido', 'contenidos')}` : 'Agregar'}

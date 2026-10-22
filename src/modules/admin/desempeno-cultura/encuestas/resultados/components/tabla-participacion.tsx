@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Progress,
   Text,
   Tooltip,
@@ -14,9 +13,9 @@ import {
   type DataGridListConfig,
 } from '@ubits/flux-ui'
 import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { notify } from '@/shared/components/notify'
-import { PageSection } from '@/shared/components/PageShell'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
@@ -343,10 +342,8 @@ export function TablaParticipacion({ filas, segmentos, segmento, onSegmento, sel
   }
 
   return (
-    // El título y «Ver por» van sobre la tabla: la tabla del sistema no lleva título dentro de su marco.
-    <PageSection
-      title={`Detalle de la participación por ${nombreGrupos}`}
-    >
+    // El título va en lo gris de la tabla, sobre el conteo, y «Ver por» junto al buscador (regla «tabla-del-sistema», 16-oct).
+    <>
       {/* Los globos de las acciones de lo marcado salen a los 200 ms, como los del resto del playground. */}
       {/* «Por colaborador» va entre el buscador y el botón de columnas (Elkin, 14-oct). La tabla de la librería pinta sus
           acciones después de ese botón y no deja reordenarlas: solo se le cambia el orden (layout) al de columnas. */}
@@ -358,6 +355,7 @@ export function TablaParticipacion({ filas, segmentos, segmento, onSegmento, sel
             config={config}
             data={visibles}
             paginacion={{ pagina: actual, setPagina: setActual, porPagina, setPorPagina, total: resultado.length }}
+            titulo={`Detalle de la participación por ${nombreGrupos}`}
             nombre={porPersona ? 'personas' : 'grupos'}
             singular={porPersona ? 'persona' : 'grupo'}
             id="participacion"
@@ -385,6 +383,6 @@ export function TablaParticipacion({ filas, segmentos, segmento, onSegmento, sel
           setRecordando([])
         }}
       />
-    </PageSection>
+    </>
   )
 }

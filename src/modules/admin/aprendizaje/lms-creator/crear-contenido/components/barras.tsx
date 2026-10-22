@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Alert02Icon, ArrowLeft01Icon, ArrowRight01Icon, Download01Icon } from '@hugeicons/core-free-icons'
+import { ArrowLeft01Icon, ArrowRight01Icon, Download01Icon } from '@hugeicons/core-free-icons'
 import { Button, Text } from '@ubits/flux-ui'
 import { PageActionBar } from '@/shared/components/PageShell'
 import { BotonIa } from '@/shared/components/BotonIa'
 import { TokenCost } from './tokens'
+import { BarraPasos } from '@/modules/design-system/navegacion/barra-pasos'
 
 // Las dos barras inferiores del editor, flotantes y fijas abajo como en Crear vacante. Nunca van las dos a la vez: en
 // Editar está la del editor (Cancelar · qué falta · Atrás · a dónde lleva el botón) y en la Vista del colaborador la
@@ -28,7 +29,7 @@ type PropsEditor = {
   onCancelar?: () => void
   /** A la izquierda, en el sitio de «Cancelar»: el ChipGuardado, si el paso guarda. */
   inicio?: ReactNode
-  /** «Cancelar» por defecto; los flujos hijos que vuelven a «Añadir página» dicen «Volver». */
+  /** «Cancelar» por defecto; los flujos hijos que vuelven a «Agregar página» dicen «Volver». */
   textoCancelar?: string
   /** Qué falta para avanzar o publicar, o que ya está todo listo. */
   mensaje: { texto: string; problema: boolean } | null
@@ -38,49 +39,34 @@ type PropsEditor = {
   principal: AccionPrincipal
 }
 
+// Desde el 13-oct es la barra de los pasos del sistema (BarraPasos) con lo propio del editor: «Cancelar» a la
+// izquierda y el primario de IA con su costo. Así «Atrás», la sombra y el sitio de cada cosa son los de todos.
 export function BarraEditor({ onCancelar, inicio, textoCancelar = 'Cancelar', mensaje, onAtras, secundario, principal }: PropsEditor) {
   return (
-    <PageActionBar className="z-20">
-      {inicio}
-      {onCancelar ? (
-        <Button variant="outline" onClick={onCancelar}>
-          {textoCancelar}
-        </Button>
-      ) : null}
-      <div className="ml-auto flex min-w-0 items-center gap-4">
-        {mensaje ? (
-          // Lo que falta se dice como en el bloque «Faltan N datos» de los resúmenes: el icono en ámbar y el texto en
-          // medium, del color de siempre. El texto entero en ámbar no llega al contraste mínimo (Dave, 5-oct).
-          <span className="hidden min-w-0 items-center gap-2 md:flex">
-            {mensaje.problema ? (
-              <HugeiconsIcon icon={Alert02Icon} size={16} className="shrink-0 text-warning" aria-hidden="true" />
-            ) : null}
-            <Text
-              as="p"
-              size="sm"
-              weight={mensaje.problema ? 'medium' : undefined}
-              variant={mensaje.problema ? undefined : 'muted'}
-              aria-live="polite"
-              className="min-w-0 truncate"
-            >
-              {mensaje.texto}
-            </Text>
-          </span>
-        ) : null}
-        {onAtras ? (
-          <Button variant="ghost" className="text-muted-foreground!" onClick={onAtras}>
-            <HugeiconsIcon icon={ArrowLeft01Icon} size={16} aria-hidden="true" />
-            Atrás
-          </Button>
-        ) : null}
-        {secundario ? (
+    <BarraPasos
+      className="z-20"
+      inicio={
+        <>
+          {inicio}
+          {onCancelar ? (
+            <Button variant="outline" onClick={onCancelar}>
+              {textoCancelar}
+            </Button>
+          ) : null}
+        </>
+      }
+      mensaje={mensaje}
+      extra={
+        secundario ? (
           <Button variant="outline" onClick={secundario.onClick}>
             {secundario.texto}
           </Button>
-        ) : null}
-        <Principal accion={principal} />
-      </div>
-    </PageActionBar>
+        ) : null
+      }
+      paso={onAtras ? 2 : 1}
+      onAtras={onAtras}
+      principal={<Principal accion={principal} />}
+    />
   )
 }
 

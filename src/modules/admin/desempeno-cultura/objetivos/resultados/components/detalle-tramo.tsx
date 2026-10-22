@@ -3,6 +3,8 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { ChartColumnIcon, Search01Icon } from '@hugeicons/core-free-icons'
 import { Frame, FramePanel, InputGroup, InputGroupAddon, InputGroupInput, Item, ItemActions, ItemContent, ItemDescription, ItemTitle, Text } from '@ubits/flux-ui'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
 import { TITULO_DIMENSION, detalleDe, type Dimension } from '../../modelo/resultados/lecturas'
 import type { ResultadosCiclo } from '../../modelo/resultados/seguimiento'
 
@@ -41,10 +43,11 @@ export function DetalleTramo({ pedido, resultados, onCerrar }: { pedido: PedidoD
         </div>
       }
     >
-      {visibles.length === 0 ? (
-        <Text as="p" size="sm" variant="muted" className="py-6 text-center">
-          {filas.length === 0 ? `Nadie quedó en «${pedido?.etiqueta ?? ''}».` : 'Nada coincide con esa búsqueda.'}
-        </Text>
+      {/* Los vacíos con las piezas del sistema y su ilustración glass: tramo vacío (PrimeraVez) o búsqueda sin nada (SinResultados). */}
+      {filas.length === 0 ? (
+        <PrimeraVez icono="glass-profile" titulo={`Nadie quedó en «${pedido?.etiqueta ?? ''}»`} descripcion="Con los filtros del reporte, este tramo no tiene a nadie." className="py-10" />
+      ) : visibles.length === 0 ? (
+        <SinResultados busqueda={busqueda} onLimpiar={() => setBusqueda('')} />
       ) : (
         // Las líneas entre filas, como en la lista para elegir: el envoltorio de cada fila las pone (divide-y).
         <Frame>

@@ -19,7 +19,6 @@ import {
   PaintBrush01Icon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -31,6 +30,7 @@ import {
   IconTile,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 
 import { EncabezadoPatron } from '../patrones/piezas'
 import { IconoIA } from '../ia/icono-ia'
@@ -99,7 +99,7 @@ const PRODUCTO: Template[] = [
     descripcion:
       'La lista de comunicaciones con métricas, historial y archivar, y el editor con vista previa donde el agente reescribe y revisa antes de publicar.',
     icono: MarketingIcon,
-    etiquetas: ['2 pantallas', 'Orbit Flow', 'Formularios'],
+    etiquetas: ['2 pantallas', 'Orbit', 'Formularios'],
   },
   {
     titulo: 'Detalle de vacante',
@@ -107,7 +107,7 @@ const PRODUCTO: Template[] = [
     descripcion:
       'Los candidatos en las 5 etapas del flujo, la ficha de cada uno y el agente que resume un candidato y compara finalistas.',
     icono: Briefcase06Icon,
-    etiquetas: ['Tablero', 'Drawer', 'Orbit Flow'],
+    etiquetas: ['Tablero', 'Drawer', 'Orbit'],
   },
   {
     titulo: 'Datos de empresa',

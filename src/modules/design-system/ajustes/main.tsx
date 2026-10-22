@@ -12,6 +12,7 @@ import {
   FramePanel,
   FrameTitle,
   Heading,
+  Progress,
   Tabs,
   TabsList,
   TabsTrigger,
@@ -203,7 +204,7 @@ export const AJUSTES_MARCO: Ajuste[] = [
       'Productos en medio peso y gris; títulos de grupo de 28 px',
     ],
     porque: 'En la librería la fila activa casi no se distinguía; el azul con marca ubica a la persona de un vistazo.',
-    donde: ['Barra lateral (AppSidebar: ROW, GROUP_LABEL, NavIcon)', 'Medidas en Fundamentos › Marco'],
+    donde: ['Barra lateral (AppSidebar: ROW, GROUP_LABEL, NavIcon)', 'Medidas en Patrones › Marco'],
     usar: 'La navegación principal del producto y del design system.',
     evitar: 'Menús desplegables o listas dentro de una página.',
   },
@@ -435,7 +436,7 @@ export const AJUSTES_MARCO: Ajuste[] = [
     resumen: 'La familia de IA: primario con degradado, secundario con contorno y orbe, y solo icono. Los tres en pastilla.',
     piezas: [{ nombre: 'Button', slug: 'button' }],
     hechoAMano:
-      'El degradado y el brillo del borde son CSS propio (new-chat.module.css y tarjeta-ia.module.css) encima del Button; el secundario y el de solo icono redefinen el radio.',
+      'El degradado, que se invierte con suavidad al pasar el cursor, y el brillo del borde son CSS propio (new-chat.module.css y tarjeta-ia.module.css) encima del Button; el secundario y el de solo icono redefinen el radio. El primario fuerza su padding (20px, 16px en el pequeño): el tema pone 10px y le gana a la clase (15 oct).',
     libreria: <Button size="lg">Nueva conversación</Button>,
     ubits: <BotonesIaUbits />,
     cambia: [
@@ -471,12 +472,74 @@ export const AJUSTES_MARCO: Ajuste[] = [
     evitar: 'Agregar el mismo ajuste en otros menús mientras tanto.',
   },
   {
+    id: 'avance-redondo',
+    titulo: 'Barras de avance redondeadas',
+    estado: 'pedido',
+    resumen: 'La parte de color de toda barra de avance termina redondeada, como su riel.',
+    piezas: [{ nombre: 'Progress', slug: 'progress' }],
+    libreria: (
+      <Text size="sm" variant="muted">
+        La librería redondea el riel gris, pero la parte de color termina recta.
+      </Text>
+    ),
+    ubits: <Progress value={57} className="w-48" aria-label="Avance de ejemplo: 57 %" />,
+    cambia: ['La parte de color con las puntas redondeadas (.cn-progress-indicator)'],
+    porque: 'War room del 13-oct (Carlos): la barra azul recta se veía cortada; solo pasaba bien en créditos y licencias.',
+    donde: ['src/index.css, para todas las barras (Planes de formación › Progreso, créditos, resultados)'],
+    usar: 'Pedir a la librería que la parte de color venga redondeada; entonces se borra la regla.',
+    evitar: 'Redondear barras a mano en una pantalla.',
+  },
+  {
+    id: 'azul-texto-oscuro',
+    titulo: 'Azul de texto en modo oscuro',
+    estado: 'pedido',
+    resumen: 'En oscuro, el azul que se usa como texto es más claro que el del botón, para que se lea.',
+    piezas: [{ nombre: 'Button', slug: 'button' }, { nombre: 'Badge', slug: 'badge' }],
+    libreria: (
+      <Text size="sm" variant="muted">
+        El azul de marca como texto daba 3,4:1 sobre el fondo oscuro y 1,8:1 sobre la fila resaltada.
+      </Text>
+    ),
+    ubits: (
+      <Text size="sm" variant="muted">
+        Enlaces, nombres azules de las tablas, pestaña activa y botones e insignias de enlace en un azul más claro (4,7:1 o más); el foco, en un azul intermedio. El botón sigue con el azul de marca.
+      </Text>
+    ),
+    cambia: ['--primary-texto, un azul más claro, para el texto azul en oscuro', '--ring, un azul intermedio, para el foco en oscuro'],
+    porque: 'War room del 13-oct: los azules del modo oscuro no pasaban AA. El botón conserva el azul de marca (decisión de Nicolás del 18-sep).',
+    donde: ['src/index.css: el bloque oscuro y «Texto azul en oscuro»'],
+    usar: 'Pedir a la librería un azul de texto propio para el oscuro.',
+    evitar: 'Escribir azules a mano en una pantalla para el modo oscuro.',
+  },
+  {
+    id: 'avisos-forma',
+    titulo: 'Avisos: esquina y ancho',
+    estado: 'pedido',
+    resumen: 'Los avisos llevan la esquina de las tarjetas y se ensanchan con texto largo.',
+    piezas: [{ nombre: 'Toast', slug: 'toast' }],
+    libreria: (
+      <Text size="sm" variant="muted">
+        Esquina más redonda que las tarjetas y 384 px fijos: con texto largo quedaban altos y angostos.
+      </Text>
+    ),
+    ubits: (
+      <Text size="sm" variant="muted">
+        Esquina de las tarjetas; hasta 576 px cuando el título pasa de 45 caracteres o el detalle de 90. Los cortos siguen de 384 px.
+      </Text>
+    ),
+    cambia: ['rounded-xl en vez de rounded-2xl', 'Ancho de 576 px solo con texto largo'],
+    porque: 'War room del 13-oct (Carlos): avisos con mucho texto se veían angostos y altos.',
+    donde: ['src/shared/components/Toaster.tsx'],
+    usar: 'Pedir a la librería que el toaster acepte el ancho y la posición.',
+    evitar: 'Montar otro toaster o forzar el ancho en una pantalla.',
+  },
+  {
     id: 'anillos',
     titulo: 'Anillos de consumo',
     estado: 'pedido',
-    resumen: 'Licencias y créditos de IA en el menú de empresa.',
+    resumen: 'Licencias y los créditos de cada producto (Selección, LMS Creator) en el menú de empresa: bolsas separadas, sin un total.',
     piezas: [{ nombre: 'DropdownMenu', slug: 'dropdown-menu' }],
-    hechoAMano: 'Los dos anillos no existen en ReUI: son un SVG propio (account-gauge.module.css) dentro del menú de la cuenta.',
+    hechoAMano: 'Los anillos no existen en ReUI: son un SVG propio (account-gauge.module.css) dentro del menú de la cuenta.',
     libreria: <ConsumoLibreria />,
     ubits: <ConsumoUbits />,
     cambia: ['Progreso circular', 'Licencias en azul; créditos de IA con el degradado de la IA'],
@@ -722,7 +785,7 @@ export const AJUSTES_MARCO: Ajuste[] = [
     libreria: <TokensLibreria />,
     ubits: <TokensUbits />,
     cambia: [
-      'Insignia (TokenBadge): borde en el degradado de la IA, moneda en morado y saldo en el color del texto, como el badge IA del prototipo',
+      'Insignia (TokenBadge): pastilla con borde en el degradado de la IA y moneda y saldo en el color del texto (la moneda iba en morado hasta el 15-oct), con 4 × 12px de aire en vez de los 2 × 5px del Badge',
       'Al gastar se aplasta y rebota, la moneda gira, el número baja contando y sube un «−N» en rojo',
       'Costo (TokenCost): moneda y número dentro del botón, en su color un poco más tenue; igual en el primario de IA y en el secundario',
       'Nada de «· 50 tokens» escrito: el lector de pantalla sí dice «50 tokens»',
@@ -731,6 +794,7 @@ export const AJUSTES_MARCO: Ajuste[] = [
     porque: 'Es el badge IA de tokens de UBITS (React y vanilla), con su microinteracción. La librería no trae contador animado. Se pidió a la librería.',
     donde: [
       'LMS Creator › Portada, Video con IA (setup, editor, avatar), Presentación interactiva, Agente de evaluaciones',
+      'Avisos internos › Crear aviso (Imagen con IA) · Portal colaborador › Progreso (agente de planes)',
       'TokenBadge y TokenCost (crear-contenido/components/tokens.tsx)',
     ],
     usar: 'Toda acción de IA que gasta tokens: el costo en el botón y el saldo en la cabecera de esa superficie.',
@@ -961,7 +1025,7 @@ const GRUPOS = [
 export const AJUSTES = GRUPOS.flatMap((grupo) => grupo.ajustes)
 
 // Los ajustes que no son de una pieza sino de toda la librería: se ven en la pestaña «Reglas globales».
-export const REGLAS_GLOBALES = ['campos', 'hover', 'hover-sin-borde', 'casillas', 'insignias', 'opacos', 'pestanas']
+export const REGLAS_GLOBALES = ['campos', 'hover', 'hover-sin-borde', 'casillas', 'insignias', 'opacos', 'pestanas', 'avance-redondo', 'azul-texto-oscuro']
 
 export const ajusteDe = (id: string | undefined) => AJUSTES.find((ajuste) => ajuste.id === id)
 

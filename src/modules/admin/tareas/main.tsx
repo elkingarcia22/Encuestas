@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowDown01Icon, PlusSignIcon, Task01Icon, TaskAdd01Icon } from '@hugeicons/core-free-icons'
 import {
@@ -34,12 +34,17 @@ export function Component() {
   const llegada = (useLocation().state as { nuevos?: PlanConIa[]; elegido?: string; tareasNuevas?: Tarea[] } | null) ?? {}
   const nuevos = llegada.nuevos ?? []
   const tareasNuevas = llegada.tareasNuevas ?? []
-  const [pestana, setPestana] = useState<Pestana>(nuevos.length > 0 ? 'planes' : 'tareas')
+  // «Copiar enlace» de una tarea o un plan deja `?tarea=<id>` o `?plan=<id>` (13-oct, I-117): al abrir esa dirección se
+  // elige esa fila y su detalle queda a la vista, en la pestaña que le toca. Un id que no existe se ignora.
+  const [consulta] = useSearchParams()
+  const idTarea = TAREAS_INICIALES.find((t) => t.id === consulta.get('tarea'))?.id
+  const idPlan = PLANES_INICIALES.find((p) => p.id === consulta.get('plan'))?.id
+  const [pestana, setPestana] = useState<Pestana>(nuevos.length > 0 || (idPlan && !idTarea) ? 'planes' : 'tareas')
   const [tareas, setTareas] = useState(() => [...tareasNuevas, ...nuevos.flatMap((nuevo) => nuevo.tareas), ...TAREAS_INICIALES])
   const [planes, setPlanes] = useState(() => [...nuevos.map((nuevo) => nuevo.plan), ...PLANES_INICIALES])
-  const [tareaElegida, setTareaElegida] = useState<string | undefined>(tareasNuevas[0]?.id ?? TAREAS_INICIALES[0].id)
-  const [planElegido, setPlanElegido] = useState<string | undefined>(llegada.elegido ?? nuevos[0]?.plan.id ?? PLANES_INICIALES[0].id)
-  const [tareaEnPanel, setTareaEnPanel] = useState(false)
+  const [tareaElegida, setTareaElegida] = useState<string | undefined>(tareasNuevas[0]?.id ?? idTarea ?? TAREAS_INICIALES[0].id)
+  const [planElegido, setPlanElegido] = useState<string | undefined>(llegada.elegido ?? nuevos[0]?.plan.id ?? idPlan ?? PLANES_INICIALES[0].id)
+  const [tareaEnPanel, setTareaEnPanel] = useState(Boolean(idTarea) && tareasNuevas.length === 0)
   // Un objeto nuevo reinicia la selección de las tablas sin perder su búsqueda ni sus filtros.
   const [limpiarSeleccion, setLimpiarSeleccion] = useState<Record<string, boolean>>({})
   const limpiar = () => setLimpiarSeleccion({})
@@ -48,7 +53,6 @@ export function Component() {
     setPestana(valor)
     limpiar()
   }
-
   // Desde el detalle de un plan se abre la tarea en su pestaña.
   const verTarea = (tarea: Tarea) => {
     setTareaElegida(tarea.id)

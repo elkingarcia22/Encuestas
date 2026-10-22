@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { DataGridListConfig } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { plural } from '@/modules/design-system/patrones/formato'
@@ -116,7 +117,7 @@ export function TablaSeleccion<T extends { id: string }>({
       ],
     },
     emptyState: soloMarcados
-      ? { type: 'empty', title: `Sin ${plurales} ${elegido}s`, description: `Vuelve a la lista completa y marca los que quieras sumar.` }
+      ? { type: 'empty', customComponent: <PrimeraVez icono="glass-tick" titulo={`Sin ${plurales} ${elegido}s`} descripcion="Vuelve a la lista completa y marca los que quieras sumar." /> }
       : filtrando
         ? {
             type: 'no-results',
@@ -124,7 +125,7 @@ export function TablaSeleccion<T extends { id: string }>({
               <SinResultados busqueda={busqueda} filtrosActivos={filtros.filter((f) => Array.isArray(f.value) && f.value.length > 0).length} onLimpiar={limpiar} />
             ),
           }
-        : { type: 'empty', title: `No hay ${plurales} para elegir` },
+        : { type: 'empty', customComponent: <PrimeraVez icono="glass-profile" titulo={`No hay ${plurales} para elegir`} descripcion="Cuando haya, podrás marcarlos aquí." /> },
     frame: { title: titulo, toolbar: 'header' },
     layout,
     labels: {

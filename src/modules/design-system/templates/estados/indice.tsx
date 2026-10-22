@@ -1,7 +1,8 @@
 import { Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
-import { Badge, Card, CardContent, Heading, Text } from '@ubits/flux-ui'
+import { Card, CardContent, Heading, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 
 import { MarcoAdmin } from '../admin-compartido/marco-admin'

@@ -3,6 +3,7 @@ import {
   AnalyticsDownIcon,
   Briefcase01Icon,
   Calendar03Icon,
+  CheckListIcon,
   DocumentValidationIcon,
   FileImportIcon,
   MarketingIcon,
@@ -62,16 +63,18 @@ export const PALETTE_OBJECTS: PaletteEntry[] = [
   { title: 'Onboarding operativo', meta: 'contenido · borrador · 6 lecciones', action: 'Abrir', to: '/admin/aprendizaje/lms-creator/contenidos/onboarding-operativo' },
 ]
 
+// Lo que cambió con el agente en Selección («Ver qué cambió»): título corto y el detalle, como las filas de Novedades.
 export const PROMO_BULLETS = [
-  { icon: Briefcase01Icon, text: 'Publica vacantes y mueve candidatos de etapa sin salir del chat.' },
-  { icon: Shield01Icon, text: 'Cada acción con efecto real te pide confirmación y dice a quién afecta.' },
-  { icon: RefreshIcon, text: 'Los procesos largos siguen corriendo aunque cierres la conversación.' },
+  { icon: Briefcase01Icon, title: 'Acciones desde el chat', text: 'Publica vacantes y mueve candidatos de etapa sin salir del chat.' },
+  { icon: Shield01Icon, title: 'Confirmas antes', text: 'Cada acción con efecto real te pide confirmación y dice a quién afecta.' },
+  { icon: RefreshIcon, title: 'Procesos en segundo plano', text: 'Los procesos largos siguen corriendo aunque cierres la conversación.' },
 ]
 
 export const PROMO_NEWS = [
   { icon: Briefcase01Icon, tag: 'Selección', title: 'Acciones en vacantes', text: 'Publicar, mover de etapa y avisar al responsable, con confirmación previa.' },
   { icon: Queue02Icon, tag: 'Procesos', title: 'Centro de procesos', text: 'Un panel flotante con todo lo que está corriendo y lo que quedó a medias.' },
   { icon: Moon02Icon, tag: 'Interfaz', title: 'Tema oscuro', text: 'Toda la plataforma en oscuro, con el mismo contraste de lectura.' },
+  { icon: CheckListIcon, tag: 'Inicio', title: 'Para atender', text: 'Lo más urgente de cada módulo en el inicio, con la acción que lo resuelve.' },
 ]
 
 export const PROMO_STEPS = [

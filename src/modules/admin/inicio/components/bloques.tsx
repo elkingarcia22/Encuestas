@@ -483,7 +483,7 @@ export function AvanceCiclo360() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    notify(`Recordatorio enviado a ${persona.name}`)
+                    notify(`Recordatorio enviado a ${persona.name}`, undefined, 'success')
                   }
                 >
                   Recordar

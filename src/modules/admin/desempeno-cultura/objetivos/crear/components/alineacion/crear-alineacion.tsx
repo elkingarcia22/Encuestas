@@ -119,7 +119,7 @@ export function CrearAlineacion({
             </Tabs>
           ) : null}
           <Command key={pestana}>
-            <CommandInput placeholder="Buscar..." />
+            <CommandInput placeholder="Buscar…" />
             <CommandList className="max-h-60">
               <CommandEmpty>No hay resultados</CommandEmpty>
               <CommandGroup>
@@ -178,7 +178,7 @@ export function CrearAlineacion({
           <Encabezado titulo="¿A qué contribuye?" detalle={sinTitulo(objetivo.title)} paso={3} onVolver={() => setPaso('objetivo')} />
           <OpcionesEmpresa
             opciones={opciones}
-            alineadoA={objetivo.alignedTo === null ? [] : [objetivo.alignedTo]}
+            alineadoA={objetivo.alignedTo}
             onElegir={(id) => alinear(refs, id)}
             onQuitar={() => alinear(refs, null)}
           />

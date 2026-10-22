@@ -33,6 +33,7 @@ export type Arbol = {
   /** La sección o subsección cuyo título se está editando. Mientras haya una, todo lo demás del paso queda apagado. */
   editandoSeccion: string | null
   setEditandoSeccion: (id: string | null) => void
+  crearSeccion: () => void
   crearSubseccion: (padre: SectionTreeEntry) => void
   crearPregunta: (duena: SectionTreeEntry) => void
   /** Una pregunta nueva cuyo enunciado lo redacta la IA: su formulario abre pidiendo el contexto. */

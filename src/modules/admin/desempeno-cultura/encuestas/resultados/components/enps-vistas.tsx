@@ -2,7 +2,6 @@ import { Fragment, useMemo, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowDown01Icon, LockIcon, Message01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   cn,
   Item,
@@ -18,6 +17,7 @@ import {
   TableRow,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
@@ -31,6 +31,7 @@ import { TotalOculto } from './controles'
 import { COLOR_POR_TONO, FONDO_ESCALA, INSIGNIA_POR_TONO, TEXTO_ESCALA, conSigno, numero } from './escala'
 import { nivelDe, type Nivel } from './filtros'
 import { COLUMNA_FIJA, LineasGuia, SANGRIA } from './mapa-calor'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Las tres vistas del eNPS. El puntaje es % promotores − % detractores, de −100 a +100
 // (detractores 0 a 6, neutros 7 y 8, promotores 9 y 10).
@@ -47,7 +48,7 @@ const VARIANTE_BANDA: Record<NpsBand, 'success-light' | 'warning-light' | 'destr
 export function PuntajeNps({ puntaje, promotores, neutros, detractores, n, gris, conEtiqueta }: { puntaje: number; promotores: number; neutros: number; detractores: number; n: number; gris?: boolean; conEtiqueta?: boolean }) {
   const parte = (valor: number) => (n > 0 ? Math.round((valor / n) * 100) : 0)
   return (
-    <Hint label={`Promotores ${parte(promotores)}% · Neutros ${parte(neutros)}% · Detractores ${parte(detractores)}% · ${numero(n)} respuestas`}>
+    <Hint label={`Promotores ${parte(promotores)} % · Neutros ${parte(neutros)} % · Detractores ${parte(detractores)} % · ${numero(n)} ${plural(n, 'respuesta', 'respuestas')}`}>
       <span className="inline-flex items-center gap-1.5" tabIndex={0}>
         {conEtiqueta ? (
           <Text as="span" size="xs" variant="muted" weight="medium">
@@ -88,7 +89,7 @@ function RepartoNps({ datos, gris }: { datos: ConReparto; gris: boolean }) {
     <div className="flex items-center justify-end gap-4">
       {COLUMNAS_NPS.map((columna) => (
         <Text key={columna.id} as="span" size="xs" weight="semibold" className={cn('w-16 text-right tabular-nums', gris ? 'text-muted-foreground' : columna.texto)}>
-          {valores[columna.id]}%
+          {valores[columna.id]} %
         </Text>
       ))}
     </div>
@@ -149,6 +150,7 @@ function TablaPreguntasNps({ preguntas, oculto, resaltadas }: { preguntas: reado
                   {indice + 1}
                 </Text>
               </TableCell>
+              {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
               <TableCell className="whitespace-normal!">
                 <Text as="span" size="sm" weight="medium" variant={gris ? 'muted' : 'default'}>
                   {pregunta.text}
@@ -224,7 +226,7 @@ function CeldaSegmento({ celda, resaltadas, oculta = false }: { celda: NpsSegmen
   // Un grupo bajo el mínimo dice «Reservado», nunca un 0.
   if (celda.belowThreshold) {
     return (
-      <Hint label={`Reservado · ${numero(celda.n)} respuestas. Por debajo del mínimo para mostrar resultados de este grupo.`}>
+      <Hint label={`Reservado · ${numero(celda.n)} ${plural(celda.n, 'respuesta', 'respuestas')}. Por debajo del mínimo para mostrar resultados de este grupo.`}>
         <Badge variant="secondary" className={CELDA} aria-label="Reservado">
           <HugeiconsIcon icon={LockIcon} aria-hidden="true" />
         </Badge>
@@ -234,7 +236,7 @@ function CeldaSegmento({ celda, resaltadas, oculta = false }: { celda: NpsSegmen
   const gris = apagado(celda.score, resaltadas)
   const tono = npsBandForScore(celda.score).tone
   return (
-    <Hint label={`${numero(celda.n)} respuestas · promotores ${celda.n ? Math.round((celda.promoters / celda.n) * 100) : 0}% · detractores ${celda.n ? Math.round((celda.detractors / celda.n) * 100) : 0}%`}>
+    <Hint label={`${numero(celda.n)} ${plural(celda.n, 'respuesta', 'respuestas')} · promotores ${celda.n ? Math.round((celda.promoters / celda.n) * 100) : 0} % · detractores ${celda.n ? Math.round((celda.detractors / celda.n) * 100) : 0} %`}>
       <Badge variant={gris ? 'secondary' : 'outline'} className={cn(CELDA, 'tabular-nums !border-0')} style={gris ? undefined : { backgroundColor: FONDO_ESCALA[tono], color: TEXTO_ESCALA[tono] }}>
         {conSigno(celda.score)}
       </Badge>
@@ -375,7 +377,7 @@ export function SegmentoNps({ datos, niveles, resaltadas }: { datos: NpsSegmentD
   )
 }
 
-const porcentajeEs = (valor: number) => `${valor.toFixed(1).replace('.', ',')}%`
+const porcentajeEs = (valor: number) => `${valor.toFixed(1).replace('.', ',')} %`
 
 // Lo que escribió una banda, en la misma lista con separadores que usa Preguntas › Comentarios.
 function RespuestasBanda({ banda }: { banda: NpsDepthBand }) {
@@ -428,9 +430,9 @@ function PreguntaProfundidad({ pregunta }: { pregunta: NpsDepthQuestion }) {
           {pregunta.statement}
         </Text>
         <Text as="span" size="xs" variant="muted" className="min-w-0 flex-1">
-          {pregunta.formatLabel} · {numero(pregunta.n)} respuestas a la escala
+          {pregunta.formatLabel} · {numero(pregunta.n)} {plural(pregunta.n, 'respuesta', 'respuestas')} a la escala
         </Text>
-        <Hint label={`${numero(escritas)} respuestas escritas`}>
+        <Hint label={`${numero(escritas)} ${plural(escritas, 'respuesta', 'respuestas')} escritas`}>
           <Badge variant="outline" size="sm" className="tabular-nums" tabIndex={0}>
             <HugeiconsIcon icon={Message01Icon} aria-hidden="true" />
             {numero(escritas)}
@@ -459,6 +461,7 @@ function PreguntaProfundidad({ pregunta }: { pregunta: NpsDepthQuestion }) {
             return (
               <Fragment key={banda.band}>
                 <TableRow className="cursor-pointer" onClick={() => alternar(banda.band)}>
+                  {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                   <TableCell className="whitespace-normal!">
                     <Text as="span" size="sm" weight="medium" variant={banda.question ? 'default' : 'muted'}>
                       {banda.question || 'Sin pregunta escrita para esta banda'}
@@ -488,6 +491,7 @@ function PreguntaProfundidad({ pregunta }: { pregunta: NpsDepthQuestion }) {
                 </TableRow>
                 {abierta ? (
                   <TableRow className="hover:bg-transparent">
+                    {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
                     <TableCell colSpan={6} className="whitespace-normal!">
                       <RespuestasBanda banda={banda} />
                     </TableCell>

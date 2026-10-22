@@ -1,3 +1,9 @@
-import { createPage } from '@/shared/pages/createPage'
+import { crearProximamente } from '@/modules/design-system/estados/pantalla-proximamente'
 
-export const { Component } = createPage('Modo estudio AI', '/portal-colaborador/aprendizaje/modo-estudio-ai', 'PortalColaboradorAprendizajeModoEstudioAiPage')
+// Sin maquetar todavía: sigue en el menú con «Próximamente» y abre la espera del sistema (regla «pantallas-pendientes», 13-oct).
+export const { Component } = crearProximamente(
+  'Modo estudio AI',
+  'Tu tutor de IA para estudiar.',
+  'Un tutor de IA para estudiar contigo lo que necesites.',
+  'PortalColaboradorAprendizajeModoEstudioAiPage',
+)

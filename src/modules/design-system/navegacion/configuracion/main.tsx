@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { InformationCircleIcon } from '@hugeicons/core-free-icons'
+import { Delete02Icon, InformationCircleIcon } from '@hugeicons/core-free-icons'
 import { Button, cn } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
 import { PageActionBar, PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { WS } from '../../drawers/components/drawer-styles'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../components/case-frame'
 import { INITIAL, SECTIONS, type SectionId, type Settings } from './components/data'
 import { SectionPanel } from './components/sections'
@@ -15,6 +16,7 @@ export function Component() {
   const [section, setSection] = useState<SectionId>('general')
   const [saved, setSaved] = useState<Settings>(INITIAL)
   const [values, setValues] = useState<Settings>(INITIAL)
+  const [descartando, setDescartando] = useState(false)
 
   const changedKeys = (Object.keys(values) as (keyof Settings)[]).filter((key) => values[key] !== saved[key])
   const changed = changedKeys.length
@@ -73,14 +75,15 @@ export function Component() {
                 Tienes {changed} {changed === 1 ? 'cambio' : 'cambios'} sin guardar
               </span>
               <div className="ml-auto flex gap-2">
-                <Button variant="ghost" className={WS} onClick={() => setValues(saved)}>
+                {/* Descartar tira lo escrito: pregunta antes, «Seguir editando» · «Descartar» (13-oct). */}
+                <Button variant="ghost" className={WS} onClick={() => setDescartando(true)}>
                   Descartar
                 </Button>
                 <Button
                   className={WS}
                   onClick={() => {
                     setSaved(values)
-                    notify('Cambios guardados')
+                    notify('Cambios guardados', undefined, 'success')
                   }}
                 >
                   Guardar cambios
@@ -90,6 +93,23 @@ export function Component() {
           ) : null}
         </PageContent>
 
+        <DialogoConfirmar
+          abierto={descartando}
+          onAbiertoChange={setDescartando}
+          icono={Delete02Icon}
+          titulo="¿Descartar los cambios?"
+          descripcion="Los datos vuelven a como estaban al abrir la página. Lo que escribiste se pierde."
+          cancelar="Seguir editando"
+          accion="Descartar"
+          destructiva
+          onConfirmar={() => {
+            setDescartando(false)
+            setValues(saved)
+            notify('Cambios descartados', undefined, 'info')
+          }}
+        >
+          <RegistroConfirmar nombre="Configuración de la empresa" detalle={`${changed} ${changed === 1 ? 'cambio' : 'cambios'} sin guardar`} estado="Sin guardar" />
+        </DialogoConfirmar>
       </PageShell>
     </CaseFrame>
   )

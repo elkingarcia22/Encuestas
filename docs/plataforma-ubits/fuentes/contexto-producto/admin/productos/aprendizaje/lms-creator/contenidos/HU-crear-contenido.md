@@ -7,7 +7,7 @@ Los creadores de mi empresa tardan demasiado en armar un contenido nuevo con por
 ## Historia de Usuario
 
 **Como** creador de contenidos LMS,
-**quiero** crear un contenido nuevo en un asistente de Información básica, Recursos, Certificado y Ajustes,
+**quiero** crear un contenido nuevo en un asistente de Información general, Recursos, Certificado y Ajustes,
 **para** publicar material formativo listo para asignar en planes sin saltarme pasos críticos.
 
 ## Pantallas en el prototipo
@@ -17,7 +17,7 @@ Cada pantalla del flujo tiene su dirección en el playground UX (en local, `http
 | Pantalla | Dirección | Qué se ve |
 |---|---|---|
 | Listado de contenidos | [`/admin/aprendizaje/lms-creator/contenidos`](http://localhost:5173/admin/aprendizaje/lms-creator/contenidos) | «Crear contenido» abre el asistente en blanco; al finalizar, la tarjeta nueva sale de primera |
-| Paso Información básica | [`/admin/aprendizaje/lms-creator/crear-contenido#portada`](http://localhost:5173/admin/aprendizaje/lms-creator/crear-contenido#portada) | Formulario vacío (no se siembra el ejemplo), en tres grupos: Título y descripción, Portada y Ficha técnica |
+| Paso Información general | [`/admin/aprendizaje/lms-creator/crear-contenido#portada`](http://localhost:5173/admin/aprendizaje/lms-creator/crear-contenido#portada) | Formulario vacío (no se siembra el ejemplo), en tres grupos: Título y descripción, Portada y Ficha técnica |
 | Vista del colaborador | [`/admin/aprendizaje/lms-creator/vista-colaborador`](http://localhost:5173/admin/aprendizaje/lms-creator/vista-colaborador) | El contenido recorrido como lo recorrerá quien lo estudie |
 | Paso Recursos | [`/admin/aprendizaje/lms-creator/crear-contenido#recursos`](http://localhost:5173/admin/aprendizaje/lms-creator/crear-contenido#recursos) | Dos columnas: Índice (2 secciones y 7 páginas de ejemplo) y Vista previa de la página activa |
 | Recursos · página concreta | [`/admin/aprendizaje/lms-creator/crear-contenido#recursos/page/p5`](http://localhost:5173/admin/aprendizaje/lms-creator/crear-contenido#recursos/page/p5) | Abre directo esa página (p1 video, p2 presentación interactiva, p3 evaluación, p4 SCORM, p5 PDF, p6 evaluación) |
@@ -42,8 +42,8 @@ Cada pantalla del flujo tiene su dirección en el playground UX (en local, `http
 ## Alcance
 
 **Incluye:**
-- Asistente de 4 pasos fijos: Información básica → Recursos → Certificado → Ajustes.
-- Información básica (datos + generación de imagen con IA si hay créditos), repartida en tres grupos.
+- Asistente de 4 pasos fijos: Información general → Recursos → Certificado → Ajustes.
+- Información general (datos + generación de imagen con IA si hay créditos), repartida en tres grupos.
 - Recursos: índice de páginas y vista previa de la página activa; modal «Añadir página» y flujos de alta por tipo (modales a pantalla completa).
 - Certificado.
 - Ajustes: hub de visibilidad (Borrador / Público / Privado / Oculto), pesos de evaluación y tipo de navegación (Lineal / Libre; detalle en HU-LMS-011).
@@ -59,8 +59,8 @@ Cada pantalla del flujo tiene su dirección en el playground UX (en local, `http
 
 ## Reglas de Negocio
 
-- **RN-01:** El asistente tiene exactamente 4 pasos en orden: Información básica → Recursos → Certificado → Ajustes (el paso Ajustes concentra visibilidad y pesos).
-- **RN-01a:** Información básica va en tres grupos con fondo gris: **Título y descripción**, **Portada** (imagen y tráiler) y **Ficha técnica** (tipo, categoría, nivel, idioma, duración). Ajustes se reparte igual en secciones. Los tres **nombran lo que llevan dentro**, y por eso ninguno cambia entre contenido, ruta y evento: el primero decía «El contenido» / «La ruta» / «El evento» y además repetía el título de la página (Dave, 6-oct).
+- **RN-01:** El asistente tiene exactamente 4 pasos en orden: Información general → Recursos → Certificado → Ajustes (el paso Ajustes concentra visibilidad y pesos).
+- **RN-01a:** Información general va en **dos** grupos con fondo gris: **Título, descripción y portada** y **Ficha técnica** (tipo, categoría, nivel, idioma, duración). Eran tres —título y descripción por un lado, portada por otro— y son la misma cosa: lo que se lleva la tarjeta del catálogo. Separarlas obligaba a leer dos cabeceras para llenar un formulario de tres campos (Dave, 15-oct). Ajustes se reparte igual en secciones. Los tres **nombran lo que llevan dentro**, y por eso ninguno cambia entre contenido, ruta y evento: el primero decía «El contenido» / «La ruta» / «El evento» y además repetía el título de la página (Dave, 6-oct).
 - **RN-01a-marco:** **Los cuatro pasos usan el mismo marco.** Cada bloque va en un contenedor gris con su rótulo **fuera**, sobre el gris, y el contenido en un panel blanco dentro: los grupos y la vista previa del paso 1, el **índice y la vista previa del paso 2**, y los tres bloques del paso 3. Hasta el 6-oct los pasos 2 y 3 eran tarjetas blancas con el rótulo adentro y una línea debajo, así que se leían como otra pantalla aunque fueran el mismo asistente (Dave, 6-oct).
 - **RN-01a-0:** El primer campo se llama **«Título del contenido»** —«de la ruta», «del evento»—, no «Nombre». La misma palabra se usa en el texto de ayuda, en la lista de datos que faltan y en la vista previa cuando aún está vacío («Sin título todavía»).
 - **RN-01a-bis:** Un asistente paso a paso dentro de la página sale con un **botón secundario «Salir de la creación»** en las acciones de la cabecera, como Crear vacante. Cuando el flujo edita en vez de crear, dice «Salir de la edición». Los flujos inmersivos (video con IA, presentación interactiva, roleplay) no lo llevan: salen por la X de su propia cabecera.
@@ -92,7 +92,36 @@ Cada pantalla del flujo tiene su dirección en el playground UX (en local, `http
 - **RN-01a-bis:** En los setups de IA —video, presentación interactiva y evaluador roleplay— **la idea se escribe en la caja del chat de Suite AI**, no en un campo de texto normal: lo que se le pide a la IA se escribe siempre en el mismo sitio, lo haga quien lo haga y esté donde esté. Generar sigue siendo cosa del botón del pie; enviar desde la caja hace lo mismo que ese botón.
 - **RN-01b-bis:** En los **setups de IA** —video, presentación interactiva y evaluador roleplay— la idea sí lleva insignia **«Obligatorio», en ámbar** (`warning-light`). Es la excepción a la norma del design system, que manda marcar solo lo opcional: ahí es el único campo del que depende todo el flujo y conviven los dos tipos de insignia en la misma pantalla, así que en gris se leían igual. Ámbar porque es el color con el que el playground ya dice «obligatorio» —la insignia de un contenido obligatorio del plan, en la vista del colaborador—; nadie en el equipo marca campos obligatorios todavía, así que esto sienta el precedente (Dave, 5-oct).
 - **RN-01c:** La portada **se resuelve en el propio paso 1, sin modal**. Sin portada, el estado vacío ofrece las dos vías: «Crearla con IA» (secundario de IA) y «Subir una imagen». Con «Crearla con IA» el generador se despliega **debajo del recuadro**, en una tarjeta con su cabecera y su cierre; mientras está abierto, la portada no se pinta arriba porque el propio lienzo del generador ya la enseña. Con portada, el recuadro 16:9 lleva el velo degradado arriba, la insignia «Generado con IA» si vino de IA, y «Cambiar imagen» y «Editar con IA» en la esquina.
-- **RN-01c-bis:** El **tráiler es un campo propio** del grupo Portada, marcado «Opcional», con validación de enlace (YouTube, Vimeo, Drive y OneDrive). No es una tercera forma de hacer una portada: es algo que se reproduce sobre ella. La categoría lleva icono de carpeta fijo y el título del contenido no lleva icono.
+- **RN-01c-bis:** El **tráiler vive en su propia tarjeta**, debajo de la portada y **apagado de entrada**, con un interruptor (Dave, 15-oct). No es una forma de hacer la portada: es algo que se reproduce sobre ella, y la mayoría de los contenidos no lo lleva, así que con el interruptor apagado ni siquiera se pide el enlace. Al encenderlo aparece el campo —con su validación: YouTube, Vimeo, Drive y OneDrive— y, en cuanto hay un enlace válido, **la miniatura del vídeo a la derecha de la tarjeta**. Apagarlo borra el enlace: dejarlo guardado y sin usar es lo que hace que después nadie sepa si el contenido tiene tráiler. La categoría lleva icono de carpeta fijo y el título del contenido no lleva icono.
+
+  **De dónde puede venir el enlace se dice debajo del campo**, no en la cabecera de la tarjeta: ahí se leía antes de
+  que hubiera nada donde escribirlo. «Puede ser un link de YouTube, Vimeo, Drive y OneDrive.»
+
+  **El play de la miniatura reproduce**: es donde se comprueba que el enlace es el que se quería, sin salir del
+  formulario ni abrir otra pestaña. Por lo mismo, **la portada del formulario no lleva play**: ahí la imagen es lo que
+  se está eligiendo, y el tráiler se prueba en su tarjeta. La portada sí lleva **su etiqueta**, como los demás campos
+  del marco: sin ella era el único bloque sin nombre.
+
+  La miniatura es la real en **YouTube**, que la publica en una dirección fija; Vimeo, Drive y OneDrive piden una llamada con credenciales, así que ahí va un marco con el icono de vídeo.
+
+- **RN-01z:** **Editar un contenido y duplicarlo todavía no existen en el playground, y se dice.** Las dos puertas llevaban al asistente de **creación** con la ficha cargada, y quien lo probaba no sabía si al guardar reemplazaba el contenido o creaba otro: confundía más que no hacer nada (Dave, 15-oct). Hasta que los flujos existan, los botones se quedan —el sitio donde van es parte del diseño— pero avisan en vez de abrir una pantalla que no es la suya.
+
+  **Es temporal y se nota en el copy de la pantalla**, que sigue diciendo «Crea, edita y elimina los contenidos»: la edición entra esta misma semana y entonces estos avisos se cambian por el flujo de verdad. No se toca la bajada por algo que va a durar días (Dave, 15-oct).
+
+  | Dónde | Qué pasa |
+  | --- | --- |
+  | Contenidos › opciones de un contenido **en borrador** › Editar | Abre el asistente. Ahí sí: está a medias y lo que toca es terminarlo |
+  | Contenidos › opciones de **cualquier otro estado** › **Ver resultados** | Abre Resultados. Va **la primera** del menú: es lo que de verdad se viene a hacer con un contenido publicado. Un borrador no la lleva, porque todavía no le ha pasado nada a nadie (Dave, 15-oct) |
+  | Contenidos › opciones de **cualquier otro estado** › Editar | «El flujo de edición aún no existe» |
+  | Contenidos › opciones › **Duplicar** | «El flujo de duplicado aún no existe» |
+  | Resultados › botón **Editar** de la cabecera | «El flujo de edición aún no existe» |
+  | Resultados › franja de atención › «Editar recurso», «Editar roleplay», «Revisar la visibilidad» | Lo mismo |
+
+- **RN-01z-bis:** **En LMS Creator un contenido no se elimina**, así que «Eliminar» sale del menú de opciones (y con él su ventana de confirmación). Lo que la gente ya avanzó cuelga del contenido: lo que se hace es **archivarlo u ocultarlo** (Dave, 15-oct).
+
+- **RN-01c-ter:** **El tráiler se reproduce sobre la portada, en los tres sitios donde la portada se ve**: el recuadro del paso 1, la vista previa de la derecha y la vista del colaborador. Un botón de play **redondo** encima de la imagen —el cuadrado de la librería se leía como un botón más de la barra de acciones y no como «dale play»—; al pulsarlo el vídeo ocupa ese mismo hueco y **al terminar vuelve la portada**, que es lo que lo distingue de abrirlo en otra pestaña (Dave, 15-oct).
+
+  Que el vídeo avisa de que acabó lo cuentan **YouTube y Vimeo**, cada uno a su manera y por `postMessage`. **Drive y OneDrive no avisan**: por eso el reproductor lleva siempre una X, para que el tráiler no se quede puesto para siempre.
 - **RN-01d:** Recursos y Certificado comparten el mismo reparto de dos columnas: a la izquierda el índice o el formulario (medida fija) y a la derecha «Vista previa», con su título arriba.
 - **RN-01d-bis:** **El alto de las dos columnas lo manda la vista previa, no la pantalla.** Al entrar sin páginas abraza su estado vacío y queda bajita; con una página dentro mide lo que mida el recurso con sus complementarios, sin scroll propio. El índice **copia ese alto**: no aporta altura por sí mismo, así que nunca es él quien estira la fila, y si su lista es más larga se desplaza por dentro. Quien hace scroll es la página. Con alto fijo, entrar sin páginas dejaba dos cajones enormes casi vacíos y, con un recurso, lo que no cabía se escondía tras un scroll interno: la experiencia se sentía cortada por los dos lados (Dave, 8-oct).
 - **RN-01d-bis-2:** Ese alto tiene **tope: 1.000 px**. Una página con muchos recursos puede medir metros, y entonces el scroll de la página se vuelve interminable y el índice —que copia el alto— se va de la vista. Pasado el tope, la vista previa se queda ahí y lo que sobra **se desplaza por dentro** de ese panel; por debajo no hay scroll interno ninguno (Dave, 8-oct).
@@ -161,6 +190,10 @@ Cada pantalla del flujo tiene su dirección en el playground UX (en local, `http
 - **RN-01k-decies:** **El índice del estudiante se ve como el del Creator**: cada página es una ficha con borde, su icono en baldosa y el título hasta en **dos renglones** antes de recortar —cortar a «Comunic…» no distingue una página de otra—. Lo suyo propio son los estados a la derecha y el azul de la que se está viendo.
 - **RN-01k-undecies:** **En azul solo la página en curso**: fondo claro y borde, que es como el tema dice «esta es la elegida». La baldosa del icono también: con todas azules el color dejaba de señalar nada. Vale igual para el índice del Creator.
 - **RN-01k-duodecies:** Las **secciones son plegables** (acordeón de la librería), sin el rótulo «Sección 1» encima del nombre —ese era del Creator— y con el **número de páginas en una insignia, a la izquierda del chevron**. Nace abierta la sección donde está la página en curso, y si se avanza a otra, esa se abre sola. Sin secciones habilitadas no hay nada que plegar: la lista va seguida.
+- **RN-01k-sexdecies:** **Con navegación libre, abrir una página la completa.** Es RN-06 de `HU-navegacion-libre` y es lo que distingue los dos modos: en lineal se avanza en orden y «Continuar» es el gesto que completa; en libre se salta por el índice, y si completar dependiera de «Continuar» no se finalizaría nunca nada —el índice se quedaba con todo en gris y el cierre, inalcanzable— (Dave, 15-oct). Dos excepciones: la **evaluación** solo se completa **al aprobarla** (RN-07), y la **asistencia**, al confirmarse. Saltar a la página 3 **no** completa la 1 ni la 2 (RN-05).
+
+- **RN-01k-septdecies:** **«Fin del contenido» se puede abrir aunque falten páginas, y entonces dice qué falta.** La HU lo deja bloqueado (RN-04 y RN-08 de `HU-navegacion-libre`); aquí se abre a propósito y enseña el **estado vacío del design system** —icono glass, título y una línea con cuántas páginas quedan— en vez de la felicitación (Dave, 15-oct). Lo que la HU protege se respeta igual: **no marca el contenido como finalizado** ni entrega el certificado. Una fila con candado no explica nada; esta sí, y la barra de abajo remata con «Aún no has completado todas las páginas de este contenido» y «Ir a lo pendiente».
+
 - **RN-01k-quindecies:** **Nada se abre antes de empezar.** Hasta que el colaborador pulsa «Comenzar ahora», todas las páginas van **con candado**, incluida la primera. Ese botón no es un atajo a la página 1: es lo que le dice al back que alguien **inició el contenido**, así que tiene que ser la única puerta de entrada. Vale también con navegación libre. En la vista previa del Creator no hay back que avisar, pero el candado se pinta igual porque es lo que verá el colaborador. La puerta **la abre el propio botón**, no las páginas ya vistas: una página solo queda vista al salir de ella, así que deducirlo de ahí dejaba el índice con todo bloqueado mientras se estaba viendo la primera (Dave, 6-oct).
 - **RN-01k-terdecies:** Una página bloqueada lleva **candado**, no llave ni ojo de cerradura.
 - **RN-01k-quaterdecies:** La columna de la derecha —título e índice— **se queda fija** al bajar; lo que se consume se va con el scroll. En el **móvil no hay botón de retroceder**: para atrás está el gesto del sistema y el índice, que lleva a cualquier página con un toque (Dave, 6-oct).
@@ -194,6 +227,8 @@ Cada pantalla del flujo tiene su dirección en el playground UX (en local, `http
   - **Antes.** Una pantalla que dice lo que hay que saber mientras todavía se puede decidir — y **solo lo que no está ya en el encabezado**, que lleva el porcentaje para aprobar, el tiempo límite y cuántos intentos hay: repetirlo debajo es leer dos veces lo mismo (Dave, 8-oct). Queda lo que esa línea no puede decir: que **el reloj arranca al abrirla** y, a partir del segundo intento, **cuántos quedan** —«Te queda 1 intento, este»—, que es la pregunta que de verdad se hace quien va a reintentar. Cuando no hay nada de eso que avisar, no se pinta ninguna lista y la pantalla dice solo «Cuando estés listo, empieza».
   - **Entrar a mirar no cuesta un intento.** Ni el reloj ni el contador arrancan hasta que el colaborador pulsa **«Comenzar evaluación»** (o **«Comenzar intento N»** si ya falló una vez: decir «Comenzar evaluación» en el segundo sonaría a que empieza de cero).
   - **Durante.** En la cabecera, **«Intento N de M»** si se limitan los intentos y **el reloj** si hay tiempo límite —por debajo de un minuto se pone en rojo, que a esas alturas es la información urgente—. Si no se limita ninguna de las dos cosas, no aparece nada: una insignia que siempre dice lo mismo no informa.
+  - **El reloj no es una condición más, y no se pierde de vista.** La insignia de tiempo dice **cuánto dura** la evaluación, siempre lo mismo («5 min»); la cuenta atrás va **aparte, a la derecha de esa misma fila**. Un número que cambia cada segundo dentro de una fila de datos fijos hace que la fila entera parezca moverse (Dave, 14-oct). Y mientras se responde, **la cabecera se queda arriba**: un reloj que hay que ir a buscar no sirve de nada, porque se responde abajo, lejos de él. De paso quedan a la vista en qué evaluación se está y con cuánto se aprueba. Solo durante el intento: antes de empezar y al ver el resultado no hay nada que seguir.
+    La cabecera pegada **no cambia de aspecto**: mismo ancho que las preguntas, dentro del marco y con su mismo gris. El primer intento la sacaba fuera con márgenes negativos y acababa más ancha que el cuerpo y por fuera del borde, y parecía otra cosa pegada encima.
   - **Salir pausa el intento.** Al irse a otra página la evaluación deja de estar empezada: al volver se ve **«Continúa tu evaluación»** con lo respondido intacto y el aviso de que el tiempo vuelve a correr al continuar. Es más honesto que dejar corriendo un reloj que nadie está mirando.
   - **Se acabó el tiempo:** se califica **lo que alcanzó a responder** y el aviso va **encima** del resultado, porque explica por qué llegó solo. El resultado en sí es el de siempre.
   - **Después.** Tres finales, no dos: **«Aprobaste la evaluación»**, **«No aprobaste esta vez»** —con «Reintentar»— y **«Usaste todos tus intentos»**, que lleva candado, **no ofrece reintentar** —sería prometer algo que no va a pasar— y deja «Continuar» bloqueado con «Habla con tu administrador si necesitas otra oportunidad».
@@ -308,7 +343,7 @@ Cada pantalla del flujo tiene su dirección en el playground UX (en local, `http
 
 **Escenario: Crear la portada con IA sin salir del paso**
 
-**Dado** que Ana está en Información básica y el contenido todavía no tiene portada
+**Dado** que Ana está en Información general y el contenido todavía no tiene portada
 **Cuando** pulsa «Crearla con IA» y describe la portada
 **Entonces** el generador se abre **debajo del recuadro**, en la misma página, sin ningún modal
 **Y** al generarla, la portada queda en el bloque con la insignia «Generado con IA»
@@ -398,3 +433,44 @@ Cada pantalla del flujo tiene su dirección en el playground UX (en local, `http
 **Entonces** aparece el modal «Publicar contenido» (o «Ocultar contenido» si eligió Oculto)
 **Y** si pulsa Cancelar, la visibilidad sigue en Borrador
 **Y** si confirma, la visibilidad cambia a la elegida y la opción Borrador queda deshabilitada
+
+---
+
+## Enlaces fijos de la vista previa (14-oct-2026)
+
+Cada pantalla de la vista del colaborador tiene su dirección, y **la dirección sigue a la vista**: al moverse por el
+contenido se va reescribiendo sola. Es un playground, y enseñar algo aquí es mandar un enlace —«mírate solo la
+portada», «mírate la evaluación reprobada»—; antes había que explicar por dónde pasar para llegar (Dave, 14-oct).
+
+Sobre el curso de ejemplo (`?ejemplo=forzar` lo siembra aunque haya un borrador empezado):
+
+| Qué se quiere enseñar | Dirección |
+| --- | --- |
+| La portada | `/admin/aprendizaje/lms-creator/vista-colaborador?ejemplo=forzar` |
+| Una página concreta | `…/vista-colaborador?ejemplo=forzar&pagina=p1` |
+| El final, con el certificado | `…/vista-colaborador?ejemplo=forzar&vista=cierre` |
+| Una evaluación **aprobada** | `…/vista-colaborador?ejemplo=forzar&pagina=p3&estado=aprobado` |
+| Una evaluación **reprobada** | `…/vista-colaborador?ejemplo=forzar&pagina=p3&estado=reprobado` |
+| Un roleplay aprobado o no | `…/vista-colaborador?ejemplo=forzar&pagina=p7&estado=aprobado` |
+
+`estado` fabrica el veredicto sin tener que recorrer el recurso entero: son las pantallas que más cuesta enseñar
+—en una evaluación habría que responderlo todo y en un roleplay hacen falta dos llamadas—. Al navegar a otra página
+el parámetro se cae, porque el veredicto era de la página que se pidió.
+
+`volver` y `destino` siguen siendo de quien abrió la vista previa y no los toca la navegación: `destino` es el que
+devuelve a Resultados al cerrar (RN-16 de HU-resultados-contenido).
+
+### La vista previa abre donde estás editando
+
+«Vista del colaborador» no abre la portada: abre **la página que se está editando**. Quien está en la séptima quiere
+ver esa, y obligarle a recorrer las seis anteriores para comprobar un cambio no tiene sentido (Dave, 14-oct).
+
+Y llega **como llegaría quien estudia**, según la navegación del contenido:
+
+| Navegación | Cómo entra |
+| --- | --- |
+| **Lineal** | Con las páginas anteriores ya recorridas: progreso avanzado y lo que viene después, bloqueado. Si no, el índice las enseñaría bloqueadas y la pantalla mentiría sobre dónde está quien la mira |
+| **Libre** | Directo a esa página, sin nada completado — que es justo lo que se puede hacer en libre |
+
+El id sale del hash del asistente (`#recursos/page/p4`), que es donde guarda en qué página está, y viaja como
+`&pagina=p4` junto al `volver` de siempre.

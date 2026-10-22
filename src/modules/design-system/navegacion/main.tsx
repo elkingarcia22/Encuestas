@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
-import { Button, Card } from '@ubits/flux-ui'
+import { Button, Card, Tabs, TabsContent, TabsList, TabsTrigger, Text } from '@ubits/flux-ui'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import {
   AnatomyLegend,
@@ -17,7 +17,9 @@ import {
 import { KICKER } from '../drawers/components/drawer-styles'
 import { PAGE_CASES, pageParts, type PageConfig } from './components/page-config'
 import { PagePreview } from './components/page-preview'
-import { VerEnAccion } from '../patrones/piezas'
+import { Demo, VerEnAccion } from '../patrones/piezas'
+import { notify } from '@/shared/components/notify'
+import { BotonSalirCreacion } from './boton-salir-creacion'
 
 // Qué hace cada opción, en una frase, bajo el control que la elige.
 const TOP_HINT: Record<PageConfig['top'], string> = {
@@ -54,6 +56,105 @@ function Hint({ children }: { children: ReactNode }) {
   return <p className="-mt-2 text-xs leading-snug text-muted-foreground">{children}</p>
 }
 
+// BotonSalirCreacion con `salida` (war room del 13-oct, regla «salir-con-cambios»): la única salida de una creación o
+// edición trae su ventana, «¿Salir de la creación?» con «Seguir aquí» y «Salir de la creación». Con `alGuardarYSalir` hay
+// borrador y salir lo guarda; sin él, la bajada avisa que se pierde; sin cambios, sale directo. El botón, siempre azul
+// (war room del 15-oct). Aquí se
+// prueba de verdad, con el interruptor de «hay cambios».
+function SalidaDeCreacion() {
+  const [conCambios, setConCambios] = useState(true)
+  return (
+    <section className="flex flex-col gap-3">
+      <div role="heading" aria-level={2} className={KICKER}>
+        Salir de una creación o edición
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Demo
+          title="Sin borrador: lo que llevas se pierde"
+          description="Crear una tarea o una evaluación no guarda nada hasta el final. Al salir con cambios pregunta «¿Salir de la creación?»: la bajada avisa que lo que llevas se pierde. «Salir de la creación» va en azul igual: salir no elimina nada."
+        >
+          <div className="flex flex-col items-start gap-4">
+            <SwitchRow label="Hay cambios sin guardar" checked={conCambios} onChange={setConCambios} />
+            <BotonSalirCreacion
+              texto="Salir de la creación"
+              onClick={() => notify('Saliste de la creación', 'No quedó nada guardado.', 'info')}
+              salida={{ conCambios }}
+            />
+          </div>
+        </Demo>
+        <Demo
+          // Pregunta antes: BotonSalirCreacion abre su ventana (VentanaSalir, hecha con DialogoConfirmar) y solo al
+          // confirmar guarda y avisa.
+          title="Con borrador: salir lo guarda"
+          description="Si de verdad hay un borrador, se pasa `alGuardarYSalir` (y `retomarEn`): salir lo guarda y la bajada dice dónde retomarlo. Sin cambios, sale directo y no pregunta."
+        >
+          <div className="flex flex-col items-start gap-4">
+            <SwitchRow label="Hay cambios sin guardar" checked={conCambios} onChange={setConCambios} />
+            <BotonSalirCreacion
+              texto="Salir de la edición"
+              onClick={() => notify('Saliste de la edición', undefined, 'info')}
+              salida={{
+                conCambios,
+                retomarEn: 'Planes de formación',
+                alGuardarYSalir: () => notify('Borrador guardado', 'Lo retomas desde Planes de formación.', 'success'),
+              }}
+            />
+          </div>
+        </Demo>
+      </div>
+    </section>
+  )
+}
+
+// Pestaña dentro de pestaña (regla «pestanas-anidadas», war room del 13-oct): la principal subrayada y la de adentro en
+// píldora, como en Resultados de encuestas › Accionables. Nunca dos filas subrayadas.
+function PestanasAnidadas() {
+  return (
+    <section className="flex flex-col gap-3">
+      <div role="heading" aria-level={2} className={KICKER}>
+        Pestaña dentro de pestaña
+      </div>
+      <Demo
+        title="La principal subrayada, la de adentro en píldora"
+        description="Cuando una pestaña tiene sus propias pestañas, la de arriba es la subrayada (TabsList variant=line) y la de adentro va en píldora (TabsList por defecto). Así se lee cuál manda. Las dos, solo texto."
+      >
+        <Tabs defaultValue="accionables" className="w-full">
+          <TabsList variant="line">
+            <TabsTrigger value="participacion" className="flex-none">
+              Participación
+            </TabsTrigger>
+            <TabsTrigger value="preguntas" className="flex-none">
+              Preguntas
+            </TabsTrigger>
+            <TabsTrigger value="accionables" className="flex-none">
+              Accionables
+            </TabsTrigger>
+          </TabsList>
+          {['participacion', 'preguntas'].map((valor) => (
+            <TabsContent key={valor} value={valor} className="pt-4">
+              <Text size="sm" variant="muted">
+                Abre «Accionables» para ver la pestaña de adentro.
+              </Text>
+            </TabsContent>
+          ))}
+          <TabsContent value="accionables" className="flex flex-col items-start gap-4 pt-4">
+            <Tabs defaultValue="todos">
+              <TabsList aria-label="Estado de los accionables">
+                <TabsTrigger value="todos">Todos</TabsTrigger>
+                <TabsTrigger value="activos">Activos</TabsTrigger>
+                <TabsTrigger value="sugeridos">Sugeridos</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <Text size="sm" variant="muted">
+              Aquí va la lista de accionables.
+            </Text>
+          </TabsContent>
+        </Tabs>
+      </Demo>
+    </section>
+  )
+}
+
 // Design system › Navegación: configurador de pantallas del Workspace. Se elige un caso de uso y se prende o apaga
 // cada tipo de navegación, título, descripción, botones, pestañas y pie. La vista previa marca con nombre lo que es
 // del componente y deja el contenido como slot (espacio libre).
@@ -87,7 +188,7 @@ export function Component() {
     <PageShell width="default">
       <PageHeader
         kicker="Design system · Patrones"
-        title="Navegación"
+        title="Estructura de página"
         description="Arma una pantalla del Workspace pieza por pieza. Lo azul con nombre es parte del componente y se ve igual en todas las pantallas; lo gris rayado es un slot, el espacio libre donde va el contenido de cada una."
         actions={
           <>
@@ -323,7 +424,7 @@ export function Component() {
               <SwitchRow label="Botón secundario" checked={config.secondary} onChange={set('secondary')} />
               <SwitchRow label="Más acciones" checked={config.more} onChange={set('more')} />
               <Choice
-                label="Orbit Flow (abre el panel del agente)"
+                label="Orbit (abre el panel del agente)"
                 value={config.modoIa}
                 onChange={set('modoIa')}
                 options={[
@@ -334,7 +435,7 @@ export function Component() {
               />
               {config.modoIa !== 'none' ? (
                 <span className="text-[13px] leading-snug text-muted-foreground">
-                  Va al final de la fila de acciones, a la derecha del botón primario. Completo por defecto; solo el orbe cuando la pantalla ya viene muy cargada (cabecera larga o botones con mucho texto).
+                  Va al final de la fila de acciones, a la derecha del botón primario. Completo por defecto; solo el orbe cuando la fila tiene más de dos llamados a la acción, contando a Orbit y sin contar el «⋯» (regla del 5-oct).
                 </span>
               ) : null}
               <Choice
@@ -363,7 +464,7 @@ export function Component() {
                     ]}
                   />
                   <Hint>{TABS_HINT[config.tabs]}</Hint>
-                  <SwitchRow label="Con iconos" checked={config.tabIcons} onChange={set('tabIcons')} />
+                  {/* 13-oct: las pestañas llevan solo texto, sin icono (regla «pestanas-solo-texto», 5-oct); se quitó «Con iconos». */}
                   <SwitchRow label="Con conteo" checked={config.counts} onChange={set('counts')} />
                   {config.under === 'tabs' ? (
                     <SwitchRow label="Con «Más» si no caben" checked={config.tabMore} onChange={set('tabMore')} />
@@ -384,12 +485,13 @@ export function Component() {
                 value={config.footer}
                 onChange={set('footer')}
                 options={[
-                  { value: 'legal', label: 'Legal del marco' },
+                  { value: 'none', label: 'Sin pie' },
                   { value: 'save', label: 'Guardar cambios' },
                   { value: 'wizard', label: 'Atrás y siguiente' },
-                  { value: 'none', label: 'Sin pie' },
+                  { value: 'legal', label: 'Legal del marco' },
                 ]}
               />
+              <Hint>El pie legal del marco solo sale en las páginas de inicio: nunca en creación, edición ni subvistas.</Hint>
             </ControlSection>
 
             <ControlSection title="Contenedor">
@@ -413,6 +515,9 @@ export function Component() {
             <PartsList parts={pageParts(config)} hot={hot} onHot={setHot} />
           </div>
         </div>
+
+        <SalidaDeCreacion />
+        <PestanasAnidadas />
 
         {/* «Probar en pantalla»: la misma pantalla sin la anatomía, a tamaño real. */}
         <TryOnScreen open={trying} onOpenChange={setTrying} title={current.title}>

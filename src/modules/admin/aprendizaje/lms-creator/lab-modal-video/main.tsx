@@ -5,7 +5,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Frame,
   FrameDescription,
@@ -20,6 +19,7 @@ import {
   Separator,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { ModalAgregarVideo } from '../crear-contenido/components/video/modal-agregar-video'
 import type { DisposicionAvatar } from '../crear-contenido/components/video/panel-avatar'

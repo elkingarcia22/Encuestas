@@ -11,7 +11,6 @@ import {
 import {
   Alert,
   AlertDescription,
-  Badge,
   Button,
   Checkbox,
   Field,
@@ -33,6 +32,7 @@ import {
   ToggleGroupItem,
   cn,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import type { Pregunta, TipoPregunta } from '../borrador'
@@ -255,7 +255,7 @@ function EdicionPorTipo({
   if (t === 'multiple_choice_single' || t === 'multiple_choice_multiple' || t === 'dropdown') {
     const multiple = t === 'multiple_choice_multiple'
     /* La lista desplegable son las mismas opciones, **sin marca de correcta**: solo en encuestas, donde no se
-       califica. Se edita con esta misma fila para que añadir y quitar opciones se haga igual en los tres. */
+       califica. Se edita con esta misma fila para que agregar y quitar opciones se haga igual en los tres. */
     const sinMarca = t === 'dropdown'
     const opciones = pregunta.opciones
     const texto = (i: number, valor: string) => cambiar({ opciones: opciones.map((o, j) => (j === i ? { ...o, texto: valor } : o)) })
@@ -329,7 +329,7 @@ function EdicionPorTipo({
             onClick={() => cambiar({ opciones: [...opciones, { texto: '', correcta: false }] })}
           >
             <HugeiconsIcon icon={PlusSignIcon} data-icon="inline-start" />
-            Añadir opción
+            Agregar opción
           </Button>
         </div>
       </>
@@ -450,7 +450,7 @@ function EdicionPorTipo({
         <div>
           <Button variant="outline" size="xs" onClick={() => cambiar({ parejas: [...parejas, { a: '', b: '' }] })}>
             <HugeiconsIcon icon={PlusSignIcon} data-icon="inline-start" />
-            Añadir pareja
+            Agregar pareja
           </Button>
         </div>
       </>
@@ -492,7 +492,7 @@ function EdicionPorTipo({
         <div>
           <Button variant="outline" size="xs" onClick={() => poner([...opciones, ''])}>
             <HugeiconsIcon icon={PlusSignIcon} data-icon="inline-start" />
-            Añadir opción
+            Agregar opción
           </Button>
         </div>
       </>

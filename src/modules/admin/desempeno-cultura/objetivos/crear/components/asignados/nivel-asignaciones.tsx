@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Alert02Icon, Delete02Icon, Edit02Icon, GitForkIcon, InformationCircleIcon, LibraryIcon, UserEdit01Icon, WeightScaleIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import { Alert, AlertAction, AlertDescription, AlertTitle, Button, Text } from '@ubits/flux-ui'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { formatCount } from '../../../../encuestas/modelo/participants'
 import { colaboradoresDelCiclo, gruposDelCiclo, segmentoDeGrupos } from '../../../modelo/constructor/participantesCiclo'
@@ -15,9 +15,11 @@ import { useWeightShares } from '../../../modelo/constructor/weightShares'
 import { weightBalanceGroup } from '../../../modelo/constructor/weightBalance'
 import type { PedidoIa } from '../ia/pedido'
 import { DialogoPesos } from './dialogo-pesos'
-import { PanelAsignacion, type PedidoPanel } from './panel-asignacion'
+import { VentanaAsignacion } from './creacion/ventana-asignacion'
+import type { PedidoPanel } from './creacion/usar-creacion'
 import { AccionesConflicto, VistaConflicto } from './vista-conflicto'
 import { ListaRoster, type AccionEnBloque, type FilaAsignado } from './lista-roster'
+import { ContenedorDesplegable } from '../../../../encuestas/crear/components/participantes/contenedor-desplegable'
 
 // Un nivel del paso (por grupos o por colaborador): el registro de lo repartido. Arriba, a cuánta gente llega y cuántos
 // objetivos reparte, «Cómo ver lo asignado» y «Crear asignación»; después, los avisos que solo se ven desde aquí, cada
@@ -185,10 +187,45 @@ export function NivelAsignaciones({
     ...(sinTerminar > 0 ? [`${sinTerminar} sin terminar`] : []),
   ].join(' · ')
   const grupos =(cuadrando ?? []).map((id) => sets.find((set) => set.id === id)).filter((set): set is ObjectiveSet => set !== undefined)
+  const conObjetivos = filas.filter((fila) => (fila.set?.objectives.length ?? 0) > 0).length
+
+  // La creación de una asignación, en una ventana de trabajo encima de la pantalla (21-oct, Elkin: «dejar el de la ventana»).
+  const creacion = (
+    <VentanaAsignacion
+      pedido={pedido}
+      onCerrar={() => onPedido(null)}
+      tipo={tipo}
+      sets={todos}
+      onSets={onSets}
+      segmentBy={segmentBy}
+      onSegmentBy={(groupSegmentBy) => onAsignacion({ groupSegmentBy })}
+      sincronizar={borrador.assignment.groupsAutoInclude}
+      onSincronizar={(groupsAutoInclude) => onAsignacion({ groupsAutoInclude })}
+      empresa={empresa}
+      reglas={reglas}
+      modelo={borrador.objectiveModel}
+      nombreCiclo={borrador.name}
+      onGuardar={onGuardado}
+      onCrearConIa={onCrearConIa}
+      agenteAbierto={agenteAbierto}
+    />
+  )
+  // Como «Por grupos» y «Por persona» de Participantes (21-oct, Elkin): cada nivel es un acordeón con su título, el
+  // resumen de lo repartido debajo y, a la derecha, cuántos ya tienen objetivos. Adentro, los avisos y la lista.
+  const contenedor = (contenido: ReactNode) => (
+    <ContenedorDesplegable
+      id={tipo}
+      titulo={grupal ? 'Por grupos' : 'Por colaborador'}
+      detalle={resumenNivel}
+      conteo={filas.length > 0 ? `${conObjetivos}/${filas.length} con objetivos` : undefined}
+    >
+      {contenido}
+    </ContenedorDesplegable>
+  )
 
 
   if (enConflicto) {
-    return (
+    return contenedor(
       <div className="flex flex-col gap-4">
         <VistaConflicto control={reparto} afectadas={conflictos.length} onVolver={() => setEnConflicto(false)} onSacar={(setId, personaId) => onSets((actual) => excludeFromSet(actual, setId, personaId))} />
         <div className="flex flex-wrap items-center justify-end gap-2 border-t pt-4">
@@ -204,11 +241,13 @@ export function NivelAsignaciones({
             }}
           />
         </div>
-      </div>
+      </div>,
     )
   }
 
   return (
+    <>
+      {contenedor(
     <div className="flex flex-col gap-4">
       {sinCuadrar.length > 0 ? (
         <Alert variant="warning">
@@ -273,8 +312,6 @@ export function NivelAsignaciones({
       <ListaRoster
         tipo={tipo}
         filas={filas}
-        titulo={grupal ? 'Objetivos por grupos' : 'Objetivos por colaborador'}
-        descripcion={resumenNivel}
         conErrores={conErrores}
         onAbrir={(fila) => onPedido({ setId: fila.set?.id ?? null, fase: 'objetivos', intencion: 'manual', targetIds: [fila.targetId] })}
         onEliminar={(fila) => (fila.set ? onSets((actual) => removeTargets(actual, [{ setId: fila.set!.id, targetId: fila.targetId }])) : undefined)}
@@ -282,25 +319,10 @@ export function NivelAsignaciones({
         onMarcadas={setMarcadas}
         acciones={acciones}
       />
+    </div>,
+      )}
 
-      <PanelAsignacion
-        pedido={pedido}
-        onCerrar={() => onPedido(null)}
-        tipo={tipo}
-        sets={todos}
-        onSets={onSets}
-        segmentBy={segmentBy}
-        onSegmentBy={(groupSegmentBy) => onAsignacion({ groupSegmentBy })}
-        sincronizar={borrador.assignment.groupsAutoInclude}
-        onSincronizar={(groupsAutoInclude) => onAsignacion({ groupsAutoInclude })}
-        empresa={empresa}
-        reglas={reglas}
-        modelo={borrador.objectiveModel}
-        nombreCiclo={borrador.name}
-        onGuardar={onGuardado}
-        onCrearConIa={onCrearConIa}
-        agenteAbierto={agenteAbierto}
-      />
+      {creacion}
 
       <DialogoPesos
         abierto={cuadrando !== null}
@@ -323,7 +345,15 @@ export function NivelAsignaciones({
           soltar()
           setQuitando(false)
         }}
-      />
-    </div>
+      >
+        {/* Qué se quita y a cuántos toca: los nombres marcados y cuántos objetivos se van con ellos. */}
+        {quitando ? (() => {
+          const marcadasFilas = filas.filter((fila) => seleccion.includes(fila.id))
+          const objetivos = marcadasFilas.reduce((suma, fila) => suma + (fila.set?.objectives.length ?? 0), 0)
+          const nombres = marcadasFilas.slice(0, 3).map((fila) => fila.nombre).join(', ') + (marcadasFilas.length > 3 ? ` y ${marcadasFilas.length - 3} más` : '')
+          return <RegistroConfirmar nombre={nombres} detalle={`${formatCount(marcadasFilas.length)} ${plural(marcadasFilas.length, grupal ? 'grupo' : 'persona', unidades)} · ${formatCount(objetivos)} ${plural(objetivos, 'objetivo', 'objetivos')}`} tono="neutro" />
+        })() : null}
+      </DialogoConfirmar>
+    </>
   )
 }

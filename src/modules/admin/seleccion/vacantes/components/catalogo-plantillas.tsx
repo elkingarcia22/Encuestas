@@ -43,6 +43,7 @@ import { CATALOGO_PLANTILLAS, CATEGORIAS_PLANTILLA, type PlantillaCatalogo } fro
 import { DetallePlantilla } from './detalle-plantilla'
 import { creacionDesdePlantilla } from '../../propuestas/desde-creacion'
 import { noSeGuardo } from '../../propuestas/simular'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import {
   duplicarPlantilla,
   eliminarPlantillaPropia,
@@ -321,8 +322,8 @@ export function CatalogoPlantillas({ open, onOpenChange, onUsar, base = '/admin/
           ) : (
             <Empty>
               <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
+                <EmptyMedia variant="default">
+                  <ImagenGlass nombre="glass-search" />
                 </EmptyMedia>
                 <EmptyTitle>No encontramos plantillas</EmptyTitle>
                 <EmptyDescription>{busqueda.trim() ? `Ninguna coincide con «${busqueda.trim()}».` : 'No hay plantillas en esta categoría.'} Prueba con otro nombre u otra categoría.</EmptyDescription>

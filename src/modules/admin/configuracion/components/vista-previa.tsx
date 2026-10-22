@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Image01Icon, Menu01Icon, Notification03Icon, Search01Icon } from '@hugeicons/core-free-icons'
+import { Menu01Icon, Notification03Icon, Search01Icon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarFallback,
@@ -24,6 +24,7 @@ import {
   Text,
   cn,
 } from '@ubits/flux-ui'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import avatar from '@/shared/assets/avatar-carolina.jpg'
 
@@ -66,8 +67,9 @@ export function VistaInicioSesion({ logo, fondo }: { logo?: string; fondo?: stri
         <div className="hidden bg-muted sm:flex">
           <Empty>
             <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <HugeiconsIcon icon={Image01Icon} />
+              {/* Ilustración glass (13-oct). Sin PrimeraVez: es una miniatura decorativa sin título ni acción. */}
+              <EmptyMedia variant="default">
+                <ImagenGlass nombre="glass-gallery" />
               </EmptyMedia>
               <EmptyDescription>Aquí va tu imagen de fondo</EmptyDescription>
             </EmptyHeader>

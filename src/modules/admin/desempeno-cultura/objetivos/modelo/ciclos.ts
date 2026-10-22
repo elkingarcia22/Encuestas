@@ -57,11 +57,11 @@ export const CICLOS: readonly Ciclo[] = [
   { id: 'tecnologia-q1-2027', nombre: 'Tecnología Q1 2027', periodo: 'Trimestre', inicio: dia(87), cierre: dia(177), estado: 'Por iniciar', objetivos: 4, personas: 35, ...SIN_LECTURA, anterior: null },
   { id: 'onboarding-nov', nombre: 'Objetivos de onboarding · Noviembre', periodo: 'Mes', inicio: dia(26), cierre: dia(55), estado: 'Borrador', objetivos: 2, personas: 0, ...SIN_LECTURA, anterior: null },
   // Finalizados: la historia que alimenta la curva de objetivos cumplidos.
-  { id: 'metas-comerciales-q2', nombre: 'Metas comerciales Q2', periodo: 'Trimestre', inicio: '01 abr 2026', cierre: '30 jun 2026', estado: 'Finalizado', objetivos: 4, personas: 37, avance: 96, cumplidos: 75, reportando: 100, anterior: { avance: 88, cumplidos: 50, reportando: 97 } },
-  { id: 'servicio-cliente-q2', nombre: 'Servicio al cliente Q2', periodo: 'Trimestre', inicio: '01 abr 2026', cierre: '30 jun 2026', estado: 'Finalizado', objetivos: 3, personas: 52, avance: 74, cumplidos: 33, reportando: 96, anterior: { avance: 70, cumplidos: 33, reportando: 92 } },
-  { id: 'compania-i-semestre', nombre: 'Objetivos de compañía · I semestre', periodo: 'Semestre', inicio: '01 ene 2026', cierre: '30 jun 2026', estado: 'Finalizado', objetivos: 10, personas: 305, avance: 71, cumplidos: 30, reportando: 98, anterior: { avance: 66, cumplidos: 30, reportando: 95 } },
-  { id: 'metas-comerciales-q1', nombre: 'Metas comerciales Q1', periodo: 'Trimestre', inicio: '01 ene 2026', cierre: '31 mar 2026', estado: 'Finalizado', objetivos: 4, personas: 36, avance: 88, cumplidos: 50, reportando: 97, anterior: { avance: 81, cumplidos: 50, reportando: 94 } },
-  { id: 'eficiencia-i-semestre', nombre: 'Eficiencia operativa · I semestre', periodo: 'Semestre', inicio: '01 ene 2026', cierre: '30 jun 2026', estado: 'Finalizado', objetivos: 6, personas: 118, avance: 62, cumplidos: 33, reportando: 95, anterior: { avance: 58, cumplidos: 17, reportando: 93 } },
+  { id: 'metas-comerciales-q2', nombre: 'Metas comerciales Q2', periodo: 'Trimestre', inicio: '1 abr 2026', cierre: '30 jun 2026', estado: 'Finalizado', objetivos: 4, personas: 37, avance: 96, cumplidos: 75, reportando: 100, anterior: { avance: 88, cumplidos: 50, reportando: 97 } },
+  { id: 'servicio-cliente-q2', nombre: 'Servicio al cliente Q2', periodo: 'Trimestre', inicio: '1 abr 2026', cierre: '30 jun 2026', estado: 'Finalizado', objetivos: 3, personas: 52, avance: 74, cumplidos: 33, reportando: 96, anterior: { avance: 70, cumplidos: 33, reportando: 92 } },
+  { id: 'compania-i-semestre', nombre: 'Objetivos de compañía · I semestre', periodo: 'Semestre', inicio: '1 ene 2026', cierre: '30 jun 2026', estado: 'Finalizado', objetivos: 10, personas: 305, avance: 71, cumplidos: 30, reportando: 98, anterior: { avance: 66, cumplidos: 30, reportando: 95 } },
+  { id: 'metas-comerciales-q1', nombre: 'Metas comerciales Q1', periodo: 'Trimestre', inicio: '1 ene 2026', cierre: '31 mar 2026', estado: 'Finalizado', objetivos: 4, personas: 36, avance: 88, cumplidos: 50, reportando: 97, anterior: { avance: 81, cumplidos: 50, reportando: 94 } },
+  { id: 'eficiencia-i-semestre', nombre: 'Eficiencia operativa · I semestre', periodo: 'Semestre', inicio: '1 ene 2026', cierre: '30 jun 2026', estado: 'Finalizado', objetivos: 6, personas: 118, avance: 62, cumplidos: 33, reportando: 95, anterior: { avance: 58, cumplidos: 17, reportando: 93 } },
 ]
 
 /** Lo que ya está en marcha o terminó: lo único con lectura de avance. */
@@ -73,6 +73,12 @@ export function diasParaCierre(ciclo: Pick<Ciclo, 'cierre'>, hoy: Date = startOf
   return cierre ? Math.round((cierre.getTime() - hoy.getTime()) / 86_400_000) : Number.POSITIVE_INFINITY
 }
 
+/** Días que faltan para el inicio (negativo si ya pasó). */
+export function diasParaInicio(ciclo: Pick<Ciclo, 'inicio'>, hoy: Date = startOfToday()): number {
+  const inicio = parseSurveyDate(ciclo.inicio)
+  return inicio ? Math.round((inicio.getTime() - hoy.getTime()) / 86_400_000) : Number.POSITIVE_INFINITY
+}
+
 /** Qué parte del calendario del ciclo ya pasó, en %: el avance que se esperaría hoy si fuera parejo. */
 export function avanceEsperado(ciclo: Pick<Ciclo, 'inicio' | 'cierre'>, hoy: Date = startOfToday()): number {
   const inicio = parseSurveyDate(ciclo.inicio)
@@ -82,5 +88,5 @@ export function avanceEsperado(ciclo: Pick<Ciclo, 'inicio' | 'cierre'>, hoy: Dat
   return Math.round(Math.min(1, Math.max(0, transcurrido)) * 100)
 }
 
-/** `125` → `"125%"`, `7.5` → `"7,5%"`. */
-export const formatoAvance = (valor: number) => `${valor.toLocaleString('es-CO', { maximumFractionDigits: 1 })}%`
+/** `125` → `"125 %"`, `7.5` → `"7,5 %"` (con espacio, 13-oct). */
+export const formatoAvance = (valor: number) => `${valor.toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`

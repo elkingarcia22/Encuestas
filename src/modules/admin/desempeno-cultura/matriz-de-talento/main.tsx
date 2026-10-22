@@ -1,17 +1,9 @@
-import { PlaceholderPage } from '@/shared/components/PlaceholderPage'
-import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
+import { crearProximamente } from '@/modules/design-system/estados/pantalla-proximamente'
 
-// Todavía sin maquetar (aún no hay HU), pero con el marco de toda pantalla (decisión 7 de la auditoría, 5-oct): título
-// del menú, la descripción de UBITS hoy (docs/plataforma-ubits, «Matriz de talento») y el espacio libre.
-export function Component() {
-  return (
-    <PageShell>
-      <PageHeader title="Matriz de talento" description="Cruza las evaluaciones 360 con los objetivos para analizar el talento de tus equipos." />
-      <PageContent>
-        <PlaceholderPage title="Matriz de talento" path="/admin/desempeno-cultura/matriz-de-talento" />
-      </PageContent>
-    </PageShell>
-  )
-}
-
-Component.displayName = 'AdminDesempenoCulturaMatrizDeTalentoPage'
+// Sin maquetar todavía: sigue en el menú con «Próximamente» y abre la espera del sistema (regla «pantallas-pendientes», 13-oct).
+export const { Component } = crearProximamente(
+  'Matriz de talento',
+  'Cruza las evaluaciones 360 con los objetivos para analizar el talento de tus equipos.',
+  'El cruce de las evaluaciones 360 con los objetivos, para ver el talento de cada equipo.',
+  'AdminDesempenoCulturaMatrizDeTalentoPage',
+)

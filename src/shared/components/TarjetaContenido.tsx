@@ -84,6 +84,11 @@ export type TarjetaContenidoProps = {
    */
   sinImagen?: ReactNode
   /**
+   * Lo que se pinta **encima de la portada**, dentro de su recuadro: hoy, el play del tráiler en la vista previa del
+   * paso 1. Es una capa absoluta; la tarjeta no sabe qué lleva dentro.
+   */
+  sobrePortada?: ReactNode
+  /**
    * Solo acostada: el asidero de arrastre, a la izquierda del todo y pegado al borde de la tarjeta. Lo pasa quien
    * pone la tarjeta en una lista que se reordena arrastrando.
    */
@@ -195,6 +200,7 @@ function DePie({
   estado,
   onDescargarCertificado,
   sinImagen,
+  sobrePortada,
   acciones,
   encimaIzquierda,
   encimaDerecha,
@@ -234,6 +240,8 @@ function DePie({
             </div>
           )}
         </div>
+
+        {sobrePortada}
 
         {/* Los colores suaves del Badge son translúcidos: sobre una foto se pierden. Va sobre una base
             del color de la tarjeta, del tamaño exacto del badge (de ahí inline-flex y la esquina sm,
@@ -398,6 +406,7 @@ function Acostada({
   progreso,
   estado,
   sinImagen,
+  sobrePortada,
   acciones,
   asa,
   posicion,
@@ -457,6 +466,7 @@ function Acostada({
               {sinImagen ?? <HugeiconsIcon icon={Mortarboard01Icon} size={20} aria-hidden="true" />}
             </div>
           )}
+          {sobrePortada}
           {barra > 0 ? (
             <div className="absolute inset-x-0 bottom-0 p-1.5">
               <Progress value={barra} aria-label={`Avance de ${titulo}`} className="**:data-[slot=progress-track]:h-1.5" />

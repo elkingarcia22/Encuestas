@@ -52,8 +52,9 @@ import {
   Text,
   Tooltip,
   TooltipTrigger,
-  toast,
 } from '@ubits/flux-ui'
+import { useNavigate } from 'react-router'
+import { notify } from '@/shared/components/notify'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { CloseButton } from '@/shared/components/CloseButton'
@@ -213,7 +214,7 @@ function CargaMasiva() {
     ;[18, 42, 77, 104, 118].forEach((valor, i) => despues(() => setCreados(valor), 900 * (i + 1)))
     despues(() => {
       setMasivo('listo')
-      toast.add({ type: 'success', title: 'Carga masiva terminada', description: 'También te enviamos el resultado por correo.' })
+      notify('Carga masiva terminada', 'También te enviamos el resultado por correo.', 'success')
     }, 5000)
   }
 
@@ -250,7 +251,7 @@ function CargaMasiva() {
           porcentaje={porcentaje}
           onElegir={subir}
           onQuitar={reiniciar}
-          onDescargarErrores={() => toast.add({ type: 'info', title: 'Se descargó el detalle de errores' })}
+          onDescargarErrores={() => notify('Se descargó el detalle de errores', undefined, 'info')}
           bloqueado={masivo === 'corriendo'}
         />
 
@@ -338,6 +339,7 @@ const COSTO_VIDEO = 320
 const PASOS_IA = ['Guion', 'Escenas', 'Voz del video', 'Video'] as const
 
 function GeneracionIA() {
+  const navigate = useNavigate()
   const despues = useTemporizadores()
   const [saldoBajo, setSaldoBajo] = useState(false)
   const [saldo, setSaldo] = useState(500_000)
@@ -429,7 +431,7 @@ function GeneracionIA() {
             </AlertTitle>
             <AlertDescription>La página «Video» ya está en Recursos.</AlertDescription>
             <AlertAction>
-              <Button variant="outline" size="sm" onClick={() => toast.add({ type: 'info', title: 'Se abriría la página en Recursos' })}>
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/aprendizaje/lms-creator/contenidos')}>
                 Ver página
               </Button>
             </AlertAction>

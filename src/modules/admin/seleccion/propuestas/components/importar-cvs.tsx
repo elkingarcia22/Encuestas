@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type MouseEvent, type ReactNode } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
@@ -43,7 +43,10 @@ import {
   FieldLabel,
   FieldTitle,
   Frame,
+  FrameDescription,
+  FrameHeader,
   FramePanel,
+  FrameTitle,
   Heading,
   IconTile,
   Input,
@@ -58,22 +61,25 @@ import {
   SelectTrigger,
   SelectValue,
   Separator,
+  Skeleton,
   Spinner,
   Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
   Text,
   Textarea,
   cn,
-  toast,
   useFileUpload,
-  type DataGridListConfig,
 } from '@ubits/flux-ui'
 import { Badge } from '@/shared/components/Badge'
 import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
 import { BotonIcono } from '@/shared/components/BotonIcono'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import { notify, notifyAction } from '@/shared/components/notify'
-import { SinResultados } from '@/shared/components/SinResultados'
-import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
-import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { publishProcess, type LiveProcess } from '@/shared/components/process-store'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
@@ -105,15 +111,17 @@ import {
   type LoteCvs,
 } from '../importacion'
 import { avisoDeError, noSeGuardo } from '../simular'
-import { FiltroChip } from './filtro-chip'
-import { SelectorEtiquetas } from './selector-etiquetas'
-import { etiquetasDeLaBase, usePersonasDeLaBase } from '../base'
+import { FiltroChip } from '@/modules/design-system/navegacion/filtro-chip'
+import { usePersonasDeLaBase } from '../base'
 import { AvisoVacanteCerrada } from './tablero-candidatos'
 import { baseDeCandidatos } from '../base'
 import { ListaDatos } from '../../vacantes/crear/components/piezas-resumen'
-import { Esqueleto, LineaEsqueleto, useCarga } from './carga'
+import { Esqueleto, LineaEsqueleto, useCarga } from '@/modules/design-system/estados/carga'
 import type { Bloqueo } from './use-proceso'
 import type { Persona } from '../personas'
+import { AnimatePresence, motion } from 'motion/react'
+import { Flotar, RESORTE, RESORTE_VIVO } from './animacion'
+import { CURVA, FilaAnimada, entrada } from './movimiento'
 
 // Importar hojas de vida, de punta a punta (24 sep, Nicolás: «deberíamos tener, si no hay, un empty state con el file
 // uploader ahí, y si ya tiene algo que la opción sea diferente… esfuérzate»; completo el 25 sep: «hacer lo mismo con
@@ -301,12 +309,8 @@ export function useImportaciones(opciones: Opciones) {
   // Cualquier camino que intente importar con la vacante cerrada (un botón viejo, soltar un archivo) termina aquí.
   const bloqueada = () => {
     if (!bloqueo) return false
-    toast.add({
-      type: 'warning',
-      title: bloqueo.titulo,
-      description: bloqueo.onReabrir ? 'Reábrela para importar CVs.' : 'No puedes importar CVs aquí.',
-      ...(bloqueo.onReabrir ? { actionProps: { children: 'Reabrir la vacante', onClick: bloqueo.onReabrir } } : {}),
-    })
+    if (bloqueo.onReabrir) notifyAction(bloqueo.titulo, 'Reábrela para importar CVs.', { label: 'Reabrir la vacante', onClick: bloqueo.onReabrir }, 'warning')
+    else notify(bloqueo.titulo, 'No puedes importar CVs aquí.', 'warning')
     return true
   }
 
@@ -590,7 +594,7 @@ export function ZonaParaSoltar({
   detalle,
   onArchivos,
   acepta = ACEPTA,
-  soltando = 'Suéltalas para empezar',
+  soltando = 'Suéltalos para empezar',
   boton = 'Elegir archivos',
 }: {
   grande?: boolean
@@ -640,15 +644,26 @@ export function ZonaParaSoltar({
   return (
     <div className={cn(borde, 'flex min-h-80 flex-col items-center justify-center gap-4 p-8 text-center')} {...soltable}>
       {campo}
-      <span
-        className={cn('flex size-16 items-center justify-center rounded-full transition-colors', encima ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground')}
-      >
-        <HugeiconsIcon icon={Upload01Icon} size={24} />
-      </span>
+      {/* La ilustración glass de subir, no un icono de línea: es el estado vacío de la ventana (regla de Cristian, 9-oct).
+          Flota mientras espera; con archivos encima se levanta y se inclina, como si fuera a recibirlos. */}
+      <Flotar>
+        <motion.span
+          className="inline-flex"
+          animate={encima ? { y: -10, scale: 1.14, rotate: -6 } : { y: 0, scale: 1, rotate: 0 }}
+          transition={RESORTE_VIVO}
+        >
+          <ImagenGlass nombre="glass-arrow-up-square" />
+        </motion.span>
+      </Flotar>
       <span className="flex flex-col items-center gap-2">
-        <Heading as="h3" level={5}>
-          {encima ? soltando : titulo}
-        </Heading>
+        {/* «Suelta aquí…» cambia a «Suéltalos…» con un fundido, sin saltar. */}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span key={encima ? 'soltando' : 'titulo'} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.16 }}>
+            <Heading as="h3" level={5}>
+              {encima ? soltando : titulo}
+            </Heading>
+          </motion.span>
+        </AnimatePresence>
         {descripcion ? (
           <Text as="p" size="sm" variant="muted">
             {descripcion}
@@ -757,11 +772,7 @@ function DialogoImportar({
   const [avisar, setAvisar] = useState(false)
   const [aviso, setAviso] = useState(TEXTO_AVISO_ENTRADA)
   const [acepto, setAcepto] = useState(false)
-  const [etiquetas, setEtiquetas] = useState<string[]>([])
   const [leyendoTexto, setLeyendoTexto] = useState(false)
-  // A la base van con etiquetas (las que reemplazan a las carpetas): las que ya existen y las que se escriban.
-  const personasBase = usePersonasDeLaBase()
-  const disponibles = useMemo(() => etiquetasDeLaBase(personasBase), [personasBase])
   const autorizacion = useAutorizacion()
 
   // Cada vez que se abre, con lo que se soltó (o vacía) y en la primera etapa (se ajusta en el render).
@@ -780,7 +791,6 @@ function DialogoImportar({
         setAvisar(false)
         setAviso(TEXTO_AVISO_ENTRADA)
         setAcepto(false)
-        setEtiquetas([])
       }
     }
   }
@@ -813,7 +823,6 @@ function DialogoImportar({
       origen: origenElegido,
       referidoPor: origenElegido === 'referido' ? referidoPor.trim() || undefined : undefined,
       aviso: avisar && aviso.trim() ? aviso.trim() : undefined,
-      etiquetas: vacante ? undefined : etiquetas,
     })
   }
 
@@ -884,8 +893,18 @@ function DialogoImportar({
               </div>
 
               <AttachmentGroup className="max-h-[13rem] flex-col! items-stretch! gap-1.5 overflow-x-hidden! overflow-y-auto!">
-                {[...validos, ...elegidos.filter((elegido) => elegido.problema)].map((elegido) => (
-                  <Attachment key={elegido.id} state={elegido.problema ? 'error' : 'done'} size="sm" className="w-full! min-w-0!">
+                {/* Los archivos entran uno tras otro; el que se quita se encoge y los demás suben. */}
+                <AnimatePresence initial={true}>
+                {[...validos, ...elegidos.filter((elegido) => elegido.problema)].map((elegido, puesto) => (
+                  <motion.div
+                    key={elegido.id}
+                    layout="position"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.15 } }}
+                    transition={{ duration: 0.3, delay: Math.min(puesto, 10) * 0.035, ease: CURVA, layout: RESORTE }}
+                  >
+                  <Attachment state={elegido.problema ? 'error' : 'done'} size="sm" className="w-full! min-w-0!">
                     <AttachmentMedia>
                       <HugeiconsIcon icon={elegido.tipo === 'zip' ? FileZipIcon : elegido.problema ? FileRemoveIcon : File01Icon} size={16} />
                     </AttachmentMedia>
@@ -899,7 +918,9 @@ function DialogoImportar({
                       </BotonIcono>
                     </AttachmentActions>
                   </Attachment>
+                  </motion.div>
                 ))}
+                </AnimatePresence>
               </AttachmentGroup>
 
               {/* Más de 200: no se obliga a quitar nada; se parte en lotes que se leen uno detrás de otro. */}
@@ -948,13 +969,7 @@ function DialogoImportar({
                     <Input value={referidoPor} onChange={(evento) => setReferidoPor(evento.target.value)} placeholder="Por ejemplo: Juan Pérez, de Ventas" />
                   </Field>
                 ) : null}
-                {vacante ? null : (
-                  <Field className="sm:col-span-2">
-                    <FieldLabel htmlFor="etiquetas-lote">Etiquetas para todas</FieldLabel>
-                    <SelectorEtiquetas id="etiquetas-lote" valor={etiquetas} onCambiar={setEtiquetas} disponibles={disponibles} placeholder="Por ejemplo: Feria Uniandes 2026" />
-                    <FieldDescription>Con ellas las encuentras después y armas búsquedas guardadas.</FieldDescription>
-                  </Field>
-                )}
+                {/* Sin etiquetas para el lote (13 oct, PM: a las personas no se les ponen etiquetas). */}
                 {vacante ? (
                   <Field>
                     <FieldLabel>Entran a</FieldLabel>
@@ -1154,204 +1169,34 @@ const lineaDeLote = (lote: LoteCvs, vacante?: VacanteUI) =>
     .filter(Boolean)
     .join(' · ')
 
-// La tabla de lotes es la del sistema (`TablaDatos`; auditoría del 5-oct, decisiones 1 y 2): arriba el conteo, el
-// buscador y el filtro por estado en su columna; cada columna se ordena; y abajo, el paginador de siempre. Las columnas van
-// fuera del componente (si no, el filtro se cierra al marcar) y leen de un contexto lo que necesitan de la pantalla. Lo
-// que se hace con un lote sigue siendo su botón de la última columna, según cómo va (Nicolás, 29 sep), y tocar la fila
-// abre el detalle de cada archivo.
-type FilaLote = LoteCvs & { reciente: number; situacion: string; total: number; entraron: number; subidoPor: string }
-
-const ContextoLotes = createContext<{ importaciones: Importaciones | null; vacante?: VacanteUI }>({ importaciones: null })
-
-// El estado de una carga en una palabra, para filtrar y ordenar: el mismo que dice `EstadoCarga`.
-const SITUACIONES = ['Cargando', 'En cola', 'Detenida', 'Se cortó la conexión', 'Deshecha', 'Falta confirmar', 'Con errores', 'Cargado']
-
-function situacionDe(lote: LoteCvs) {
-  const cuentas = cuentasDe(lote)
-  if (lote.estado === 'leyendo') return 'Cargando'
-  if (lote.estado === 'en-cola') return 'En cola'
-  if (lote.estado === 'detenido') return lote.interrumpido ? 'Se cortó la conexión' : 'Detenida'
-  if (lote.retirado) return 'Deshecha'
-  if (cuentas.dudosos) return 'Falta confirmar'
-  if (cuentas.fallidos) return 'Con errores'
-  return 'Cargado'
-}
-
-// Lo marcado en el filtro de una columna.
-const marcadosEn = (filtros: { id: string; value: unknown }[], id: string) => {
-  const valor = filtros.find((filtro) => filtro.id === id)?.value
-  return Array.isArray(valor) ? valor.map(String) : valor ? [String(valor)] : []
-}
-
-// El orden de la tabla: por la columna que se pidió («-» adelante, de mayor a menor); sin orden, el más nuevo primero.
-function ordenarLotes(filas: FilaLote[], orden: string | undefined) {
-  if (!orden) return filas
-  const desc = orden.startsWith('-')
-  const campo = (desc ? orden.slice(1) : orden) as keyof FilaLote
-  return [...filas].sort((a, b) => {
-    const va = a[campo]
-    const vb = b[campo]
-    const r = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va ?? '').localeCompare(String(vb ?? ''), 'es')
-    return desc ? -r : r
-  })
-}
-
-// El archivo: su nombre abre el detalle del lote, con su icono, y debajo de dónde vienen y a qué etapa entran.
-function CeldaArchivo({ lote }: { lote: FilaLote }) {
-  const { importaciones, vacante } = useContext(ContextoLotes)
-  return (
-    <span className="flex min-w-0 items-center gap-3" data-lote={lote.id}>
-      <IconTile variant="soft" size="sm" className="shrink-0">
-        <HugeiconsIcon icon={FileImportIcon} size={16} />
-      </IconTile>
-      <CeldaTitulo titulo={lote.nombre} detalle={lineaDeLote(lote, vacante)} onClick={() => importaciones?.ver(lote.id)} />
-    </span>
-  )
-}
-
-// Cuántos CVs traía y, al terminar, quiénes entraron (se ven desde aquí, aunque falte confirmar a alguien del mismo lote).
-function CeldaCvs({ lote }: { lote: FilaLote }) {
-  const { importaciones } = useContext(ContextoLotes)
-  return (
-    <span className="flex min-w-0 flex-col">
-      <Text as="span" weight="medium" className="tabular-nums">
-        {lote.total}
-      </Text>
-      {lote.estado === 'terminado' && lote.entraron ? (
-        <Button
-          variant="link"
-          size="sm"
-          className="h-auto! w-fit p-0! tabular-nums"
-          onClick={() => (importaciones?.verEntraron ? importaciones.verEntraron(lote.id) : importaciones?.ver(lote.id))}
-        >
-          {lote.entraron === 1 ? '1 entró' : `${lote.entraron} entraron`}
-        </Button>
-      ) : lote.estado === 'terminado' ? (
-        <Text as="span" variant="muted" size="sm">
-          Nadie entró
-        </Text>
-      ) : null}
-    </span>
-  )
-}
-
-// Lo que se puede hacer con un lote según cómo va: detenerlo, seguir, confirmar lo dudoso, ver a quiénes entraron o, si no,
-// el detalle de cada archivo.
-function AccionDeLote({ lote }: { lote: FilaLote }) {
-  const { importaciones } = useContext(ContextoLotes)
-  if (!importaciones) return null
-  const cuentas = cuentasDe(lote)
-  if (lote.estado === 'leyendo')
-    return (
-      <Button variant="outline" size="sm" onClick={() => importaciones.detener(lote.id)}>
-        <HugeiconsIcon icon={PauseIcon} size={14} />
-        Detener
-      </Button>
-    )
-  if (lote.estado === 'en-cola')
-    return (
-      <Text as="span" variant="muted" size="sm">
-        Espera su turno
-      </Text>
-    )
-  if (lote.estado === 'detenido')
-    return (
-      <Button variant={lote.interrumpido ? 'default' : 'outline'} size="sm" onClick={() => importaciones.seguir(lote.id)}>
-        <HugeiconsIcon icon={PlayIcon} size={14} />
-        Seguir cargando
-      </Button>
-    )
-  if (cuentas.dudosos)
-    return (
-      <Button size="sm" onClick={() => importaciones.revisar(lote.id)}>
-        Confirmar {cuentas.dudosos}
-      </Button>
-    )
-  if (lote.entraron)
-    return (
-      <Button variant="outline" size="sm" onClick={() => (importaciones.verEntraron ? importaciones.verEntraron(lote.id) : importaciones.ver(lote.id))}>
-        Ver a quiénes
-      </Button>
-    )
-  return (
-    <Button variant="outline" size="sm" onClick={() => importaciones.ver(lote.id)}>
-      Ver el detalle
-    </Button>
-  )
-}
-
-const COLUMNAS_LOTES: DataGridListConfig<FilaLote>['columns'] = [
-  {
-    accessorKey: 'reciente',
-    header: 'Fecha',
-    size: 130,
-    cell: ({ row }) => (
-      <Text as="span" size="sm" className="truncate">
-        {row.original.fecha}
-      </Text>
-    ),
-  },
-  { accessorKey: 'nombre', header: 'Archivo', size: 310, cell: ({ row }) => <CeldaArchivo lote={row.original} /> },
-  { accessorKey: 'situacion', header: 'Estado', size: 190, cell: ({ row }) => <EstadoCarga lote={row.original} /> },
-  { accessorKey: 'total', header: 'CVs', size: 110, cell: ({ row }) => <CeldaCvs lote={row.original} /> },
-  {
-    accessorKey: 'subidoPor',
-    header: 'Subido por',
-    size: 120,
-    cell: ({ row }) => (
-      <Text as="span" size="sm" className="truncate">
-        {row.original.subidoPor}
-      </Text>
-    ),
-  },
-  {
-    id: 'acciones',
-    header: 'Acciones',
-    size: 170,
-    enableSorting: false,
-    enableResizing: false,
-    cell: ({ row }) => <AccionDeLote lote={row.original} />,
-  },
-]
-
-const FILTROS_LOTES: DataGridListConfig<FilaLote>['columnFilters'] = [
-  { id: 'situacion', label: 'Estado', type: 'select', multiple: true, options: SITUACIONES.map((uno) => ({ value: uno, label: uno })) },
-]
-
 export function PestanaCvs({ importaciones, vacante }: { importaciones: Importaciones; vacante?: VacanteUI }) {
   const { lotes, bloqueo } = importaciones
   // Los lotes cargan al abrir la pestaña (no cada vez que uno avanza: eso ya lo dice su fila). Lo fijo —el título, la
   // zona para soltar y los títulos de la tabla— se queda; las cuentas y las filas van en gris.
   const cargando = useCarga()
-  const [busqueda, setBusqueda] = useState('')
-  const [filtros, setFiltros] = useState<{ id: string; value: unknown }[]>([])
-  const [orden, setOrden] = useState<string | undefined>(undefined)
-  const [pagina, setPagina] = useState(1)
-  const [porPagina, setPorPagina] = useState(10)
-  // Limpiar la búsqueda y el filtro vuelve a montar la tabla.
-  const [version, setVersion] = useState(0)
   const hojas = lotes.reduce((suma, lote) => suma + lote.archivos.length, 0)
   const pendientes = lotes.reduce((suma, lote) => suma + cuentasDe(lote).dudosos, 0)
   const recibir = (archivos: File[]) =>
     importaciones.abrir(archivos.reduce<Elegido[]>((lista, archivo) => [...lista, elegidoDe(archivo.name, archivo.size, lista, archivo)], []))
+  const parar = (evento: MouseEvent) => evento.stopPropagation()
   // Cerrada, no entran hojas de vida nuevas: el aviso trae el botón para reabrirla y la zona para soltar no está.
   const cerrada = vacante && bloqueo ? <AvisoVacanteCerrada vacante={vacante} onReabrir={bloqueo.onReabrir} /> : null
 
+  // Como toda sección, en su marco gris con el título y la bajada en el gris (regla de Cristian); antes era una tarjeta
+  // blanca con el título adentro.
   if (!lotes.length)
     return (
-      <>
-        {cerrada}
-        <div className="flex flex-col gap-6 px-5 py-6">
-          <div className="flex flex-col gap-1">
-            <Text as="div" weight="medium">
-              {bloqueo ? 'No se importó ningún CV' : 'Importa los CVs que te llegaron por fuera'}
-            </Text>
-            <Text as="p" variant="muted" size="sm">
-              {bloqueo
-                ? 'Con la vacante cerrada no entran CVs nuevos. Al reabrirla, así funciona:'
-                : 'Referidos, ferias de empleo, correos: la IA las lee, las compara con los requisitos y las deja en la vacante.'}
-            </Text>
-          </div>
+      <Frame>
+        <FrameHeader>
+          <FrameTitle>{bloqueo ? 'No se importó ningún CV' : 'Importa los CVs que te llegaron por fuera'}</FrameTitle>
+          <FrameDescription>
+            {bloqueo
+              ? 'Con la vacante cerrada no entran CVs nuevos. Al reabrirla, así funciona:'
+              : 'Referidos, ferias de empleo, correos: la IA los lee, los compara con los requisitos y los deja en la vacante.'}
+          </FrameDescription>
+        </FrameHeader>
+        <FramePanel className="flex flex-col gap-6">
+          {cerrada}
           {bloqueo ? null : (
             <ZonaParaSoltar
               grande
@@ -1363,107 +1208,146 @@ export function PestanaCvs({ importaciones, vacante }: { importaciones: Importac
           )}
           <Separator />
           <ComoFunciona vacante={vacante} />
-        </div>
-      </>
+        </FramePanel>
+      </Frame>
     )
 
-  const filas = lotes.map<FilaLote>((lote, indice) => ({
-    ...lote,
-    reciente: lotes.length - indice,
-    situacion: situacionDe(lote),
-    total: cuentasDe(lote).total,
-    entraron: lote.archivos.filter((archivo) => archivo.candidaturaId && !archivo.sacado).length,
-    subidoPor: lote.quien === QUIEN_MUEVE ? 'Tú' : lote.quien,
-  }))
-  const texto = busqueda.trim().toLowerCase()
-  const estados = marcadosEn(filtros, 'situacion')
-  const resultado = ordenarLotes(
-    filas.filter((fila) => (!texto || `${fila.nombre} ${lineaDeLote(fila, vacante)}`.toLowerCase().includes(texto)) && (!estados.length || estados.includes(fila.situacion))),
-    orden,
-  )
-  const limpiar = () => {
-    setBusqueda('')
-    setFiltros([])
-    setPagina(1)
-    setVersion((antes) => antes + 1)
-  }
-  const config: DataGridListConfig<FilaLote> = {
-    columns: COLUMNAS_LOTES,
-    columnFilters: FILTROS_LOTES,
-    onColumnFiltersChange: (nuevos) => {
-      setFiltros(nuevos)
-      setPagina(1)
-    },
-    sort: { onSortChange: setOrden },
-    search: {
-      placeholder: 'Buscar lote',
-      onSearch: (q) => {
-        setBusqueda(q)
-        setPagina(1)
-      },
-    },
-    emptyState: { type: 'no-results', customComponent: <SinResultados busqueda={busqueda} filtrosActivos={estados.length ? 1 : 0} onLimpiar={limpiar} /> },
-  }
-  // Tocar la fila abre el detalle del lote, salvo lo que ya hace algo propio (su botón, el enlace de quiénes entraron).
-  // `DataGridList` no deja pasar el clic por fila, así que se escucha en el marco y se busca el lote de la fila tocada.
-  const abrirDesdeFila = (evento: MouseEvent<HTMLDivElement>) => {
-    const destino = evento.target as HTMLElement
-    if (destino.closest('a, button, input, label, [role="checkbox"], [role="menuitem"], [aria-haspopup]')) return
-    if (window.getSelection()?.toString()) return
-    const id = destino.closest('tbody tr')?.querySelector<HTMLElement>('[data-lote]')?.dataset.lote
-    if (id) importaciones.ver(id)
-  }
-
   return (
-    <>
-      {cerrada}
-      <div className="flex flex-col gap-4 px-5 py-4">
-        <div className="flex min-w-0 flex-col gap-1">
-          <Text as="div" weight="medium">
-            CVs importados
-          </Text>
-          {cargando ? (
-            // El anuncio de la carga va aquí, en la cuenta; las filas grises de la tabla quedan ocultas para el lector.
-            <Esqueleto etiqueta="Cargando los lotes">
-              <LineaEsqueleto ancho="w-96 max-w-full" />
-            </Esqueleto>
-          ) : (
-            <Text as="p" variant="muted" size="sm">
-              {hojas} {hojas === 1 ? 'archivo' : 'archivos'} en {lotes.length} {lotes.length === 1 ? 'lote' : 'lotes'}.{' '}
-              {pendientes ? `${pendientes} ${pendientes === 1 ? 'espera' : 'esperan'} que confirmes un dato.` : 'No hay nada pendiente.'}
-            </Text>
-          )}
-        </div>
-        {bloqueo ? null : (
-          <ZonaParaSoltar
-            titulo="O suelta aquí más CVs"
-            detalle={`PDF, Word, foto o ZIP · de a ${LIMITE_POR_LOTE} por lote · se leen en segundo plano`}
-            onArchivos={recibir}
-          />
+    <Frame>
+      <FrameHeader>
+        <FrameTitle>CVs importados</FrameTitle>
+        {cargando ? (
+          // El anuncio de la carga va aquí, en la cuenta; las filas grises de la tabla quedan ocultas para el lector.
+          <Esqueleto etiqueta="Cargando los lotes">
+            <LineaEsqueleto ancho="w-96 max-w-full" />
+          </Esqueleto>
+        ) : (
+          <FrameDescription>
+            {hojas} {hojas === 1 ? 'archivo' : 'archivos'} en {lotes.length} {lotes.length === 1 ? 'lote' : 'lotes'}.{' '}
+            {pendientes ? `${pendientes} ${pendientes === 1 ? 'espera' : 'esperan'} que confirmes un dato.` : 'No hay nada pendiente.'}
+          </FrameDescription>
         )}
-      </div>
-
-      <Separator />
+      </FrameHeader>
+      {/* Sin la franja «O suelta aquí más CVs» (15 oct, Nicolás: «demasiada información»): repetía «Importar CVs», que
+          está arriba en la cabecera de la vacante. */}
+      <FramePanel className="overflow-hidden [--frame-panel-px:0px] [--frame-panel-py:0px]">
+      {cerrada}
 
       {/* 29 sep, reunión con Elkin: esta pestaña es el registro de lo que se cargó —cuándo, qué archivo, cómo quedó la
           carga y cuántos CVs traía—, sin el análisis de la IA: lo que la IA concluyó de cada persona se ve en
           el tablero y en su ficha. Desde cada carga se ve a quiénes entraron y se abre su ficha; tocar la fila abre el
-          detalle de cada archivo. Es la tabla del sistema (`TablaDatos`), con el mismo margen de 20px que el título de arriba. */}
-      <div className="px-5 pb-5 [&_tbody_tr]:cursor-pointer" onClick={abrirDesdeFila}>
-        <ContextoLotes.Provider value={{ importaciones, vacante }}>
-          <TablaDatos
-            key={version}
-            config={config}
-            data={resultado.slice((pagina - 1) * porPagina, pagina * porPagina)}
-            isLoading={cargando}
-            paginacion={{ pagina, setPagina, porPagina, setPorPagina, total: resultado.length }}
-            nombre="lotes"
-            singular="lote"
-            id="lotes-cvs"
-          />
-        </ContextoLotes.Provider>
-      </div>
-    </>
+          detalle de cada archivo.
+          La primera y la última columna con el mismo margen de 20px que el título de arriba: la tabla de la librería
+          pone 8px en todas las celdas y le gana a `pl-5` sin el «!». */}
+      <Table className="table-fixed">
+        <TableHeader>
+          <TableRow>
+            {/* «Archivo» sin ancho: se queda con lo que sobra y se corta él, no la última columna. */}
+            <TableHead className="w-[136px] pl-5!">Fecha</TableHead>
+            <TableHead>Archivo</TableHead>
+            <TableHead className="w-[200px]">Estado</TableHead>
+            <TableHead className="w-[116px]">CVs</TableHead>
+            <TableHead className="w-[112px]">Subido por</TableHead>
+            <TableHead className="w-[156px] pr-5!" aria-label="Acciones" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {cargando ? lotes.map((lote) => <FilaLoteCargando key={lote.id} />) : null}
+          {cargando ? null : lotes.map((lote, puesto) => {
+            const cuentas = cuentasDe(lote)
+            const entraron = lote.archivos.filter((archivo) => archivo.candidaturaId && !archivo.sacado).length
+            return (
+              <FilaAnimada key={lote.id} {...entrada(puesto)} className="cursor-pointer" onClick={() => importaciones.ver(lote.id)}>
+                <TableCell className="py-3 pl-5!">
+                  <Text as="span" size="sm" className="truncate">
+                    {lote.fecha}
+                  </Text>
+                </TableCell>
+                <TableCell>
+                  <span className="flex min-w-0 items-center gap-3">
+                    <IconTile variant="soft" size="sm" className="shrink-0">
+                      <HugeiconsIcon icon={FileImportIcon} size={16} />
+                    </IconTile>
+                    <span className="flex min-w-0 flex-col">
+                      <Text as="span" weight="medium" className="truncate">
+                        {lote.nombre}
+                      </Text>
+                      <Text as="span" variant="muted" size="sm" className="truncate">
+                        {lineaDeLote(lote, vacante)}
+                      </Text>
+                    </span>
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <EstadoCarga lote={lote} />
+                </TableCell>
+                <TableCell>
+                  <span className="flex min-w-0 flex-col">
+                    <Text as="span" weight="medium" className="tabular-nums">
+                      {cuentas.total}
+                    </Text>
+                    {/* Quienes entraron se ven desde aquí, aunque falte confirmar a alguien del mismo lote. */}
+                    {lote.estado === 'terminado' && entraron ? (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto! w-fit p-0! tabular-nums"
+                        onClick={(evento) => {
+                          evento.stopPropagation()
+                          if (importaciones.verEntraron) importaciones.verEntraron(lote.id)
+                          else importaciones.ver(lote.id)
+                        }}
+                      >
+                        {entraron === 1 ? '1 entró' : `${entraron} entraron`}
+                      </Button>
+                    ) : lote.estado === 'terminado' ? (
+                      <Text as="span" variant="muted" size="sm">
+                        Nadie entró
+                      </Text>
+                    ) : null}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Text as="span" size="sm" className="truncate">
+                    {lote.quien === QUIEN_MUEVE ? 'Tú' : lote.quien}
+                  </Text>
+                </TableCell>
+                <TableCell className="pr-5!" onClick={parar}>
+                  {lote.estado === 'leyendo' ? (
+                    <Button variant="outline" size="sm" onClick={() => importaciones.detener(lote.id)}>
+                      <HugeiconsIcon icon={PauseIcon} size={14} />
+                      Detener
+                    </Button>
+                  ) : lote.estado === 'en-cola' ? (
+                    <Text as="span" variant="muted" size="sm">
+                      Espera su turno
+                    </Text>
+                  ) : lote.estado === 'detenido' ? (
+                    <Button variant={lote.interrumpido ? 'default' : 'outline'} size="sm" onClick={() => importaciones.seguir(lote.id)}>
+                      <HugeiconsIcon icon={PlayIcon} size={14} />
+                      Seguir cargando
+                    </Button>
+                  ) : cuentas.dudosos ? (
+                    <Button size="sm" onClick={() => importaciones.revisar(lote.id)}>
+                      Confirmar {cuentas.dudosos}
+                    </Button>
+                  ) : entraron ? (
+                    <Button variant="outline" size="sm" onClick={() => (importaciones.verEntraron ? importaciones.verEntraron(lote.id) : importaciones.ver(lote.id))}>
+                      Ver a quiénes
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => importaciones.ver(lote.id)}>
+                      Ver el detalle
+                    </Button>
+                  )}
+                </TableCell>
+              </FilaAnimada>
+            )
+          })}
+        </TableBody>
+      </Table>
+      </FramePanel>
+    </Frame>
   )
 }
 
@@ -1530,6 +1414,42 @@ function EstadoCarga({ lote }: { lote: LoteCvs }) {
       <HugeiconsIcon icon={Tick02Icon} size={12} aria-hidden />
       Cargado
     </Badge>
+  )
+}
+
+// La fila de un lote mientras carga: el mismo alto (icono y dos líneas), las mismas seis columnas y el botón de la
+// derecha.
+function FilaLoteCargando() {
+  return (
+    <TableRow aria-hidden="true" className="hover:bg-transparent">
+      <TableCell className="py-3 pl-5!">
+        <LineaEsqueleto ancho="w-3/4" />
+      </TableCell>
+      <TableCell>
+        <span className="flex min-w-0 items-center gap-3">
+          <Skeleton className="size-8 shrink-0 rounded-lg" />
+          <span className="flex min-w-0 flex-1 flex-col">
+            <LineaEsqueleto className="h-6" ancho="w-4/5" />
+            <LineaEsqueleto ancho="w-3/5" />
+          </span>
+        </span>
+      </TableCell>
+      <TableCell>
+        <Skeleton className="h-5.5 w-24" />
+      </TableCell>
+      <TableCell>
+        <span className="flex flex-col">
+          <LineaEsqueleto className="h-6" ancho="w-8" />
+          <LineaEsqueleto ancho="w-2/3" />
+        </span>
+      </TableCell>
+      <TableCell>
+        <LineaEsqueleto ancho="w-2/3" />
+      </TableCell>
+      <TableCell className="pr-5!">
+        <Skeleton className="h-8 w-28 rounded-full" />
+      </TableCell>
+    </TableRow>
   )
 }
 
@@ -2243,7 +2163,7 @@ function RevisarDudosas({
           </div>
           <Frame variant="ghost" spacing="sm" className="min-h-0 p-0">
             <FramePanel className="max-h-[22rem] overflow-auto">
-              <Text as="p" size="xs" className="font-mono leading-relaxed whitespace-pre-wrap">
+              <Text as="p" size="xs" className="leading-relaxed whitespace-pre-wrap">
                 {textoDeLaHoja({ ...actual, datos: actual.datos })}
               </Text>
             </FramePanel>

@@ -12,7 +12,6 @@ import {
 import {
   Avatar,
   AvatarFallback,
-  Badge,
   Button,
   Field,
   FieldLabel,
@@ -20,9 +19,11 @@ import {
   Input,
   Text,
   DataGridList,
-  toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
+import { Badge } from '@/shared/components/Badge'
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import { WelcomeDialog } from '@/shared/components/Announcements'
 import { notify } from '@/shared/components/notify'
@@ -99,7 +100,7 @@ export function VacantesView() {
     setCreate(false)
     setTitle('')
     setOwner('')
-    notify(`Vacante «${title.trim()}» creada como borrador`)
+    notify(`Vacante «${title.trim()}» creada como borrador`, undefined, 'success')
   }
 
   // Filtrado y ordenación locales para el DataGridList
@@ -201,25 +202,20 @@ export function VacantesView() {
 
   const emptyState: DataGridListConfig<Vacante>['emptyState'] = hayFiltrosActivos
     ? {
+        // Vacíos con su ilustración glass (13-oct): sin resultados con «Limpiar», o todavía nada.
         type: 'no-results',
-        title: 'Ninguna vacante coincide',
-        description: 'Prueba con otra búsqueda o quita alguno de los filtros activos.',
-        action: {
-          id: 'limpiar',
-          label: 'Limpiar filtros',
-          variant: 'outline',
-          onClick: limpiarTodo,
-        },
+        customComponent: <SinResultados busqueda={busqueda} filtrosActivos={filtros.length} onLimpiar={limpiarTodo} />,
       }
     : {
         type: 'empty',
-        title: 'Todavía no hay vacantes',
-        description: 'Crea la primera vacante para empezar.',
-        action: {
-          id: 'agregar',
-          label: 'Crear vacante',
-          onClick: () => setCreate(true),
-        },
+        customComponent: (
+          <PrimeraVez
+            icono="glass-bag"
+            titulo="Todavía no hay vacantes"
+            descripcion="Crea la primera vacante para empezar."
+            accion={{ texto: 'Crear vacante', onClick: () => setCreate(true) }}
+          />
+        ),
       }
 
   const config: DataGridListConfig<Vacante> = {
@@ -243,7 +239,7 @@ export function VacantesView() {
       },
     },
     refresh: {
-      onRefresh: () => toast.add({ type: 'info', title: 'Lista actualizada' }),
+      onRefresh: () => notify('Lista actualizada', undefined, 'info'),
     },
     pagination: {
       total: resultado.length,
@@ -268,7 +264,7 @@ export function VacantesView() {
           label: 'Exportar',
           variant: 'outline',
           icon: <HugeiconsIcon icon={Download01Icon} strokeWidth={2} aria-hidden="true" />,
-          onClick: () => toast.add({ type: 'success', title: 'Exportación generada' }),
+          onClick: () => notify('Exportación generada', undefined, 'success'),
         },
       ],
       item: [
@@ -282,14 +278,14 @@ export function VacantesView() {
           id: 'editar',
           label: 'Editar',
           icon: <HugeiconsIcon icon={Edit02Icon} strokeWidth={2} aria-hidden="true" />,
-          onClick: (filas) => toast.add({ type: 'info', title: `Editando ${filas[0]?.title}` }),
+          onClick: (filas) => notify(`Editando ${filas[0]?.title}`, undefined, 'info'),
         },
         {
           id: 'archivar',
           label: 'Archivar',
           variant: 'destructive',
           icon: <HugeiconsIcon icon={Archive02Icon} strokeWidth={2} aria-hidden="true" />,
-          onClick: () => toast.add({ type: 'success', title: 'Vacante archivada' }),
+          onClick: () => notify('Vacante archivada', undefined, 'success'),
         },
       ],
     },

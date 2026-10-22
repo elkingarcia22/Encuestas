@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import type { IconSvgElement } from '@hugeicons/react'
 import { BubbleChatIcon, ClipboardIcon, FileValidationIcon, LanguageSkillIcon, SecurityCheckIcon, UserSearch01Icon } from '@hugeicons/core-free-icons'
-import { generador } from '@/modules/design-system/patrones/formato'
+import { generador, fechaCorta, fechaSinAnio } from '@/modules/design-system/patrones/formato'
 import { CANDIDATURAS, VACANTES_UI } from './datos'
 import { QUIEN_MUEVE } from './movimientos'
 import { PERSONAS } from './personas'
@@ -175,6 +175,11 @@ export type Movimiento = {
   agente?: AgenteId
   vacanteId?: string
   persona?: { id: string; nombre: string }
+  // Las reservas de la sesión: de qué candidatura y en qué etapa, para devolverlas si la invitación se cancela.
+  candidaturaId?: string
+  etapaId?: string
+  // Una devolución de la sesión dice qué reserva devuelve: esa deja de contar como reservada.
+  devuelve?: string
   // Para la bolsa: + entra (compra), − sale (consumo). Una reserva no sale todavía y un reparto no cambia la bolsa.
   creditos: number
   // Reparto: cuánto ganó (+) o perdió (−) cada agente; lo que no se asignó queda en la bolsa.
@@ -317,7 +322,64 @@ export const registroDeCreditos = {
       avisar()
     }
   },
+  // Invitar a alguien a una etapa con IA que cobra aparta lo de una vez en su agente: se cobra al terminar y, si la
+  // invitación se cancela, vuelve (13 oct, PM: «esto tiene implicaciones directas en el consumo de créditos… en este
+  // producto tiene que haber una traza»). Cada reserva queda en el historial de Créditos con la persona y la vacante.
+  // Devuelve cómo deshacerlo: «Deshacer» del aviso la quita, porque la invitación no llegó a salir.
+  reservar(invitadas: Invitada[]) {
+    const marca = Date.now()
+    const nuevas = invitadas.flatMap((una, indice): Movimiento[] => {
+      const id = agenteDeEtapa(una.etapaId)
+      if (!id || !agenteDe(id).costo) return []
+      return [
+        {
+          id: `reserva-sesion-${una.candidaturaId}-${marca}-${indice}`,
+          tipo: 'reserva',
+          cuando: iso(new Date(HOY.getTime() + (repartos.length + 1) * 60_000)),
+          quien: agenteDe(id).nombre,
+          agente: id,
+          vacanteId: una.vacanteId,
+          persona: una.persona,
+          candidaturaId: una.candidaturaId,
+          etapaId: una.etapaId,
+          creditos: 0,
+        },
+      ]
+    })
+    if (!nuevas.length) return () => {}
+    repartos = [...nuevas, ...repartos]
+    avisar()
+    const ids = new Set(nuevas.map((uno) => uno.id))
+    return () => {
+      repartos = repartos.filter((uno) => !ids.has(uno.id))
+      avisar()
+    }
+  },
+  // La invitación se canceló sin abrirse (se movió a la persona antes de que la presentara): lo reservado en esta visita
+  // vuelve a su agente, con una devolución en el historial. Devuelve cómo deshacerlo.
+  devolver(candidaturaId: string, etapaId: string, detalle: string) {
+    const devueltas = new Set(repartos.flatMap((uno) => (uno.devuelve ? [uno.devuelve] : [])))
+    const reserva = repartos.find((uno) => uno.tipo === 'reserva' && uno.candidaturaId === candidaturaId && uno.etapaId === etapaId && !devueltas.has(uno.id))
+    if (!reserva) return () => {}
+    const movimiento: Movimiento = {
+      ...reserva,
+      id: `devolucion-sesion-${reserva.id}`,
+      tipo: 'devolucion',
+      cuando: iso(new Date(HOY.getTime() + (repartos.length + 1) * 60_000)),
+      devuelve: reserva.id,
+      detalle,
+    }
+    repartos = [movimiento, ...repartos]
+    avisar()
+    return () => {
+      repartos = repartos.filter((uno) => uno.id !== movimiento.id)
+      avisar()
+    }
+  },
 }
+
+// A quién se invita: lo que la reserva necesita para su línea del historial.
+export type Invitada = { candidaturaId: string; etapaId: string; vacanteId: string; persona: { id: string; nombre: string } }
 
 export const useRepartos = () => useSyncExternalStore(registroDeCreditos.suscribir, registroDeCreditos.leer)
 
@@ -432,13 +494,15 @@ export function bolsaDe(historial: Movimiento[], asignacionExtra: Partial<Record
   // Con `?simular=sin-creditos` se gastó el último crédito: lo que quedaba sin asignar se lo llevó Serena AI (el agente
   // que más se usa) y cada agente con costo gastó todo lo suyo, también lo que tenía reservado.
   const agotada = simulado('sin-creditos')
+  // Las reservas que ya volvieron (una invitación de la sesión que se canceló sin abrirse).
+  const devueltas = new Set(historial.flatMap((m) => (m.tipo === 'devolucion' && m.devuelve ? [m.devuelve] : [])))
   const sobrante = agotada ? Math.max(0, comprado - AGENTES_CON_COSTO.reduce((suma, agente) => suma + repartido(agente.id), 0)) : 0
 
   const porAgente = AGENTES.map((agente): EstadoAgente => {
     const suyos = historial.filter((m) => m.agente === agente.id)
     const asignado = repartido(agente.id) + (agente.id === 'serena' ? sobrante : 0)
     const cobrados = suyos.filter((m) => m.tipo === 'consumo').length
-    const reservas = suyos.filter((m) => m.tipo === 'reserva').length
+    const reservas = suyos.filter((m) => m.tipo === 'reserva' && !devueltas.has(m.id)).length
     const usado = agotada && agente.costo ? asignado : cobrados * agente.costo
     const reservado = agotada ? 0 : reservas * agente.costo
     const libre = Math.max(0, asignado - usado - reservado)
@@ -574,8 +638,10 @@ export const conSigno = (n: number) => (n > 0 ? `+${NUMERO.format(n)}` : n < 0 ?
 export const usosTexto = (agente: Agente, n: number) => `${NUMERO.format(n)} ${n === 1 ? agente.uso[0] : agente.uso[1]}`
 
 const HORA = new Intl.DateTimeFormat('es-CO', { hour: 'numeric', minute: '2-digit' })
-const DIA = new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
-const DIA_CORTO = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short' })
+const DIA_SEMANA = new Intl.DateTimeFormat('es-CO', { weekday: 'long' })
+// 13-oct: las fechas salen de la utilidad del sistema («22 sept 2026», sin año en el eje de un gráfico).
+const DIA_CORTO = { format: (fecha: Date) => fechaCorta(fecha.toLocaleDateString('en-CA')) }
+const DIA_SIN_ANIO = { format: (fecha: Date) => fechaSinAnio(fecha.toLocaleDateString('en-CA')) }
 const aFecha = (texto: string) => new Date(texto)
 const mismoDia = (a: Date, b: Date) => a.toDateString() === b.toDateString()
 const ayerDe = (fecha: Date) => {
@@ -584,15 +650,15 @@ const ayerDe = (fecha: Date) => {
   return ayer
 }
 export const horaDe = (texto: string) => HORA.format(aFecha(texto))
-// «Hoy», «Ayer», «martes, 22 de septiembre»
+// «Hoy», «Ayer», «Martes, 22 sept»
 export function diaDe(texto: string) {
   const fecha = aFecha(texto)
   if (mismoDia(fecha, HOY)) return 'Hoy'
   if (mismoDia(fecha, ayerDe(HOY))) return 'Ayer'
-  const dia = DIA.format(fecha)
+  const dia = `${DIA_SEMANA.format(fecha)}, ${DIA_SIN_ANIO.format(fecha)}`
   return dia.charAt(0).toUpperCase() + dia.slice(1)
 }
-// «Hoy, 8:42 p. m.», «Ayer, 6:00 p. m.», «22 sept., 4:00 p. m.»
+// «Hoy, 8:42 p. m.», «Ayer, 6:00 p. m.», «22 sept 2026, 4:00 p. m.»
 export function cuandoTexto(texto: string) {
   const fecha = aFecha(texto)
   const dia = mismoDia(fecha, HOY) ? 'Hoy' : mismoDia(fecha, ayerDe(HOY)) ? 'Ayer' : DIA_CORTO.format(fecha)
@@ -621,7 +687,7 @@ export function consumoPorSemana(historial: Movimiento[], semanas = 8) {
     const inicio = new Date(fin)
     inicio.setDate(inicio.getDate() - 7)
     const [desde, hasta] = [iso(inicio), iso(fin)]
-    const fila: Record<string, number | string> = { semana: DIA_CORTO.format(fin) }
+    const fila: Record<string, number | string> = { semana: DIA_SIN_ANIO.format(fin) }
     for (const agente of AGENTES_CON_COSTO) {
       fila[agente.id] = historial.filter((m) => m.agente === agente.id && m.tipo === 'consumo' && m.cuando > desde && m.cuando <= hasta).length * agente.costo
     }

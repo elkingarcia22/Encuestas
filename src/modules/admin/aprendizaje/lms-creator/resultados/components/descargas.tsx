@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { CheckmarkCircle02Icon, Comment01Icon, Download04Icon, File01Icon, Loading03Icon, Table01Icon, Xls01Icon } from '@hugeicons/core-free-icons'
-import { Button, Checkbox, Field, FieldContent, FieldDescription, FieldLabel, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, IconTile, Progress, RadioGroup, RadioGroupItem, Tabs, TabsContent, TabsList, TabsTrigger, Text } from '@ubits/flux-ui'
+import { Button, Checkbox, Field, FieldContent, FieldLabel, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, IconTile, Progress, RadioGroup, RadioGroupItem, Text } from '@ubits/flux-ui'
 import { Badge } from '@/shared/components/Badge'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
-import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { notify } from '@/shared/components/notify'
 import { publishProcess, removeProcess, updateProcess } from '@/shared/components/process-store'
 import { XLS_EXTENSION, XLS_MIME, fileStamp, saveBlob, slugify } from '@/modules/admin/desempeno-cultura/encuestas/modelo/descargas/libro'
-import { fechaHora, numero, type Resultados } from './datos'
+import { fechaHora, type Resultados, type TipoReporte } from './datos'
 import { libroDe } from './libros'
 
 // El panel de descargas de un contenido.
@@ -18,8 +17,6 @@ import { libroDe } from './libros'
 // «Solicitar» y a partir de ahí nadie sabe si salió, si falló o si ya llegó.
 //
 // Y las descargas viven en la pantalla, no en el panel: cerrarlo **no cancela** un reporte a medio preparar.
-
-type TipoReporte = 'progreso' | 'evaluaciones' | 'respuestas' | 'encuestas' | 'roleplay'
 
 type DefinicionReporte = {
   id: TipoReporte
@@ -34,7 +31,7 @@ type DefinicionReporte = {
 const REPORTES: readonly DefinicionReporte[] = [
   { id: 'progreso', titulo: 'Progreso por persona', descripcion: 'Una fila por persona: cuándo empezó, en qué va y qué recursos completó', formato: 'XLSX', icono: Xls01Icon, segundos: 4 },
   { id: 'evaluaciones', titulo: 'Resultados de evaluaciones', descripcion: 'El resultado de cada persona en cada evaluación, con su nota final ponderada', formato: 'XLSX', icono: Table01Icon, segundos: 5 },
-  { id: 'respuestas', titulo: 'Respuestas pregunta por pregunta', descripcion: 'Qué respondió cada persona en cada pregunta, para ver cuál falla más', formato: 'XLSX', icono: File01Icon, segundos: 6 },
+  { id: 'respuestas', titulo: 'Respuestas de las evaluaciones', descripcion: 'Qué respondió cada persona en cada pregunta, para ver cuál falla más', formato: 'XLSX', icono: File01Icon, segundos: 6 },
   { id: 'encuestas', titulo: 'Respuestas de las encuestas', descripcion: 'Lo que contestaron en las encuestas del contenido, incluidas las abiertas', formato: 'XLSX', icono: Comment01Icon, segundos: 4 },
   { id: 'roleplay', titulo: 'Intentos de roleplay', descripcion: 'Un intento por fila con sus objetivos, y la transcripción de cada conversación', formato: 'XLSX', icono: Comment01Icon, segundos: 5 },
 ]
@@ -135,6 +132,25 @@ export function useDescargas(abrirPanel?: () => void) {
   return { pedidos, pedir, preparando }
 }
 
+/**
+ * Pide un reporte concreto sin pasar por el panel.
+ *
+ * Lo usa el análisis con IA: cuando lo que hay que hacer con un hallazgo es llevarse el archivo, el botón lo prepara
+ * directo en vez de abrir el panel y obligar a elegirlo otra vez (Dave, 15-oct).
+ */
+export function pedirReporte(centro: ReturnType<typeof useDescargas>, resultados: Resultados, tipo: TipoReporte, alcance: 'todos' | 'completaron' = 'todos') {
+  const definicion = REPORTES.find((uno) => uno.id === tipo)
+  if (!definicion) return
+  // El periodo entra en el nombre cuando recorta algo: dos archivos del mismo contenido sacados con fechas distintas
+  // no se pueden llamar igual, o en la carpeta de descargas uno pisa al otro sin avisar.
+  const trozoPeriodo = resultados.periodo.activo ? `-${slugify(resultados.periodo.etiqueta)}` : ''
+  const archivo = `${slugify(resultados.contenido.titulo)}-${definicion.id}-${alcance}${trozoPeriodo}-${fileStamp()}.${XLS_EXTENSION}`
+  centro.pedir(definicion.titulo, definicion.formato, definicion.segundos, () => {
+    saveBlob(archivo, XLS_MIME, libroDe(definicion.id, resultados))
+    return true
+  })
+}
+
 export function PanelDescargas({
   abierto,
   onAbierto,
@@ -160,13 +176,7 @@ export function PanelDescargas({
   const alcance = soloCompletaron ? 'completaron' : 'todos'
 
   const descargar = () => {
-    if (definicion) {
-      const archivo = `${slugify(resultados.contenido.titulo)}-${definicion.id}-${alcance}-${fileStamp()}.${XLS_EXTENSION}`
-      centro.pedir(definicion.titulo, definicion.formato, definicion.segundos, () => {
-        saveBlob(archivo, XLS_MIME, libroDe(definicion.id, resultados))
-        return true
-      })
-    }
+    if (definicion) pedirReporte(centro, resultados, definicion.id, alcance)
     // Se salta a «Descargas» al pedir: ahí es donde pasa lo siguiente, y así se ve que el pedido se registró.
     onPestana('descargas')
   }
@@ -177,6 +187,8 @@ export function PanelDescargas({
       onOpenChange={onAbierto}
       title="Descargas"
       description="Elige el archivo que necesitas y sigue aquí su preparación."
+      // El icono en la cabecera del panel, igual que el de Resultados de encuestas (Dave, 15-oct).
+      icon={Download04Icon}
       size="md"
       footer={
         pestana === 'reportes' ? (
@@ -187,69 +199,58 @@ export function PanelDescargas({
         ) : undefined
       }
     >
-      <Tabs value={pestana} onValueChange={(valor) => onPestana(valor as 'reportes' | 'descargas')}>
-        <TabsList variant="line">
-          <TabsTrigger value="reportes">Reportes</TabsTrigger>
-          <TabsTrigger value="descargas">
-            <span className="flex items-center gap-1.5">
-              Descargas
-              {centro.pedidos.length > 0 ? (
-                <Badge variant="secondary" size="xs" radius="full" className="tabular-nums">
-                  {centro.pedidos.length}
-                </Badge>
-              ) : null}
-            </span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Sin pestañas: no hay historial de descargas que enseñar. Los archivos no se guardan en ningún lado —se
+          arman con los datos de la pantalla y salen—, así que una lista de «lo que pediste antes» prometía algo que
+          no existe (Cristian Niño, 14-oct). Lo que se está preparando se sigue viendo en el Centro de procesos. */}
+      <div className="flex flex-col gap-5">
+        <Frame>
+          <FrameHeader>
+            <FrameTitle>Tipo de reporte</FrameTitle>
+            <FrameDescription>Elige qué archivo quieres descargar.</FrameDescription>
+          </FrameHeader>
+          <FramePanel>
+            <RadioGroup value={elegido} onValueChange={(valor) => setElegido(valor as TipoReporte)} className="grid gap-2" aria-label="Tipo de archivo">
+              {disponibles.map((reporte) => (
+                <OpcionReporte key={reporte.id} id={reporte.id} titulo={reporte.titulo} descripcion={reporte.descripcion} formato={reporte.formato} icono={reporte.icono} />
+              ))}
+            </RadioGroup>
+          </FramePanel>
+        </Frame>
 
-        <TabsContent value="reportes">
-          <div className="flex flex-col gap-5 pt-4">
-            {/* En su marco, con título y bajada en el gris, igual que el panel de descargas de Encuestas: así los dos
-                paneles de la misma empresa se leen como el mismo sitio (Dave, 14-oct). */}
-            <Frame>
-              <FrameHeader>
-                <FrameTitle>Tipo de archivo</FrameTitle>
-                <FrameDescription>Elige qué quieres descargar de este contenido. Solo salen los que tiene.</FrameDescription>
-              </FrameHeader>
-              <FramePanel>
-                <RadioGroup value={elegido} onValueChange={(valor) => setElegido(valor as TipoReporte)} className="grid gap-2" aria-label="Tipo de archivo">
-                  {disponibles.map((reporte) => (
-                    <OpcionReporte key={reporte.id} id={reporte.id} titulo={reporte.titulo} descripcion={reporte.descripcion} formato={reporte.formato} icono={reporte.icono} />
-                  ))}
-                </RadioGroup>
-              </FramePanel>
-            </Frame>
+        <Frame>
+          <FrameHeader>
+            <FrameTitle>A quiénes incluir</FrameTitle>
+            {/* El archivo sale con el periodo de la pantalla puesto, y hay que decirlo aquí: desde el panel ya no se
+                ve el filtro, y quien pide el archivo da por hecho que va todo (Dave, 14-oct). */}
+            <FrameDescription>
+              Por defecto van todas las personas que lo han iniciado.
+              {resultados.periodo.activo ? ` Solo en el periodo seleccionado: ${resultados.periodo.etiqueta.toLowerCase()}.` : ''}
+            </FrameDescription>
+          </FrameHeader>
+          <FramePanel>
+            {/* Sin la línea de cuántas personas son: la cabecera del marco ya dice a quiénes incluye por defecto, y
+                debajo repetía el mismo dato con otras palabras (Dave, 15-oct). */}
+            <Field orientation="horizontal">
+              <FieldContent>
+                <FieldLabel>Solo quienes completaron el contenido</FieldLabel>
+              </FieldContent>
+              <Checkbox checked={soloCompletaron} onCheckedChange={(valor) => setSoloCompletaron(valor === true)} aria-label="Solo quienes completaron el contenido" />
+            </Field>
+          </FramePanel>
+        </Frame>
 
-            <Frame>
-              <FrameHeader>
-                <FrameTitle>A quiénes incluir</FrameTitle>
-                <FrameDescription>Por defecto van todas las personas inscritas, hayan terminado o no.</FrameDescription>
-              </FrameHeader>
-              <FramePanel>
-                <Field orientation="horizontal">
-                  <FieldContent>
-                    <FieldLabel>Solo quienes completaron el contenido</FieldLabel>
-                    <FieldDescription>
-                      {soloCompletaron ? `${numero(resultados.completaron)} de ${numero(resultados.inscritos)} personas` : `Las ${numero(resultados.inscritos)} personas inscritas`}
-                    </FieldDescription>
-                  </FieldContent>
-                  <Checkbox checked={soloCompletaron} onCheckedChange={(valor) => setSoloCompletaron(valor === true)} aria-label="Solo quienes completaron el contenido" />
-                </Field>
-              </FramePanel>
-            </Frame>
+        {/* Lo que se está preparando ahora mismo, para no tener que cerrar el panel para verlo. */}
+        {centro.pedidos.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            <Text as="span" size="xs" weight="semibold" variant="muted">
+              Preparando
+            </Text>
+            {centro.pedidos.map((pedido) => (
+              <FilaPedido key={pedido.id} pedido={pedido} />
+            ))}
           </div>
-        </TabsContent>
-
-        <TabsContent value="descargas">
-          <div className="flex flex-col gap-3 pt-4">
-            {centro.pedidos.length === 0 ? (
-              <PrimeraVez icono="glass-document" titulo="Todavía no has pedido nada" descripcion="Los archivos que prepares aparecerán aquí, y podrás cerrar este panel sin perderlos." />
-            ) : (
-              centro.pedidos.map((pedido) => <FilaPedido key={pedido.id} pedido={pedido} />)
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+        ) : null}
+      </div>
     </DrawerShell>
   )
 }

@@ -1,17 +1,17 @@
 import { useId, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Alert02Icon, Copy01Icon, Delete02Icon, Link01Icon, Linkedin01Icon, Mail01Icon, Tick02Icon, WhatsappIcon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, Copy01Icon, Delete02Icon, Link01Icon, Mail01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Button,
   Checkbox,
   Field,
   FieldContent,
   FieldDescription,
   FieldLabel,
   FieldTitle,
+  Input,
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
@@ -21,18 +21,18 @@ import {
   RadioGroupItem,
   Text,
 } from '@ubits/flux-ui'
+import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
 import { notify } from '@/shared/components/notify'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
-import { ESPERA_RESPUESTA, esUltimaEtapa, type EstadoPublicacion, type VacanteUI } from '../datos'
+import { ESPERA_RESPUESTA, esUltimaEtapa, type EstadoPublicacion, type Miembro, type VacanteUI } from '../datos'
 import { esperasDe } from '../movimientos'
 import { COMO_TERMINO, desenlaceDe, faltaParaPublicar, type ComoTermino, type Falta } from '../publicar'
-import { enProcesoDe } from './editar-vacante'
+import { CompartirVacante, enProcesoDe } from './editar-vacante'
 
-// Las ventanas de una vacante que se abren desde su cabecera y desde la lista del inicio: cambiar su estado y eliminarla,
-// y el enlace para candidatos de la de compartir. Antes la lista tenía las suyas —publicaba de un clic, compartía en otra
-// ventana que no guardaba nada y eliminaba avisando menos— (IN-04, IN-05, IN-06): ahora las dos usan estas, con las
-// mismas preguntas y los mismos datos.
+// Las ventanas de una vacante que se abren desde su cabecera y desde la lista del inicio: cambiar su estado, compartirla
+// y eliminarla. Antes la lista tenía las suyas —publicaba de un clic, compartía en otra ventana que no guardaba nada y
+// eliminaba avisando menos— (IN-04, IN-05, IN-06): ahora las dos usan estas, con las mismas preguntas y los mismos datos.
 //
 // La regla de siempre: se confirma lo que sale de la empresa o lo que no se puede deshacer; el resto se hace y se ofrece
 // «Deshacer». Quien abre la ventana aplica el cambio y pone el aviso.
@@ -281,7 +281,7 @@ function ContenidoEstado({
           <HugeiconsIcon icon={Alert02Icon} size={16} aria-hidden="true" />
           <AlertTitle>Ya {conAplicaciones === 1 ? 'aplicó 1 persona' : `aplicaron ${conAplicaciones} personas`}</AlertTitle>
           <AlertDescription>
-            Nada se borra, pero el aviso se cae del portal y quien lo tenía guardado ve un enlace roto. Si es para dejar de
+            Nada se elimina, pero el aviso se cae del portal y quien lo tenía guardado ve un enlace roto. Si es para dejar de
             recibir CVs un rato, sale más barato ocultarla del portal: sigue publicada y el enlace aguanta.
           </AlertDescription>
         </Alert>
@@ -299,17 +299,12 @@ const MS_COPIADO = 2000
 // recibe a nadie: se dice.
 //
 // 7 oct (VA-32): el enlace va por el id de la vacante, no por su nombre: renombrarla no rompe los que ya se compartieron
-// y dos vacantes con el mismo nombre no comparten enlace. Cada canal (LinkedIn, WhatsApp, correo) abre el mismo enlace:
-// el origen no se mapea (8 oct, VP de producto), todos aplican por el portal de empleo.
+// y dos vacantes con el mismo nombre no comparten enlace. Sin «Compartir en LinkedIn, WhatsApp, Correo» (13 oct, PM: «no
+// lo tenemos hoy… no está dentro del alcance»): solo el enlace y quién tiene acceso.
 export const PORTAL = 'https://empleos.ubits.com/vacantes'
-const CANALES = [
-  { origen: 'linkedin', texto: 'LinkedIn', icono: Linkedin01Icon, abrir: (enlace: string) => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(enlace)}` },
-  { origen: 'whatsapp', texto: 'WhatsApp', icono: WhatsappIcon, abrir: (enlace: string, titulo: string) => `https://wa.me/?text=${encodeURIComponent(`${titulo}: ${enlace}`)}` },
-  { origen: 'correo', texto: 'Correo', icono: Mail01Icon, abrir: (enlace: string, titulo: string) => `mailto:?subject=${encodeURIComponent(titulo)}&body=${encodeURIComponent(enlace)}` },
-]
 
-export function EnlaceParaCandidatos({ id, titulo, oculta }: { id: string; titulo: string; oculta: boolean }) {
-  const enlace = `${PORTAL}/${id}`
+export function EnlaceParaCandidatos({ vacante }: { vacante: VacanteUI }) {
+  const enlace = `${PORTAL}/${vacante.id}`
   const [copiado, setCopiado] = useState(false)
   const campo = useId()
 
@@ -322,11 +317,6 @@ export function EnlaceParaCandidatos({ id, titulo, oculta }: { id: string; titul
     } catch {
       notify('No pudimos copiar el enlace', 'Selecciónalo y cópialo a mano.', 'error')
     }
-  }
-  const compartirEn = (canal: (typeof CANALES)[number]) => {
-    // Sin marcar el canal en el enlace: el origen no se mapea (8 oct, VP de producto); todos aplican por el portal.
-    window.open(canal.abrir(enlace, titulo), '_blank', 'noopener')
-    notify(`Abrimos ${canal.texto} con el enlace`, undefined, 'success')
   }
 
   return (
@@ -345,29 +335,69 @@ export function EnlaceParaCandidatos({ id, titulo, oculta }: { id: string; titul
         </InputGroupAddon>
       </InputGroup>
       <FieldDescription>
-        {oculta
+        {vacante.oculta
           ? 'Está oculta del portal: quien abra el enlace no puede postularse hasta que la vuelvas a mostrar.'
           : 'Compártelo para que los candidatos se postulen directamente. No cambia aunque renombres la vacante.'}
       </FieldDescription>
-      {oculta ? null : (
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          <Text as="span" size="sm" variant="muted">
-            Compartir en
-          </Text>
-          {CANALES.map((canal) => (
-            <Button key={canal.origen} variant="outline" size="sm" onClick={() => compartirEn(canal)}>
-              <HugeiconsIcon icon={canal.icono} aria-hidden="true" />
-              {canal.texto}
-            </Button>
-          ))}
-        </div>
-      )}
     </Field>
   )
 }
 
-// La ventana de «Compartir» es una sola, la del sistema: `DialogoCompartirVacante` en `acciones-vacante.tsx` (auditoría del
-// 8-oct, H-220 y H-248; decisión 4a de Cristian el 9-oct). Aquí queda el enlace y los canales, que son lo suyo.
+export function DialogoCompartirVacante({
+  vacante,
+  abierto,
+  onAbierto,
+  onEquipo,
+  administra = true,
+  duena,
+}: {
+  vacante: VacanteUI | null
+  abierto: boolean
+  onAbierto: (abierto: boolean) => void
+  onEquipo: (equipo: Miembro[]) => void
+  // Solo la dueña cambia quién tiene acceso (VA-11).
+  administra?: boolean
+  duena?: string
+}) {
+  return (
+    <VentanaDeAccion
+      open={abierto && vacante !== null}
+      onOpenChange={onAbierto}
+      title={vacante ? `Compartir «${vacante.titulo}»` : 'Compartir'}
+      sub="Dale acceso a gente de la empresa y decide qué puede hacer cada quien."
+      cancelLabel="Listo"
+    >
+      {vacante ? (
+        <>
+          {/* Con el enlace para candidatos arriba: al publicar se abre esta misma y se manda el enlace de una vez. */}
+          {vacante.estado === 'Publicada' ? <EnlaceParaCandidatos vacante={vacante} /> : null}
+          {administra ? (
+            <CompartirVacante titulo={vacante.titulo} equipo={vacante.equipo} onEquipo={onEquipo} />
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Text as="p" size="sm" weight="medium">
+                Con acceso ({vacante.equipo.length})
+              </Text>
+              {vacante.equipo.map((miembro) => (
+                <div key={miembro.correo} className="flex items-baseline justify-between gap-3">
+                  <Text as="span" size="sm">
+                    {miembro.nombre}
+                  </Text>
+                  <Text as="span" size="sm" variant="muted">
+                    {miembro.permiso}
+                  </Text>
+                </div>
+              ))}
+              <Text as="p" size="sm" variant="muted">
+                Solo {duena ?? 'la dueña del proceso'} cambia quién tiene acceso.
+              </Text>
+            </div>
+          )}
+        </>
+      ) : null}
+    </VentanaDeAccion>
+  )
+}
 
 /* Eliminar --------------------------------------------------------------------------------------------------------- */
 
@@ -385,6 +415,11 @@ export function DialogoEliminarVacantes({
   onCerrarEnSuLugar?: () => void
 }) {
   const una = vacantes.length === 1 ? vacantes[0] : null
+  // Eliminar no tiene vuelta atrás (13 oct, PM: «eso involucra un montón de cosas por debajo… que escriba eliminar, así
+  // como lo hace Amazon»): se escribe la palabra para poder confirmar, como en ConfirmarEliminar, y queda registrado.
+  const [texto, setTexto] = useState('')
+  const campo = useId()
+  const listo = texto.trim().toLowerCase() === 'eliminar'
   const enProceso = vacantes.reduce((suma, vacante) => suma + enProcesoDe(vacante.id).length, 0)
   const aplicaciones = vacantes.reduce((suma, vacante) => suma + vacante.aplicaciones, 0)
   const publicadas = vacantes.filter((vacante) => vacante.estado === 'Publicada').length
@@ -401,7 +436,11 @@ export function DialogoEliminarVacantes({
   return (
     <DialogoConfirmar
       abierto={vacantes.length > 0}
-      onAbiertoChange={(abrir) => (abrir ? undefined : onCerrar())}
+      onAbiertoChange={(abrir) => {
+        if (abrir) return
+        setTexto('')
+        onCerrar()
+      }}
       icono={Delete02Icon}
       titulo={una ? `¿Eliminar «${una.titulo}»?` : `¿Eliminar ${vacantesTexto(vacantes.length)}?`}
       // Nada de «¿estás seguro?»: lo que hay que leer es qué se lleva por delante.
@@ -414,8 +453,12 @@ export function DialogoEliminarVacantes({
         </>
       }
       destructiva
+      deshabilitada={!listo}
       enCurso="Eliminando…"
-      onConfirmar={onConfirmar}
+      onConfirmar={() => {
+        setTexto('')
+        onConfirmar()
+      }}
     >
       {enProceso ? (
         <Alert variant="info">
@@ -432,10 +475,14 @@ export function DialogoEliminarVacantes({
           {otros} {otros === 1 ? 'persona más tiene' : 'personas más tienen'} acceso y la{una ? '' : 's'} van a dejar de ver.
         </Text>
       ) : null}
-      {/* No se pide escribir el nombre, como en Ashby: queda «Deshacer» en el aviso. */}
       <Text as="p" variant="muted" size="sm">
-        Queda un momento para deshacerlo desde el aviso.
+        Las entrevistas agendadas se cancelan y los créditos que no se usaron vuelven a tu saldo. No se puede deshacer:
+        queda registrado quién {una ? 'la' : 'las'} eliminó y cuándo.
       </Text>
+      <Field>
+        <FieldLabel htmlFor={campo}>Escribe «eliminar» para confirmar</FieldLabel>
+        <Input id={campo} value={texto} autoComplete="off" onChange={(evento) => setTexto(evento.target.value)} />
+      </Field>
     </DialogoConfirmar>
   )
 }

@@ -13,7 +13,6 @@ import {
   AlertAction,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   InputGroup,
   InputGroupAddon,
@@ -31,12 +30,13 @@ import {
   TabsTrigger,
   Text,
 } from '@ubits/flux-ui'
-import { ActionDialog } from '@/shared/components/ActionDialog'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { Orb } from '@/shared/components/Orb'
 import { notify } from '@/shared/components/notify'
 import { PageContent, PageHeader, PageSection, PageShell } from '@/shared/components/PageShell'
 import { PILL } from '../../drawers/components/drawer-styles'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../components/case-frame'
 import { ROLES, SOURCES } from './components/data'
 import { RoleCard } from './components/proposal'
@@ -67,7 +67,7 @@ export function Component() {
     window.setTimeout(() => {
       setRegenerating(false)
       setVersion((v) => v + 1)
-      notify('El agente generó una versión nueva')
+      notify('El agente generó una versión nueva', undefined, 'success')
     }, 1400)
   }
 
@@ -75,7 +75,7 @@ export function Component() {
     if (!text.trim()) return
     setAdjustOpen(false)
     setPrompt('')
-    notify(`Ajustando: «${text.trim()}»`)
+    notify(`Ajustando: «${text.trim()}»`, undefined, 'info')
     regenerate()
   }
 
@@ -114,7 +114,7 @@ export function Component() {
                   sistema (BotonIaSecundario), no un botón con varita (decisiones 8 y 10 de la auditoría). */}
               <Popover open={adjustOpen} onOpenChange={setAdjustOpen}>
                 <PopoverTrigger render={<BotonIaSecundario disabled={published} />}>
-                  Ajustar con el agente
+                  Ajustar con IA
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-96 gap-3 rounded-2xl">
                   <PopoverHeader>
@@ -190,7 +190,7 @@ export function Component() {
                     El agente no tiene acceso a las evaluaciones 360 de 2024: la preparación de cada candidato se calculó solo con datos de 2025.
                   </AlertDescription>
                   <AlertAction>
-                    <Button variant="outline" size="sm" className={PILL} onClick={() => notify('Solicitud de acceso enviada a Gestión humana')}>
+                    <Button variant="outline" size="sm" className={PILL} onClick={() => notify('Solicitud de acceso enviada a Gestión humana', undefined, 'success')}>
                       Pedir acceso
                     </Button>
                   </AlertAction>
@@ -211,32 +211,23 @@ export function Component() {
 
       </PageShell>
 
-      {/* Confirmar algo corto va en la ventana única del sistema, en su tamaño chico (decisión 4 de la auditoría). Los
-          botones del pie siguen en pastilla, como el resto de esta pantalla de Orbit. */}
-      <ActionDialog
-        open={confirm}
-        onOpenChange={setConfirm}
-        size="sm"
-        title="¿Aprobar y publicar el plan?"
-        sub="Esto tiene efecto real en el área comercial:"
-        footer={
-          <>
-            <Button variant="outline" className={PILL} onClick={() => setConfirm(false)}>
-              Seguir revisando
-            </Button>
-            <Button
-              className={PILL}
-              onClick={() => {
-                setConfirm(false)
-                setPublished(true)
-                notify('Plan de sucesión publicado')
-              }}
-            >
-              Aprobar y publicar
-            </Button>
-          </>
-        }
+      {/* Confirmar, aunque afecte a varias personas, va en DialogoConfirmar con la tarjeta RegistroConfirmar (regla
+          «dos-ventanas», 13-oct; antes era un ActionDialog con la lista de efectos). Los efectos siguen debajo. */}
+      <DialogoConfirmar
+        abierto={confirm}
+        onAbiertoChange={setConfirm}
+        icono={Task01Icon}
+        titulo="¿Aprobar y publicar el plan?"
+        descripcion="Esto tiene efecto real en el área comercial."
+        cancelar="Seguir revisando"
+        accion="Aprobar y publicar"
+        onConfirmar={() => {
+          setConfirm(false)
+          setPublished(true)
+          notify('Plan de sucesión publicado', 'Se avisó a 3 jefes directos.', 'success')
+        }}
       >
+        <RegistroConfirmar nombre="Plan de sucesión · Área comercial" detalle="3 jefes directos · 5 sucesores" estado="Borrador del agente" tono="neutro" />
         <div className="flex flex-col gap-3">
           {IMPACT.map((item) => (
             <div key={item.text} className="flex items-start gap-3">
@@ -247,7 +238,7 @@ export function Component() {
             </div>
           ))}
         </div>
-      </ActionDialog>
+      </DialogoConfirmar>
     </CaseFrame>
   )
 }

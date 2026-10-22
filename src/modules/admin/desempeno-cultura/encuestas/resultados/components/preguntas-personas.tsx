@@ -6,15 +6,9 @@ import {
   AlertDescription,
   Avatar,
   AvatarFallback,
-  Badge,
   Card,
   CardContent,
   CardHeader,
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
   Frame,
   FrameDescription,
   FrameFooter,
@@ -27,15 +21,14 @@ import {
   Item,
   ItemActions,
   ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
   Separator,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
+import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
 import { useCargaProgresiva } from '@/modules/design-system/templates/admin-compartido/lista'
 import { BotonCargarMas } from '../../components/tabla-piezas'
 import { FAVORABILITY_BANDS, formatScore, tierForScore } from '../../modelo/favorabilityScale'
@@ -54,13 +47,11 @@ import type { SectionResult } from '../../modelo/surveyResults'
 import { ArbolResultados } from './arbol-resultados'
 import { INSIGNIA_POR_TONO, numero } from './escala'
 import { InsigniaSentimiento } from './sentimiento'
-import { TextoCompleto } from '@/shared/components/TextoCompleto'
 
 // Preguntas › Por persona: una fila por participante, con su promedio, cuántas respondió y cuándo
 // la envió; al elegir una se ve su ficha con todo lo que contestó. En una encuesta anónima la ficha
 // sigue siendo legible pero no atribuible: «Participante 1» y ningún demográfico, porque un
 // demográfico también identifica.
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 export type Acotado = { pregunta: string; opcion: string }
 
@@ -262,6 +253,7 @@ export function PreguntasPersonas({ secciones, personas, recuentos, matriz, come
       ) : null}
       <div className="grid items-start gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
         <Frame spacing="sm" className="[--frame-gap:0px] lg:sticky lg:top-4">
+          {/* Más aire entre el conteo y el buscador: con el tema sin capa el espacio solo obedece con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
           <FrameHeader className="gap-3!">
             <div>
               <FrameTitle>Participantes</FrameTitle>
@@ -286,6 +278,7 @@ export function PreguntasPersonas({ secciones, personas, recuentos, matriz, come
               </Alert>
             ) : null}
           </FrameHeader>
+          {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
           <FramePanel className="max-h-[36rem] overflow-y-auto p-1!">
             {lista.length === 0 ? (
               // «Sin resultados» del sistema, con ilustración, lo buscado y el botón para limpiar (decisión 14).
@@ -309,14 +302,9 @@ export function PreguntasPersonas({ secciones, personas, recuentos, matriz, come
                     aria-pressed={elegida?.id === persona.id}
                     className="w-full text-left"
                   >
-                    <ItemMedia>
-                      <Avatar size="sm">
-                        <AvatarFallback>{persona.initials}</AvatarFallback>
-                      </Avatar>
-                    </ItemMedia>
+                    {/* La persona del sistema (Persona): avatar con iniciales, nombre y su línea gris. */}
                     <ItemContent className="min-w-0">
-                      <TextoCompleto texto={persona.name}><ItemTitle className="truncate">{persona.name}</ItemTitle></TextoCompleto>
-                      <TextoCompleto texto={[persona.area, persona.leader].filter(Boolean).join(" · ")}><ItemDescription className="truncate">{[persona.area, persona.leader].filter(Boolean).join(' · ') || `Enviada el ${persona.submittedLabel}`}</ItemDescription></TextoCompleto>
+                      <Persona nombre={persona.name} detalle={[persona.area, persona.leader].filter(Boolean).join(' · ') || `Enviada el ${persona.submittedLabel}`} />
                     </ItemContent>
                     <ItemActions>
                       {persona.status === 'partial' ? (
@@ -341,15 +329,7 @@ export function PreguntasPersonas({ secciones, personas, recuentos, matriz, come
         {elegida ? (
           <Ficha key={elegida.id} persona={elegida} secciones={secciones} recuentos={recuentos} comentarios={comentarios} correcciones={correcciones} matriz={matriz} />
         ) : (
-          <Empty className="py-16">
-            <EmptyHeader>
-              <EmptyMedia variant="default">
-              <ImagenGlass nombre="glass-profile" />
-            </EmptyMedia>
-              <EmptyTitle>Selecciona una persona</EmptyTitle>
-              <EmptyDescription>Elige a alguien de la lista para ver todo lo que respondió.</EmptyDescription>
-            </EmptyHeader>
-          </Empty>
+          <PrimeraVez icono="glass-profile" titulo="Selecciona una persona" descripcion="Elige a alguien de la lista para ver todo lo que respondió." className="py-16" />
         )}
       </div>
     </div>

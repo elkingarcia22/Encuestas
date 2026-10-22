@@ -67,6 +67,19 @@ export function descargarReporte(plan: Plan, tipo: Tipo) {
   descargarCsv(`reporte-${tipo}-${enSlug(plan.nombre)}.csv`, filasReporte(plan, tipo))
 }
 
+// Quiénes terminaron todo, del primero al último (hay empresas que premian a quien termina primero; war room del 14-oct).
+// La última fecha de progreso de quien terminó es cuándo terminó: «hace 9 días» terminó antes que «hace 2 días».
+const diasDe = (texto: string | null) => Number(texto?.match(/(\d+)/)?.[1] ?? 0)
+export const enOrdenDeLlegada = <T extends { ultimoProgreso: string | null }>(personas: T[]) => [...personas].sort((a, b) => diasDe(b.ultimoProgreso) - diasDe(a.ultimoProgreso))
+
+export function descargarTerminaron(plan: Plan) {
+  const terminaron = enOrdenDeLlegada(personasDelPlan(plan).filter((p) => p.progreso === 100))
+  descargarCsv(`terminaron-${enSlug(plan.nombre)}.csv`, [
+    ['Puesto', 'Nombre', 'Área', 'Terminó', `${TIPOS[plan.tipo].items.charAt(0).toUpperCase() + TIPOS[plan.tipo].items.slice(1)} terminados`],
+    ...terminaron.map((p, i) => [i + 1, p.nombre, p.area, p.ultimoProgreso ?? '—', p.total]),
+  ])
+}
+
 // ── «Importar participantes» (paso «Cargar archivo»): lo que hace falta para armar el CSV ──
 // En UBITS el archivo trae a la vez a quién y qué: una fila por persona y contenido (username, content_id). Los tres
 // botones de arriba bajan los usernames, los códigos del catálogo y una plantilla con ese formato.

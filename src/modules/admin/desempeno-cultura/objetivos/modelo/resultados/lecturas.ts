@@ -1,4 +1,5 @@
 import { MEASURE_META, type MeasureType } from '../constructor/cicloBuilderTypes'
+import { BANDA_NEGATIVA, CONFIG_INICIAL, ESTADOS_FIJOS, tonoDe, type Banda } from '../configuracion'
 import { OBJETIVOS_EMPRESA, type Etapa, type Medida, type ObjetivoSeguido, type PersonaSeguida, type ResultadosCiclo, type Riesgo } from './seguimiento'
 
 // Las cuentas de cada bloque del Resumen de resultados (9-oct, como el prototipo «configuración objetivos»): pendientes,
@@ -75,23 +76,29 @@ export function porLider(r: ResultadosCiclo, etapa: Etapa): FilaGrupo[] {
 
 /** Estado de los objetivos aprobados. Abierto, se lee en curso; cerrado, por su resultado (como los estados configurables). */
 export function estados(r: ResultadosCiclo): Tramo[] {
+  // Los estados salen de la configuración del ciclo (21-oct): con el ciclo abierto, los fijos «Por iniciar» y «En
+  // progreso» y luego las bandas que aplican en curso; cerrado, todas las bandas (lo que no reportó cuenta como 0 %).
+  const config = r.ciclo.draft?.config ?? CONFIG_INICIAL
+  const bandas = [...(config.negativos ? [BANDA_NEGATIVA] : []), ...config.bandas].sort((a, b) => a.desde - b.desde)
   const aprobados = objetivosDe(r.personas).filter(({ objetivo }) => objetivo.etapa === 'aprobado').map(({ objetivo }) => objetivo.cumplimiento)
   const cuenta = (prueba: (valor: number | null) => boolean) => aprobados.filter(prueba).length
+  const fijo = (id: string) => ESTADOS_FIJOS.find((estado) => estado.id === id)!
+  const tramo = (banda: Banda, sinAvanceEsCero: boolean): Tramo => ({
+    id: banda.id,
+    etiqueta: banda.nombre,
+    color: tonoDe(banda.tono).color,
+    cantidad: cuenta((v) => (v === null && !sinAvanceEsCero ? false : (v ?? 0) >= banda.desde && (v ?? 0) <= banda.hasta)),
+  })
   if (r.abierto) {
+    const enCurso = bandas.filter((banda) => banda.aplica === 'curso')
+    const primera = Math.min(...enCurso.filter((banda) => banda.desde > 0).map((banda) => banda.desde), Number.POSITIVE_INFINITY)
     return [
-      { id: 'por-iniciar', etiqueta: 'Por iniciar', cantidad: cuenta((v) => v === null || v === 0), color: 'var(--muted-foreground)' },
-      { id: 'en-progreso', etiqueta: 'En progreso', cantidad: cuenta((v) => v !== null && v > 0 && v < 100), color: 'var(--chart-2)' },
-      { id: 'cumplido', etiqueta: 'Cumplido', cantidad: cuenta((v) => v === 100), color: 'var(--success)' },
-      { id: 'sobrecumplio', etiqueta: 'Sobrecumplió', cantidad: cuenta((v) => v !== null && v > 100), color: 'var(--primary)' },
+      { id: 'por-iniciar', etiqueta: fijo('por-iniciar').nombre, cantidad: cuenta((v) => v === null || v === 0), color: tonoDe(fijo('por-iniciar').tono).color },
+      { id: 'en-progreso', etiqueta: fijo('en-progreso').nombre, cantidad: cuenta((v) => v !== null && v > 0 && v < primera), color: tonoDe(fijo('en-progreso').tono).color },
+      ...enCurso.map((banda) => tramo(banda, false)),
     ]
   }
-  return [
-    { id: 'no-cumplio', etiqueta: 'No cumplió', cantidad: cuenta((v) => (v ?? 0) < 40), color: 'var(--destructive)' },
-    { id: 'no-cumplio-parcialmente', etiqueta: 'No cumplió parcialmente', cantidad: cuenta((v) => v !== null && v >= 40 && v < 70), color: 'var(--warning)' },
-    { id: 'cumplio-parcialmente', etiqueta: 'Cumplió parcialmente', cantidad: cuenta((v) => v !== null && v >= 70 && v < 100), color: 'var(--chart-2)' },
-    { id: 'cumplido', etiqueta: 'Cumplido', cantidad: cuenta((v) => v === 100), color: 'var(--success)' },
-    { id: 'sobrecumplio', etiqueta: 'Sobrecumplió', cantidad: cuenta((v) => v !== null && v > 100), color: 'var(--primary)' },
-  ]
+  return bandas.map((banda) => tramo(banda, true))
 }
 
 /** Avance promedio de cada grupo del corte (de las personas que reportaron), del más bajo al más alto. */
@@ -183,7 +190,7 @@ export const TITULO_DIMENSION: Record<Dimension, string> = {
   medida: 'Tipo de medida',
 }
 
-const formato = (valor: number | null) => (valor === null ? 'Sin avance' : `${valor.toLocaleString('es-CO', { maximumFractionDigits: 1 })}%`)
+const formato = (valor: number | null) => (valor === null ? 'Sin avance' : `${valor.toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`)
 const ESTADO_DE: Record<string, (v: number | null) => boolean> = {
   'por-iniciar': (v) => v === null || v === 0,
   'en-progreso': (v) => v !== null && v > 0 && v < 100,

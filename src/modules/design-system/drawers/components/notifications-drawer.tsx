@@ -62,7 +62,7 @@ export function NotificationsDrawer({ open, onOpenChange }: Props) {
             disabled={!unread}
             onClick={() => {
               setItems((all) => all.map((item) => ({ ...item, unread: false })))
-              notify('Notificaciones marcadas como leídas')
+              notify('Notificaciones marcadas como leídas', undefined, 'success')
             }}
           >
             Marcar todas
@@ -71,11 +71,11 @@ export function NotificationsDrawer({ open, onOpenChange }: Props) {
       }
       footer={
         <>
-          <Button variant="ghost" className={`mr-auto ${WS}`} onClick={() => notify('Preferencias de notificación')}>
+          <Button variant="ghost" className={`mr-auto ${WS}`} onClick={() => notify('Preferencias de notificación', undefined, 'info')}>
             <HugeiconsIcon icon={Settings02Icon} size={16} />
             Configurar avisos
           </Button>
-          <Button className={WS} onClick={() => notify('Bandeja completa de notificaciones')}>
+          <Button className={WS} onClick={() => notify('Bandeja completa de notificaciones', undefined, 'info')}>
             Ver todas
           </Button>
         </>
@@ -99,7 +99,7 @@ export function NotificationsDrawer({ open, onOpenChange }: Props) {
           </ItemMedia>
           <ItemContent>
             <ItemTitle>Novedades de la v4.2</ItemTitle>
-            <ItemDescription className="line-clamp-1!">Tres mejoras nuevas esta semana</ItemDescription>
+            <ItemDescription className="line-clamp-1!">Cuatro mejoras nuevas esta semana</ItemDescription>
           </ItemContent>
           <HugeiconsIcon icon={ArrowRight01Icon} size={15} className="shrink-0 text-muted-foreground" />
         </Item>

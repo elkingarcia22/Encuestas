@@ -20,6 +20,7 @@ import {
 import { keepFocusNear } from './agent-focus'
 import styles from './editor.module.css'
 import { CloseButton } from '@/shared/components/CloseButton'
+import { AvisoOrbit } from '@/modules/design-system/ia/aviso-orbit'
 
 export type CardAnim = 'in' | 'nudge' | null
 
@@ -45,7 +46,7 @@ export function AgentPanelFrame({ className, children, ...props }: ComponentProp
   return (
     <TooltipProvider delay={300}>
       <aside
-        aria-label="Orbit Flow"
+        aria-label="Orbit"
         data-agent-panel=""
         tabIndex={-1}
         {...props}
@@ -66,7 +67,7 @@ type HeaderProps = ComponentProps<'div'> & {
   closeRegion?: string
 }
 
-// Cabecera de 58px: orbe, «Orbit Flow» y cerrar.
+// Cabecera de 58px: orbe, «Orbit» y cerrar.
 export function AgentPanelHeader({ onClose, orbRegion, closeRegion, ...props }: HeaderProps) {
   const orb = <Orb className="size-6.5" />
   const close = onClose ? <CloseButton label="Cerrar" onClick={onClose} /> : null
@@ -80,7 +81,7 @@ export function AgentPanelHeader({ onClose, orbRegion, closeRegion, ...props }: 
       ) : (
         orb
       )}
-      <h2 className="flex-1 text-[15px] font-medium">Orbit Flow</h2>
+      <h2 className="flex-1 text-[15px] font-medium">Orbit</h2>
       {close && closeRegion ? (
         <span data-region={closeRegion} data-chip="under" className="flex">
           {close}
@@ -137,10 +138,12 @@ export function AgentShortcuts({ items, onPick, region }: { items: string[]; onP
 // Bandeja gris del composer, como en el chat de Suite AI. Los atributos extra van en la bandeja.
 export function ComposerTray({ children, ...props }: ComponentProps<'div'>) {
   return (
-    <div className="shrink-0 px-4.5 pt-2 pb-4.5">
+    <div className="shrink-0 px-4.5 pt-2 pb-3">
       <div {...props} className="rounded-[1.75rem] bg-muted p-2">
         {children}
       </div>
+      {/* Debajo del campo, siempre (regla «aviso-de-orbit», 13-oct): vale para el Orbit de todas las pantallas. */}
+      <AvisoOrbit className="mt-2" />
     </div>
   )
 }
@@ -208,7 +211,7 @@ export function FieldProposal({
 
       <div data-region={regions?.actions} className="mt-3 flex flex-wrap items-center gap-2.5">
         {applied ? (
-          <Button data-undo-focus="" variant="outline" className={PILL} onClick={() => notify('El cambio ya está aplicado')}>
+          <Button data-undo-focus="" variant="outline" className={PILL} onClick={() => notify('El cambio ya está aplicado', undefined, 'info')}>
             Aplicado
           </Button>
         ) : (
@@ -413,13 +416,13 @@ export function AgentPanel({
           onChange={setDraft}
           onSend={send}
           placeholder={fieldContext ? 'Pide un cambio sobre este campo' : 'Pregunta o pide un cambio sobre este contenido'}
-          onVoice={() => notify('El modo voz se abre desde el chat de Orbit')}
+          onVoice={() => notify('El modo voz se abre desde el chat de Orbit', undefined, 'info')}
           contextChip={fieldContext ? `${contentName} · Descripción` : undefined}
           // Sin nota junto a la pastilla: a 452px no cabe en una línea y la franja «Contexto:» ya lo explica.
           contextNote=""
           onRemoveContext={() => {
             setFieldContext(false)
-            notify('El agente ahora responde sobre todo el contenido')
+            notify('El agente ahora responde sobre todo el contenido', undefined, 'info')
           }}
         />
       </ComposerTray>

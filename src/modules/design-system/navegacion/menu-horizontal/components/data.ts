@@ -74,7 +74,7 @@ export const SUMMARIES: Record<string, Summary> = {
     stats: [
       { label: 'Publicados', value: '128', note: '6 publicados en septiembre' },
       { label: 'En borrador', value: '14', note: '3 con cambios de Orbit' },
-      { label: 'Finalización promedio', value: '72%', note: 'De quienes empiezan un curso' },
+      { label: 'Finalización promedio', value: '72 %', note: 'De quienes empiezan un curso' },
     ],
     rows: [
       { title: 'Plan de onboarding para operarios', meta: 'Actualizado hoy · 12 lecciones', status: 'Borrador' },
@@ -104,7 +104,7 @@ export const SUMMARIES: Record<string, Summary> = {
     stats: [
       { label: 'Escuelas', value: '5', note: 'Comercial, Operaciones, Tecnología…' },
       { label: 'Rutas activas', value: '21' },
-      { label: 'Personas en una ruta', value: '864', note: '71% de la empresa' },
+      { label: 'Personas en una ruta', value: '864', note: '71 % de la empresa' },
     ],
     rows: [
       { title: 'Escuela Comercial', meta: '6 rutas · 212 personas', status: 'Activa' },
@@ -133,19 +133,19 @@ export const SUMMARIES: Record<string, Summary> = {
     cta: 'Crear plan',
     stats: [
       { label: 'Planes activos', value: '12' },
-      { label: 'Cumplimiento', value: '81%', note: 'Operaciones es la más atrasada' },
+      { label: 'Cumplimiento', value: '81 %', note: 'Operaciones es la más atrasada' },
       { label: 'Vencen este mes', value: '3' },
     ],
     rows: [
-      { title: 'Inducción corporativa 2026', meta: '1.212 personas · vence el 31 dic', status: '84% al día' },
-      { title: 'Seguridad en planta', meta: '390 personas · vence el 30 sep', status: '67% al día' },
-      { title: 'Ventas consultivas', meta: '212 personas · vence el 15 oct', status: '91% al día' },
-      { title: 'Liderazgo para nuevos líderes', meta: '18 personas · vence el 30 nov', status: '40% al día' },
+      { title: 'Inducción corporativa 2026', meta: '1.212 personas · vence el 31 dic', status: '84 % al día' },
+      { title: 'Seguridad en planta', meta: '390 personas · vence el 30 sept', status: '67 % al día' },
+      { title: 'Ventas consultivas', meta: '212 personas · vence el 15 oct', status: '91 % al día' },
+      { title: 'Liderazgo para nuevos líderes', meta: '18 personas · vence el 30 nov', status: '40 % al día' },
     ],
   },
   grupos: {
     description: 'Audiencias por área, sede o nivel para asignar planes y cursos.',
-    cta: 'Nuevo grupo',
+    cta: 'Crear grupo',
     stats: [
       { label: 'Grupos', value: '34' },
       { label: 'Se actualizan solos', value: '28', note: 'Sincronizados con Workday' },
@@ -193,7 +193,7 @@ export const SUMMARIES: Record<string, Summary> = {
     cta: 'Nuevo diagnóstico',
     stats: [
       { label: 'Aplicados', value: '6' },
-      { label: 'Participación', value: '88%' },
+      { label: 'Participación', value: '88 %' },
       { label: 'Brecha principal', value: 'Datos', note: 'Analítica y Finanzas' },
     ],
     rows: [
@@ -208,14 +208,14 @@ export const SUMMARIES: Record<string, Summary> = {
     cta: 'Exportar reporte',
     stats: [
       { label: 'Horas de formación', value: '6.420 h', note: 'En 2026' },
-      { label: 'Personas activas', value: '1.086', note: '90% de la empresa' },
-      { label: 'Obligatorios al día', value: '81%' },
+      { label: 'Personas activas', value: '1.086', note: '90 % de la empresa' },
+      { label: 'Obligatorios al día', value: '81 %' },
     ],
     rows: [
       { title: 'Avance por área', meta: 'Actualizado hoy', status: 'Diario' },
       { title: 'Cumplimiento de planes', meta: 'Actualizado hoy', status: 'Diario' },
       { title: 'Horas por persona', meta: 'Actualizado el lunes', status: 'Semanal' },
-      { title: 'Satisfacción con los cursos', meta: 'Actualizado el 1 sep', status: 'Mensual' },
+      { title: 'Satisfacción con los cursos', meta: 'Actualizado el 1 sept', status: 'Mensual' },
     ],
   },
 }

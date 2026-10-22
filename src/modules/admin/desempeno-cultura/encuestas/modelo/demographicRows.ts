@@ -52,7 +52,7 @@ export interface DemographicRow {
 
 const MONTHS = [
   "ene", "feb", "mar", "abr", "may", "jun",
-  "jul", "ago", "sep", "oct", "nov", "dic",
+  "jul", "ago", "sept", "oct", "nov", "dic",
 ] as const;
 
 /** "2025-06-23" → "23 jun 2025". Matches the survey list's date wording. */

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon, InformationCircleIcon, MoreHorizontalIcon } from '@hugeicons/core-free-icons'
@@ -22,6 +22,7 @@ import {
 } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { AiThinking } from '@/shared/components/AiThinking'
+import { ChatStatusDot } from '@/shared/components/ChatStatusDot'
 import { Demo, EncabezadoPatron, PestanasDePatron, Reglas, SectionIntro, VerEnAccion, type Regla } from '../patrones/piezas'
 import { Composer } from '@/modules/admin/suite-ai/shared/composer'
 import { destino } from '../templates/admin-compartido/rutas'
@@ -43,45 +44,49 @@ const PESTANAS = [
   { valor: 'superficies', etiqueta: 'Superficies' },
   { valor: 'estados', etiqueta: 'Estados' },
   { valor: 'vocabulario', etiqueta: 'Vocabulario' },
-  { valor: 'pendientes', etiqueta: 'Pendientes' },
+  // La dirección sigue siendo /pendientes; el nombre es el del menú y de las demás páginas (13-oct).
+  { valor: 'pendientes', etiqueta: 'Por resolver' },
 ]
 
 // Auditoría del 5 oct (decisión 10): un solo primario de IA (BotonIa, el degradado), el secundario de IA y «Orbit
 // Flow». El terciario de IA y el de solo icono con el orbe eran propuestas y se retiraron: no se arman a mano.
 const REGLAS_BOTONES: Regla[] = [
-  { titulo: 'Siempre el último', detalle: 'Todo botón de IA va al final de su fila, a la derecha de todo, después del primario. «Orbit Flow» cierra la fila. El «⋯» va al otro extremo, el primero.' },
+  { titulo: 'Siempre el último', detalle: 'Todo botón de IA va al final de su fila, a la derecha de todo, después del primario. «Orbit» cierra la fila. El «⋯» va al otro extremo, el primero.' },
   { titulo: 'Uno por vista', detalle: 'La acción de IA principal lleva el degradado y es una sola. La segunda acción de IA va con contorno y el orbe.' },
   { titulo: 'En superficie de IA manda el de IA', detalle: 'Dentro de una tarjeta o panel de IA, el botón principal es el de IA, no el azul normal.' },
   { titulo: 'Pastilla solo aquí', detalle: 'El radio completo es la marca de la IA. En el resto del producto se usan las esquinas de la librería.' },
-  { titulo: 'El orbe va al inicio', detalle: 'En el secundario y en «Orbit Flow», antes del texto. El primario no lleva icono: el degradado ya es la marca. Nada de estrellas ni chispas.' },
+  { titulo: 'El orbe va al inicio', detalle: 'En el secundario y en «Orbit», antes del texto. El primario no lleva icono: el degradado ya es la marca. Nada de estrellas ni chispas.' },
   { titulo: 'Sin borde', detalle: 'El degradado va solo. El borde en degradado y el brillo extra se descartaron para no sumar variantes.' },
 ]
 
 const VOCABULARIO = [
   { ingles: 'Nudge', nuestro: 'Aviso sugerido', donde: 'La franja «Ya ejecuta acciones en Selección» sobre el cuadro de escritura.' },
-  { ingles: 'Suggestions', nuestro: 'Sugerencias', donde: 'Las pastillas con temas propuestos antes de escribir («Plan de formación para Ventas»).' },
+  { ingles: 'Suggestions', nuestro: 'Sugerencias', donde: 'Las tarjetas con temas propuestos debajo del cuadro de escritura de un chat nuevo («Plan de formación»).' },
   { ingles: 'Autofill', nuestro: 'Completar por mí', donde: 'El agente llena un formulario y la persona revisa antes de guardar.' },
   { ingles: 'Chain actions', nuestro: 'Acciones encadenadas', donde: 'El agente propone varios pasos y se aprueban juntos (aprobación de Orbit).' },
-  { ingles: 'Agent panel', nuestro: 'Orbit Flow', donde: 'El panel del borde derecho que acompaña la pantalla donde estás: el agente contextual. También es el nombre del botón que lo abre.' },
+  { ingles: 'Agent panel', nuestro: 'Orbit', donde: 'El panel del borde derecho que acompaña la pantalla donde estás: el agente contextual. También es el nombre del botón que lo abre.' },
   { ingles: 'Streaming', nuestro: 'Escribiendo', donde: 'La respuesta aparece palabra por palabra, con el cursor parpadeando.' },
   { ingles: 'Thinking', nuestro: 'Razonando', donde: 'Antes de la respuesta: el orbe, el texto con brillo y los segundos que lleva.' },
 ]
 
 const PENDIENTES: Regla[] = [
-  { titulo: 'Variante de IA en la librería', detalle: 'Pedir el botón con degradado, en pastilla, para no depender de estilos propios del marco.' },
+  {
+    titulo: 'Botón de IA en la librería',
+    detalle:
+      'Pedir el botón con degradado, en pastilla, para no depender de estilos propios del marco. El Storybook trae uno que no viene en la versión instalada y usa otro degradado (naranja → rosa → morado → azul): cuando lo publiquen, se decide si BotonIa pasa a usarlo.',
+  },
   { titulo: 'Orbe y burbuja animados', detalle: 'Hoy el orbe es una imagen. Carlos propone hacerlo con WebGL para que se mueva de verdad.' },
   { titulo: 'Terminología', detalle: 'Alinear los nombres con Shape of AI (shapeof.ai), la referencia que compartió Carlos.' },
-  { titulo: 'La pestaña Orbit del design system', detalle: 'Hoy lleva al producto. Debería abrir estas piezas cuando estás en el design system.' },
   { titulo: 'Estado «razonando» en la librería', detalle: 'Ya hay una sola forma nuestra (orbe, texto con brillo y segundos). Falta pedírsela a la librería para no mantenerla aquí.' },
 ]
 
 function Botones() {
-  const abrirAgente = () => notify('En la pantalla real se abre Orbit Flow, el agente contextual', undefined, 'info')
+  const abrirAgente = () => notify('En la pantalla real se abre Orbit, el agente contextual', undefined, 'info')
   return (
     <div className="flex flex-col gap-6">
       <SectionIntro
         title="Jerarquía de IA"
-        description="Tres botones y nada más: el primario con el degradado, el secundario con contorno y el orbe, y «Orbit Flow», que abre el agente. Los tres en pastilla."
+        description="Tres botones y nada más: el primario con el degradado, el secundario con contorno y el orbe, y «Orbit», que abre el agente. Los tres en pastilla."
       />
       <div className="grid gap-4 md:grid-cols-2">
         <Demo title="Primario de IA" description="Degradado sin borde, en pastilla y sin icono. Uno solo por vista: «Nueva conversación», en Orbit." centrado>
@@ -96,18 +101,18 @@ function Botones() {
             </BotonIaSecundario>
           </div>
         </Demo>
-        <Demo title="Orbit Flow" description="El botón que abre el agente contextual. Se llama «Orbit Flow» y va siempre el último de su fila." centrado>
+        <Demo title="Orbit" description="El botón que abre el agente contextual. Se llama «Orbit» y va siempre el último de su fila." centrado>
           <div className="flex justify-center py-4">
             <ReopenAgentButton onClick={abrirAgente} />
           </div>
         </Demo>
-        <Demo title="Orbit Flow, solo el orbe" description="Cuando la cabecera ya viene muy cargada. El nombre sale al pasar el cursor." centrado>
+        <Demo title="Orbit, solo el orbe" description="Cuando la fila tiene más de dos llamados a la acción, contando a Orbit y sin contar el «⋯» (regla del 5-oct). El nombre sale al pasar el cursor." centrado>
           <div className="flex justify-center py-4">
             <ReopenAgentButton compact onClick={abrirAgente} />
           </div>
         </Demo>
       </div>
-      <Demo title="Orden en la fila" description="«⋯» · terciario · secundario · primario · IA. Los de IA van al final y «Orbit Flow» cierra la fila.">
+      <Demo title="Orden en la fila" description="«⋯» · terciario · secundario · primario · IA. Los de IA van al final y «Orbit» cierra la fila.">
         <div className="flex flex-wrap items-center justify-end gap-2 py-2">
           <BotonIcono aria-label="Más acciones">
             <HugeiconsIcon icon={MoreHorizontalIcon} aria-hidden="true" />
@@ -149,13 +154,20 @@ function Superficies() {
         description="Dónde vive la IA dentro del producto. Todas comparten el degradado y el orbe; el resto de la pantalla no cambia."
       />
       <div className="grid gap-4 lg:grid-cols-2">
+        {/* La tarjeta se documenta entera en su página (Orbit › Tarjeta de IA); aquí solo se muestra entre las superficies. */}
         <Demo title="Tarjeta de IA" description="Invita a usar la IA desde una pantalla normal. En el Home, «Crear un curso».">
-          <AiCard
-            title="Crear un curso"
-            description="Genera contenido de aprendizaje apoyado en AI en minutos."
-            action="Crear ahora"
-            render={<Link to={destino('contenidos')} />}
-          />
+          <div className="flex flex-col items-start gap-3">
+            <AiCard
+              title="Crear un curso"
+              description="Genera contenido de aprendizaje apoyado en IA en minutos."
+              action="Crear ahora"
+              render={<Link to={destino('contenidos')} />}
+            />
+            <Button variant="link" nativeButton={false} render={<Link to="/design-system/tarjeta-ia" />}>
+              Qué lleva y cómo se arma
+              <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" data-icon="inline-end" />
+            </Button>
+          </div>
         </Demo>
         <Demo title="Selector de espacio" description="Cambia entre el Workspace y Orbit. El orbe marca cuál es el de IA.">
           <BarraEnVivo id="suite-ai" alto="h-32" />
@@ -197,31 +209,56 @@ function Superficies() {
   )
 }
 
+// «Escribiendo» en vivo: el texto de una respuesta que llega palabra por palabra, con el cursor al final (13-oct: antes
+// era un rótulo «En el chat de Orbit» con una insignia de autoría, no la pieza).
+const RESPUESTA = 'Revisé las 12 postulaciones y te propongo tres para la entrevista final.'
+
+function TextoEscribiendo() {
+  const [letras, setLetras] = useState(0)
+  useEffect(() => {
+    const reloj = window.setInterval(() => setLetras((antes) => (antes >= RESPUESTA.length + 20 ? 0 : antes + 1)), 70)
+    return () => window.clearInterval(reloj)
+  }, [])
+  return (
+    <Text size="sm" role="status" aria-label="Respuesta que llega palabra por palabra" className="max-w-xs">
+      {RESPUESTA.slice(0, letras)}
+      <span aria-hidden="true" className="ms-0.5 inline-block h-4 w-0.5 translate-y-0.5 animate-pulse bg-foreground" />
+    </Text>
+  )
+}
+
+// Los tres estados del punto del historial de Orbit, cada uno con su dirección propia para que no se mezclen.
+const PUNTOS: { path: string; status: 'thinking' | 'unread' | 'read'; etiqueta: string }[] = [
+  { path: '/design-system/ia/estados#razonando', status: 'thinking', etiqueta: 'Razonando: el agente está trabajando' },
+  { path: '/design-system/ia/estados#sin-leer', status: 'unread', etiqueta: 'Respuesta sin leer' },
+  { path: '/design-system/ia/estados#leida', status: 'read', etiqueta: 'Leída' },
+]
+
 function Estados() {
   return (
     <div className="flex flex-col gap-6">
-      <SectionIntro title="Estados" description="Qué ve la persona mientras la IA trabaja. «Razonando» es la misma pieza en el chat, en Orbit Flow y en el editor." />
+      <SectionIntro title="Estados" description="Qué ve la persona mientras la IA trabaja. «Razonando» es la misma pieza en el chat, en Orbit y en el editor." />
       <div className="grid gap-4 md:grid-cols-3">
         <Demo title="Razonando" description="Mientras prepara la respuesta: el orbe respira, el texto brilla y al lado corren los segundos." centrado>
           <div className="flex flex-col items-center gap-2 py-6">
             <AiThinking />
-            <Badge variant="secondary">Hecho por Nicolás</Badge>
           </div>
         </Demo>
         <Demo title="Escribiendo" description="La respuesta aparece palabra por palabra, con el cursor parpadeando al final." centrado>
-          <div className="flex flex-col items-center gap-2 py-6">
-            <Text as="span" variant="muted" size="sm">
-              En el chat de Orbit
-            </Text>
-            <Badge variant="secondary">Hecho por Nicolás</Badge>
+          <div className="flex min-h-16 items-center justify-center py-6">
+            <TextoEscribiendo />
           </div>
         </Demo>
-        <Demo title="Trabajando en segundo plano" description="El historial marca con un punto si la conversación está razonando, sin leer o leída." centrado>
-          <div className="flex flex-col items-center gap-2 py-6">
-            <Text as="span" variant="muted" size="sm">
-              En la barra lateral de Orbit
-            </Text>
-            <Badge variant="secondary">Hecho por Nicolás</Badge>
+        <Demo title="Trabajando en segundo plano" description="El historial marca con un punto si la conversación está razonando, sin leer o leída (ChatStatusDot)." centrado>
+          <div className="flex flex-col gap-3 py-4">
+            {PUNTOS.map((punto) => (
+              <div key={punto.path} className="flex items-center gap-2.5">
+                <ChatStatusDot path={punto.path} status={punto.status} />
+                <Text as="span" size="sm">
+                  {punto.etiqueta}
+                </Text>
+              </div>
+            ))}
           </div>
         </Demo>
       </div>
@@ -231,7 +268,7 @@ function Estados() {
         <AlertDescription>
           <p>
             «Razonando» es solo para cuando de verdad trabaja la IA. Una carga normal lleva el esqueleto de lo que va a
-            aparecer, y la respuesta de una acción va en su propio botón (ver Componentes › Estados y avisos).
+            aparecer, y la respuesta de una acción va en su propio botón (ver Patrones › Estados y avisos).
           </p>
         </AlertDescription>
       </Alert>

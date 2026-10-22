@@ -2,7 +2,6 @@ import type { ReactElement } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Calendar03Icon, Copy01Icon, Delete02Icon, Edit02Icon, UserIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   FieldDescription,
   FieldLegend,
@@ -17,6 +16,7 @@ import {
   ItemTitle,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { Hint } from '@/shared/components/Hint'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { DEMOGRAPHIC_TYPES, demographicTypeTone } from '../../modelo/demographics'
@@ -99,6 +99,8 @@ export function FichaDemografico({
                 : 'Creado por una persona de tu equipo para segmentar los resultados.'}
             </FieldDescription>
             {fila.createdAt !== null || fila.createdBy !== null ? (
+              // px-0! en las dos filas: a ras del panel, alineadas con el resto de la ficha; el relleno de la fila no se quita con
+              // una clase normal (ficha instalacion-estilos-sin-capa en ai-tools/flux-ui/diferencias.json).
               <ItemGroup>
                 {fila.createdAt !== null ? (
                   <Item size="xs" className="px-0!">
@@ -111,6 +113,7 @@ export function FichaDemografico({
                   </Item>
                 ) : null}
                 {fila.createdBy !== null ? (
+                  // px-0!: como la fila de arriba (ficha instalacion-estilos-sin-capa).
                   <Item size="xs" className="px-0!">
                     <ItemMedia variant="icon">
                       <HugeiconsIcon icon={UserIcon} aria-hidden="true" />

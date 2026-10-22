@@ -15,7 +15,9 @@ type Props = Omit<ComponentProps<typeof Button>, 'variant' | 'size'> & {
 export function BotonIa({ size = 'md', className, children, ...props }: Props) {
   return (
     <span className={cn(newChat.wrap, 'inline-flex w-fit shrink-0')}>
-      <Button size={size === 'sm' ? 'sm' : 'default'} className={cn(newChat.button, 'rounded-full!', size === 'sm' ? 'px-4' : 'px-5', className)} {...props}>
+      {/* Más aire a los lados que un botón normal (15 oct, Carlos): 20px y 16px en el pequeño. Va con «!» porque el tema
+          de la librería pone 10px y le gana a la clase (ficha: Ajustes propios › Botones de IA). */}
+      <Button size={size === 'sm' ? 'sm' : 'default'} className={cn(newChat.button, 'rounded-full!', size === 'sm' ? 'px-4!' : 'px-5!', className)} {...props}>
         {children}
       </Button>
     </span>

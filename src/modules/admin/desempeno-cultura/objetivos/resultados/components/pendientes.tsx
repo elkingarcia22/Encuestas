@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Notification01Icon, Search01Icon } from '@hugeicons/core-free-icons'
-import { Button, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, InputGroup, InputGroupAddon, InputGroupInput, Item, ItemContent, ItemDescription, ItemTitle, Text } from '@ubits/flux-ui'
+import { Button, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, InputGroup, InputGroupAddon, InputGroupInput, Item, ItemContent, ItemDescription, ItemTitle } from '@ubits/flux-ui'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
 import { Badge } from '@/shared/components/Badge'
 import { notify } from '@/shared/components/notify'
+import { SinResultados } from '@/shared/components/SinResultados'
 import { formatoAvance } from '../../modelo/ciclos'
 import { pendientes } from '../../modelo/resultados/lecturas'
 import type { ResultadosCiclo } from '../../modelo/resultados/seguimiento'
@@ -107,9 +108,8 @@ export function Pendientes({ resultados }: { resultados: ResultadosCiclo }) {
         footer={abierto ? <Button onClick={() => setConfirmar(true)}>{TEXTOS[abierto].accion(listas[abierto].length)}</Button> : undefined}
       >
         {lista.length === 0 ? (
-          <Text as="p" size="sm" variant="muted" className="py-6 text-center">
-            Nada pendiente por aquí.
-          </Text>
+          // Solo queda vacía al buscar (un pendiente sin filas no abre panel): el vacío de búsqueda del sistema.
+          <SinResultados busqueda={busqueda} onLimpiar={() => setBusqueda('')} />
         ) : (
           <Frame>
           <FramePanel className="[--frame-panel-px:0px] [--frame-panel-py:0px]">
@@ -128,14 +128,13 @@ export function Pendientes({ resultados }: { resultados: ResultadosCiclo }) {
           </FramePanel>
           </Frame>
         )}
-      </DrawerShell>
-
-      <DialogoConfirmar
+        {/* Dentro del panel: la confirmación se abre como vista del mismo, con «← título» para volver (regla «preguntar-dentro-del-panel»). */}
+        <DialogoConfirmar
         abierto={confirmar}
         onAbiertoChange={setConfirmar}
         icono={Notification01Icon}
         titulo="¿Enviar el recordatorio?"
-        descripcion={abierto ? `Les llega un aviso a ${listas[abierto].length} ${listas[abierto].length === 1 ? 'persona' : 'personas'} con «${TEXTOS[abierto].titulo}» en «${resultados.ciclo.nombre}».` : ''}
+        descripcion={abierto ? <>Les llega un aviso a {listas[abierto].length} {listas[abierto].length === 1 ? 'persona' : 'personas'} con «{TEXTOS[abierto].titulo}» en <strong className="font-semibold">{resultados.ciclo.nombre}</strong>.</> : ''}
         accion="Enviar recordatorio"
         onConfirmar={() => {
           if (!abierto) return
@@ -143,7 +142,10 @@ export function Pendientes({ resultados }: { resultados: ResultadosCiclo }) {
           setConfirmar(false)
           setAbierto(null)
         }}
-      />
+      >
+        {abierto ? <RegistroConfirmar icono={Notification01Icon} nombre={TEXTOS[abierto].titulo} detalle={`${resultados.ciclo.nombre} · ${listas[abierto].length} ${listas[abierto].length === 1 ? 'pendiente' : 'pendientes'}`} tono="neutro" /> : null}
+        </DialogoConfirmar>
+      </DrawerShell>
     </>
   )
 }

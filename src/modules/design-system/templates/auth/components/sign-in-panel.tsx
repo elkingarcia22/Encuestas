@@ -4,6 +4,7 @@ import { useCasoAuth } from './casos'
 import { CheckEmailPanel } from './check-email-panel'
 import { ForgotPasswordForm } from './forgot-password-form'
 import { KeepLearningPanel } from './keep-learning-panel'
+import { LicenseInactivePanel, ValidityEndedPanel } from './license-panels'
 import { LoginForm } from './login-form'
 import { OrganizationForm } from './organization-form'
 
@@ -43,7 +44,17 @@ export function SignInPanel() {
     case 'bloqueado':
       return <BlockedAccountPanel onBackToLogin={irAlLogin} />
     case 'sigue-aprendiendo':
-      return <KeepLearningPanel onBackToLogin={irAlLogin} onOrganizationLogin={() => irA('organizacion')} />
+      return (
+        <KeepLearningPanel
+          correo={identificador}
+          onBackToLogin={irAlLogin}
+          onOrganizationLogin={() => irA('organizacion')}
+        />
+      )
+    case 'licencia-inactiva':
+      return <LicenseInactivePanel onBackToLogin={irAlLogin} />
+    case 'vigencia-terminada':
+      return <ValidityEndedPanel onBackToLogin={irAlLogin} />
     default:
       return (
         <LoginForm

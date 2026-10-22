@@ -7,7 +7,7 @@ import type { SurveyQuestion } from '../../../modelo/surveyBuilderTypes'
 import { LIMITE_ENUNCIADO, contador, largoDe, mensajeMinimo } from '../../../modelo/limites-texto'
 
 // El enunciado de una pregunta. Escribirla a mano es lo principal: sin botón de IA ni atajos de redacción en el campo.
-// «Redactar con IA» (desde Añadir)
+// «Redactar con IA» (desde Agregar)
 // abre el campo pidiendo una frase de contexto, y con Enter sale la pregunta entera, con su tipo de respuesta.
 
 type Fase = 'escribiendo' | 'contexto' | 'trabajando'
@@ -61,6 +61,7 @@ export function CampoEnunciado({ pregunta, onCambio, invalido, pedirContexto = f
   return (
     <Field data-invalid={(invalido && !enContexto) || undefined}>
       <FieldLabel htmlFor={id}>{enContexto ? 'De qué va la pregunta' : 'Enunciado'}</FieldLabel>
+      {/* «!»: el fondo sólido; la librería lo deja transparente y se pierde sobre el gris de la fila (diferencias.json › input-group-fondo-solido). */}
       <Textarea
         id={id}
         rows={2}

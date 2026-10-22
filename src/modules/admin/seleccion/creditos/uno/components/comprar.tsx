@@ -23,6 +23,7 @@ import {
   Text,
 } from '@ubits/flux-ui'
 import { notify, notifyAction } from '@/shared/components/notify'
+import { BotonCancelarPanel } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import {
   PAQUETES_SUELTOS,
@@ -35,7 +36,7 @@ import {
   useRecarga,
   type Bolsa,
 } from '../../../propuestas/creditos'
-import { useAccion } from '../../../propuestas/components/carga'
+import { useAccion } from '@/modules/design-system/estados/carga'
 import { noSeGuardo } from '../../../propuestas/simular'
 
 // Comprar créditos sin pasar por el ejecutivo de UBITS (8 oct, VP de producto: «si quieres comprar más créditos los vas
@@ -90,14 +91,14 @@ export function ComprarCreditos({
       icon={CreditCardIcon}
       title="Comprar créditos"
       description="Entran al momento a tu bolsa, sin contrato. Pagas con tarjeta en la página segura de Stripe."
+      // 13-oct (I-021): con otro paquete o la recarga cambiada, no se cierra al tocar fuera y pregunta antes de descartar.
+      conCambios={cantidad !== PAQUETES_SUELTOS[1] || automatica !== Boolean(recarga) || umbral !== (recarga?.umbral ?? UMBRALES[1])}
       footer={
         <div className="flex w-full items-center gap-2">
           <Text as="span" variant="muted" size="sm" role="status" className="min-w-0 flex-1">
             {creditos(cantidad)} créditos · {dolares(precio)}
           </Text>
-          <Button variant="outline" disabled={accion.enCurso} onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
+          <BotonCancelarPanel disabled={accion.enCurso} alCerrar={() => onOpenChange(false)} />
           <Button disabled={accion.enCurso} onClick={() => accion.correr(pagar)}>
             {accion.enCurso ? <Spinner /> : null}
             {accion.enCurso ? 'Abriendo el pago…' : `Pagar ${dolares(precio)}`}

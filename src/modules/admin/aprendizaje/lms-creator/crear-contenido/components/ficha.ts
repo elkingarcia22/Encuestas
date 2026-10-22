@@ -80,6 +80,44 @@ const HOSTS_TRAILER = [
   /(^|\.)sharepoint\.com$/,
 ]
 
+/**
+ * El tráiler listo para incrustar, **y de quién es**.
+ *
+ * Saber el proveedor hace falta para dos cosas que `embedDeVideo` no da: pedirle al reproductor que avise cuando el
+ * vídeo termina —cada uno lo hace a su manera— y sacar la miniatura.
+ */
+export function trailerEmbebido(url: string): { src: string; proveedor: 'youtube' | 'vimeo' | 'otro' } | null {
+  const src = embedDeVideo(url)
+  if (!src) return null
+  if (src.includes('youtube-nocookie.com')) {
+    // `enablejsapi` es lo que abre el canal para enterarse de que el vídeo acabó.
+    return { src: `${src}&enablejsapi=1`, proveedor: 'youtube' }
+  }
+  if (src.includes('player.vimeo.com')) return { src: `${src}&api=1`, proveedor: 'vimeo' }
+  return { src, proveedor: 'otro' }
+}
+
+/**
+ * La miniatura del tráiler, cuando se puede sacar sin pedir permiso a nadie.
+ *
+ * YouTube publica la suya en una dirección fija a partir del id. Vimeo, Drive y OneDrive piden una llamada a su API
+ * con credenciales, así que ahí no hay miniatura y quien la pinte enseña un marco con el icono de vídeo.
+ */
+export function miniaturaDeTrailer(url: string): string | null {
+  try {
+    const u = new URL(url.trim())
+    const host = u.hostname.replace(/^www\./, '')
+    if (host === 'youtu.be') return `https://i.ytimg.com/vi/${u.pathname.slice(1)}/mqdefault.jpg`
+    if (host.endsWith('youtube.com') || host.endsWith('youtube-nocookie.com')) {
+      const id = u.searchParams.get('v') ?? u.pathname.split('/').filter(Boolean).at(-1)
+      return id ? `https://i.ytimg.com/vi/${id}/mqdefault.jpg` : null
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 export function trailerValido(url: string) {
   try {
     const u = new URL(url.trim())

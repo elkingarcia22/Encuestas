@@ -51,8 +51,8 @@ export function Asistencias({ resultados }: { resultados: Resultados }) {
   const confirmadas = personas.size
   const automaticas = new Set(filas.filter((fila) => fila.confirmado != null && fila.modo === 'Autoconfirmación').map((fila) => fila.usuario)).size
   const manuales = confirmadas - automaticas
-  const inscritos = resultados.inscritos
-  const cobertura = inscritos === 0 ? 0 : (confirmadas / inscritos) * 100
+  const iniciaron = resultados.iniciaron
+  const cobertura = iniciaron === 0 ? 0 : (confirmadas / iniciaron) * 100
 
   // Las sesiones con más gente: dicen qué horario funciona, que es lo que se usa para programar la siguiente.
   const porSesion = useMemo(
@@ -133,11 +133,11 @@ export function Asistencias({ resultados }: { resultados: Resultados }) {
     <div className="flex flex-col gap-6">
       <ResumenPestana
         titulo="Asistencia"
-        ayuda="Es el porcentaje de personas inscritas que confirmaron su asistencia a alguna sesión: personas que confirmaron ÷ personas inscritas."
+        ayuda="Es el porcentaje de quienes iniciaron el contenido y confirmaron su asistencia a alguna sesión: personas que confirmaron ÷ personas que lo iniciaron."
         cifra={porcentaje(cobertura)}
         // Sin clasificación, por lo mismo que en las otras pestañas: la cifra habla sola y poner nota es juzgar con
         // un corte que nadie acordó (Dave, 14-oct).
-        pie={`${numero(confirmadas)} de ${numero(inscritos)} inscritos · ${numero(filas.length)} ${filas.length === 1 ? 'asistencia' : 'asistencias'}`}
+        pie={`${numero(confirmadas)} de ${numero(iniciaron)} · ${numero(filas.length)} ${filas.length === 1 ? 'asistencia' : 'asistencias'}`}
         grafico={<AnilloAvance valor={cobertura} color="var(--primary)" etiqueta="Asistencia" tamano={48} />}
         tituloReparto="Cómo se confirmó"
         totalReparto={`${numero(confirmadas)} ${confirmadas === 1 ? 'persona' : 'personas'}`}

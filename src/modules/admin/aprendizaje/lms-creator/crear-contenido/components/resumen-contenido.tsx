@@ -2,6 +2,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Alert02Icon, CheckmarkCircle02Icon } from '@hugeicons/core-free-icons'
 import { Frame, FrameHeader, FramePanel, FrameTitle, Progress, Separator, Text } from '@ubits/flux-ui'
 import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
+import { CapaTrailer } from '../../compartido/portada-trailer'
 import { enLista, plural } from '@/modules/design-system/patrones/formato'
 import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import {
@@ -73,7 +74,7 @@ export function pendientesDelResumen(b: Borrador, paso: number, items: ItemPeso[
     if (visibles.length >= 2) {
       total += 1
       const suma = sumaPesos(items, pesos)
-      if (suma !== 100) falta.push(`Pesos que sumen 100% (llevas ${suma.toLocaleString('es-CO')}%)`)
+      if (suma !== 100) falta.push(`Pesos que sumen 100 % (llevas ${suma.toLocaleString('es-CO')} %)`)
     }
     if (b.visibilidad === 'privado') {
       total += 1
@@ -145,12 +146,16 @@ export function ResumenContenido({ borrador, paso, items, pesos }: Props) {
       </FrameHeader>
 
           {/* La tarjeta del catálogo, con lo que se lleva escrito. Sin título todavía, el título va apagado para que no
-              parezca un contenido que ya se llama así. */}
+              parezca un contenido que ya se llama así.
+
+              Y el tráiler se ve desde aquí: un play sobre la portada que lo reproduce en su hueco y, al acabar,
+              devuelve la imagen. Es lo mismo que verá el colaborador (Dave, 15-oct). */}
           <TarjetaContenido
             className={nombre ? undefined : '[&_h3]:text-muted-foreground'}
             titulo={nombre || 'Sin título todavía'}
             imagen={portada.imagen || undefined}
             sinImagen={<ImagenGlass nombre="glass-gallery" tamano={64} className="opacity-45 grayscale" />}
+            sobrePortada={<CapaTrailer trailer={portada.trailer} tamano="sm" />}
             tipo={ruta ? 'Ruta de aprendizaje' : evento ? 'Evento' : nombreTipo(portada.tipo) || undefined}
             competencia={portada.categoria ? nombreCategoria(portada.categoria) : undefined}
             nivel={nombreNivel(portada.nivel) || undefined}

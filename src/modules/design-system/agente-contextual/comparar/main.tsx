@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Button, Heading, Text } from '@ubits/flux-ui'
-import { ActionDialog } from '@/shared/components/ActionDialog'
+import { ArrowRight01Icon, Calendar03Icon } from '@hugeicons/core-free-icons'
+import { Button, Text } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../../navegacion/components/case-frame'
 import {
   AgentCard,
@@ -26,6 +27,7 @@ export function Component() {
   const [selected, setSelected] = useState<CandidateId[]>(['laura', 'andres', 'camila'])
   const [offer, setOffer] = useState(false)
   const [confirm, setConfirm] = useState(false)
+  const [agendar, setAgendar] = useState(false)
   const [flash, setFlash] = useState<{ id: CandidateId; tick: number } | null>(null)
   const thread = useAgentThread()
 
@@ -47,13 +49,13 @@ export function Component() {
     setConfirm(false)
     setOffer(true)
     focusCandidate('laura')
-    notify('Laura Méndez pasó a Oferta')
+    notify('Laura Méndez pasó a Oferta', 'Se avisó a Andrés Pardo.', 'success')
   }
 
   const undoOffer = () => {
     setOffer(false)
     focusCandidate('laura')
-    notify('Laura volvió a Entrevista final')
+    notify('Laura volvió a Entrevista final', undefined, 'info')
   }
 
   const agentPanel = (
@@ -93,7 +95,7 @@ export function Component() {
                   className="mt-3"
                   items={[
                     'Gana en 3 de 6 criterios y no queda última en ninguno.',
-                    'Pide 11% más que el tope del rango; Camila está dentro, pero tiene 2 años de experiencia.',
+                    'Pide 11 % más que el tope del rango; Camila está dentro, pero tiene 2 años de experiencia.',
                     'Puede empezar en 15 días, antes del cierre del trimestre.',
                   ]}
                 />
@@ -114,7 +116,11 @@ export function Component() {
             </div>
           </AgentCard>
 
+          {/* Orden de una fila (13-oct, I-464): primero el secundario y a la derecha el primario. */}
           <div className="mt-4 flex flex-wrap items-center gap-2.5">
+            <Button variant="outline" className={PILL} onClick={() => setAgendar(true)}>
+              Agendar segunda entrevista
+            </Button>
             {withLaura ? (
               offer ? (
                 <Button data-undo-focus="" variant="outline" className={PILL} onClick={() => focusCandidate('laura')}>
@@ -126,9 +132,6 @@ export function Component() {
                 </Button>
               )
             ) : null}
-            <Button variant="outline" className={PILL} onClick={() => notify('Invitación a segunda entrevista enviada para el 18 sep')}>
-              Agendar segunda entrevista
-            </Button>
           </div>
           {offer ? (
             <UndoRow className="mt-3" onUndo={undoOffer}>
@@ -148,7 +151,7 @@ export function Component() {
       hint="Compara en una tabla y lo que tiene impacto pide confirmación"
       width="default"
       anatomy={false}
-      back={{ label: 'Casos de Orbit Flow', to: '/design-system/agente-contextual' }}
+      back={{ label: 'Casos de Orbit', to: '/design-system/agente-contextual' }}
     >
       <AgentStage state={panel} onOpen={() => setPanel('open')} panel={agentPanel}>
         <div className="px-8 py-6">
@@ -163,30 +166,40 @@ export function Component() {
         </div>
       </AgentStage>
 
-      {/* Confirmación corta en la ventana única (auditoría 5-oct): título fijo y la finalista en la primera línea. */}
-      <ActionDialog
-        open={confirm}
-        onOpenChange={setConfirm}
-        size="sm"
-        title="Pasar a oferta"
-        sub="Se mueve a la etapa Oferta, se avisa a Andrés Pardo (responsable de la vacante) y la candidata recibe un correo para agendar la llamada."
-        lead={
-          <>
-            <Heading as="h3" level={6}>
-              Laura Méndez
-            </Heading>
-            <Text as="span" variant="muted" size="sm">
-              Analista de datos · Entrevista final
-            </Text>
-          </>
-        }
-        confirmLabel="Pasar a oferta"
-        onConfirm={sendOffer}
+      {/* Confirmar un cambio que avisa a otras personas va en DialogoConfirmar con RegistroConfirmar (regla «dos-ventanas»,
+          13-oct; antes era un ActionDialog con la finalista en la primera línea): título fijo y la finalista en la tarjeta. */}
+      <DialogoConfirmar
+        abierto={confirm}
+        onAbiertoChange={setConfirm}
+        icono={ArrowRight01Icon}
+        titulo="¿Pasar a oferta?"
+        descripcion="Se mueve a la etapa Oferta, se avisa a Andrés Pardo (responsable de la vacante) y la candidata recibe un correo para agendar la llamada."
+        cancelar="Todavía no"
+        accion="Pasar a oferta"
+        onConfirmar={sendOffer}
       >
+        <RegistroConfirmar nombre="Laura Méndez" detalle="Analista de datos · Entrevista final" estado="Pasa a Oferta" tono="neutro" />
         <Text size="sm" variant="muted">
           Andrés Castaño y Camila Rojas siguen en Entrevista final.
         </Text>
-      </ActionDialog>
+      </DialogoConfirmar>
+
+      {/* Agendar envía invitaciones a las finalistas: también pregunta antes (13-oct). */}
+      <DialogoConfirmar
+        abierto={agendar}
+        onAbiertoChange={setAgendar}
+        icono={Calendar03Icon}
+        titulo="¿Agendar la segunda entrevista?"
+        descripcion="Se envía la invitación para el 18 sept a las finalistas que compares."
+        cancelar="Todavía no"
+        accion={`Enviar ${compared.length} invitaciones`}
+        onConfirmar={() => {
+          setAgendar(false)
+          notify('Invitaciones enviadas', `Segunda entrevista el 18 sept para ${compared.length} finalistas.`, 'success')
+        }}
+      >
+        <RegistroConfirmar nombre="Analista de datos" detalle={`Segunda entrevista · ${compared.length} finalistas`} estado="18 sept" tono="neutro" icono={Calendar03Icon} />
+      </DialogoConfirmar>
     </CaseFrame>
   )
 }

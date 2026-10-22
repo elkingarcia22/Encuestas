@@ -23,14 +23,17 @@ export const adminModule: AppModule = {
               index: true,
               lazy: () => import('./seleccion/main'),
             },
-            // AI Insights reemplazó al Dashboard el 8 oct (VP de producto): su código sigue en `seleccion/dashboard`. Los
-            // enlaces viejos del Dashboard y de Onboarding (que salió el 7 oct) llevan a él.
+            // AI Insights reemplazó al Dashboard el 8 oct y el 16 oct pasó a ser «Orbit Data», una conversación con Orbit
+            // sobre los datos de Selección (VP de producto): su código sigue en `seleccion/dashboard`. Los enlaces viejos
+            // (AI Insights, «Habla con tus datos», Dashboard y Onboarding, que salió el 7 oct) llevan a ella.
             {
-              path: 'ai-insights',
+              path: 'orbit-data',
               lazy: () => import('./seleccion/dashboard/main'),
             },
-            { path: 'dashboard', loader: () => redirect('/admin/seleccion/ai-insights') },
-            { path: 'onboarding', loader: () => redirect('/admin/seleccion/ai-insights') },
+            { path: 'tus-datos', loader: () => redirect('/admin/seleccion/orbit-data') },
+            { path: 'ai-insights', loader: () => redirect('/admin/seleccion/orbit-data') },
+            { path: 'dashboard', loader: () => redirect('/admin/seleccion/orbit-data') },
+            { path: 'onboarding', loader: () => redirect('/admin/seleccion/orbit-data') },
             {
               path: 'vacantes',
               lazy: () => import('./seleccion/vacantes/main'),
@@ -162,9 +165,8 @@ export const adminModule: AppModule = {
                 { path: 'planes', lazy: () => import('./aprendizaje/planes-de-formacion/planes/main') },
                 // Va antes del detalle para que «crear» no se lea como el id de un plan.
                 { path: 'planes/crear', lazy: () => import('./aprendizaje/planes-de-formacion/planes/crear/main') },
-                // Editar es la misma página que crear, con el plan cargado (auditoría del 5-oct: crear y editar en una
-                // página con la barra fija abajo, nunca en un panel). Reemplaza al panel de edición del 30 sep.
-                { path: 'planes/:id/editar', lazy: () => import('./aprendizaje/planes-de-formacion/planes/crear/main') },
+                // El plan se edita en su propia página, sin «modo editar» (14-oct): el enlace viejo de editar lleva ahí.
+                { path: 'planes/:id/editar', loader: ({ params }) => redirect(`/admin/aprendizaje/planes-de-formacion/planes/${params.id}`) },
                 { path: 'planes/:id', lazy: () => import('./aprendizaje/planes-de-formacion/planes/detalle/main') },
                 { path: 'grupos', lazy: () => import('./aprendizaje/planes-de-formacion/grupos/main') },
                 // «crear» y «asistente» van antes del detalle para que no se lean como el id de un grupo.

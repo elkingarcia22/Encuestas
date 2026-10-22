@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
+import { useInicioDePagina } from '../components/usar-inicio-de-pagina'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Calendar03Icon, Download04Icon, Globe02Icon, InformationCircleIcon, ViewOffSlashIcon, Tag01Icon, UserGroupIcon, ViewIcon } from '@hugeicons/core-free-icons'
-import { Alert, AlertDescription, AlertTitle, Badge, Button, Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle, Spinner, Tabs, TabsContent, TabsList, TabsTrigger } from '@ubits/flux-ui'
+import { Alert, AlertDescription, AlertTitle, Button, Spinner, Tabs, TabsContent, TabsList, TabsTrigger } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { TextoCompleto } from '@/shared/components/TextoCompleto'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
@@ -23,12 +25,12 @@ import { Preguntas } from './components/preguntas'
 import { PanelDescargas, type PestanaDescargas } from './descargas/panel-descargas'
 import { useCentroDescargas, useDescargasEnProcesos } from './descargas/use-centro-descargas'
 import { RiesgoPsicosocial } from './components/riesgo'
+import { numero } from './components/escala'
 
 // Resultados de una encuesta: cinco pestañas sobre la misma medición, cada una responde una
 // pregunta distinta. Lo que se comparte entre ellas es el demográfico elegido («Ver por»): pasar
 // de participación por área al mapa de calor por área es un solo pensamiento. Las acciones que en
 // el prototipo iban en la barra flotante están en el encabezado y en la tabla de participación.
-import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 const RUTA = '/admin/desempeno-cultura/encuestas'
 // Cuántas mediciones anteriores del mismo tipo entran en la tendencia.
@@ -67,20 +69,12 @@ function SinEncuesta() {
     <PageShell>
       <PageHeader back={{ label: 'Encuestas', to: RUTA }} title="Resultados" />
       <PageContent>
-        <Empty className="py-16">
-          <EmptyHeader>
-            <EmptyMedia variant="default">
-              <ImagenGlass nombre="glass-search" />
-            </EmptyMedia>
-            <EmptyTitle>No encontramos esta encuesta</EmptyTitle>
-            <EmptyDescription>Puede que se haya eliminado o que el enlace esté mal copiado. Vuelve a la lista para elegir otra.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button variant="outline" onClick={() => navigate(RUTA)}>
-              Volver a encuestas
-            </Button>
-          </EmptyContent>
-        </Empty>
+        <PrimeraVez
+          icono="glass-search"
+          titulo="No encontramos esta encuesta"
+          descripcion="Puede que se haya eliminado o que el enlace esté mal copiado. Vuelve a la lista para elegir otra."
+          accion={{ texto: 'Volver a encuestas', onClick: () => navigate(RUTA) }}
+        />
       </PageContent>
     </PageShell>
   )
@@ -125,7 +119,7 @@ function AvisoEnCurso({ respondidas, invitados, cierre }: { respondidas: number;
       <HugeiconsIcon icon={InformationCircleIcon} aria-hidden="true" />
       <AlertTitle>La encuesta sigue abierta</AlertTitle>
       <AlertDescription>
-        {`Ves las cifras acumuladas hasta ahora: ${respondidas.toLocaleString('es-CO')} de ${invitados.toLocaleString('es-CO')} invitados ya respondieron. `}
+        {`Ves las cifras acumuladas hasta ahora: ${numero(respondidas)} de ${numero(invitados)} invitados ya respondieron. `}
         {vencida ? `Su cierre era el ${cierre} y sigue recibiendo respuestas: los números pueden cambiar hasta que se cierre.` : `Los números pueden cambiar hasta el cierre, el ${cierre}.`}
       </AlertDescription>
     </Alert>
@@ -136,6 +130,7 @@ export function Component() {
   const { id = '' } = useParams()
   const encuestas = useEncuestas()
   const encuesta = encuestaPorId(id)
+  const inicio = useInicioDePagina(id)
 
   const borrador = useMemo(() => (encuesta ? (encuesta.draft ?? createPublishedSurveyDraft(encuesta)) : null), [encuesta])
   // La tendencia: las mediciones anteriores del mismo tipo, en el orden de la lista.
@@ -205,6 +200,7 @@ export function Component() {
 
   return (
     <PageShell>
+      <span ref={inicio} aria-hidden="true" className="hidden" />
       {/* Las pestañas envuelven la página: la tira va en el hueco `tabs` de la cabecera, pegada al título, y cada pestaña
           es un TabsContent dentro de PageContent (decisión 13 de la auditoría; como Tareas y Navegación › Detalle). */}
       <Tabs value={pestanaActiva} onValueChange={(valor) => setPestana(valor as PestanaId)}>

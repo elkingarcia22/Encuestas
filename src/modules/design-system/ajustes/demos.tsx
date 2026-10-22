@@ -133,12 +133,13 @@ export function EmpresaUbits({ nota }: { nota: string }) {
   )
 }
 
-// Los dos anillos reales del menú de empresa, a la vista sin abrir nada (7-oct: en la ficha solo se veía el botón).
+// Los anillos reales del menú de empresa, a la vista sin abrir nada (7-oct: en la ficha solo se veía el botón).
 export function ConsumoUbits() {
   return (
     <div className="flex w-full max-w-64 flex-col rounded-xl border bg-popover p-1 shadow-xs">
       <Gauge label="Licencias" value={[470, 500]} />
-      <Gauge label="Créditos de IA" value={[5600, 10000]} ai />
+      <Gauge label="Créditos de Selección" value={[5600, 10000]} ai />
+      <Gauge label="Créditos de LMS Creator" value={[1800, 5000]} ai />
     </div>
   )
 }
@@ -338,12 +339,12 @@ export function ConfirmarLibreria() {
             <AlertDialogMedia>
               <HugeiconsIcon icon={LogoutSquare01Icon} aria-hidden="true" />
             </AlertDialogMedia>
-            <AlertDialogTitle>¿Salir sin guardar los cambios?</AlertDialogTitle>
-            <AlertDialogDescription>Si sales ahora, se pierde lo que cambiaste.</AlertDialogDescription>
+            <AlertDialogTitle>¿Salir de la creación?</AlertDialogTitle>
+            <AlertDialogDescription>Lo que llevas se pierde: no queda guardado al salir.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Seguir editando</AlertDialogCancel>
-            <AlertDialogAction onClick={() => setAbierto(false)}>Guardar y salir</AlertDialogAction>
+            <AlertDialogCancel>Seguir aquí</AlertDialogCancel>
+            <AlertDialogAction onClick={() => setAbierto(false)}>Salir de la creación</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -363,10 +364,10 @@ export function ConfirmarUbits() {
         abierto={abierto}
         onAbiertoChange={setAbierto}
         icono={LogoutSquare01Icon}
-        titulo="¿Salir sin guardar los cambios?"
-        descripcion="Si sales ahora, se pierde lo que cambiaste."
-        cancelar="Seguir editando"
-        accion="Guardar y salir"
+        titulo="¿Salir de la creación?"
+        descripcion="Lo que llevas se pierde: no queda guardado al salir."
+        cancelar="Seguir aquí"
+        accion="Salir de la creación"
         onConfirmar={() => setAbierto(false)}
       />
     </ConNota>

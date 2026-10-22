@@ -6,6 +6,7 @@ import { Badge } from '@/shared/components/Badge'
 import { BotonAyuda } from '@/shared/components/BotonAyuda'
 import { Hint } from '@/shared/components/Hint'
 import { DetalleIndicador } from '@/modules/design-system/graficos/fila-indicadores'
+import { CifraAnimada } from './cifra-animada'
 
 // Las piezas de las cifras de Selección: «Cómo van los procesos» en el inicio de Vacantes y «Cómo va tu base» en Mis
 // candidatos (5 oct, Nicolás: «así mismo en forma deben de ser los de mis candidatos»). Cada columna de `FilaIndicadores`
@@ -81,11 +82,12 @@ export function Ayuda({ titulo, children }: { titulo: string; children: string }
   )
 }
 
-export function Cifra({ valor, cambio }: { valor: string; cambio: ReactNode }) {
+// Con un número, sube hasta su valor al llegar (`CifraAnimada`, 13 oct); con un texto ya armado («40 %»), se pone tal cual.
+export function Cifra({ valor, cambio }: { valor: string | number; cambio: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2">
       <Text as="span" size="xl" weight="semibold" className="tabular-nums">
-        {valor}
+        {typeof valor === 'number' ? <CifraAnimada valor={valor} /> : valor}
       </Text>
       {cambio}
     </div>

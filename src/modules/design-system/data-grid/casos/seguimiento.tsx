@@ -13,7 +13,6 @@ import {
 import {
   Avatar,
   AvatarFallback,
-  Badge,
   Field,
   FieldDescription,
   FieldLabel,
@@ -30,10 +29,11 @@ import {
   TabsList,
   TabsTrigger,
   Text,
-  toast,
   type DataGridListConfig,
   type ListAction,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { notify } from '@/shared/components/notify'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { DialogoConfirmar } from '../../estados/confirmaciones'
 
@@ -400,7 +400,7 @@ function TablaTareas({ periodo, limpiarSeleccion }: { periodo: string; limpiarSe
   const cuenta = (estado: EstadoTarea) => resultado.filter((t) => t.estado === estado).length
 
   const aviso = (titulo: string) => (filas: Tarea[]) =>
-    toast.add({ type: 'success', title: `${titulo} ${filas.length} ${plural(filas.length, 'tarea', 'tareas')}` })
+    notify(`${titulo} ${filas.length} ${plural(filas.length, 'tarea', 'tareas')}`, undefined, 'success')
 
   const masivas: ListAction<Tarea>[] = [
     { id: 'reasignar', label: 'Reasignar', icon: icono(UserSwitchIcon), onClick: aviso('Se reasignaron') },
@@ -441,15 +441,14 @@ function TablaTareas({ periodo, limpiarSeleccion }: { periodo: string; limpiarSe
         id: 'crear',
         label: 'Crear tarea',
         icon: <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />,
-        onClick: () => toast.add({ type: 'info', title: 'Se abre la creación de una tarea de seguimiento' }),
+        onClick: () => notify('Se abre la creación de una tarea de seguimiento', undefined, 'info'),
       },
       item: [
         {
           id: 'detalle',
           label: 'Ver detalle',
           icon: icono(ViewIcon),
-          onClick: ([fila]) =>
-            toast.add({ type: 'info', title: 'Se abre el detalle de la tarea', description: fila?.titulo }),
+          onClick: ([fila]) => notify('Se abre el detalle de la tarea', fila?.titulo, 'info'),
         },
       ],
       bulk: masivas,
@@ -492,10 +491,7 @@ function TablaTareas({ periodo, limpiarSeleccion }: { periodo: string; limpiarSe
         sustantivo={['tarea', 'tareas']}
         onConfirmar={() => {
           setEliminadas((previas) => new Set([...previas, ...porEliminar.map((t) => t.id)]))
-          toast.add({
-            type: 'success',
-            title: `${porEliminar.length} ${plural(porEliminar.length, 'tarea eliminada', 'tareas eliminadas')}`,
-          })
+          notify(`${porEliminar.length} ${plural(porEliminar.length, 'tarea eliminada', 'tareas eliminadas')}`, undefined, 'success')
           setConfirmando(false)
         }}
       />
@@ -524,7 +520,7 @@ function TablaPlanes({ periodo, limpiarSeleccion }: { periodo: string; limpiarSe
   const cuenta = (estado: EstadoPlan) => resultado.filter((p) => p.estado === estado).length
 
   const aviso = (titulo: string) => (filas: Plan[]) =>
-    toast.add({ type: 'success', title: `${titulo} ${filas.length} ${plural(filas.length, 'plan', 'planes')}` })
+    notify(`${titulo} ${filas.length} ${plural(filas.length, 'plan', 'planes')}`, undefined, 'success')
 
   const config: DataGridListConfig<Plan> = {
     columns: COLUMNAS_PLANES,
@@ -547,14 +543,14 @@ function TablaPlanes({ periodo, limpiarSeleccion }: { periodo: string; limpiarSe
         id: 'crear',
         label: 'Crear plan',
         icon: <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />,
-        onClick: () => toast.add({ type: 'info', title: 'Se abre la creación de un plan de tareas' }),
+        onClick: () => notify('Se abre la creación de un plan de tareas', undefined, 'info'),
       },
       item: [
         {
           id: 'detalle',
           label: 'Ver detalle',
           icon: icono(ViewIcon),
-          onClick: ([fila]) => toast.add({ type: 'info', title: 'Se abre el detalle del plan', description: fila?.nombre }),
+          onClick: ([fila]) => notify('Se abre el detalle del plan', fila?.nombre, 'info'),
         },
       ],
       bulk: [
@@ -611,10 +607,7 @@ function TablaPlanes({ periodo, limpiarSeleccion }: { periodo: string; limpiarSe
         sustantivo={['plan', 'planes']}
         onConfirmar={() => {
           setEliminados((previos) => new Set([...previos, ...porEliminar.map((p) => p.id)]))
-          toast.add({
-            type: 'success',
-            title: `${porEliminar.length} ${plural(porEliminar.length, 'plan eliminado', 'planes eliminados')}`,
-          })
+          notify(`${porEliminar.length} ${plural(porEliminar.length, 'plan eliminado', 'planes eliminados')}`, undefined, 'success')
           setConfirmando(false)
         }}
       />

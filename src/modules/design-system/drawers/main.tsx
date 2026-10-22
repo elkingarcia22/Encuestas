@@ -23,21 +23,22 @@ import { KICKER, WS } from './components/drawer-styles'
 import { FiltersDrawer } from './components/filters-drawer'
 import { NavDrawer } from './components/nav-drawer'
 import { NoticeDrawer } from './components/notice-drawer'
+import { NotesDrawer } from './components/notes-drawer'
 import { NotificationsDrawer } from './components/notifications-drawer'
 import { PreviewDrawer } from './components/preview-drawer'
 import { ProcessDrawer } from './components/process-drawer'
 import { QuickActionsDrawer } from './components/quick-actions-drawer'
-import { VacancyDrawer } from './components/vacancy-drawer'
 import { VerEnAccion } from '../patrones/piezas'
 
 const GUIDE = [
-  { title: 'Usa un drawer para', text: 'ver o editar un registro sin salir de la lista, filtrar, seguir un proceso o hablar con el agente sobre lo que tienes abierto.' },
-  { title: 'Mejor una ventana cuando', text: 'la decisión bloquea el trabajo: publicar, eliminar o confirmar algo con efecto real.' },
+  { title: 'Usa un drawer para', text: 'ver el detalle de un registro sin salir de la lista, filtrar, seguir un proceso, escribir una nota corta o hablar con el agente sobre lo que tienes abierto.' },
+  { title: 'Mejor una ventana cuando', text: 'la decisión bloquea el trabajo: publicar, eliminar o confirmar algo con efecto real (DialogoConfirmar). Crear o editar algo largo no va ni en un drawer ni en una ventana: va en una página (13-oct).' },
   {
     title: 'Desde un drawer, nunca una ventana ni otro drawer encima',
     text: 'Lo que se pide dentro de un drawer (confirmar, escribir, mover, otro detalle) se abre en el mismo drawer: su contenido cambia por el de la ventana y arriba queda «← título del panel» para volver. Nada de otro drawer encima. DrawerShell, VentanaDeAccion y DialogoConfirmar lo hacen solos.',
   },
-  { title: 'Borde', text: 'Derecha: detalle y formularios · Izquierda: navegación · Abajo: acciones rápidas y celular · Arriba: avisos del sistema.' },
+  { title: 'Con algo escrito', text: 'Pásale conCambios a DrawerShell: no se cierra al tocar fuera y, al cerrar con la X, Escape o «Cancelar», pregunta «Seguir editando · Descartar» dentro del mismo panel. Si el panel tiene su propio «Cancelar», debe llamar a lo mismo que la X (cerrarPanel), no cerrar directo.' },
+  { title: 'Borde', text: 'Derecha: detalle de un registro · Izquierda: navegación · Abajo: acciones rápidas y celular · Arriba: avisos del sistema.' },
 ]
 
 // Design system › Drawers: configurador del Drawer de flux-ui. Se elige un caso de uso y se prende o apaga cada parte
@@ -71,7 +72,7 @@ export function Component() {
   return (
     <PageShell width="default">
       <PageHeader
-        kicker="Design system · Patrones"
+        kicker="Design system · Componentes"
         title="Paneles laterales"
         description="Paneles que salen desde un borde para trabajar sin perder la página. Arma uno pieza por pieza: lo azul con nombre es parte del drawer y se ve igual en todos; lo gris rayado es el cuerpo, un slot donde va el contenido de cada caso."
         actions={
@@ -171,7 +172,6 @@ export function Component() {
                 options={[
                   { value: 'none', label: 'Nada' },
                   { value: 'tabs', label: 'Pestañas' },
-                  { value: 'steps', label: 'Pasos' },
                   { value: 'progress', label: 'Progreso' },
                 ]}
               />
@@ -242,7 +242,7 @@ export function Component() {
 
       <CandidateDrawer {...bind('candidato')} />
       <FiltersDrawer {...bind('filtros')} />
-      <VacancyDrawer {...bind('vacante')} />
+      <NotesDrawer {...bind('notas')} />
       <NotificationsDrawer {...bind('avisos')} />
       <AgentDrawer {...bind('agente')} />
       <ProcessDrawer {...bind('proceso')} />

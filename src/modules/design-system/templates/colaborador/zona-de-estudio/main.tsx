@@ -11,7 +11,6 @@ import {
   UserIcon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Card,
   CardAction,
@@ -43,6 +42,7 @@ import {
   Text,
   toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
@@ -86,7 +86,7 @@ function Buscador({ valor, onCambio, total }: { valor: string; onCambio: (v: str
         <InputGroupInput aria-label="Buscar en la lista" placeholder="Buscar contenido…" value={valor} onChange={(e) => onCambio(e.target.value)} />
         {valor ? (
           <InputGroupAddon align="inline-end">
-            <InputGroupButton size="icon-xs" aria-label="Borrar búsqueda" onClick={() => onCambio('')}>
+            <InputGroupButton size="icon-xs" aria-label="Limpiar búsqueda" onClick={() => onCambio('')}>
               <HugeiconsIcon icon={Cancel01Icon} aria-hidden="true" />
             </InputGroupButton>
           </InputGroupAddon>

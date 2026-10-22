@@ -153,7 +153,7 @@ export function BorradorEscenas({ proyecto, onProyecto, deshabilitado }: Props) 
       <div>
         <Button variant="outline" size="sm" onClick={() => onProyecto({ ...proyecto, escenas: [...escenas, escenaEnBlanco()] })}>
           <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" aria-hidden="true" />
-          Añadir escena
+          Agregar escena
         </Button>
       </div>
 

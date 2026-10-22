@@ -8,14 +8,26 @@ import type { FilaGrupo, Tramo } from '../../modelo/resultados/lecturas'
 // del design system: Frame, Progress, la dona de reparto (tamaño fijo: la de Métricas se mide sola y en un hueco angosto
 // quedaba sin tamaño) y la fila de leyenda de los gráficos (FilaTooltip).
 
-export function Bloque({ titulo, descripcion, columnas = 2, children }: { titulo: string; descripcion?: string; columnas?: 1 | 2 | 3; children: ReactNode }) {
+/** `extra`: los controles de la caja («Ver por»), a la derecha del título, como las cajas de Resultados de Encuestas. */
+export function Bloque({ titulo, descripcion, columnas = 2, extra, children }: { titulo: string; descripcion?: string; columnas?: 1 | 2 | 3; extra?: ReactNode; children: ReactNode }) {
   const rejilla = columnas === 3 ? 'lg:grid-cols-3' : columnas === 2 ? 'lg:grid-cols-2' : ''
   return (
     <Frame>
-      <FrameHeader>
-        <FrameTitle>{titulo}</FrameTitle>
-        {descripcion ? <FrameDescription>{descripcion}</FrameDescription> : null}
-      </FrameHeader>
+      {extra ? (
+        // «!»: la misma cabecera en fila de las cajas de Resultados de Encuestas (diferencias.json › instalacion-estilos-sin-capa).
+        <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
+          <div>
+            <FrameTitle>{titulo}</FrameTitle>
+            {descripcion ? <FrameDescription>{descripcion}</FrameDescription> : null}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">{extra}</div>
+        </FrameHeader>
+      ) : (
+        <FrameHeader>
+          <FrameTitle>{titulo}</FrameTitle>
+          {descripcion ? <FrameDescription>{descripcion}</FrameDescription> : null}
+        </FrameHeader>
+      )}
       <div className={`grid gap-(--frame-gap) ${rejilla}`}>{children}</div>
     </Frame>
   )
@@ -92,7 +104,7 @@ export function Reparto({ tramos, total, unidad, onTramo }: { tramos: readonly T
             <FilaTooltip
               color={tramo.color}
               etiqueta={tramo.etiqueta}
-              valor={[unidad ? unidad(tramo.cantidad) : tramo.cantidad.toLocaleString('es-CO'), `${suma === 0 ? 0 : Math.round((tramo.cantidad / suma) * 100)}%`].filter(Boolean).join(' · ')}
+              valor={[unidad ? unidad(tramo.cantidad) : tramo.cantidad.toLocaleString('es-CO'), `${suma === 0 ? 0 : Math.round((tramo.cantidad / suma) * 100)} %`].filter(Boolean).join(' · ')}
             />
           )
           // Un tramo con algo adentro se toca para ver quiénes son (como en el prototipo); uno vacío no.

@@ -15,7 +15,6 @@ import {
 import {
   Avatar,
   AvatarFallback,
-  Badge,
   Button,
   cn,
   Heading,
@@ -35,6 +34,7 @@ import {
   Text,
   Textarea,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ReopenAgentButton } from '@/modules/design-system/agente-contextual/components/agent-kit'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import styles from '@/modules/design-system/agente-contextual/components/agent.module.css'
@@ -131,7 +131,7 @@ export function FichaCandidato({
             <Badge variant="secondary">
               {NOMBRE_ETAPA[candidato.etapa]}
             </Badge>
-            <EtiquetaIA size="sm">Ajuste {candidato.ajuste}%</EtiquetaIA>
+            <EtiquetaIA size="sm">Ajuste {candidato.ajuste} %</EtiquetaIA>
           </span>
         ) : null
       }
@@ -175,7 +175,7 @@ export function FichaCandidato({
               Ver expediente
               <HugeiconsIcon icon={ArrowRight01Icon} data-icon="inline-end" />
             </Button>
-            {/* El botón que abre el agente (orbe incluido), y el último de la fila. Se llama «Orbit Flow» como en todo el
+            {/* El botón que abre el agente (orbe incluido), y el último de la fila. Se llama «Orbit» como en todo el
                 producto (auditoría, 5-oct; antes «Agente IA»); el agente abre con el resumen. */}
             <ReopenAgentButton className="w-full" onClick={onResumir} />
           </div>

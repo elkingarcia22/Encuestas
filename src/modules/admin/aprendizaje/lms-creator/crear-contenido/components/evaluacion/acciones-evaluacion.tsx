@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef } from 'react'
 
-// «Configuración» y «Orbit Flow» son de la evaluación entera, no de una pregunta, así que van en la barra del recurso
+// «Configuración» y «Orbit» son de la evaluación entera, no de una pregunta, así que van en la barra del recurso
 // principal —junto a «Reemplazar»—, con el resto de lo que se puede hacer con el recurso. Pero quien sabe abrirlos es el
 // editor, que se pinta debajo: el editor los publica aquí y la barra los rinde.
 

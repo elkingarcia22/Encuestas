@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Attachment01Icon, Cancel01Icon, Download01Icon, Image01Icon } from '@hugeicons/core-free-icons'
+import { Attachment01Icon, Cancel01Icon, Download01Icon } from '@hugeicons/core-free-icons'
 import {
   Attachment,
   AttachmentAction,
@@ -11,12 +11,11 @@ import {
   Button,
   Empty,
   EmptyDescription,
-  EmptyHeader,
   EmptyMedia,
-  EmptyTitle,
   Input,
   Text,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { BotonIa } from '@/shared/components/BotonIa'
 import { AiThinking } from '@/shared/components/AiThinking'
 import { Composer } from '@/modules/admin/suite-ai/shared/composer'
@@ -66,7 +65,7 @@ export function GeneradorImagenIa({ nombre, resultado, promptInicial, costo, onG
 
   const generar = () => {
     if (!gastarTokens(costo)) {
-      notify(`No tienes suficientes tokens (${costo} requeridos).`)
+      notify(`No tienes suficientes tokens (${costo} requeridos).`, undefined, 'warning')
       return
     }
     setGenerando(true)
@@ -107,15 +106,7 @@ export function GeneradorImagenIa({ nombre, resultado, promptInicial, costo, onG
                 </Button>
               </>
             ) : (
-              <Empty className="size-full">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <HugeiconsIcon icon={Image01Icon} />
-                  </EmptyMedia>
-                  <EmptyTitle>Vista previa de la {nombre}</EmptyTitle>
-                  <EmptyDescription>Aquí verás la {nombre} cuando la generes con IA.</EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              <PrimeraVez className="size-full" icono="glass-gallery" titulo={`Vista previa de la ${nombre}`} descripcion={`Aquí verás la ${nombre} cuando la generes con IA.`} />
             )}
           </div>
         </div>

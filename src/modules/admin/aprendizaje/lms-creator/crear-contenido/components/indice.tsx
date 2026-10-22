@@ -13,7 +13,6 @@ import {
   PencilEdit02Icon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +29,7 @@ import {
   Text,
   cn,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
@@ -49,7 +49,7 @@ import { ICONO_PAGINA_VACIA, ICONO_RECURSO } from './tipos-recurso'
 // Índice editable del paso 2 · Recursos: las secciones con su menú y, dentro, las páginas (el interruptor de secciones va
 // en la cabecera de la tarjeta). Cada página dice qué recurso tiene; tocarla abre su hoja lateral «Editar página». Se
 // reordenan arrastrando —también de una sección a otra— o con «Mover arriba/abajo». No nacen vacías
-// desde aquí: «Añadir página» abre el selector de tipo.
+// desde aquí: «Agregar página» abre el selector de tipo.
 
 type Props = {
   borrador: Borrador
@@ -85,7 +85,7 @@ export function Indice(props: Props) {
       {borrador.seccionesHabilitadas ? (
         <Button variant="outline" onClick={onAnadirSeccion}>
           <HugeiconsIcon icon={Add01Icon} size={16} />
-          Añadir sección
+          Agregar sección
         </Button>
       ) : null}
     </ArrastrePaginas>
@@ -247,7 +247,7 @@ function BloqueSeccion({
 
         {conTitulo && conError ? (
           <Text as="p" size="xs" className="px-1 text-destructive">
-            Sección vacía: añade al menos una página.
+            Sección vacía: agrega al menos una página.
           </Text>
         ) : null}
 
@@ -255,7 +255,7 @@ function BloqueSeccion({
             ve igual, no un enlace suelto que cambia de forma según el modo. */}
         <Button variant="outline" onClick={() => onAnadirPagina(seccion.id)}>
           <HugeiconsIcon icon={Add01Icon} size={16} />
-          Añadir página
+          Agregar página
         </Button>
       </div>
     </div>
@@ -312,10 +312,10 @@ function FilaPagina({
     ? `Generando${progreso != null ? ` ${progreso.toLocaleString('es-CO')} %` : '…'}`
     : conError && !pagina.titulo.trim()
       ? 'Falta el título'
-      : // Sin el tipo delante: la fila es angosta y «Evaluación · Añade al menos…» se cortaba justo en lo que hay que
+      : // Sin el tipo delante: la fila es angosta y «Evaluación · Agrega al menos…» se cortaba justo en lo que hay que
         // hacer. El tipo ya lo dice el icono de la fila.
         sinPreguntas
-        ? 'Añade al menos una pregunta'
+        ? 'Agrega al menos una pregunta'
         : tipo
 
   const etiqueta = `Editar página ${pagina.titulo.trim() || '(sin título)'}${pagina.oculta ? ' (oculta)' : ''}`

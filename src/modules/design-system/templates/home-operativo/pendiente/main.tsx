@@ -2,7 +2,6 @@ import { Link, useParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { File01Icon, Route01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -20,6 +19,7 @@ import {
   ItemTitle,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ImagenGlass } from '@/shared/components/ImagenGlass'
 import { PageHeader } from '@/shared/components/PageShell'
 

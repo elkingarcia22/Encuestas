@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Badge, Card, CardContent, Field, FieldLabel, Input, Text, cn } from '@ubits/flux-ui'
+import { Card, CardContent, Field, FieldLabel, Input, Text, cn } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import { Hint } from '@/shared/components/Hint'
 import { ImagenGlass } from '@/shared/components/ImagenGlass'
@@ -7,7 +8,7 @@ import type { TipoRecurso } from './borrador'
 import { TARJETAS_TIPO, type TarjetaTipo } from './tipos-recurso'
 import { EtiquetaIA } from '@/modules/design-system/ia/etiqueta-ia'
 
-// «Añadir página»: título opcional y el tipo de recurso principal. Todos avanzan al clic, también Evaluación: la página
+// «Agregar página»: título opcional y el tipo de recurso principal. Todos avanzan al clic, también Evaluación: la página
 // nace de una vez y se abre para escribir o generar las preguntas (sin el paso de marcarla y confirmar «Crear página»).
 
 type Props = {
@@ -45,7 +46,7 @@ export function AnadirPagina({ abierto, evento, onCerrar, onElegir }: Props) {
       }}
       // La única ventana del sistema (decisión 4 de la auditoría, 5-oct). Sin pie: se avanza al elegir un tipo.
       size="wide"
-      title="Añadir página"
+      title="Agregar página"
       hideFooter
     >
       {/* El ancho lo pone la ventana («wide», 736px): a pantalla completa las tarjetas quedaban enormes y elegir el
@@ -62,7 +63,7 @@ export function AnadirPagina({ abierto, evento, onCerrar, onElegir }: Props) {
         </Field>
 
         <Text variant="muted" size="sm">
-          Selecciona el tipo de recurso principal que quieres añadir
+          Selecciona el tipo de recurso principal que quieres agregar
         </Text>
 
         <div role="list" className="grid grid-cols-1 gap-3 min-[521px]:grid-cols-2 min-[901px]:grid-cols-4">

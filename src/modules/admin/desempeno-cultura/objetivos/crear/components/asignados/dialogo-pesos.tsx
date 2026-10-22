@@ -1,7 +1,25 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Alert02Icon, BalanceScaleIcon, CheckmarkCircle02Icon } from '@hugeicons/core-free-icons'
-import { Alert, AlertTitle, Button, Heading, IconTile, InputGroup, InputGroupAddon, InputGroupInput, InputGroupText, Item, ItemContent, ItemGroup, ItemSeparator, ItemTitle, Slider, Text, cn } from '@ubits/flux-ui'
+import {
+  Alert,
+  AlertTitle,
+  Button,
+  Heading,
+  IconTile,
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+  Item,
+  ItemContent,
+  ItemGroup,
+  ItemSeparator,
+  ItemTitle,
+  Slider,
+  Text,
+  cn,
+} from '@ubits/flux-ui'
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import { MIN_OBJECTIVE_WEIGHT, TOTAL_WEIGHT, distributeWeights, type Objective } from '../../../modelo/constructor/cicloBuilderTypes'
 import { rescaleObjectives } from '../../../modelo/constructor/objectiveSets'
@@ -33,15 +51,30 @@ export function DialogoPesos(props: DialogoPesosProps) {
   return <Dialogo key={sesion.cuenta} {...props} />
 }
 
-function Dialogo({
-  abierto,
-  onAbiertoChange,
-  grupos,
-  onAplicar,
-  titulo = 'Ajustar pesos',
-  descripcion = 'Reparte el peso de cada objetivo sin entrar uno por uno. El total tiene que cerrar antes de aplicar.',
-}: DialogoPesosProps) {
+/** Lo que devuelve el reparto: las secciones ya armadas y lo que el pie necesita para decir cómo va y aplicar. */
+export interface RepartoPesos {
+  borrador: WeightBalanceResult
+  cuadra: boolean
+  hayGrupos: boolean
+  /** «Todo cuadra» o cuántas asignaciones faltan, con su icono. */
+  estado: ReactNode
+  cuadrarTodo: () => void
+  cuerpo: ReactNode
+}
+
+/**
+ * El reparto sin su ventana: el borrador, las secciones por asignación y el estado. Lo usa la ventana centrada
+ * (`DialogoPesos`, desde la vista general) y la página «Ajustar pesos» dentro de la ventana de una asignación (21-oct,
+ * Elkin: «que no salga en modal, sino que se vea en el panel derecho»). Con `activo`, cada vez que se abre arranca del
+ * reparto que hay hoy.
+ */
+export function useRepartoPesos(grupos: readonly WeightBalanceGroup[], activo = true): RepartoPesos {
   const [borrador, setBorrador] = useState<Borrador>(() => borradorDe(grupos))
+  const [activoAntes, setActivoAntes] = useState(activo)
+  if (activoAntes !== activo) {
+    setActivoAntes(activo)
+    if (activo) setBorrador(borradorDe(grupos))
+  }
   const pesoDe = (grupo: WeightBalanceGroup, objetivo: Objective) => borrador[grupo.setId]?.[objetivo.id] ?? objetivo.weight
   const totalDe = (grupo: WeightBalanceGroup) => grupo.objectives.reduce((suma, objetivo) => suma + pesoDe(grupo, objetivo), 0)
   const sinCuadrar = grupos.filter((grupo) => totalDe(grupo) !== grupo.budget)
@@ -59,6 +92,91 @@ function Dialogo({
       ).map((objetivo) => objetivo.weight),
     )
 
+  const estado = (
+    <Text as="span" size="sm" variant="muted" className="flex items-center gap-1.5">
+      <HugeiconsIcon icon={cuadra ? CheckmarkCircle02Icon : Alert02Icon} className={cn('size-4', cuadra ? 'text-success' : 'text-warning')} aria-hidden="true" />
+      {cuadra ? 'Todo cuadra' : sinCuadrar.length === 1 ? '1 asignación sin cuadrar' : `${sinCuadrar.length} asignaciones sin cuadrar`}
+    </Text>
+  )
+
+  // Las secciones por asignación: las mismas en la ventana centrada y en la página de la asignación.
+  const cuerpo =
+    grupos.length === 0 ? (
+      <Text size="sm" variant="muted">
+        No hay objetivos que ajustar todavía.
+      </Text>
+    ) : (
+      grupos.map((grupo) => {
+        const total = totalDe(grupo)
+        const diferencia = total - grupo.budget
+        return (
+          <section key={grupo.setId} className="flex flex-col gap-2.5" aria-label={grupo.label}>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="flex min-w-0 flex-col">
+                <Heading as="h4" level={6} className="truncate">
+                  {grupo.label}
+                </Heading>
+                <Text size="xs" variant="muted">
+                  {grupo.budget === TOTAL_WEIGHT
+                    ? `Cuánto pesa cada objetivo dentro de su ${TOTAL_WEIGHT} %. Sube uno y tendrás que bajarle a otro.`
+                    : `Cupo de ${grupo.budget} % — comparte el ciclo con otra asignación.`}
+                </Text>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={() => partesIguales(grupo)}>
+                  Partes iguales
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => cuadrar(grupo)}>
+                  Cuadrar
+                </Button>
+              </div>
+            </div>
+            {/* Filas pegadas, separadas por su divisor: el gap del tema no se quita sin «!» (diferencias.json › instalacion-estilos-sin-capa). */}
+            <ItemGroup className="gap-0! rounded-xl border">
+              {grupo.objectives.map((objetivo, indice) => (
+                <div key={objetivo.id}>
+                  {indice > 0 ? <ItemSeparator /> : null}
+                  <FilaPeso
+                    numero={indice + 1}
+                    objetivo={objetivo}
+                    valor={pesoDe(grupo, objetivo)}
+                    maximo={grupo.budget}
+                    onCambio={(peso) => setBorrador((actual) => ({ ...actual, [grupo.setId]: { ...actual[grupo.setId], [objetivo.id]: peso } }))}
+                  />
+                </div>
+              ))}
+            </ItemGroup>
+            <Alert variant={diferencia === 0 ? 'success' : diferencia > 0 ? 'destructive' : 'warning'}>
+              <HugeiconsIcon icon={diferencia === 0 ? CheckmarkCircle02Icon : Alert02Icon} aria-hidden="true" />
+              <AlertTitle className="flex items-center justify-between gap-3">
+                <span>{diferencia === 0 ? 'Ya quedó al tope' : diferencia > 0 ? `Te pasaste ${diferencia} % del cupo` : `Faltan ${Math.abs(diferencia)} % por repartir`}</span>
+                <span className="tabular-nums">
+                  {total} / {grupo.budget} %
+                </span>
+              </AlertTitle>
+            </Alert>
+          </section>
+        )
+      })
+    )
+
+  return { borrador, cuadra, hayGrupos: grupos.length > 0, estado, cuadrarTodo: () => grupos.forEach(cuadrar), cuerpo }
+}
+
+function Dialogo({
+  abierto,
+  onAbiertoChange,
+  grupos,
+  onAplicar,
+  titulo = 'Ajustar pesos',
+  descripcion = 'Reparte el peso de cada objetivo sin entrar uno por uno. El total tiene que cerrar antes de aplicar.',
+}: DialogoPesosProps) {
+  const reparto = useRepartoPesos(grupos)
+  const aplicar = () => {
+    onAplicar(reparto.borrador)
+    onAbiertoChange(false)
+  }
+
   return (
     <ActionDialog
       open={abierto}
@@ -73,87 +191,22 @@ function Dialogo({
       footer={
           <>
             {/* -order-1: el estado va a la izquierda del pie, antes del hueco que ActionDialog deja para la nota. */}
-            <Text as="span" size="sm" variant="muted" className="-order-1 flex items-center gap-1.5">
-              <HugeiconsIcon icon={cuadra ? CheckmarkCircle02Icon : Alert02Icon} className={cn('size-4', cuadra ? 'text-success' : 'text-warning')} aria-hidden="true" />
-              {cuadra ? 'Todo cuadra' : sinCuadrar.length === 1 ? '1 asignación sin cuadrar' : `${sinCuadrar.length} asignaciones sin cuadrar`}
-            </Text>
-            {!cuadra && grupos.length > 0 ? (
-              <Button variant="outline" onClick={() => grupos.forEach(cuadrar)}>
+            <span className="-order-1">{reparto.estado}</span>
+            {!reparto.cuadra && reparto.hayGrupos ? (
+              <Button variant="outline" onClick={reparto.cuadrarTodo}>
                 Ajustar automáticamente
               </Button>
             ) : null}
             <Button variant="outline" onClick={() => onAbiertoChange(false)}>
               Cancelar
             </Button>
-            <Button
-              disabled={!cuadra || grupos.length === 0}
-              onClick={() => {
-                onAplicar(borrador)
-                onAbiertoChange(false)
-              }}
-            >
+            <Button disabled={!reparto.cuadra || !reparto.hayGrupos} onClick={aplicar}>
               Aplicar
             </Button>
           </>
       }
     >
-      {grupos.length === 0 ? (
-        <Text size="sm" variant="muted">
-          No hay objetivos que ajustar todavía.
-        </Text>
-      ) : (
-        grupos.map((grupo) => {
-          const total = totalDe(grupo)
-          const diferencia = total - grupo.budget
-          return (
-            <section key={grupo.setId} className="flex flex-col gap-2.5" aria-label={grupo.label}>
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="flex min-w-0 flex-col">
-                  <Heading as="h4" level={6} className="truncate">
-                    {grupo.label}
-                  </Heading>
-                  <Text size="xs" variant="muted">
-                    {grupo.budget === TOTAL_WEIGHT
-                      ? `Cuánto pesa cada objetivo dentro de su ${TOTAL_WEIGHT} %. Sube uno y tendrás que bajarle a otro.`
-                      : `Cupo de ${grupo.budget} % — comparte el ciclo con otra asignación.`}
-                  </Text>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => partesIguales(grupo)}>
-                    Partes iguales
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => cuadrar(grupo)}>
-                    Cuadrar
-                  </Button>
-                </div>
-              </div>
-              <ItemGroup className="gap-0! rounded-xl border">
-                {grupo.objectives.map((objetivo, indice) => (
-                  <div key={objetivo.id}>
-                    {indice > 0 ? <ItemSeparator /> : null}
-                    <FilaPeso
-                      numero={indice + 1}
-                      objetivo={objetivo}
-                      valor={pesoDe(grupo, objetivo)}
-                      maximo={grupo.budget}
-                      onCambio={(peso) => setBorrador((actual) => ({ ...actual, [grupo.setId]: { ...actual[grupo.setId], [objetivo.id]: peso } }))}
-                    />
-                  </div>
-                ))}
-              </ItemGroup>
-              <Alert variant={diferencia === 0 ? 'success' : diferencia > 0 ? 'destructive' : 'warning'}>
-                <HugeiconsIcon icon={diferencia === 0 ? CheckmarkCircle02Icon : Alert02Icon} aria-hidden="true" />
-                <AlertTitle className="flex items-center justify-between gap-3">
-                  <span>{diferencia === 0 ? 'Ya quedó al tope' : diferencia > 0 ? `Te pasaste ${diferencia} % del cupo` : `Faltan ${Math.abs(diferencia)} % por repartir`}</span>
-                  <span className="tabular-nums">
-                    {total} / {grupo.budget} %
-                  </span>
-                </AlertTitle>
-              </Alert>
-            </section>
-          )
-        })
-      )}
+      {reparto.cuerpo}
     </ActionDialog>
   )
 }

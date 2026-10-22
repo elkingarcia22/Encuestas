@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { USUARIOS_INICIALES, nombreCompleto, type Usuario } from '@/modules/design-system/templates/gestion-usuarios/components/datos'
-import { TAMANO_GRUPO } from './planes-datos'
+// De la plantilla y no de planes-datos: planes-datos lee los grupos para saber quién está en cada asignación.
+import { TAMANO_GRUPO } from '@/modules/design-system/templates/planes-formacion/components/datos'
 
 // Grupos de colaboradores (HU-LMS-006): un nombre, una descripción opcional y sus integrantes. Se reutilizan en los
 // planes de contenidos y de competencias. Los compartes la pantalla de Grupos y el panel «Participantes por grupo»
@@ -73,6 +74,9 @@ export function cambiarGrupos(cambio: (todos: Grupo[]) => Grupo[]) {
   grupos = cambio(grupos)
   oyentes.forEach((oyente) => oyente())
 }
+
+// Los grupos de este momento, fuera de React: con ellos planes-datos resuelve quién está en cada asignación.
+export const gruposActuales = () => grupos
 
 export const buscarGrupo = (id: string | undefined) => grupos.find((g) => g.id === id)
 export const grupoPorNombre = (nombre: string) => grupos.find((g) => g.nombre === nombre)

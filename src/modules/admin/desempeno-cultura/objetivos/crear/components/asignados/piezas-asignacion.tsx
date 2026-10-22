@@ -1,14 +1,15 @@
 import type { ReactElement } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { LibraryIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
-import { Badge, DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger, Progress, Text, cn } from '@ubits/flux-ui'
+import { PlusSignIcon } from '@hugeicons/core-free-icons'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger, Progress, Text, cn } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { Hint } from '@/shared/components/Hint'
 import { TOTAL_WEIGHT } from '../../../modelo/constructor/cicloBuilderTypes'
 import type { AssignmentSetSummary } from '../../../modelo/constructor/assignmentRows'
 
 // Las marcas que comparten las dos vistas del paso (agrupaciones y lista) y el panel de asignación: el peso repartido
-// de una agrupación, si está lista, de qué agrupación viene una fila y el menú con las tres formas de traer objetivos.
+// de una agrupación, si está lista, de qué agrupación viene una fila y el menú con las formas de traer objetivos.
 // Van juntas para que las dos vistas digan lo mismo con las mismas piezas.
 
 /** De dónde salen los objetivos de una asignación nueva: a mano, del banco, con IA o ya escritos por una plantilla. */
@@ -83,8 +84,8 @@ function Opcion({ titulo, descripcion }: { titulo: string; descripcion: string }
 }
 
 /**
- * Las tres formas de traer objetivos, en un menú con su renglón de explicación: el de «Crear asignación» en el paso y
- * el de «Añadir objetivo» dentro del panel. La de IA va al final, como los botones de IA en una fila.
+ * Las dos formas de traer objetivos (a mano o con IA), en un menú con su renglón de explicación: el de «Crear asignación» en el paso y
+ * el de «Agregar objetivo» dentro del panel. La de IA va al final, como los botones de IA en una fila.
  */
 export function MenuCrear({ disparador, onElegir, sinIa = false }: { disparador: ReactElement; onElegir: (intencion: Exclude<IntencionAsignacion, 'plantilla'>) => void; sinIa?: boolean }) {
   return (
@@ -95,10 +96,6 @@ export function MenuCrear({ disparador, onElegir, sinIa = false }: { disparador:
           <DropdownMenuItem onClick={() => onElegir('manual')}>
             <HugeiconsIcon icon={PlusSignIcon} aria-hidden="true" />
             <Opcion titulo="Crear manualmente" descripcion="Redacta un objetivo desde cero." />
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onElegir('banco')}>
-            <HugeiconsIcon icon={LibraryIcon} aria-hidden="true" />
-            <Opcion titulo="Elegir del banco" descripcion="Objetivos ya escritos por área y tema." />
           </DropdownMenuItem>
           {/* Con el agente ya acoplado no se ofrece abrir otro: el que está abierto es la única conversación. */}
           <DropdownMenuItem disabled={sinIa} onClick={() => onElegir('ia')}>

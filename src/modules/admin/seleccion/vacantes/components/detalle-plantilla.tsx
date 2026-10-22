@@ -5,7 +5,6 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-  Badge,
   Card,
   CardContent,
   IconTile,
@@ -17,6 +16,7 @@ import {
   Separator,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import type { PlantillaCatalogo } from './datos'
 import { etapasDe, relacionadasCon, type EtapaPlantilla } from './etapas-plantilla'
 import { esMia, esPropia, usePlantillasPropias } from './plantillas-propias'

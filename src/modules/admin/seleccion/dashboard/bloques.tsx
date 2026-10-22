@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useId, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
@@ -8,7 +8,7 @@ import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { ColumnaIndicador, FilaIndicadores } from '@/modules/design-system/graficos/fila-indicadores'
 import { Ayuda, Cambio, Cifra, Pie } from '../propuestas/components/cifras'
-import { LineaEsqueleto } from '../propuestas/components/carga'
+import { LineaEsqueleto } from '@/modules/design-system/estados/carga'
 import { leer, periodoDe, type Periodo, type Resumen } from './datos'
 
 // Los tres bloques de arriba del dashboard: las cifras, lo que lee la IA en ellas y el embudo. Con la forma de todos los
@@ -23,7 +23,7 @@ const CANDIDATOS_ANTES: Record<Periodo, number> = {
   '90': 0.74,
 }
 const porcentaje = (hoy: number, antes: number) => (antes === 0 ? 0 : Math.round(((hoy - antes) / antes) * 100))
-const hace = (dias: number) => (dias === 7 ? 'hace una semana' : `hace ${dias} días`)
+const hace = (dias: number) => (dias === 7 ? 'hace una semana' : `hace ${dias} ${plural(dias, 'día', 'días')}`)
 
 // Mientras carga, cada columna ya dice qué cuenta (el rótulo y la ayuda no dependen de los datos) y en gris la cifra y
 // sus dos líneas, en el mismo alto.
@@ -53,15 +53,18 @@ export function CifrasContratacion({ resumen, periodo, cargando }: { resumen: Re
   const tasa = cerradas.length ? Math.round((conContratacion.length / cerradas.length) * 100) : null
   const tasaAntes = tasa === null ? null : Math.max(0, tasa - 5)
   const sinContratar = cerradas.find((fila) => !fila.cierre?.contratados)
+  // Puede salir varias veces en la misma conversación: cada uno con su id.
+  const tituloId = useId()
 
   return (
-    <section aria-labelledby="cifras-dashboard-titulo" aria-busy={cargando || undefined}>
+    <section aria-labelledby={tituloId} aria-busy={cargando || undefined}>
       <Frame spacing="sm">
         <FrameHeader>
-          <FrameTitle id="cifras-dashboard-titulo">Cómo va la contratación</FrameTitle>
+          <FrameTitle id={tituloId}>Cómo va la contratación</FrameTitle>
           <FrameDescription>Cada cifra, frente a {anterior}.</FrameDescription>
         </FrameHeader>
-        <FilaIndicadores etiqueta="Indicadores de contratación" columnas={4} enMarco>
+        {/* Va en una respuesta de Orbit: las cifras se acomodan al ancho del chat, no al de la ventana. */}
+        <FilaIndicadores etiqueta="Indicadores de contratación" columnas={4} enMarco segunContenedor>
           <ColumnaIndicador
             titulo="Vacantes activas"
             ayuda={
@@ -133,8 +136,8 @@ export function CifrasContratacion({ resumen, periodo, cargando }: { resumen: Re
             )}
             pie={pieOCarga(
               cargando,
-              diasAntes === null ? 'Nadie se contrató en este periodo' : `El periodo anterior: ${diasAntes} días`,
-              masRapida ? `La más rápida cerró en ${masRapida.vacante.diasAbierta} días` : 'Prueba con un periodo más largo',
+              diasAntes === null ? 'Nadie se contrató en este periodo' : `El periodo anterior: ${diasAntes} ${plural(diasAntes, 'día', 'días')}`,
+              masRapida ? `La más rápida cerró en ${masRapida.vacante.diasAbierta} ${plural(masRapida.vacante.diasAbierta, 'día', 'días')}` : 'Prueba con un periodo más largo',
             )}
           />
           <ColumnaIndicador
@@ -242,19 +245,21 @@ export function Embudo({ resumen, cargando }: { resumen: Resumen; cargando: bool
     .map((tasa, indice) => ({ tasa, indice }))
     .filter(({ indice }) => indice > 0 && indice < embudo.length - 1 && embudo[indice - 1].llegaron >= 5)
   const peor = candidatosPeor.sort((a, b) => a.tasa - b.tasa)[0]?.indice
+  const tituloId = useId()
 
   return (
-    <section aria-labelledby="embudo-titulo" aria-busy={cargando || undefined}>
+    <section aria-labelledby={tituloId} aria-busy={cargando || undefined}>
       <Frame spacing="sm">
         <FrameHeader>
-          <FrameTitle id="embudo-titulo">Dónde se quedan los candidatos</FrameTitle>
+          <FrameTitle id={tituloId}>Dónde se quedan los candidatos</FrameTitle>
           <FrameDescription>
             Cuántos llegan a cada etapa y cuántos pasan de la anterior. Son las cinco etapas que comparten todas las vacantes.
           </FrameDescription>
         </FrameHeader>
-        <FramePanel className="divide-border grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5 lg:gap-0 lg:divide-x">
+        {/* Va en una respuesta de Orbit: en el ancho del chat, de a tres; las cinco en fila desde 768 px de contenedor. */}
+        <FramePanel className="divide-border grid grid-cols-2 gap-5 @md:grid-cols-3 @3xl:grid-cols-5 @3xl:gap-0 @3xl:divide-x">
           {embudo.map(({ etapa, llegaron }, indice) => (
-            <div key={etapa.id} className="flex min-w-0 flex-col gap-2 lg:px-4 lg:first:ps-0 lg:last:pe-0">
+            <div key={etapa.id} className="flex min-w-0 flex-col gap-2 @3xl:px-4 @3xl:first:ps-0 @3xl:last:pe-0">
               <div className="flex min-h-10 min-w-0 items-start gap-1.5">
                 <Text as="span" variant="muted" size="sm" className="tabular-nums">
                   {indice + 1}

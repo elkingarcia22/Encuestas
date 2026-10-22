@@ -1,10 +1,12 @@
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Badge, Field, FieldError, FieldLabel, IconTile, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Text } from '@ubits/flux-ui'
+import { Field, FieldDescription, FieldError, FieldLabel, IconTile, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { PARTICIPANT_MODES_BY_CREATOR, type CicloDraft, type CicloObjectiveCreator, REMINDER_FREQUENCY_LABELS, REMINDER_FREQUENCY_ORDER, type ReminderFrequency } from '../../../modelo/constructor/cicloBuilderTypes'
 import { ASSIGNMENT_LEVEL_META, ASSIGNMENT_LEVEL_ORDER, GOVERNANCE_META, GOVERNANCE_ORDER, assignmentLevelOf, creatorAssignsObjectives, levelsForAssignment, levelsForCreator, shouldResetLevels, type AssignmentLevel } from '../../../modelo/constructor/cicloSetup'
 import { OBJECTIVE_MODEL_META } from '../../../modelo/constructor/objectiveModel'
 import { type Contestadas } from './preguntas'
 import { Pregunta } from './opciones'
+import { MARGEN_BARRA, useMostrarAlAbrir } from '../mostrar-al-abrir'
 
 // Bloque 3 · Gobierno: quién redacta los objetivos (el quién), que decide dónde termina el trabajo de quien crea el
 // ciclo. RRHH escribe y reparte todo, y por eso es el único con una pregunta más: a qué nivel se reparten. Con líderes,
@@ -46,6 +48,7 @@ export function BloqueGobierno({
 
   const nivel = nivelContestado ? assignmentLevelOf(borrador) : null
   const gobierno = creador ? GOVERNANCE_META[creador] : null
+  const [frecuencia, mostrarFrecuencia] = useMostrarAlAbrir()
 
   return (
     <>
@@ -70,19 +73,21 @@ export function BloqueGobierno({
             <SelectContent>
               {GOVERNANCE_ORDER.map((id) => (
                 <SelectItem key={id} value={id}>
-                  <div className="flex items-start gap-3 py-1 max-w-[280px] sm:max-w-sm">
+                  <div className="flex items-start gap-3 py-1">
+                    {/* El icono de la opción en el azul de marca: el tema pinta la baldosa «soft» en gris y la clase sola no le gana
+                        (diferencias.json › instalacion-estilos-sin-capa). */}
                     <IconTile variant="soft" size="sm" className="shrink-0 text-primary! **:text-primary!">
                       <HugeiconsIcon icon={GOVERNANCE_META[id].icon} aria-hidden="true" />
                     </IconTile>
                     <div className="flex flex-col whitespace-normal">
-                      <span className="font-medium">
+                      <Text as="span" size="sm" weight="medium">
                         {GOVERNANCE_META[id].label}
                         {id === sugerido ? (
                           <Badge variant="secondary" size="xs" className="ml-2">
                             Sugerido
                           </Badge>
                         ) : null}
-                      </span>
+                      </Text>
                       <Text as="span" size="xs" variant="muted">
                         {GOVERNANCE_META[id].description}
                       </Text>
@@ -130,12 +135,16 @@ export function BloqueGobierno({
               <SelectContent>
                 {ASSIGNMENT_LEVEL_ORDER.map((id) => (
                   <SelectItem key={id} value={id}>
-                    <div className="flex items-start gap-3 py-1 max-w-[280px] sm:max-w-sm">
+                    <div className="flex items-start gap-3 py-1">
+                      {/* El icono de la opción en el azul de marca: el tema pinta la baldosa «soft» en gris y la clase sola no le gana
+                          (diferencias.json › instalacion-estilos-sin-capa). */}
                       <IconTile variant="soft" size="sm" className="shrink-0 text-primary! **:text-primary!">
                         <HugeiconsIcon icon={ASSIGNMENT_LEVEL_META[id].icon} aria-hidden="true" />
                       </IconTile>
                       <div className="flex flex-col whitespace-normal">
-                        <span className="font-medium">{ASSIGNMENT_LEVEL_META[id].label}</span>
+                        <Text as="span" size="sm" weight="medium">
+                          {ASSIGNMENT_LEVEL_META[id].label}
+                        </Text>
                         <Text as="span" size="xs" variant="muted">
                           {ASSIGNMENT_LEVEL_META[id].tagline}
                         </Text>
@@ -145,6 +154,8 @@ export function BloqueGobierno({
                 ))}
               </SelectContent>
             </Select>
+            {/* Apagado sin RRHH: se dice por qué, no solo se pone en gris. */}
+            {creador !== null && creador !== 'hr' ? <FieldDescription>Solo aplica cuando RRHH redacta los objetivos.</FieldDescription> : null}
             {conErrores && creador === 'hr' && nivel === null ? <FieldError>Elige cómo se reparten</FieldError> : null}
           </Field>
       </div>
@@ -161,6 +172,7 @@ export function BloqueGobierno({
                   onContestar({ recordatorios: true })
                   onCambio({ remindersEnabled: activo })
                   if (!activo) onContestar({ frecuencia: false })
+                  else mostrarFrecuencia()
                 }}
                 aria-label="Activar recordatorios automáticos"
               />
@@ -169,7 +181,7 @@ export function BloqueGobierno({
           ayuda="Avisaremos a los participantes para que actualicen su progreso."
         >
           {borrador.remindersEnabled ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div ref={frecuencia} className={`grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 ${MARGEN_BARRA}`}>
               <Field>
                 <FieldLabel htmlFor="ciclo-frecuencia">Frecuencia</FieldLabel>
                 <Select

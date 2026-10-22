@@ -1,8 +1,14 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { createContext, useContext, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { CreditCardIcon, PieChartIcon } from '@hugeicons/core-free-icons'
+import { CreditCardIcon, MoreHorizontalIcon, PieChartIcon } from '@hugeicons/core-free-icons'
 import {
   Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Frame,
   FrameDescription,
   FrameHeader,
@@ -14,17 +20,15 @@ import {
   TabsTrigger,
   Text,
   TrafficLight,
-  cn,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
-import { PageContent, PageHeader, PageSection, PageShell } from '@/shared/components/PageShell'
-import paleta from '@/shared/components/tarjeta-ia.module.css'
-import anillo from './components/anillo.module.css'
-import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
+import { BotonIcono } from '@/shared/components/BotonIcono'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
-import { IconoIA } from '@/modules/design-system/ia/icono-ia'
+import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
+import { PageContent, PageHeader, PageShell } from '@/shared/components/PageShell'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { BarraSegmentada, GraficoArea } from '@/modules/design-system/templates/dashboard/components/graficos'
+import { AnilloAvance } from '@/modules/design-system/graficos/piezas'
 import {
   AGENTES_CON_COSTO,
   bolsaDe,
@@ -36,12 +40,16 @@ import {
   type EstadoAgente,
 } from '../../propuestas/creditos'
 import { IconoAgente, InsigniaSituacion } from '../../propuestas/components/creditos-ui'
-import { useCarga } from '../../propuestas/components/carga'
+import { useCarga } from '@/modules/design-system/estados/carga'
 import { ReasignarCreditos } from './components/reasignar'
 import { ComprarCreditos } from './components/comprar'
 import { Historial } from './components/historial'
 import { nombresDe } from './components/atencion'
 import { TableroCreditos } from './components/tablero'
+import { CifraAnimada } from '../../propuestas/components/cifra-animada'
+import { MotionConfig, motion } from 'motion/react'
+import { Fundido, Revelar, useFilasQueEntran } from '../../propuestas/components/animacion'
+import { CURVA } from '../../propuestas/components/movimiento'
 
 // Créditos de IA · exploración 1, «Saldo» (25 sep, Nicolás: «esfuérzate, quiero algo hermoso»). La claridad de una
 // cuenta de banco: primero lo que necesita tu atención (desde el 5 oct, el tablero de Vacantes en lugar de un aviso);
@@ -75,13 +83,17 @@ export function Component() {
   }
   // Las cifras, los agentes y el gráfico llegan al entrar.
   const cargando = useCarga()
-  const [pestana, setPestana] = useState<'resumen' | 'historial'>('resumen')
+  // «Ver el historial» desde los créditos de la cabecera llega con ?pestana=historial.
+  const [parametros] = useSearchParams()
+  const [pestana, setPestana] = useState<'resumen' | 'historial'>(() => (parametros.get('pestana') === 'historial' ? 'historial' : 'resumen'))
 
   const conCosto = porUrgencia(bolsa.porAgente.filter((uno) => uno.agente.costo))
   const compras = historial.filter((movimiento) => movimiento.tipo === 'compra').length
   const libres = conCosto.reduce((suma, uno) => suma + uno.libre, 0)
 
   return (
+    // Con «reducir movimiento» en el sistema, las animaciones de Selección se quedan quietas.
+    <MotionConfig reducedMotion="user">
     <PageShell>
       <PageHeader
         breadcrumbs={[{ label: 'Inicio', path: '/admin' }, { label: 'Selección' }, { label: 'Créditos de IA' }]}
@@ -117,6 +129,8 @@ export function Component() {
       />
 
       <PageContent>
+        {/* Cambiar de pestaña funde una vista en la otra; dentro, las secciones entran en cascada. */}
+        <Fundido clave={pestana} className="flex flex-col gap-6">
         {pestana === 'historial' ? (
           // ── El historial: su propia pestaña. La tabla ya no lleva título: lo dice la pestaña. ──
           <Historial historial={historial} />
@@ -124,13 +138,15 @@ export function Component() {
           <>
             {/* ── Lo que necesita tu atención, lo primero (5 oct): el tablero de Vacantes en lugar del aviso amarillo.
                 Si te dicen que algo necesita tu atención, lo primero es resolverlo. ── */}
-            <TableroCreditos bolsa={bolsa} historial={historial} cargando={cargando} onReasignar={abrir} onComprar={comprar} />
+            <Revelar>
+              <TableroCreditos bolsa={bolsa} historial={historial} cargando={cargando} onReasignar={abrir} onComprar={comprar} />
+            </Revelar>
 
             {/* ── La bolsa y lo cobrado por semana, lado a lado y del mismo alto: los dos cuentan cómo va la bolsa. Cada
                 uno con la forma de los demás bloques: marco gris, título arriba y lo suyo en blanco. ── */}
             {/* Se mide contra el ancho del contenido, no de la ventana: con el menú abierto en una pantalla mediana, las dos
                 columnas no caben y van una debajo de la otra. */}
-            <div className="@container">
+            <Revelar orden={1} className="@container">
             <div className="grid gap-6 @4xl:grid-cols-2">
               <Frame spacing="sm" className="h-full">
                 <FrameHeader>
@@ -153,7 +169,8 @@ export function Component() {
                       ) : (
                         <span className="flex flex-wrap items-baseline gap-2">
                           <Text as="span" weight="semibold" className="text-5xl leading-12 tracking-tight tabular-nums">
-                            {creditos(bolsa.disponible)}
+                            {/* Sube hasta su valor al llegar (13 oct, PM: «que esos numeritos se muevan»). */}
+                            <CifraAnimada valor={bolsa.disponible} formato={creditos} />
                           </Text>
                           <Text as="span" variant="muted">
                             de {creditos(bolsa.comprado)}
@@ -161,7 +178,7 @@ export function Component() {
                         </span>
                       )}
                     </div>
-                    {/* El mismo anillo con el degradado de la IA del menú de la empresa: lo usado de la bolsa. */}
+                    {/* Lo usado de la bolsa. */}
                     <AnilloUsado usado={bolsa.usado} total={bolsa.comprado} cargando={cargando} />
                   </div>
 
@@ -169,6 +186,8 @@ export function Component() {
                     {cargando ? (
                       <Skeleton className="h-2.5 w-full" />
                     ) : (
+                      // Se dibuja de izquierda a derecha al llegar, como se va gastando la bolsa.
+                      <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.9, delay: 0.2, ease: CURVA }} style={{ originX: 0 }}>
                       <BarraSegmentada
                         segmentos={[
                           { id: 'usado', etiqueta: 'Usados', valor: bolsa.usado, color: 'var(--chart-4)' },
@@ -177,6 +196,7 @@ export function Component() {
                           { id: 'sin', etiqueta: 'Sin asignar', valor: bolsa.sinAsignar, color: 'var(--muted)' },
                         ]}
                       />
+                      </motion.div>
                     )}
                   </div>
                   {/* Las cuatro partes suman la bolsa; las tres últimas suman lo disponible. */}
@@ -227,27 +247,20 @@ export function Component() {
                 </FramePanel>
               </Frame>
             </div>
-            </div>
+            </Revelar>
 
-            {/* ── Los agentes: la tabla del sistema (`TablaDatos`; auditoría, 5-oct; decisión 4a de Cristian, 9-oct), en su sección
-                con título. Es corta: el pie de páginas sale solo si hace falta. ── */}
-            <PageSection
-              title={
-                <span className="flex items-center gap-2">
-                  <IconoIA />
-                  Agentes con IA
-                </span>
-              }
-              description="Lo asignado a cada uno, lo que ya usó y para cuánto le alcanza. Primero lo urgente."
-            >
-              <TablaAgentes agentes={[...conCosto, ...bolsa.porAgente.filter((uno) => !uno.agente.costo)]} cargando={cargando} />
+            {/* ── Los agentes, en la tabla del sistema (16 oct, Nicolás: «montale las tablas nuevas a créditos»), con su
+                título en lo gris. Primero lo urgente; cada columna ordena. ── */}
+            <Revelar orden={2} className="flex flex-col gap-2">
+              <TablaAgentes agentes={[...conCosto, ...bolsa.porAgente.filter((uno) => !uno.agente.costo)]} cargando={cargando} onReasignar={abrir} />
               {/* Lo mismo que dice Orbit Flow de sí mismo (OF-57): preguntarle no gasta, gastan las etapas con IA. */}
-              <Text as="p" variant="muted" size="sm">
+              <Text as="p" variant="muted" size="sm" className="px-1">
                 Orbit Flow, el agente de cada vacante, no usa créditos: preguntarle es gratis. Gastan las etapas con IA cuando alguien entra a ellas.
               </Text>
-            </PageSection>
+            </Revelar>
           </>
         )}
+        </Fundido>
       </PageContent>
 
       <ReasignarCreditos key={vez} open={reasignando} onOpenChange={setReasignando} bolsa={bolsa} />
@@ -262,42 +275,37 @@ export function Component() {
         }}
       />
     </PageShell>
+    </MotionConfig>
   )
 }
 
+// Lo usado de la bolsa, en el anillo radial del design system (AnilloAvance, hecho con el Chart de flux-ui; 13 oct,
+// Nicolás: «debemos usar uno que venga de flux ui»). Va en el color de «Usados» de la barra de abajo.
 function AnilloUsado({ usado, total, cargando }: { usado: number; total: number; cargando: boolean }) {
   // Sin bolsa no hay qué dividir: 0 % y no «NaN %» (CI-23; el estado de primera vez sigue pendiente).
   const porcentaje = total > 0 ? Math.round((usado / total) * 100) : 0
-  // El arco arranca vacío y se llena hasta lo usado al llegar a la pantalla.
-  const [mostrado, setMostrado] = useState(0)
-  useEffect(() => {
-    if (cargando) return
-    const cuadro = requestAnimationFrame(() => setMostrado(porcentaje))
-    return () => cancelAnimationFrame(cuadro)
-  }, [cargando, porcentaje])
-  if (cargando) return <Skeleton aria-hidden="true" className="size-36 shrink-0 rounded-full!" />
+  if (cargando) return <Skeleton aria-hidden="true" className="size-20 shrink-0 rounded-full!" />
   return (
-    <span
-      role="img"
-      aria-label={`Se ha usado el ${porcentaje} % de la bolsa`}
-      className={cn(paleta.vars, anillo.anillo, 'me-2.5')}
-      style={{ '--v': mostrado } as CSSProperties}
-    >
-      <span aria-hidden="true" className={anillo.escala} />
-      <span aria-hidden="true" className={anillo.brillo} />
-      <span aria-hidden="true" className={anillo.pista} />
-      <span aria-hidden="true" className={anillo.arco} />
-      {porcentaje > 0 ? <span aria-hidden="true" className={anillo.inicio} /> : null}
-      {porcentaje > 0 ? <span aria-hidden="true" className={anillo.punta} /> : null}
-      <span aria-hidden="true" className={anillo.centro}>
-        <Text as="span" size="xl" weight="semibold" className="tabular-nums sm:text-2xl">
-          {porcentaje} %
-        </Text>
-        <Text as="span" variant="muted" size="xs">
-          usado
-        </Text>
-      </span>
-    </span>
+    <AnilloAvance
+      valor={porcentaje}
+      color="var(--chart-4)"
+      etiqueta="Usados"
+      // Las cifras ya están escritas en la tarjeta («Usados», «de 30.000»): el globo solo las repetiría.
+      globo={false}
+      // A la altura de «Disponibles» y su cifra, para que la fila no quede con aire de más arriba y abajo.
+      tamano={80}
+      grosor={7}
+      centro={
+        <>
+          <Text as="span" weight="semibold" className="tabular-nums">
+            {porcentaje} %
+          </Text>
+          <Text as="span" variant="muted" size="xs" className="leading-none">
+            usado
+          </Text>
+        </>
+      }
+    />
   )
 }
 
@@ -311,7 +319,7 @@ function Parte({ color, etiqueta, valor, texto, cargando }: { color: string; eti
         </span>
       ) : (
         <Text as="span" size="xl" weight="semibold" className="tabular-nums">
-          {creditos(valor)}
+          <CifraAnimada valor={valor} formato={creditos} />
         </Text>
       )}
       <Text as="span" variant="muted" size="xs">
@@ -321,132 +329,168 @@ function Parte({ color, etiqueta, valor, texto, cargando }: { color: string; eti
   )
 }
 
-// Los agentes en la tabla del sistema (`TablaDatos`, auditoría del 5-oct). Lo que se ordena de cada fila: el nombre del
-// agente, cuánto lleva usado de lo asignado, para cuántos usos le alcanza y en cuántas vacantes está. Todas las filas
-// llevan lo justo para la barra y dos líneas de texto; «De lo asignado» con aire para «2.990 usados · 1.560 reservados de
-// 4.940» y las vacantes en pausa contadas, no nombradas (los nombres los dice el tablero de atención).
-type FilaAgente = EstadoAgente & { id: string; nombre: string; uso: number; alcanza: number; enVacantes: number }
+// Las columnas viven fuera del componente (si cambian en cada pintada, la tabla se vuelve a armar); lo que necesitan de la
+// pantalla, abrir «Reasignar créditos», les llega por contexto.
+const AbrirReasignar = createContext<() => void>(() => undefined)
 
-const COLUMNAS_AGENTES: DataGridListConfig<FilaAgente>['columns'] = [
-  {
-    accessorKey: 'nombre',
-    header: 'Agente',
-    size: 300,
-    cell: ({ row }) => {
-      const { agente, vecesUsado } = row.original
-      return (
-        <span className="flex min-w-0 items-center gap-3">
-          <IconoAgente agente={agente} />
-          <CeldaTitulo
-            titulo={agente.nombre}
-            detalle={agente.costo ? `${creditos(agente.costo)} créditos por ${agente.uso[0]}` : `${creditos(vecesUsado)} CVs analizados`}
-          />
-        </span>
-      )
-    },
-  },
-  {
-    accessorKey: 'uso',
-    header: 'De lo asignado',
-    size: 260,
-    cell: ({ row }) => {
-      const { agente, asignado, usado, reservado, libre } = row.original
-      return agente.costo && asignado ? (
-        <span className="flex w-full flex-col gap-1.5 pe-4">
-          {/* `flex`: sin él, la barra queda en una línea de texto y le suma 3 px a la fila. */}
-          <span aria-hidden="true" className="flex">
-            <BarraSegmentada
-              segmentos={[
-                { id: 'usado', etiqueta: 'Usado', valor: usado, color: 'var(--chart-4)' },
-                { id: 'reservado', etiqueta: 'Reservado', valor: reservado, color: 'var(--chart-2)' },
-                { id: 'libre', etiqueta: 'Libre', valor: libre, color: 'var(--muted)' },
-              ]}
-            />
-          </span>
-          <Text as="span" variant="muted" size="sm" className="truncate tabular-nums">
-            {creditos(usado)} usados{reservado ? ` · ${creditos(reservado)} reservados` : ''} de {creditos(asignado)}
-          </Text>
-        </span>
-      ) : (
-        <Text as="span" variant="muted" size="sm">
-          {agente.costo ? 'Sin créditos asignados' : 'No usa créditos'}
-        </Text>
-      )
-    },
-  },
-  {
-    accessorKey: 'alcanza',
-    header: 'Le alcanza para',
-    size: 220,
-    cell: ({ row }) => {
-      const { agente, usos } = row.original
-      return (
-        <span className="flex flex-col items-start gap-1">
-          <Text as="span" weight="medium" className="tabular-nums">
-            {agente.costo ? (usos ? usosTexto(agente, usos) : `Ninguna ${agente.uso[0]}`.replace('Ninguna roleplay', 'Ningún roleplay')) : 'Todas las que lleguen'}
-          </Text>
-          <InsigniaSituacion estado={row.original} />
-        </span>
-      )
-    },
-  },
-  {
-    accessorKey: 'enVacantes',
-    header: 'Vacantes',
-    size: 240,
-    cell: ({ row }) => {
-      const { vacantes, situacion } = row.original
-      const pausado = situacion === 'sin-cupo' && vacantes.length
-      return (
-        <Text as="span" size="sm" className={pausado ? 'truncate text-destructive' : 'truncate'}>
-          {pausado
-            ? `En pausa en ${vacantes.length === 1 ? nombresDe(vacantes) : `${vacantes.length} vacantes`}`
-            : `Lo usan ${plural(vacantes.length, '1 vacante', `${vacantes.length} vacantes`)}`}
-        </Text>
-      )
-    },
-  },
-]
-
-function TablaAgentes({ agentes, cargando }: { agentes: EstadoAgente[]; cargando: boolean }) {
-  const [orden, setOrden] = useState<string | undefined>(undefined)
-  const [pagina, setPagina] = useState(1)
-  const [porPagina, setPorPagina] = useState(10)
-  const filas = agentes.map<FilaAgente>((estado) => ({
-    ...estado,
-    id: estado.agente.id,
-    nombre: estado.agente.nombre,
-    uso: estado.asignado ? estado.usado / estado.asignado : 0,
-    alcanza: estado.agente.costo ? (estado.usos ?? 0) : Number.MAX_SAFE_INTEGER,
-    enVacantes: estado.vacantes.length,
-  }))
-  // Sin orden pedido, primero lo urgente (como llegan).
-  const ordenadas = orden ? ordenarPor(filas, orden) : filas
-
+// El agente: su icono, su nombre y debajo lo que cuesta cada uso (o cuántos CVs leyó, si es gratis).
+function CeldaAgente({ estado }: { estado: EstadoAgente }) {
+  const { agente, vecesUsado } = estado
   return (
-    <TablaDatos
-      config={{ columns: COLUMNAS_AGENTES, sort: { onSortChange: setOrden } }}
-      data={ordenadas.slice((pagina - 1) * porPagina, pagina * porPagina)}
-      isLoading={cargando}
-      paginacion={{ pagina, setPagina, porPagina, setPorPagina, total: ordenadas.length }}
-      nombre="agentes"
-      singular="agente"
-      id="agentes-creditos"
-      pieSoloSiHaceFalta
-    />
+    <span className="flex w-0 min-w-full items-center gap-3">
+      <IconoAgente agente={agente} />
+      <span className="flex min-w-0 flex-col">
+        <Text as="span" weight="medium" className="truncate">
+          {agente.nombre}
+        </Text>
+        <Text as="span" variant="muted" size="sm" className="truncate">
+          {agente.costo ? `${creditos(agente.costo)} créditos por ${agente.uso[0]}` : `${creditos(vecesUsado)} CVs analizados`}
+        </Text>
+      </span>
+    </span>
   )
 }
 
-// El orden de la tabla: por la columna que se pidió («-» adelante, de mayor a menor).
-function ordenarPor(filas: FilaAgente[], orden: string) {
-  const desc = orden.startsWith('-')
-  const campo = (desc ? orden.slice(1) : orden) as keyof FilaAgente
-  return [...filas].sort((a, b) => {
-    const va = a[campo]
-    const vb = b[campo]
-    const r = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va ?? '').localeCompare(String(vb ?? ''), 'es')
-    return desc ? -r : r
-  })
+// De lo asignado: la barra (usado, reservado, libre) y la cuenta debajo.
+function CeldaAsignado({ estado }: { estado: EstadoAgente }) {
+  const { agente, asignado, usado, reservado, libre } = estado
+  if (!agente.costo || !asignado)
+    return (
+      <Text as="span" variant="muted" size="sm">
+        {agente.costo ? 'Sin créditos asignados' : 'No usa créditos'}
+      </Text>
+    )
+  return (
+    <span className="flex w-0 min-w-full flex-col gap-1.5">
+      {/* `flex`: sin él, la barra queda en una línea de texto y le suma 3 px a la fila. */}
+      <span aria-hidden="true" className="flex">
+        <BarraSegmentada
+          segmentos={[
+            { id: 'usado', etiqueta: 'Usado', valor: usado, color: 'var(--chart-4)' },
+            { id: 'reservado', etiqueta: 'Reservado', valor: reservado, color: 'var(--chart-2)' },
+            { id: 'libre', etiqueta: 'Libre', valor: libre, color: 'var(--muted)' },
+          ]}
+        />
+      </span>
+      <Text as="span" variant="muted" size="sm" className="truncate tabular-nums">
+        {creditos(usado)} usados{reservado ? ` · ${creditos(reservado)} reservados` : ''} de {creditos(asignado)}
+      </Text>
+    </span>
+  )
+}
+
+// Para cuánto le alcanza lo libre, con su insignia (sin cupo, pronto, al día).
+function CeldaAlcanza({ estado }: { estado: EstadoAgente }) {
+  const { agente, usos } = estado
+  return (
+    <span className="flex flex-col items-start gap-1">
+      <Text as="span" weight="medium" className="tabular-nums">
+        {agente.costo ? (usos ? usosTexto(agente, usos) : `Ninguna ${agente.uso[0]}`.replace('Ninguna roleplay', 'Ningún roleplay')) : 'Todas las que lleguen'}
+      </Text>
+      <InsigniaSituacion estado={estado} />
+    </span>
+  )
+}
+
+// Las vacantes que lo usan; si se quedó sin cupo, cuántas quedaron en pausa (los nombres los dice el tablero de atención).
+function CeldaVacantes({ estado }: { estado: EstadoAgente }) {
+  const { situacion, vacantes } = estado
+  const pausado = situacion === 'sin-cupo' && vacantes.length
+  return (
+    <Text as="span" size="sm" className={pausado ? 'block w-0 min-w-full truncate text-destructive' : 'block w-0 min-w-full truncate'}>
+      {pausado
+        ? `En pausa en ${vacantes.length === 1 ? nombresDe(vacantes) : `${vacantes.length} vacantes`}`
+        : `Lo usan ${plural(vacantes.length, '1 vacante', `${vacantes.length} vacantes`)}`}
+    </Text>
+  )
+}
+
+// El «⋯» de cada agente que usa créditos: darle más (abre «Reasignar créditos»). Evaluación CV es gratis y no lo lleva.
+function MenuAgente({ estado }: { estado: EstadoAgente }) {
+  const abrir = useContext(AbrirReasignar)
+  if (!estado.agente.costo) return null
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<BotonIcono aria-label={`Acciones de ${estado.agente.nombre}`} />}>
+        <HugeiconsIcon icon={MoreHorizontalIcon} aria-hidden="true" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={abrir}>
+            <HugeiconsIcon icon={PieChartIcon} aria-hidden="true" />
+            Reasignar sus créditos
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+const COLUMNAS_AGENTES: DataGridListConfig<FilaAgente>['columns'] = [
+  { id: 'agente', accessorFn: (fila) => fila.agente.nombre, header: 'Agente', size: 290, cell: ({ row }) => <CeldaAgente estado={row.original} /> },
+  { id: 'asignado', accessorFn: (fila) => (fila.asignado ? fila.usado / fila.asignado : -1), header: 'De lo asignado', size: 300, cell: ({ row }) => <CeldaAsignado estado={row.original} /> },
+  { id: 'alcanza', accessorFn: (fila) => (fila.agente.costo ? fila.usos : Infinity), header: 'Le alcanza para', size: 210, cell: ({ row }) => <CeldaAlcanza estado={row.original} /> },
+  { id: 'vacantes', accessorFn: (fila) => fila.vacantes.length, header: 'Vacantes', size: 180, cell: ({ row }) => <CeldaVacantes estado={row.original} /> },
+  { id: 'acciones', header: 'Acciones', size: 96, enableSorting: false, enableResizing: false, ...SIN_ARRASTRE, cell: ({ row }) => <MenuAgente estado={row.original} /> },
+]
+
+// `id`: lo que la tabla usa para reconocer cada fila.
+type FilaAgente = EstadoAgente & { id: string }
+
+// El orden que pide el encabezado; sin orden, el de siempre: primero lo urgente.
+const VALOR_ORDEN: Record<string, (fila: FilaAgente) => number | string> = {
+  agente: (fila) => fila.agente.nombre,
+  asignado: (fila) => (fila.asignado ? fila.usado / fila.asignado : -1),
+  alcanza: (fila) => (fila.agente.costo ? fila.usos : Number.MAX_SAFE_INTEGER),
+  vacantes: (fila) => fila.vacantes.length,
+}
+
+function TablaAgentes({ agentes, cargando, onReasignar }: { agentes: EstadoAgente[]; cargando: boolean; onReasignar: () => void }) {
+  const [orden, setOrden] = useState<string | undefined>(undefined)
+  const [pagina, setPagina] = useState(1)
+  const [porPagina, setPorPagina] = useState(10)
+  const filas = useMemo<FilaAgente[]>(() => {
+    const conId = agentes.map((uno) => ({ ...uno, id: uno.agente.id }))
+    const campo = orden?.replace(/^-/, '') ?? ''
+    const valor = VALOR_ORDEN[campo]
+    if (!orden || !valor) return conId
+    const alReves = orden.startsWith('-')
+    return [...conId].sort((a, b) => {
+      const va = valor(a)
+      const vb = valor(b)
+      const r = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb), 'es')
+      return alReves ? -r : r
+    })
+  }, [agentes, orden])
+
+  // Los agentes entran uno tras otro al llegar y al reordenar.
+  const caja = useRef<HTMLDivElement>(null)
+  useFilasQueEntran(caja, orden ?? '', !cargando)
+
+  const config: DataGridListConfig<FilaAgente> = {
+    columns: COLUMNAS_AGENTES,
+    sort: { onSortChange: setOrden },
+    labels: { dragToReorder: 'Arrastrar para reordenar la columna' },
+    frame: { description: 'Lo asignado a cada uno, lo que ya usó y para cuánto le alcanza. Primero lo urgente.' },
+  }
+
+  return (
+    <AbrirReasignar.Provider value={onReasignar}>
+      <div ref={caja}>
+      <TablaDatos
+        titulo="Agentes con IA"
+        config={config}
+        data={filas}
+        isLoading={cargando}
+        paginacion={{ pagina, setPagina, porPagina, setPorPagina, total: filas.length }}
+        nombre="agentes"
+        singular="agente"
+        id="agentes-creditos"
+        pieSoloSiHaceFalta
+      />
+      </div>
+    </AbrirReasignar.Provider>
+  )
 }
 
 Component.displayName = 'SeleccionCreditosUnoPage'

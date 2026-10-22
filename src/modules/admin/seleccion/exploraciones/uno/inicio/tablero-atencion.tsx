@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react'
 import { useNavigate } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { GridViewIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { PlusSignIcon } from '@hugeicons/core-free-icons'
 import { Button, EmptyContent, Field, FieldLabel, Label, RadioGroup, RadioGroupItem } from '@ubits/flux-ui'
 import { VentanaDeAccion } from '@/modules/design-system/drawers/components/drawer-anidado'
 import { notify, notifyAction } from '@/shared/components/notify'
@@ -12,11 +12,11 @@ import { costoDeEtapa, creditos } from '../../../propuestas/creditos'
 import { almacenDeLotes } from '../../../propuestas/importacion'
 import { pasoPendiente } from '../../../propuestas/publicar'
 import { DialogoCorreo } from '../../../propuestas/components/dialogos-base'
-import { ErrorDeCarga, useCargaConError } from '../../../propuestas/components/carga'
+import { ErrorDeCarga, useCargaConError } from '@/modules/design-system/estados/carga'
 import { cambiarVacantes, escribirDesdeInicio, moverDesdeInicio, reenviarInvitacion, rechazarCerradas, vacantesDeLaSesion } from './acciones'
-import { asuntosDe, cumplenEn, DIAS_POSPONE, type Asunto, type Elemento, type Grupo, type PlantillaAsunto } from './atencion'
+import { asuntosDe, cumplenEn, DIAS_POSPONE, GRUPOS_VACANTES, NOMBRES_VACANTES, type Asunto, type Elemento, type Grupo, type PlantillaAsunto } from './atencion'
 import { claveAsi, claveDe, estadoInicio, useEstadoInicio } from './estado'
-import { TableroAtencion as TableroAtencionComun } from '../../../propuestas/components/tablero-atencion'
+import { TableroAtencion as TableroAtencionComun } from '@/modules/design-system/metricas/tablero-atencion'
 import { PanelAtencion, type Manejadores } from './panel-asunto'
 import { avisoDeError, noSeGuardo } from '../../../propuestas/simular'
 
@@ -59,7 +59,7 @@ const PLANTILLAS: Record<PlantillaAsunto, PlantillaBase> = {
 
 const MOTIVOS = ['No aplica a esta persona o vacante', 'Ya lo hice por fuera', 'No es buen momento', 'Otro motivo']
 
-export function TableroAtencion({ ruta, onCrear, onPlantilla }: { ruta: string; onCrear: () => void; onPlantilla: () => void }) {
+export function TableroAtencion({ ruta, onCrear }: { ruta: string; onCrear: () => void }) {
   const navigate = useNavigate()
   const registro = useSyncExternalStore(registroDeMovimientos.suscribir, registroDeMovimientos.leer)
   const estado = useEstadoInicio()
@@ -220,8 +220,11 @@ export function TableroAtencion({ ruta, onCrear, onPlantilla }: { ruta: string; 
     const ia = etapaDe(persona.vacante.etapas, hacia)?.ia
     const costo = ia ? costoDeEtapa(hacia, 1) : null
     if (costo && !costo.alcanza) {
-      const detalle = `Cuesta ${creditos(costo.total)} y le quedan ${creditos(costo.libre)}. Asígnale más en Créditos.`
-      notify(`No alcanzan los créditos de ${costo.agente.nombre}`, detalle, 'warning')
+      notify(
+        `No alcanzan los créditos de ${costo.agente.nombre}`,
+        `Cuesta ${creditos(costo.total)} y le quedan ${creditos(costo.libre)}. Asígnale más en Créditos.`,
+        'warning',
+      )
       return
     }
     const deshacer = estadoInicio.marcar([asunto.id], `Pasaste a ${persona.candidato.nombre} a «${tituloEtapa(hacia)}»`, moverDesdeInicio(persona, hacia), 'ia')
@@ -288,19 +291,17 @@ export function TableroAtencion({ ruta, onCrear, onPlantilla }: { ruta: string; 
         onExpandido={setExpandido}
         onAbrir={abrirAsunto}
         onVerGrupo={abrirGrupo}
+        grupos={GRUPOS_VACANTES}
+        nombres={NOMBRES_VACANTES}
         error={carga.falla ? <ErrorDeCarga que="lo que necesita tu atención" onReintentar={carga.reintentar} /> : undefined}
         // El primer uso no se celebra: todavía no hay nada que atender (IN-24).
         vacio={
           sinVacantes
             ? {
                 titulo: 'Empieza con tu primera vacante',
-                descripcion: 'Cuando publiques una, aquí aparece lo que necesite una acción tuya: quién espera respuesta, qué vence y qué conviene revisar.',
+                descripcion: 'Cuando publiques una, aquí aparece lo que esté esperando una acción tuya: quién espera, qué vence y qué conviene revisar.',
                 contenido: (
                   <EmptyContent className="flex-row justify-center">
-                    <Button variant="outline" onClick={onPlantilla}>
-                      <HugeiconsIcon icon={GridViewIcon} aria-hidden="true" />
-                      Usar una plantilla
-                    </Button>
                     <Button onClick={onCrear}>
                       <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
                       Crear vacante

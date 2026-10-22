@@ -11,8 +11,6 @@ import {
 import {
   Alert,
   AlertDescription,
-  AspectRatio,
-  Badge,
   Button,
   Checkbox,
   Empty,
@@ -34,11 +32,13 @@ import {
   type DataGridListConfig,
 } from '@ubits/flux-ui'
 import { PiePaginacion, usePaginacion } from '@/modules/admin/seleccion/propuestas/components/paginacion'
+import { Badge } from '@/shared/components/Badge'
+import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
-import { CATALOGO_COMPETENCIAS, CONTENIDOS, DURACIONES, IDIOMAS, TIPOS_CONTENIDO, competenciaDe, duracionTexto, fichaDe } from './catalogo'
+import { CATALOGO_COMPETENCIAS, CONTENIDOS, DURACIONES, IDIOMAS, TIPOS_CONTENIDO, competenciaDe, duracionTexto, fichaDe, portadaDe } from './catalogo'
 import { MAXIMO_COMPETENCIAS, marcadosEn, type TipoPlan } from './planes-datos'
 import { TablaSeleccion, type Filtro } from './tabla-seleccion'
 
@@ -78,7 +78,25 @@ const texto = (valor: string) => (
 const opciones = (valores: readonly string[]) => valores.map((v) => ({ label: v, value: v }))
 
 const COLUMNAS_CONTENIDOS: DataGridListConfig<FilaContenido>['columns'] = [
-  { accessorKey: 'titulo', header: 'Nombre', size: 320, ...SIN_ARRASTRE, cell: ({ row }) => titulo(row.original.titulo, row.original.autor) },
+  // La fila que nombra algo es CeldaTitulo, con su portada (o el icono de contenido si no la tiene).
+  {
+    accessorKey: 'titulo',
+    header: 'Nombre',
+    size: 320,
+    ...SIN_ARRASTRE,
+    // Con tantas columnas con filtro, la tabla reparte el ancho por lo que ocupa cada cabecera y la celda del nombre
+    // (que se corta con «…») se quedaba en 140 px: el ancho mínimo le guarda sitio al nombre.
+    cell: ({ row }) => (
+      <div className="min-w-48">
+        <CeldaTitulo
+          titulo={row.original.titulo}
+          detalle={row.original.autor}
+          imagen={portadaDe(row.original.titulo)}
+          sinImagen={<HugeiconsIcon icon={BookOpen01Icon} size={16} aria-hidden="true" />}
+        />
+      </div>
+    ),
+  },
   { accessorKey: 'tipo', header: 'Tipo de contenido', size: 150, ...SIN_ARRASTRE, cell: ({ row }) => texto(row.original.tipo) },
   { accessorKey: 'minutos', header: 'Duración', size: 110, ...SIN_ARRASTRE, cell: ({ row }) => texto(duracionTexto(row.original.minutos)) },
   { accessorKey: 'idioma', header: 'Idioma', size: 110, ...SIN_ARRASTRE, cell: ({ row }) => texto(row.original.idioma) },
@@ -97,6 +115,7 @@ const COLUMNAS_CONTENIDOS: DataGridListConfig<FilaContenido>['columns'] = [
       ),
   },
 ]
+const SIN_REORDENAR = { reorderable: false }
 const FILTROS_CONTENIDOS: DataGridListConfig<FilaContenido>['columnFilters'] = [
   { id: 'tipo', label: 'Tipo de contenido', type: 'select', multiple: true, options: opciones(TIPOS_CONTENIDO) },
   { id: 'duracion', columnId: 'minutos', label: 'Duración', type: 'select', multiple: true, options: DURACIONES.map((d) => ({ label: d.etiqueta, value: d.id })) },
@@ -120,16 +139,10 @@ const COLUMNAS_COMPETENCIAS: DataGridListConfig<FilaCompetencia>['columns'] = [
     header: 'Competencia',
     size: 250,
     ...SIN_ARRASTRE,
+    // El mismo ancho mínimo que el nombre de los contenidos, para que la competencia no se quede en «…».
     cell: ({ row }) => (
-      <div className="flex min-w-0 items-center gap-3">
-        {row.original.imagen ? (
-          <AspectRatio ratio={16 / 9} className="w-16 shrink-0 overflow-hidden rounded-md">
-            <img src={row.original.imagen} alt="" loading="lazy" className="size-full object-cover" />
-          </AspectRatio>
-        ) : null}
-        <Text as="span" size="sm" weight="medium" className="truncate">
-          {row.original.titulo}
-        </Text>
+      <div className="min-w-48">
+        <CeldaTitulo titulo={row.original.titulo} imagen={row.original.imagen} sinImagen={<HugeiconsIcon icon={Target02Icon} size={16} aria-hidden="true" />} />
       </div>
     ),
   },
@@ -138,11 +151,8 @@ const COLUMNAS_COMPETENCIAS: DataGridListConfig<FilaCompetencia>['columns'] = [
     header: 'Habilidades',
     size: 340,
     ...SIN_ARRASTRE,
-    cell: ({ row }) => (
-      <div className="max-w-80">
-        {titulo(`${row.original.cuantas} ${plural(row.original.cuantas, 'habilidad', 'habilidades')}`, row.original.habilidades.join(' · '))}
-      </div>
-    ),
+    // El ancho lo pone la columna: la lista de habilidades se corta con «…» dentro de ella.
+    cell: ({ row }) => titulo(`${row.original.cuantas} ${plural(row.original.cuantas, 'habilidad', 'habilidades')}`, row.original.habilidades.join(' · ')),
   },
 ]
 // Se busca por la competencia o por cualquiera de sus habilidades («hablar en público» encuentra Comunicación).
@@ -356,6 +366,8 @@ export function ListaCatalogo({
           columnas={COLUMNAS_CONTENIDOS}
           filtros={FILTROS_CONTENIDOS}
           coincide={coincideContenido}
+          // Para elegir no hace falta mover columnas: sin el asidero, las cinco caben en el panel.
+          layout={SIN_REORDENAR}
           buscar="Buscar por título o autor"
           marcados={marcados}
           onCambio={onCambio}

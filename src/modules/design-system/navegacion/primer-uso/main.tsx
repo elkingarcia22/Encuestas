@@ -77,11 +77,11 @@ export function Component() {
               <Button variant="ghost" className={`${WS} text-muted-foreground!`} onClick={() => setSimulated((v) => !v)}>
                 {simulated ? 'Ver estado vacío' : 'Simular datos'}
               </Button>
-              <Button variant="outline" className={WS} onClick={() => notify('Importar evaluaciones desde Excel')}>
+              <Button variant="outline" className={WS} onClick={() => notify('Importar evaluaciones desde Excel', undefined, 'info')}>
                 <HugeiconsIcon icon={FileImportIcon} size={16} />
                 Importar desde Excel
               </Button>
-              <Button className={WS} onClick={() => notify('Crear evaluación')}>
+              <Button className={WS} onClick={() => notify('Crear evaluación', undefined, 'info')}>
                 <HugeiconsIcon icon={Add01Icon} size={16} />
                 Crear evaluación
               </Button>
@@ -98,7 +98,7 @@ export function Component() {
                     {/* Cada fila es un botón (se abre con teclado) dentro de su elemento de lista. */}
                     {EVALUATIONS.map((evaluation) => (
                       <div key={evaluation.name} role="listitem">
-                        <Item render={<button type="button" />} className="cursor-pointer text-left" onClick={() => notify(`Abrir «${evaluation.name}»`)}>
+                        <Item render={<button type="button" />} className="cursor-pointer text-left" onClick={() => notify(`Abrir «${evaluation.name}»`, undefined, 'info')}>
                           <ItemMedia>
                             <IconTile variant="soft" size="sm">
                               <HugeiconsIcon icon={UserGroupIcon} />
@@ -135,7 +135,7 @@ export function Component() {
                 icono="glass-add"
                 titulo="Todavía no hay evaluaciones 360"
                 descripcion="Crea la primera en unos minutos: eliges a quién evaluar, quién opina y cuándo cierra. Las preguntas salen de las competencias de tu empresa."
-                accion={{ texto: 'Crear evaluación', icono: Add01Icon, onClick: () => notify('Crear evaluación') }}
+                accion={{ texto: 'Crear evaluación', icono: Add01Icon, onClick: () => notify('Crear evaluación', undefined, 'info') }}
               />
 
               <Card>
@@ -198,7 +198,7 @@ export function Component() {
                 title="¿Necesitas ayuda?"
                 description="Todo lo que suele consultar quien lanza su primera evaluación."
                 actions={
-                  <Button variant="ghost" size="sm" className={`${WS} text-muted-foreground!`} onClick={() => notify('Video: cómo funciona una evaluación 360')}>
+                  <Button variant="ghost" size="sm" className={`${WS} text-muted-foreground!`} onClick={() => notify('Video: cómo funciona una evaluación 360', undefined, 'info')}>
                     <HugeiconsIcon icon={PlayCircleIcon} size={16} />
                     Ver cómo funciona · 2 min
                   </Button>
@@ -230,7 +230,7 @@ export function Component() {
                           onClick={() =>
                             card.ai
                               ? navigate('/suite-ai?draft=Ay%C3%BAdame%20a%20crear%20mi%20primera%20evaluaci%C3%B3n%20360')
-                              : notify(card.cta)
+                              : notify(card.cta, undefined, 'info')
                           }
                         >
                           {card.cta}

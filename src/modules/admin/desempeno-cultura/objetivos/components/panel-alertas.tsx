@@ -1,117 +1,87 @@
 import { useMemo, useState } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
-import { Badge, Button, Frame, FrameDescription, FrameHeader, FramePanel, FrameTitle, Text } from '@ubits/flux-ui'
-import { BotonIcono } from '@/shared/components/BotonIcono'
-import { Hint } from '@/shared/components/Hint'
-import { TextoCompleto } from '@/shared/components/TextoCompleto'
-import { alertasDe, ciclosConAlerta, type AlertaCiclo, type Prioridad } from '../modelo/alertas'
+import { Notification01Icon } from '@hugeicons/core-free-icons'
+import { Frame, FrameHeader, FramePanel, FrameTitle } from '@ubits/flux-ui'
+import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { alertasDe, type AlertaCiclo } from '../modelo/alertas'
 import type { Ciclo } from '../modelo/ciclos'
+import { GRUPOS } from './alertas/columnas'
+import { ColumnaAlerta, FilaAlerta } from './alertas/fila-alerta'
 
-// «Para atender», con el mismo armado que el de Encuestas: los tres casos más urgentes en fila (alta primero y, dentro
-// de cada prioridad, el que cierra antes), cada uno con la acción que lo resuelve de una vez —«Recordar a 12»— y la
-// flecha que lleva al ciclo. «Ver en la lista» deja la tabla de abajo solo con los ciclos que tienen algún caso, que era
-// lo que hacía la alerta «Avance bajo» del home original. Lo resuelto sale del panel (en esta maqueta, hasta recargar).
+// «Para atender», con el mismo armado que el de Encuestas y la Super Home (20-oct, Elkin): cada espacio es UNA alerta
+// con la acción que la resuelve de una vez —«Recordar a 12», «Terminar borrador»—, sin contadores, sin «Ver todos», sin
+// panel lateral y sin detalle. Los tres espacios se llenan con una de cada prioridad (alta, media y baja), la más urgente
+// de cada una (la que cierra antes); si una prioridad no tiene alertas, su lugar lo toma la siguiente más urgente, así que
+// pueden salir dos altas o dos medias. Lo resuelto sale y entra la siguiente (en esta maqueta, hasta recargar). Con menos
+// de tres las columnas se reparten el ancho, y con una va en una fila entera.
 
 const EN_EL_HOME = 3
+const COLUMNAS: Record<number, string> = { 2: 'lg:grid-cols-2', 3: 'lg:grid-cols-3' }
 
-const PRIORIDADES: Record<Prioridad, { titulo: string; insignia: 'destructive-outline' | 'warning-light' }> = {
-  alta: { titulo: 'Alta', insignia: 'destructive-outline' },
-  media: { titulo: 'Media', insignia: 'warning-light' },
-}
-
-function ColumnaAlerta({ alerta, onRecordar, onAbrir }: { alerta: AlertaCiclo; onRecordar: (alerta: AlertaCiclo) => void; onAbrir: (ciclo: Ciclo) => void }) {
-  const prioridad = PRIORIDADES[alerta.prioridad]
-  return (
-    <div className="flex min-w-0 flex-col gap-3 lg:px-5 lg:first:ps-0 lg:last:pe-0">
-      <div className="flex min-w-0 flex-col gap-1">
-        <div className="flex min-w-0 items-center gap-2">
-          <Badge variant={prioridad.insignia} size="sm" className="shrink-0">
-            {prioridad.titulo}
-          </Badge>
-          <TextoCompleto texto={alerta.ciclo.nombre}>
-            <Text as="span" size="sm" variant="muted" className="truncate">
-              {alerta.ciclo.nombre}
-            </Text>
-          </TextoCompleto>
-        </div>
-        <TextoCompleto texto={alerta.titulo}>
-          <Text as="span" size="sm" weight="semibold" className="line-clamp-1">
-            {alerta.titulo}
-          </Text>
-        </TextoCompleto>
-        <TextoCompleto texto={alerta.resumen}>
-          <Text as="p" size="xs" variant="muted" className="line-clamp-2">
-            {alerta.resumen}
-          </Text>
-        </TextoCompleto>
-      </div>
-      <div className="mt-auto flex items-center gap-1">
-        <Button variant="outline" size="sm" onClick={() => onRecordar(alerta)}>
-          Recordar a {alerta.personas}
-        </Button>
-        <Hint label="Ver ciclo">
-          <BotonIcono aria-label={`Ver el ciclo ${alerta.ciclo.nombre}`} onClick={() => onAbrir(alerta.ciclo)}>
-            <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />
-          </BotonIcono>
-        </Hint>
-      </div>
-    </div>
-  )
+/** Los casos de la fila: el primero de cada prioridad y, si falta alguna, los siguientes más urgentes. */
+function destacados(alertas: readonly AlertaCiclo[]): AlertaCiclo[] {
+  const uno = GRUPOS.map((grupo) => alertas.find((alerta) => alerta.prioridad === grupo.grupo)).filter((alerta): alerta is AlertaCiclo => alerta !== undefined)
+  const resto = alertas.filter((alerta) => !uno.includes(alerta))
+  return [...uno, ...resto].slice(0, EN_EL_HOME).sort((a, b) => GRUPOS.findIndex((g) => g.grupo === a.prioridad) - GRUPOS.findIndex((g) => g.grupo === b.prioridad))
 }
 
 export function PanelAlertas({
   ciclos,
-  onRecordar,
-  onAbrir,
-  onVerEnLista,
+  onAccion,
 }: {
   ciclos: readonly Ciclo[]
-  onRecordar: (alerta: AlertaCiclo) => void
-  onAbrir: (ciclo: Ciclo) => void
-  /** Deja la lista solo con estos ciclos. */
-  onVerEnLista: (ids: readonly string[]) => void
+  /** La acción de un caso: recordar, terminar el borrador o ver los resultados. */
+  onAccion: (alerta: AlertaCiclo) => void
 }) {
   const [resueltas, setResueltas] = useState<ReadonlySet<string>>(new Set())
+  // Recordar le llega a otras personas: antes se pregunta (regla «preguntar-antes»); terminar un borrador o ver
+  // resultados no envía nada y va directo.
+  const [porRecordar, setPorRecordar] = useState<AlertaCiclo | null>(null)
   const alertas = useMemo(() => alertasDe(ciclos).filter((alerta) => !resueltas.has(alerta.id)), [ciclos, resueltas])
 
   if (alertas.length === 0) return null
 
-  const recordar = (alerta: AlertaCiclo) => {
-    onRecordar(alerta)
-    setResueltas((previas) => new Set(previas).add(alerta.id))
+  const resolver = (alerta: AlertaCiclo) => {
+    if (alerta.accion === 'recordar') return setPorRecordar(alerta)
+    onAccion(alerta)
   }
-  const cuantas = (prioridad: Prioridad) => alertas.filter((alerta) => alerta.prioridad === prioridad).length
-  const ids = [...ciclosConAlerta(alertas)]
+  // Recordar da el caso por atendido; terminar un borrador o ver resultados se va a otra pantalla.
+  const recordar = () => {
+    if (!porRecordar) return
+    onAccion(porRecordar)
+    setResueltas((previas) => new Set(previas).add(porRecordar.id))
+    setPorRecordar(null)
+  }
+  const enLaFila = destacados(alertas)
 
   return (
     <section aria-label="Para atender">
       <Frame>
-        <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3!">
-          <div className="flex min-w-0 flex-col gap-1">
-            <FrameTitle>Para atender</FrameTitle>
-            <FrameDescription>Lo más urgente de tus ciclos, con la acción que lo resuelve.</FrameDescription>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {(['alta', 'media'] as const)
-              .filter((prioridad) => cuantas(prioridad) > 0)
-              .map((prioridad) => (
-                <Badge key={prioridad} variant={PRIORIDADES[prioridad].insignia} size="sm" className="tabular-nums">
-                  {cuantas(prioridad)} {PRIORIDADES[prioridad].titulo.toLowerCase()}
-                </Badge>
-              ))}
-            <Button variant="ghost" size="sm" onClick={() => onVerEnLista(ids)}>
-              Ver en la lista ({ids.length})
-              <HugeiconsIcon icon={ArrowRight01Icon} aria-hidden="true" />
-            </Button>
-          </div>
+        <FrameHeader>
+          <FrameTitle>Para atender</FrameTitle>
         </FrameHeader>
-        <FramePanel className="divide-border grid gap-5 lg:grid-cols-3 lg:gap-0 lg:divide-x">
-          {alertas.slice(0, EN_EL_HOME).map((alerta) => (
-            <ColumnaAlerta key={alerta.id} alerta={alerta} onRecordar={recordar} onAbrir={onAbrir} />
-          ))}
-        </FramePanel>
+        {enLaFila.length === 1 ? (
+          <FramePanel className="py-1!">
+            <FilaAlerta alerta={enLaFila[0]} onResolver={resolver} />
+          </FramePanel>
+        ) : (
+          <FramePanel className={`divide-border grid gap-5 lg:gap-0 lg:divide-x ${COLUMNAS[enLaFila.length]}`}>
+            {enLaFila.map((alerta) => (
+              <ColumnaAlerta key={alerta.id} alerta={alerta} onResolver={resolver} />
+            ))}
+          </FramePanel>
+        )}
       </Frame>
+      <DialogoConfirmar
+        abierto={porRecordar !== null}
+        onAbiertoChange={(valor) => (valor ? undefined : setPorRecordar(null))}
+        icono={Notification01Icon}
+        titulo="¿Enviar el recordatorio?"
+        descripcion={porRecordar ? `A ${porRecordar.personas} ${porRecordar.personas === 1 ? 'persona le llega' : 'personas les llega'} un aviso para que actualicen el avance de sus objetivos.` : ''}
+        accion="Enviar recordatorio"
+        onConfirmar={recordar}
+      >
+        {porRecordar ? <RegistroConfirmar icono={Notification01Icon} nombre={porRecordar.ciclo.nombre} detalle={`${porRecordar.titulo} · ${porRecordar.personas} ${porRecordar.personas === 1 ? 'persona' : 'personas'}`} tono="neutro" /> : null}
+      </DialogoConfirmar>
     </section>
   )
 }

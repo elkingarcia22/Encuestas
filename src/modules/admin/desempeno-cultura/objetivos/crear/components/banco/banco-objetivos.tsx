@@ -2,6 +2,7 @@ import { useState, type JSX } from 'react'
 import { LibraryIcon } from '@hugeicons/core-free-icons'
 import { Button, Text } from '@ubits/flux-ui'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
+import { usePanelActual } from '@/modules/design-system/drawers/components/panel-actual'
 import type { Objective } from '../../../modelo/constructor/cicloBuilderTypes'
 import { useObjectiveBank, type ObjectiveBankController } from '../../../modelo/constructor/objectiveBankBrowse'
 import type { ObjectiveScope } from '../../../modelo/constructor/objectiveBankTypes'
@@ -30,18 +31,20 @@ export interface BancoObjetivosProps {
   destino?: string
 }
 
-function Pie({ banco, pesoLibre, destino, onAgregar, onCancelar }: { banco: ObjectiveBankController; pesoLibre: number; destino?: string; onAgregar: (objetivos: Objective[]) => void; onCancelar: () => void }) {
+function Pie({ banco, pesoLibre, destino, onAgregar, onCancelar, cierraElPanel = false }: { banco: ObjectiveBankController; pesoLibre: number; destino?: string; onAgregar: (objetivos: Objective[]) => void; onCancelar: () => void; cierraElPanel?: boolean }) {
   const n = banco.selectedCount
+  // Dentro del panel del banco, «Cancelar» hace lo mismo que la X: con objetivos marcados pregunta antes (I-251, 13-oct).
+  const panel = usePanelActual()
   return (
     <>
       <Text as="span" size="sm" variant="muted" className="mr-auto">
-        {n === 0 ? (destino ? `Se añadirán a ${destino}` : 'Marca los objetivos que quieras añadir') : `${contar(n)}${destino ? ` · irán a ${destino}` : ''}`}
+        {n === 0 ? (destino ? `Se agregarán a ${destino}` : 'Marca los objetivos que quieras agregar') : `${contar(n)}${destino ? ` · irán a ${destino}` : ''}`}
       </Text>
-      <Button variant="outline" onClick={onCancelar}>
+      <Button variant="outline" onClick={cierraElPanel && panel ? panel.cerrarPanel : onCancelar}>
         Cancelar
       </Button>
       <Button disabled={n === 0} onClick={() => onAgregar(banco.buildObjectives(pesoLibre))}>
-        Añadir {n > 0 ? `(${n})` : ''}
+        Agregar {n > 0 ? `(${n})` : ''}
       </Button>
     </>
   )
@@ -53,10 +56,11 @@ function DrawerBanco({ abierto, onAbiertoChange, alcance, pesoLibre, onAgregar, 
     <DrawerShell
       open={abierto}
       onOpenChange={onAbiertoChange}
+      conCambios={banco.selectedCount > 0}
       size="lg"
       icon={LibraryIcon}
       title={titulo}
-      description="Explora los objetivos de UBITS por área y tema, y elige los que quieras añadir."
+      description="Explora los objetivos de UBITS por área y tema, y elige los que quieras agregar."
       headerExtra={
         <div className="border-b px-5 py-3">
           <FiltrosBanco banco={banco} />
@@ -67,6 +71,7 @@ function DrawerBanco({ abierto, onAbiertoChange, alcance, pesoLibre, onAgregar, 
           banco={banco}
           pesoLibre={pesoLibre}
           destino={destino}
+          cierraElPanel
           onCancelar={() => onAbiertoChange(false)}
           onAgregar={(objetivos) => {
             if (objetivos.length === 0) return

@@ -5,12 +5,9 @@ import {
   Alert02Icon,
   ArrowRight01Icon,
   Delete02Icon,
-  Download04Icon,
   Mail01Icon,
   MailBlock01Icon,
   MoreHorizontalIcon,
-  PlusSignIcon,
-  Tag01Icon,
   UserMultipleIcon,
   UserSharingIcon,
 } from '@hugeicons/core-free-icons'
@@ -21,11 +18,9 @@ import {
   AlertTitle,
   Button,
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   FramePanel,
@@ -40,12 +35,11 @@ import {
 import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
-import { IconoIA } from '@/modules/design-system/ia/icono-ia'
-import { Marco } from '../../vacantes/detalle/candidato/components/piezas'
-import { CANDIDATURAS, VACANTES_UI, VEREDICTO_TEXTO, type Candidatura, type VacanteUI } from '../datos'
-import { ETIQUETAS_PERSONA, hace, type EstadoProceso, type Persona, type Proceso } from '../personas'
+import { Marco } from '@/modules/design-system/patrones/ficha'
+import { CANDIDATURAS, VEREDICTO_TEXTO, type Candidatura, type VacanteUI } from '../datos'
+import { hace, type EstadoProceso, type Persona, type Proceso } from '../personas'
 import { perfilDePersona } from '../perfil-candidato'
-import { cupoEn, etiquetar, type Ajuste, type PersonaViva } from '../base'
+import { cupoEn, type Ajuste, type PersonaViva } from '../base'
 import { PerfilCandidato } from './perfil-candidato'
 import { COLOR_ICONO, ICONO } from './requisitos-persona'
 import type { Base } from './use-base'
@@ -77,8 +71,9 @@ export function EnQueAnda({ persona, ruta }: { persona: PersonaDeLaBase; ruta: s
 
   if (!procesos.length) {
     return (
+      // Sin «Libre» (13 oct, PM: una persona no tiene un estado propio; tiene uno en cada proceso).
       <Text as="span" variant="muted" size="sm">
-        Libre
+        Sin postulaciones
       </Text>
     )
   }
@@ -194,22 +189,17 @@ function ParaVacante({ persona, vacante, ajuste, base }: { persona: PersonaViva;
 // se unió con otra ficha, si ya se le escribió y si anda en varios procesos. Con una vacante comparada, qué tanto sirve.
 export function FichaBase({
   persona,
-  ruta,
   base,
   onVerCandidatura,
-  onEtiqueta,
   quienEs,
 }: {
   persona: PersonaDeLaBase
-  ruta: string
   // Quién es (cara, nombre, cargo), arriba de todo y con el scroll de la ficha. Solo donde no lo pone un panel: la
   // bandeja de la exploración 1 abre la ficha al lado de la lista, sin `DrawerShell`.
   quienEs?: ReactNode
   // Con la capa común: los avisos traen su acción, se compara con la vacante y las etiquetas se guardan en la base.
   base?: Base
   onVerCandidatura: (candidatura: Candidatura) => void
-  // Sin la capa común (la página vieja): la página guarda las etiquetas.
-  onEtiqueta?: (etiqueta: string) => void
 }) {
   const procesos = procesosDe(persona)
   const vivos = procesos.filter((proceso) => proceso.estado === 'En proceso')
@@ -218,13 +208,6 @@ export function FichaBase({
   // concreta. Sale de los procesos al día de la persona, que cambian al postularla o moverla.
   const perfil = useMemo(() => perfilDePersona({ ...persona, procesos }), [persona, procesos])
   const otra = viva?.duplicadoDe ? base?.todas.find((una) => una.id === viva.duplicadoDe) : undefined
-  const etiquetas = base ? base.disponibles : ETIQUETAS_PERSONA
-
-  const alternar = (etiqueta: string) => {
-    if (!base) return onEtiqueta?.(etiqueta)
-    const tiene = persona.etiquetas.includes(etiqueta)
-    etiquetar([persona.id], tiene ? [] : [etiqueta], tiene ? [etiqueta] : [])
-  }
 
   return (
     <PerfilCandidato
@@ -289,55 +272,13 @@ export function FichaBase({
             </Alert>
           ) : null}
 
-          {/* Etiquetas (las carpetas del producto). Se ponen y se quitan en el mismo menú; una nueva, en su ventana. */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {persona.etiquetas.length ? (
-              persona.etiquetas.map((etiqueta) => (
-                <Badge key={etiqueta} variant="secondary">
-                  {etiqueta}
-                </Badge>
-              ))
-            ) : (
-              <Text as="span" variant="muted" size="sm">
-                Sin etiquetas todavía.
-              </Text>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="w-fit" />}>
-                <HugeiconsIcon icon={Tag01Icon} size={16} />
-                Poner o quitar etiquetas
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="max-h-72 w-60 overflow-auto">
-                {/* Crear va primero: con muchas etiquetas, al final de la lista no se ve sin bajar. */}
-                {base && viva ? (
-                  <>
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => base.etiquetar([viva])}>
-                        <HugeiconsIcon icon={PlusSignIcon} size={16} />
-                        Crear una etiqueta…
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                  </>
-                ) : null}
-                <DropdownMenuGroup>
-                  {/* El nombre del grupo va dentro de DropdownMenuGroup: fuera, Base UI revienta. */}
-                  <DropdownMenuLabel>Etiquetas de la empresa</DropdownMenuLabel>
-                  {etiquetas.map((etiqueta) => (
-                    <DropdownMenuCheckboxItem key={etiqueta} checked={persona.etiquetas.includes(etiqueta)} onCheckedChange={() => alternar(etiqueta)}>
-                      {etiqueta}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
+          {/* Sin etiquetas (13 oct, PM: a una persona no se le ponen etiquetas; lo que tiene son habilidades, en «Datos»). */}
           {base?.paraVacante && viva?.ajuste ? <ParaVacante persona={viva} vacante={base.paraVacante} ajuste={viva.ajuste} base={base} /> : null}
         </div>
       }
-      // Al pie de cada vacante del historial: entrar a la candidatura viva («Ver su ajuste», que abre la ficha de la
-      // vacante un nivel más adentro) e ir a la vacante.
+      // Al pie de cada vacante del historial: entrar a la candidatura viva, que abre la ficha de la vacante un nivel más
+      // adentro, en este mismo panel. Sin «Ir a la vacante» (13 oct, PM: «si me sacas de la experiencia, tengo que ir a
+      // la vacante y volver al candidato»): lo que pasó en cada etapa se abre tocándola en su línea.
       accionesPostulacion={(postulacion) => {
         // La candidatura solo existe mientras el proceso está vivo; la de un proceso cerrado ya no se guarda.
         const candidatura =
@@ -346,23 +287,12 @@ export function FichaBase({
             : postulacion.candidaturaId
               ? CANDIDATURAS.find((una) => una.id === postulacion.candidaturaId)
               : undefined
-        const vacante = postulacion.vacanteId ? VACANTES_UI.find((una) => una.id === postulacion.vacanteId) : undefined
-        return (
-          <>
-            {candidatura ? (
-              <Button variant="outline" size="sm" onClick={() => onVerCandidatura(candidatura)}>
-                <IconoIA />
-                Ver su ajuste
-              </Button>
-            ) : null}
-            {vacante ? (
-              <Button variant="outline" size="sm" nativeButton={false} render={<Link to={`${ruta}/${vacante.id}`} />}>
-                Ir a la vacante
-                <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
-              </Button>
-            ) : null}
-          </>
-        )
+        return candidatura ? (
+          <Button variant="outline" size="sm" onClick={() => onVerCandidatura(candidatura)}>
+            Ver su candidatura
+            <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
+          </Button>
+        ) : null
       }}
     />
   )
@@ -396,10 +326,6 @@ export function AccionesFicha({ persona, base }: { persona: PersonaViva; base: B
                 ) : null}
               </span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => base.exportar([persona])}>
-              <HugeiconsIcon icon={Download04Icon} size={16} />
-              Exportar a CSV
-            </DropdownMenuItem>
             {persona.duplicadoDe ? (
               <DropdownMenuItem onClick={() => base.unir(persona)}>
                 <HugeiconsIcon icon={UserMultipleIcon} size={16} />
@@ -411,15 +337,11 @@ export function AccionesFicha({ persona, base }: { persona: PersonaViva; base: B
           <DropdownMenuGroup>
             <DropdownMenuItem variant="destructive" onClick={() => base.eliminar([persona])}>
               <HugeiconsIcon icon={Delete02Icon} size={16} />
-              Eliminar sus datos
+              Eliminar candidato
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button variant="outline" onClick={() => base.etiquetar([persona])}>
-        <HugeiconsIcon icon={Tag01Icon} size={16} />
-        Etiquetas
-      </Button>
       <Button onClick={() => base.postular([persona])}>
         <HugeiconsIcon icon={UserSharingIcon} size={16} />
         Postular a una vacante

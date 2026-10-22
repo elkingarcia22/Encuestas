@@ -231,7 +231,7 @@ function QuickActions({ enlace, tarjetaIa }: { enlace: Enlace; tarjetaIa?: React
   return (
     <section aria-labelledby="quick-actions" className="flex min-w-0 flex-col gap-4">
       <Heading as="h2" level={5} id="quick-actions">
-        Quick actions
+        Acciones rápidas
       </Heading>
       {/* Mismo borde doble que Top métricas: un marco con los atajos como paneles adentro. Arriba, «Crear un curso». */}
       <Frame className="grow">
@@ -242,7 +242,7 @@ function QuickActions({ enlace, tarjetaIa }: { enlace: Enlace; tarjetaIa?: React
           {tarjetaIa ?? (
             <AiCard
               title="Crear un curso"
-              description="Genera contenido de aprendizaje apoyado en AI en minutos."
+              description="Genera contenido de aprendizaje apoyado en IA en minutos."
               action="Crear ahora"
               render={<Link to={enlace('contenidos')} />}
               inFrame

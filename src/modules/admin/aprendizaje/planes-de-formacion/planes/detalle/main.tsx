@@ -1,8 +1,8 @@
-import { DetallePlan } from '../../components/detalle-plan'
+import { PaginaPlan } from '../../components/plan'
 
-// Aprendizaje › Planes de formación › Detalle del plan (/admin/aprendizaje/planes-de-formacion/planes/:id).
+// Aprendizaje › Planes de formación › El plan (/admin/aprendizaje/planes-de-formacion/planes/:id): se ve y se edita aquí.
 export function Component() {
-  return <DetallePlan />
+  return <PaginaPlan />
 }
 
 Component.displayName = 'AdminAprendizajePlanesDetallePage'

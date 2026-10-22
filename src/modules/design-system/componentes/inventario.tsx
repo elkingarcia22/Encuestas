@@ -3,7 +3,6 @@ import { Link } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon, Search01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Frame,
   FrameDescription,
@@ -21,6 +20,7 @@ import {
   ItemTitle,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { GRUPOS, PIEZAS_CUSTOM, type PiezaInventario } from './inventario-datos'
 

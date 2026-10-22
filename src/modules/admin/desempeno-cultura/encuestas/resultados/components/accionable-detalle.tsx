@@ -1,10 +1,9 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CheckmarkCircle02Icon, Clock01Icon, Task01Icon, UserGroupIcon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarFallback,
-  Badge,
   Button,
   Field,
   FieldContent,
@@ -29,6 +28,8 @@ import {
   TabsTrigger,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
+import { BotonCancelarPanel } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { TARJETA_OPCION } from '@/shared/components/estilos-propios'
@@ -53,7 +54,7 @@ import { PROGRESS_STATUS_LABEL, buildProgress, type ProgressStatus } from '../..
 import { numero, varianteImpacto } from './escala'
 
 // El detalle de un accionable: qué señal lo dispara, a quién alcanza, qué queda montado en el otro módulo, cuándo sale
-// y cada cuánto se recuerda. Activarlo crea una tarea para quien debe actuar, que solo queda en check cuando el
+// y cada cuánto se recuerda. Activarlo crea una tarea para quien debe actuar, que solo queda completada cuando el
 // entregable está completo. Ya activo, suma «Cómo va».
 // Tiene la forma de los drawers del módulo (Crear con plantilla, banco de preguntas): cada sección es un marco con su
 // título y su descripción, y dentro una tarjeta con las filas separadas por una línea.
@@ -91,6 +92,7 @@ function TituloConCuenta({ titulo, cuenta }: { titulo: string; cuenta?: number }
 function OpcionRadio({ id, valor, titulo, ayuda, sugerido }: { id: string; valor: string; titulo: string; ayuda: string; sugerido: boolean }) {
   return (
     <FieldLabel htmlFor={id} className={TARJETA_OPCION}>
+      {/* El radio centrado con su texto: el Field horizontal alinea arriba y, con el tema sin capa, la clase solo gana con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
       <Field orientation="horizontal" className="items-center!">
         <RadioGroupItem value={valor} id={id} />
         <FieldContent>
@@ -116,6 +118,8 @@ type Props = {
   activacion: ActivationConfig | null
   onActivar: (config: ActivationConfig) => void
   onDesactivar: () => void
+  /** Las confirmaciones que se piden desde el panel: van dentro de él para abrirse como vista del mismo, no encima. */
+  confirmaciones?: ReactNode
 }
 
 export function AccionableDetalle({ accionable, ...resto }: Props) {
@@ -124,18 +128,21 @@ export function AccionableDetalle({ accionable, ...resto }: Props) {
   return <Detalle key={`${accionable.id}-${resto.activacion ? 'activo' : 'sugerido'}`} accionable={accionable} {...resto} />
 }
 
-function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, onDesactivar }: Props & { accionable: Actionable }) {
+function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, onDesactivar, confirmaciones }: Props & { accionable: Actionable }) {
   const [config, setConfig] = useState<ActivationConfig>(() => activacion ?? defaultActivation(accionable))
   const modulo = MODULE_BY_ID[accionable.module]
   const tono = actionableTone(accionable)
   const activo = activacion !== null
   const avance = activo ? buildProgress(accionable, activacion) : null
   const miembros = accionable.audience.members.slice(0, 6)
+  // 13-oct (I-350): lo cambiado en cuándo sale o cada cuánto se recuerda no se pierde sin preguntar.
+  const hayCambios = JSON.stringify(config) !== JSON.stringify(activacion ?? defaultActivation(accionable))
 
   return (
     <DrawerShell
       open={abierto}
       onOpenChange={onAbiertoChange}
+      conCambios={hayCambios}
       size="lg"
       kicker={`${modulo.label} · ${accionable.feature}`}
       title={accionable.title}
@@ -162,9 +169,7 @@ function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, 
           </>
         ) : (
           <>
-            <Button variant="outline" onClick={() => onAbiertoChange(false)}>
-              Cancelar
-            </Button>
+            <BotonCancelarPanel alCerrar={() => onAbiertoChange(false)} />
             <Button onClick={() => onActivar(config)}>Activar accionable</Button>
           </>
         )
@@ -190,6 +195,7 @@ function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, 
 
         <TabsContent value="senal" className="flex flex-col gap-6">
           <MarcoLista titulo={<TituloConCuenta titulo="Qué lo dispara en esta medición" cuenta={accionable.evidence.length} />} descripcion={accionable.trigger}>
+            {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
             <FramePanel className="py-1!">
               <FilasSeparadas>
                 {accionable.evidence.map((evidencia) => (
@@ -233,6 +239,7 @@ function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, 
 
         <TabsContent value="accion" className="flex flex-col gap-6">
           <MarcoLista titulo={<TituloConCuenta titulo="A quién alcanza" cuenta={accionable.audience.people} />} descripcion={accionable.audience.source}>
+            {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
             <FramePanel className="py-1!">
               <FilasSeparadas>
                 <Item size="sm">
@@ -274,6 +281,7 @@ function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, 
             </FramePanel>
           </MarcoLista>
           <MarcoLista titulo={`Qué queda en ${modulo.label}`} descripcion={accionable.outcome}>
+            {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
             <FramePanel className="py-1!">
               <Item size="sm">
                 <ItemMedia variant="icon">
@@ -289,6 +297,7 @@ function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, 
             </FramePanel>
           </MarcoLista>
           <MarcoLista titulo="La tarea que se crea" descripcion={accionable.task.completion}>
+            {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
             <FramePanel className="py-1!">
               <Item size="sm">
                 <ItemMedia variant="icon">
@@ -326,7 +335,7 @@ function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, 
               </Field>
             </FramePanel>
           </MarcoLista>
-          <MarcoLista titulo="Cada cuánto se recuerda" descripcion="Hasta que la tarea quede en check, el recordatorio sigue llegando.">
+          <MarcoLista titulo="Cada cuánto se recuerda" descripcion="Hasta que la tarea quede completada, el recordatorio sigue llegando.">
             <FramePanel>
               <RadioGroup value={config.cadence} onValueChange={(valor) => setConfig({ ...config, cadence: valor as ReminderCadence })} className="grid gap-2" aria-label="Cada cuánto se recuerda">
                 {REMINDER_CADENCES.map((opcion) => (
@@ -337,7 +346,7 @@ function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, 
           </MarcoLista>
           <Text as="p" size="xs" variant="muted" className="inline-flex items-center gap-1.5">
             <HugeiconsIcon icon={Clock01Icon} size={14} aria-hidden="true" />
-            Sale {LAUNCH_BY_ID[config.launch].label.toLowerCase()} y se recuerda {CADENCE_BY_ID[config.cadence].label.toLowerCase()} hasta que la tarea quede en check.
+            Sale {LAUNCH_BY_ID[config.launch].label.toLowerCase()} y se recuerda {CADENCE_BY_ID[config.cadence].label.toLowerCase()} hasta que la tarea quede completada.
           </Text>
         </TabsContent>
 
@@ -365,6 +374,7 @@ function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, 
               </FramePanel>
             </MarcoLista>
             <MarcoLista titulo={<TituloConCuenta titulo={`Estado por ${avance.rowsNoun}`} cuenta={avance.rows.length} />} descripcion={`El detalle vive en ${modulo.label}: desde ahí se abre cada entregable.`}>
+              {/* Relleno del panel forzado con «!»: el tema de la librería va sin capa y la clase sola no gana. Ficha: diferencias.json › frame-panel-relleno-no-se-quita. */}
               <FramePanel className="py-1!">
                 <FilasSeparadas>
                   {avance.rows.map((fila) => (
@@ -389,6 +399,7 @@ function Detalle({ accionable, abierto, onAbiertoChange, activacion, onActivar, 
           </TabsContent>
         ) : null}
       </Tabs>
+      {confirmaciones}
     </DrawerShell>
   )
 }

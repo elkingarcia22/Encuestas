@@ -2,7 +2,6 @@ import { createContext, useContext, useMemo, useState, type ReactElement } from 
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { Copy01Icon, Delete02Icon, Edit02Icon, EyeIcon, MoreHorizontalIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -22,8 +21,7 @@ import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 import { pagina } from '@/modules/design-system/templates/admin-compartido/lista'
-import { ORIGIN_OPTIONS, SYSTEM_BLOCK_REASON, createdAtValue, formatIsoDay, type DemographicRow } from '../../modelo/demographicRows'
-import { DEMOGRAPHIC_TYPES } from '../../modelo/demographics'
+import { SYSTEM_BLOCK_REASON, createdAtValue, formatIsoDay, type DemographicRow } from '../../modelo/demographicRows'
 
 // La lista de datos demográficos: los del sistema (fijos, porque alimentan datos que la plataforma
 // ya tiene de cada persona) y los que creó el equipo. Gemela de la tabla de encuestas: mismo
@@ -94,34 +92,27 @@ function Nombre({ fila }: { fila: DemographicRow }) {
   return <CeldaTitulo titulo={fila.name} detalle={opciones || undefined} onClick={() => onAccion('ver', fila)} />
 }
 
-const Origen = ({ fila }: { fila: DemographicRow }) => (
-  <Badge variant={fila.origin === 'system' ? 'info-outline' : 'outline'}>{fila.originLabel}</Badge>
-)
-
 type Fila = DemographicRow & { creacionOrden: number }
-type FiltroId = 'typeLabel' | 'originLabel'
-const SIN_FILTROS: Record<FiltroId, string[]> = { typeLabel: [], originLabel: [] }
 
-// Las columnas y los filtros van fuera del componente: si no, el filtro se cierra al marcar.
+// Sin «Tipo» ni «Origen» (21-oct). Los anchos suman 1.030 px, como la tabla de encuestas: con la casilla de selección
+// llenan el marco de 1.104 px sin dejar hueco a la derecha. El nombre se lleva el ancho que sobra.
 const COLUMNAS: DataGridListConfig<Fila>['columns'] = [
-  { accessorKey: 'name', header: 'Nombre', size: 260, cell: ({ row }) => <Nombre fila={row.original} /> },
-  { accessorKey: 'typeLabel', header: 'Tipo', size: 150, cell: ({ row }) => <Text as="span" size="sm" variant="muted">{row.original.typeLabel}</Text> },
-  { accessorKey: 'originLabel', header: 'Origen', size: 140, cell: ({ row }) => <Origen fila={row.original} /> },
+  { accessorKey: 'name', header: 'Nombre', size: 400, cell: ({ row }) => <Nombre fila={row.original} /> },
   {
     accessorKey: 'creacionOrden',
     header: 'Creación',
-    size: 130,
+    size: 160,
     cell: ({ row }) => (
       <Text as="span" size="sm" className="tabular-nums">
         {formatIsoDay(row.original.createdAt)}
       </Text>
     ),
   },
-  { accessorKey: 'createdBy', header: 'Creado por', size: 150, cell: ({ row }) => <Text as="span" size="sm">{row.original.createdBy ?? '—'}</Text> },
+  { accessorKey: 'createdBy', header: 'Creado por', size: 220, cell: ({ row }) => <Text as="span" size="sm">{row.original.createdBy ?? '—'}</Text> },
   {
     accessorKey: 'optionCount',
     header: 'Opciones',
-    size: 110,
+    size: 150,
     cell: ({ row }) => (
       <Text as="span" size="sm" weight="medium" className="tabular-nums">
         {row.original.optionCount}
@@ -139,10 +130,6 @@ const COLUMNAS: DataGridListConfig<Fila>['columns'] = [
   },
 ]
 
-const FILTROS: DataGridListConfig<Fila>['columnFilters'] = [
-  { id: 'typeLabel', label: 'Tipo', type: 'select', multiple: true, options: DEMOGRAPHIC_TYPES.map((tipo) => ({ label: tipo.label, value: tipo.label })) },
-  { id: 'originLabel', label: 'Origen', type: 'select', multiple: true, options: ORIGIN_OPTIONS.map((origen) => ({ label: origen, value: origen })) },
-]
 
 const icono = (simbolo: IconSvgElement) => <HugeiconsIcon icon={simbolo} aria-hidden="true" />
 
@@ -160,7 +147,6 @@ export function TablaDemograficos({
   onEliminarVarias: (filas: DemographicRow[], limpiar: () => void) => void
 }) {
   const [busqueda, setBusqueda] = useState('')
-  const [filtros, setFiltros] = useState<Record<FiltroId, string[]>>(SIN_FILTROS)
   const [orden, setOrden] = useState<string | undefined>(undefined)
   const [actual, setActual] = useState(1)
   const [porPagina, setPorPagina] = useState(10)
@@ -174,7 +160,6 @@ export function TablaDemograficos({
     const q = busqueda.trim().toLowerCase()
     const lista: Fila[] = filas
       .filter((fila) => !q || fila.name.toLowerCase().includes(q))
-      .filter((fila) => (Object.keys(filtros) as FiltroId[]).every((id) => filtros[id].length === 0 || filtros[id].includes(fila[id])))
       .map((fila) => ({ ...fila, creacionOrden: createdAtValue(fila) }))
     if (!orden) return lista
     const desc = orden.startsWith('-')
@@ -185,16 +170,14 @@ export function TablaDemograficos({
       const r = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb), 'es')
       return desc ? -r : r
     })
-  }, [filas, busqueda, filtros, orden])
+  }, [filas, busqueda, orden])
 
   const visibles = useMemo(() => pagina(resultado, actual, porPagina), [resultado, actual, porPagina])
-  const filtrosActivos = Object.values(filtros).filter((valores) => valores.length > 0).length
-  const filtrando = busqueda.trim() !== '' || filtrosActivos > 0
+  const filtrando = busqueda.trim() !== ''
 
   const soltarSeleccion = () => setSinSeleccion({})
   const limpiar = () => {
     setBusqueda('')
-    setFiltros(SIN_FILTROS)
     setActual(1)
     setVersion((previa) => previa + 1)
   }
@@ -242,15 +225,6 @@ export function TablaDemograficos({
 
   const config: DataGridListConfig<Fila> = {
     columns: COLUMNAS,
-    columnFilters: FILTROS,
-    onColumnFiltersChange: (nuevos) => {
-      const valores = (id: FiltroId) => {
-        const valor = nuevos.find((filtro) => filtro.id === id)?.value
-        return Array.isArray(valor) ? valor.map(String) : []
-      }
-      setFiltros({ typeLabel: valores('typeLabel'), originLabel: valores('originLabel') })
-      setActual(1)
-    },
     sort: {
       onSortChange: (nuevo) => {
         setOrden(nuevo)
@@ -265,13 +239,14 @@ export function TablaDemograficos({
       },
     },
     actions: {
-      primary: { id: 'crear', label: 'Crear demográfico', icon: <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />, onClick: onCrear },
+      // Pedido de UX (21-oct): «Crear demográfico» va como botón secundario.
+      secondary: [{ id: 'crear', label: 'Crear demográfico', variant: 'outline', icon: <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />, onClick: onCrear }],
     },
     selection: { onSelectionChange: setMarcadas },
     bulkActions: accionesSeleccion,
     // Los dos vacíos del sistema (Estados › Estados vacíos), con ilustración (decisión 14).
     emptyState: filtrando
-      ? { type: 'no-results', customComponent: <SinResultados busqueda={busqueda} filtrosActivos={filtrosActivos} onLimpiar={limpiar} /> }
+      ? { type: 'no-results', customComponent: <SinResultados busqueda={busqueda} filtrosActivos={0} onLimpiar={limpiar} /> }
       : {
           type: 'empty',
           customComponent: (
@@ -295,6 +270,8 @@ export function TablaDemograficos({
           data={visibles}
           initialRowSelection={sinSeleccion}
           paginacion={{ pagina: actual, setPagina: setActual, porPagina, setPorPagina, total: resultado.length }}
+          // El título en lo gris, sobre el conteo (16-oct, Nicolás: «no me les quites los títulos a las tablas»).
+          titulo="Datos demográficos"
           nombre="datos demográficos"
           singular="dato demográfico"
           id="demograficos"

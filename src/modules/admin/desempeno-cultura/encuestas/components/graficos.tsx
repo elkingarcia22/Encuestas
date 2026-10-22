@@ -58,7 +58,7 @@ export function MedidorEnps({ valor, reparto, ancho = 200, cifra = true }: { val
                 nameKey="clave"
                 formatter={(_cifra, _nombre, item) => {
                   const tramo = item.payload as (typeof datos)[number]
-                  return <FilaTooltip color={tramo.color} etiqueta={tramo.etiqueta} valor={tramo.porcentaje === null ? tramo.rango : `${numero(tramo.valor)} · ${tramo.porcentaje}%`} />
+                  return <FilaTooltip color={tramo.color} etiqueta={tramo.etiqueta} valor={tramo.porcentaje === null ? tramo.rango : `${numero(tramo.valor)} · ${tramo.porcentaje} %`} />
                 }}
               />
             }

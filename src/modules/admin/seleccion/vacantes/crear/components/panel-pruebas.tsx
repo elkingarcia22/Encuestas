@@ -48,6 +48,7 @@ import { BotonIcono } from '@/shared/components/BotonIcono'
 import { IDIOMAS_PRUEBA, TIPOS_PRUEBA, pruebaNueva, type Prueba } from './etapas'
 import { CampoNumero } from './piezas'
 import { AvisoPropuestaIa } from './piezas-ia'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 const ICONOS_PRUEBA: Record<string, IconSvgElement> = {
   'Cognición (inteligencia)': Brain02Icon,
@@ -133,8 +134,8 @@ export function PanelPruebas({ abierto, onAbiertoChange, pruebas: guardadas, onG
         ) : pruebas.length === 0 ? (
           <Empty>
             <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <HugeiconsIcon icon={Task01Icon} aria-hidden="true" />
+              <EmptyMedia variant="default">
+                <ImagenGlass nombre="glass-paper-plus" tamano={56} />
               </EmptyMedia>
               <EmptyTitle>Todavía no hay pruebas</EmptyTitle>
               <EmptyDescription>

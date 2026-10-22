@@ -210,7 +210,7 @@ export function TarjetaPlan({ plan, personaId, onAbrir }: { plan: Plan; personaI
             {etiqueta}
           </Text>
           <Text as="span" size="sm" weight="semibold" className={cn('tabular-nums', completo ? 'text-success' : 'text-primary')}>
-            {pct}%
+            {pct} %
           </Text>
         </div>
       </CardContent>
@@ -360,6 +360,7 @@ export function BotonRecordatorio({ hayPendientes, onEnviado }: { hayPendientes:
         onConfirmar={() => {
           setAbierto(false)
           // En el prototipo, la vista del correo se abre cuando se cierra el aviso.
+          // 13-oct: queda con toast.add a propósito: notify todavía no admite onRemove (para ingeniería).
           toast.add({ type: 'success', title: 'Recordatorios enviados', onRemove: onEnviado })
         }}
       />

@@ -38,7 +38,7 @@ export const CLOSE_BUCKETS = [
 ] as const;
 
 /** Buckets offered by the "Avance" column, in menu order. */
-export const PROGRESS_BUCKETS = ["Menos de 50%", "50% a 79%", "80% o más"] as const;
+export const PROGRESS_BUCKETS = ["Menos de 50 %", "50 % a 79 %", "80 % o más"] as const;
 
 /**
  * The participation a running survey is expected to reach. Same line the
@@ -60,7 +60,13 @@ export const CLOSING_SOON_DAYS = 7;
 export interface SurveyListFilters {
   type: readonly string[];
   status: readonly string[];
+  /** The home's "Por cerrar" card only: the column menu filters by `closeRange` instead. */
   close: readonly string[];
+  /**
+   * The "Cierre" column's date range, as [from, to] in "aaaa-mm-dd" (either may be "" for an open end);
+   * empty when not filtering.
+   */
+  closeRange: readonly string[];
   progress: readonly string[];
   origin: readonly string[];
   /**
@@ -83,6 +89,7 @@ export const NO_FILTERS: SurveyListFilters = {
   type: [],
   status: [],
   close: [],
+  closeRange: [],
   progress: [],
   origin: [],
   risk: [],
@@ -105,6 +112,13 @@ export function daysUntil(raw: string, today: Date): number | null {
   return Math.round((due.getTime() - midnight.getTime()) / 86_400_000);
 }
 
+const MONTH_KEYS = Object.keys(MONTHS);
+/** "2026-10-21" → "21 oct 2026", the form `daysUntil` reads. */
+const isoToShort = (iso: string): string => {
+  const [year, month, day] = iso.split("-").map(Number);
+  return `${day} ${MONTH_KEYS[month - 1]} ${year}`;
+};
+
 /** A row with no readable close date belongs to no bucket, so it never matches. */
 export function closeBucketOf(row: SurveyFilterableRow, today: Date): CloseBucket | null {
   const days = daysUntil(row.endDate, today);
@@ -114,8 +128,8 @@ export function closeBucketOf(row: SurveyFilterableRow, today: Date): CloseBucke
 }
 
 export function progressBucketOf(row: SurveyFilterableRow): ProgressBucket {
-  if (row.progress < 50) return "Menos de 50%";
-  return row.progress < PARTICIPATION_TARGET ? "50% a 79%" : "80% o más";
+  if (row.progress < 50) return "Menos de 50 %";
+  return row.progress < PARTICIPATION_TARGET ? "50 % a 79 %" : "80 % o más";
 }
 
 /**
@@ -153,6 +167,16 @@ export function matchesFilters(
     const bucket = closeBucketOf(row, today);
     if (bucket === null || !filters.close.includes(bucket)) return false;
   }
+  if (filters.closeRange.length > 0) {
+    const days = daysUntil(row.endDate, today);
+    if (days === null) return false;
+    const [from, to] = filters.closeRange;
+    const dayOf = (iso: string | undefined) => (iso ? daysUntil(isoToShort(iso), today) : null);
+    const fromDays = dayOf(from);
+    const toDays = dayOf(to);
+    if (fromDays !== null && days < fromDays) return false;
+    if (toDays !== null && days > toDays) return false;
+  }
   if (filters.progress.length > 0 && !filters.progress.includes(progressBucketOf(row))) {
     return false;
   }
@@ -169,6 +193,7 @@ export const hasAnyFilter = (filters: SurveyListFilters): boolean =>
   filters.type.length > 0 ||
   filters.status.length > 0 ||
   filters.close.length > 0 ||
+  filters.closeRange.length > 0 ||
   filters.progress.length > 0 ||
   filters.origin.length > 0 ||
   filters.risk.length > 0 ||
@@ -182,6 +207,7 @@ export const filtersEqual = (a: SurveyListFilters, b: SurveyListFilters): boolea
   sameValues(a.type, b.type) &&
   sameValues(a.status, b.status) &&
   sameValues(a.close, b.close) &&
+  sameValues(a.closeRange, b.closeRange) &&
   sameValues(a.progress, b.progress) &&
   sameValues(a.origin, b.origin) &&
   sameValues(a.risk, b.risk) &&

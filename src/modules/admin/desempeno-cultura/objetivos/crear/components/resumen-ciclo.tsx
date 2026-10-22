@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react'
-import { Badge } from '@ubits/flux-ui'
-import { plural } from '@/modules/design-system/patrones/formato'
+import { Badge } from '@/shared/components/Badge'
+import { fechaCorta, plural } from '@/modules/design-system/patrones/formato'
 import { AvanceObligatorios, Aviso, BloqueResumen, ItemEstado, Lista, ListaDatos, TarjetaResumen } from '@/modules/admin/seleccion/vacantes/crear/components/piezas-resumen'
 import { formatCount, participantsGroupBreakdown, totalParticipantCount } from '../../../encuestas/modelo/participants'
-import { formatSurveyDate } from '../../../encuestas/modelo/surveyListDates'
 import { CICLO_PERIOD_LABELS, REMINDER_FREQUENCY_LABELS, isObjectiveComplete, isObjectiveSetComplete, setsOfKind, type CicloDraft } from '../../modelo/constructor/cicloBuilderTypes'
 import { parseISODate } from '../../modelo/constructor/cicloDates'
 import { GOVERNANCE_META, ASSIGNMENT_LEVEL_META, assignmentLevelOf } from '../../modelo/constructor/cicloSetup'
@@ -18,10 +17,8 @@ import { etiquetaFinal, faltaEn, pasoDe, type EstadoDelBorrador, type PasoId } f
 
 type Props = { borrador: CicloDraft; paso: PasoId; estado: EstadoDelBorrador; guardado?: ReactNode }
 
-const fecha = (iso: string) => {
-  const valor = parseISODate(iso)
-  return valor ? formatSurveyDate(valor) : ''
-}
+// «aaaa-mm-dd» → «9 sep 2026»: la forma única de fechas del sistema (fechaCorta, decisión 19), como «Así va la encuesta».
+const fecha = (iso: string) => (parseISODate(iso) ? fechaCorta(iso) : '')
 
 export function ResumenCiclo({ borrador, paso, estado, guardado }: Props) {
   const fechas = [fecha(borrador.startDate), fecha(borrador.endDate)].filter(Boolean).join(' – ')
@@ -68,6 +65,9 @@ function FocoGeneral({ borrador }: { borrador: CicloDraft }) {
     ['Duración', borrador.period !== null],
     ['Fechas del ciclo', borrador.startDate !== '' && borrador.endDate !== '' && borrador.endDate >= borrador.startDate],
     ['Modelo de medición', borrador.objectiveModel !== null],
+    // Si el modelo deja los objetivos de la empresa opcionales, «Continuar» pide decidirlo (cicloSetup, setupBlockIssue):
+    // el panel cuenta lo mismo para no decir «listo» antes de tiempo (13-oct, I-103).
+    ...(borrador.modelRules.companyObjectives === 'optional' ? [['Objetivos de la empresa', borrador.useCompanyObjectives !== null] as [string, boolean]] : []),
     ['Quién redacta los objetivos', borrador.objectiveCreator !== null],
   ]
   const falta = obligatorios.filter(([, listo]) => !listo).map(([campo]) => campo)
@@ -211,7 +211,7 @@ function FocoRevision({ borrador, estado }: { borrador: CicloDraft; estado: Esta
           <ListaDatos filas={filas} />
         </BloqueResumen>
       ) : null}
-      {pendientes.length ? null : <Aviso tono="success">{final === 'Finalizar' ? 'Listo para finalizar.' : 'Listo para lanzar el ciclo.'}</Aviso>}
+      {pendientes.length ? null : <Aviso tono="success">{final === 'Publicar' ? 'Listo para publicar el ciclo.' : 'Listo para crear el ciclo.'}</Aviso>}
     </>
   )
 }

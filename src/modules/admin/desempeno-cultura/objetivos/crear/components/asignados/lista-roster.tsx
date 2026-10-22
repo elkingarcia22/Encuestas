@@ -1,40 +1,18 @@
 import { useMemo, useState } from 'react'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
-import { Delete02Icon, Edit02Icon, PlusSignIcon, Search01Icon } from '@hugeicons/core-free-icons'
-import {
-  Button,
-  Checkbox,
-  Field,
-  FieldDescription,
-  FieldLabel,
-  Input,
-  Frame,
-  FrameDescription,
-  FrameHeader,
-  FrameTitle,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemSeparator,
-  ItemTitle,
-  Text,
-} from '@ubits/flux-ui'
+import { Delete02Icon, Edit02Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
+import { Button, Field, FieldDescription, FieldLabel, Input, ItemDescription, ItemTitle, Text } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { DialogoConfirmar, RegistroConfirmar } from '@/modules/design-system/estados/confirmaciones'
 import { TextoCompleto } from '@/shared/components/TextoCompleto'
 import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
 import { plural } from '@/modules/design-system/patrones/formato'
 import { pagina } from '@/modules/design-system/templates/admin-compartido/lista'
+import { FilaElegible, ListaElegible } from '@/modules/design-system/listas/lista-elegible'
 import { formatCount } from '../../../../encuestas/modelo/participants'
-import { Paginacion } from '../../../../encuestas/components/tabla-piezas'
 import type { ObjectiveSet, ObjectiveSetKind } from '../../../modelo/constructor/cicloBuilderTypes'
 import type { AssignmentSetSummary } from '../../../modelo/constructor/assignmentRows'
 import { EstadoAgrupacion } from './piezas-asignacion'
@@ -42,8 +20,9 @@ import type { Collaborator } from '../../../../encuestas/modelo/collaborators'
 import { BotonFiltros } from '../../../../encuestas/crear/components/participantes/filtros-personas'
 import { camposDePersona, conFiltro, cumpleFiltros, type FiltrosPersona } from '../../../../encuestas/modelo/filtrosPersona'
 
-// La lista de un nivel del paso, con el mismo armado que las listas de Participantes (Por grupos / Por persona): un
-// buscador, la fila de «marcar esta página» con el conteo, las filas con su casilla y el paginador en español. Cada fila
+// La lista de un nivel del paso, la misma de Participantes (Por grupos / Por persona): ListaElegible dentro del acordeón
+// del nivel (21-oct, Elkin: «como en Participantes»), con la casilla de la página, el nombre de la lista, el buscador y los
+// filtros en su fila de arriba, las filas con su casilla y el pie de paginación del sistema. Cada fila
 // es un grupo o una persona de los que entraron al ciclo, con sus objetivos, el peso repartido, si ya está lista y su
 // acción a la derecha: «Crear objetivos» o «Editar». Con algo marcado, las acciones en bloque toman el lugar del conteo.
 // La selección vive en el nivel: lo marcado en otras páginas se conserva.
@@ -79,7 +58,7 @@ function Objetivos({ set }: { set: ObjectiveSet | null }) {
     )
   }
   const titulos = (
-    <span className="flex max-w-72 flex-col gap-1">
+    <span className="flex flex-col gap-1">
       {set.objectives.slice(0, 8).map((objetivo, i) => (
         <span key={objetivo.id} className="truncate">
           {i + 1}. {objetivo.title || 'Objetivo sin título'}
@@ -101,8 +80,6 @@ function Objetivos({ set }: { set: ObjectiveSet | null }) {
 export function ListaRoster({
   tipo,
   filas,
-  titulo,
-  descripcion,
   conErrores,
   onAbrir,
   onEliminar,
@@ -112,8 +89,6 @@ export function ListaRoster({
 }: {
   tipo: ObjectiveSetKind
   filas: readonly FilaAsignado[]
-  titulo: string
-  descripcion: string
   conErrores: boolean
   onAbrir: (fila: FilaAsignado) => void
   /** Quita todos los objetivos de esa fila (tras confirmar). */
@@ -172,154 +147,126 @@ export function ListaRoster({
 
   const unidad = grupal ? 'grupo' : 'colaborador'
   const unidades = grupal ? 'grupos' : 'colaboradores'
+  const conMarcadas = marcadas.size > 0 && acciones.length > 0
+  const filtrosActivos = (estado ? 1 : 0) + Object.values(filtros).filter(Boolean).length
+
+  // Las acciones en bloque, con algo marcado: la principal con texto y las demás en icono con su globo.
+  const enBloque = acciones.map((accion) =>
+    accion.principal ? (
+      <Button key={accion.id} variant="outline" onClick={accion.onClick}>
+        <HugeiconsIcon icon={accion.icono} aria-hidden="true" />
+        {accion.etiqueta}
+      </Button>
+    ) : (
+      // Rojo de borrar: los botones sin borde no traen tono rojo (diferencias.json › button-ghost-tonos). Solo en las acciones destructivas.
+      <Hint key={accion.id} label={accion.etiqueta}>
+        <BotonIcono aria-label={accion.etiqueta} className={accion.destructiva ? 'text-destructive!' : undefined} onClick={accion.onClick}>
+          <HugeiconsIcon icon={accion.icono} aria-hidden="true" />
+        </BotonIcono>
+      </Hint>
+    ),
+  )
 
   return (
-    <Frame spacing="sm">
-      <FrameHeader>
-        <FrameTitle>{titulo}</FrameTitle>
-        <FrameDescription>{descripcion}</FrameDescription>
-      </FrameHeader>
-      {/* Sin caja blanca adentro (como Participantes): buscador, lista y paginación sobre el gris del marco, con el mismo
-          margen que el título. Solo la lista lleva su borde y fondo. */}
-      <div className="flex flex-col gap-4 px-(--frame-panel-header-px) pb-(--frame-panel-header-py)">
-        {filas.length === 0 ? (
-          // Los vacíos van con su ilustración glass (PrimeraVez y SinResultados), no armados a mano (unión del 9-oct).
-          <PrimeraVez
-            icono="glass-profile"
-            titulo={grupal ? 'No hay grupos entre los participantes' : 'No hay colaboradores entre los participantes'}
-            descripcion="Elige quiénes entran al ciclo en el paso Participantes."
-          />
-        ) : (
-          <>
-            <div className="flex items-center gap-2">
-            <InputGroup className="min-w-0 flex-1 bg-background!">
-              <InputGroupAddon>
-                <HugeiconsIcon icon={Search01Icon} aria-hidden="true" />
-              </InputGroupAddon>
-              <InputGroupInput
-                id={`asignados-${tipo}-buscar`}
-                value={busqueda}
-                onChange={(evento) => {
-                  setBusqueda(evento.target.value)
-                  setActual(1)
-                }}
-                placeholder={grupal ? 'Busca un grupo por su nombre' : 'Busca por nombre o área'}
-                aria-label={grupal ? 'Buscar grupo' : 'Buscar colaborador'}
-              />
-            </InputGroup>
-            <BotonFiltros campos={campos} onCambio={cambiarFiltro} descripcion={grupal ? 'Muestra solo los grupos en cierto estado.' : 'Acota por estado, líder, rol, área, país o ciudad.'} />
-            </div>
-
-            {resultado.length === 0 ? (
-              <SinResultados
-                busqueda={busqueda}
-                filtrosActivos={(estado ? 1 : 0) + Object.values(filtros).filter(Boolean).length}
-                onLimpiar={() => {
-                  setBusqueda('')
-                  setEstado('')
-                  setFiltros({})
-                  setActual(1)
-                }}
-              />
-            ) : (
-              <>
-                <div className="flex min-h-8 flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <Checkbox checked={paginaCompleta} indeterminate={enPagina > 0 && !paginaCompleta} onCheckedChange={alternarPagina} aria-label={`Marcar los ${unidades} de esta página`} />
-                    <Text as="span" size="sm" variant="muted">
-                      {marcadas.size > 0
-                        ? `${formatCount(marcadas.size)} ${plural(marcadas.size, `${unidad} marcado`, `${unidades} marcados`)}`
-                        : `${formatCount(resultado.length)} ${plural(resultado.length, unidad, unidades)}`}
-                    </Text>
+    <>
+      {filas.length === 0 ? (
+        // Los vacíos van con su ilustración glass (PrimeraVez y SinResultados), no armados a mano (unión del 9-oct).
+        <PrimeraVez
+          icono="glass-profile"
+          titulo={grupal ? 'No hay grupos entre los participantes' : 'No hay colaboradores entre los participantes'}
+          descripcion="Elige quiénes entran al ciclo en el paso Participantes."
+        />
+      ) : (
+        // La lista de Participantes (ListaElegible, regla «lista-elegible»): un solo panel blanco con la fila de arriba —la
+        // casilla de la página, el nombre de la lista (o cuántos hay marcados), el buscador y los filtros— y debajo las filas,
+        // con el pie de paginación solo cuando hay más de una página. Con algo marcado, sus acciones van en esa misma fila.
+        <ListaElegible
+          id={`asignados-${tipo}`}
+          nombre={unidades}
+          herramientasEnCabecera
+          titulo={{ texto: marcadas.size > 0 ? `${formatCount(marcadas.size)} ${plural(marcadas.size, `${unidad} marcado`, `${unidades} marcados`)}` : grupal ? 'Grupos' : 'Colaboradores' }}
+          buscador={{
+            valor: busqueda,
+            placeholder: grupal ? 'Busca un grupo' : 'Busca por nombre o área',
+            onValor: (valor) => {
+              setBusqueda(valor)
+              setActual(1)
+            },
+          }}
+          herramientas={
+            <>
+              {conMarcadas ? enBloque : null}
+              <BotonFiltros campos={campos} onCambio={cambiarFiltro} descripcion={grupal ? 'Muestra solo los grupos en cierto estado.' : 'Acota por estado, líder, rol, área, país o ciudad.'} />
+            </>
+          }
+          casillaPagina={{ marcada: paginaCompleta, parcial: enPagina > 0 && !paginaCompleta, onCambio: alternarPagina, etiqueta: `Marcar los ${unidades} de esta página` }}
+          paginacion={{ pagina: actual, setPagina: setActual, porPagina, setPorPagina, total: resultado.length }}
+          vacio={
+            <SinResultados
+              busqueda={busqueda}
+              filtrosActivos={filtrosActivos}
+              onLimpiar={() => {
+                setBusqueda('')
+                setEstado('')
+                setFiltros({})
+                setActual(1)
+              }}
+            />
+          }
+        >
+          {visibles.map((fila) => {
+            const conObjetivos = (fila.set?.objectives.length ?? 0) > 0
+            return (
+              <FilaElegible
+                key={fila.id}
+                marcada={marcadas.has(fila.id)}
+                onCambio={() => alternar(fila.id)}
+                etiqueta={`Marcar ${grupal ? 'el grupo' : 'a'} ${fila.nombre}`}
+                contenido={
+                  fila.esGrupo ? (
+                    <>
+                      <TextoCompleto texto={fila.nombre}>
+                        <ItemTitle className="truncate">{fila.nombre}</ItemTitle>
+                      </TextoCompleto>
+                      <ItemDescription>{fila.detalle}</ItemDescription>
+                    </>
+                  ) : (
+                    <Persona nombre={fila.nombre} detalle={fila.detalle} />
+                  )
+                }
+                // Lo que lleva (objetivos y si ya está lista) y, al final, sus acciones: con objetivos, editar y eliminar en
+                // iconos; sin ellos, el botón para crearlos. El peso ya lo dice el estado.
+                lateral={
+                  <div className="flex items-center gap-3">
+                    <Objetivos set={fila.set} />
+                    {fila.resumen && conObjetivos ? <EstadoAgrupacion problema={fila.resumen.issue} conErrores={conErrores} /> : null}
+                    {conObjetivos ? (
+                      <span className="flex items-center gap-1">
+                        <Hint label="Editar objetivos">
+                          <BotonIcono aria-label={`Editar los objetivos de ${fila.nombre}`} onClick={() => onAbrir(fila)}>
+                            <HugeiconsIcon icon={Edit02Icon} aria-hidden="true" />
+                          </BotonIcono>
+                        </Hint>
+                        {/* Rojo de borrar: los botones sin borde no traen tono rojo (diferencias.json › button-ghost-tonos). */}
+                        <Hint label="Eliminar objetivos">
+                          <BotonIcono aria-label={`Eliminar los objetivos de ${fila.nombre}`} className="text-destructive!" onClick={() => abrirEliminar(fila)}>
+                            <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
+                          </BotonIcono>
+                        </Hint>
+                      </span>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => onAbrir(fila)}>
+                        <HugeiconsIcon icon={PlusSignIcon} aria-hidden="true" />
+                        Crear objetivos
+                      </Button>
+                    )}
                   </div>
-                  {marcadas.size > 0 && acciones.length > 0 ? (
-                    <div className="flex flex-wrap items-center gap-2">
-                      {acciones.map((accion) =>
-                        accion.principal ? (
-                          <Button key={accion.id} variant="outline" size="sm" onClick={accion.onClick}>
-                            <HugeiconsIcon icon={accion.icono} aria-hidden="true" />
-                            {accion.etiqueta}
-                          </Button>
-                        ) : (
-                          <Hint key={accion.id} label={accion.etiqueta}>
-                            <BotonIcono aria-label={accion.etiqueta} className={accion.destructiva ? 'text-destructive!' : undefined} onClick={accion.onClick}>
-                              <HugeiconsIcon icon={accion.icono} aria-hidden="true" />
-                            </BotonIcono>
-                          </Hint>
-                        ),
-                      )}
-                    </div>
-                  ) : null}
-                </div>
-
-                <ItemGroup className="mx-[calc(var(--frame-panel-header-px)*-1)] w-auto! gap-0! rounded-xl border bg-card">
-                  {visibles.map((fila, indice) => {
-                    const marcada = marcadas.has(fila.id)
-                    const conObjetivos = (fila.set?.objectives.length ?? 0) > 0
-                    return (
-                      <div key={fila.id}>
-                        {indice > 0 ? <ItemSeparator /> : null}
-                        <Item size="sm" className="gap-3" data-state={marcada ? 'selected' : undefined}>
-                          <Checkbox checked={marcada} onCheckedChange={() => alternar(fila.id)} aria-label={`Marcar ${grupal ? 'el grupo' : 'a'} ${fila.nombre}`} />
-                          <ItemContent>
-                            {fila.esGrupo ? (
-                              <>
-                                <TextoCompleto texto={fila.nombre}>
-                                  <ItemTitle className="truncate">{fila.nombre}</ItemTitle>
-                                </TextoCompleto>
-                                <ItemDescription>{fila.detalle}</ItemDescription>
-                              </>
-                            ) : (
-                              <Persona nombre={fila.nombre} detalle={fila.detalle} />
-                            )}
-                          </ItemContent>
-                          {/* Lo que lleva (objetivos y si ya está lista) y, al final, sus acciones: con objetivos, editar y
-                              eliminar en iconos; sin ellos, el botón para crearlos. El peso ya lo dice el estado. */}
-                          <ItemActions className="gap-3">
-                            <Objetivos set={fila.set} />
-                            {fila.resumen && conObjetivos ? <EstadoAgrupacion problema={fila.resumen.issue} conErrores={conErrores} /> : null}
-                            {conObjetivos ? (
-                              <span className="flex items-center gap-1">
-                                <Hint label="Editar objetivos">
-                                  <BotonIcono aria-label={`Editar los objetivos de ${fila.nombre}`} onClick={() => onAbrir(fila)}>
-                                    <HugeiconsIcon icon={Edit02Icon} aria-hidden="true" />
-                                  </BotonIcono>
-                                </Hint>
-                                <Hint label="Eliminar objetivos">
-                                  <BotonIcono aria-label={`Eliminar los objetivos de ${fila.nombre}`} className="text-destructive!" onClick={() => abrirEliminar(fila)}>
-                                    <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
-                                  </BotonIcono>
-                                </Hint>
-                              </span>
-                            ) : (
-                              <Button variant="outline" size="sm" onClick={() => onAbrir(fila)}>
-                                <HugeiconsIcon icon={PlusSignIcon} aria-hidden="true" />
-                                Crear objetivos
-                              </Button>
-                            )}
-                          </ItemActions>
-                        </Item>
-                      </div>
-                    )
-                  })}
-                </ItemGroup>
-
-                <Paginacion
-                  id={`asignados-${tipo}`}
-                  actual={actual}
-                  total={resultado.length}
-                  porPagina={porPagina}
-                  onCambiarPagina={setActual}
-                  onCambiarPorPagina={(valor) => {
-                    setPorPagina(valor)
-                    setActual(1)
-                  }}
-                />
-              </>
-            )}
-          </>
-        )}
-      </div>
+                }
+              />
+            )
+          })}
+        </ListaElegible>
+      )}
 
       <DialogoConfirmar
         abierto={eliminando !== null}
@@ -341,6 +288,13 @@ export function ListaRoster({
           setEliminando(null)
         }}
       >
+        {eliminando ? (
+          <RegistroConfirmar
+            nombre={eliminando.nombre}
+            detalle={`${eliminando.detalle} · ${eliminando.set?.objectives.length ?? 0} ${(eliminando.set?.objectives.length ?? 0) === 1 ? 'objetivo' : 'objetivos'}`}
+            tono="neutro"
+          />
+        ) : null}
         <Field>
           <FieldLabel htmlFor={`asignados-${tipo}-confirmar`}>
             Escribe «{eliminando?.nombre}» para confirmar
@@ -349,6 +303,6 @@ export function ListaRoster({
           <FieldDescription>El botón se habilita cuando el nombre coincide.</FieldDescription>
         </Field>
       </DialogoConfirmar>
-    </Frame>
+    </>
   )
 }

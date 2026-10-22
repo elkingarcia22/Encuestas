@@ -17,6 +17,7 @@ import { PEOPLE, initialsOf, type StepState } from '../../shared/data'
 import type { useApprovalFlow } from './use-approval-flow'
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import { notify } from '@/shared/components/notify'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Contenido de las ventanas del plan, copiado del prototipo.
 const DRAFT_TEXT =
@@ -75,7 +76,7 @@ export function ApprovalPlan({ steps, published, publish, doneCount }: ApprovalP
           >
             {published && doneCount === 4
               ? 'Completado'
-              : `${doneCount} terminados · ${published ? '0 pendientes' : '1 requiere revisión'}`}
+              : `${doneCount} ${plural(doneCount, 'terminado', 'terminados')} · ${published ? '0 pendientes' : '1 requiere revisión'}`}
           </span>
         </CardHeader>
         <CardContent className="py-0">
@@ -178,7 +179,7 @@ export function ApprovalPlan({ steps, published, publish, doneCount }: ApprovalP
         note="Puedes editarlo antes de publicar"
         cancelLabel="Cerrar"
         confirmLabel="Usar este borrador"
-        onConfirm={() => notify('Borrador confirmado')}
+        onConfirm={() => notify('Borrador confirmado', undefined, 'success')}
       />
       <ActionDialog
         open={audience}

@@ -4,7 +4,6 @@ import { Alert02Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarFallback,
-  Badge,
   Checkbox,
   Frame,
   FrameHeader,
@@ -24,6 +23,7 @@ import {
   ScrollBar,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import { EtiquetaIA } from '@/modules/design-system/ia/etiqueta-ia'

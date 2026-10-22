@@ -11,9 +11,9 @@ export function BlockedAccountPanel({ onBackToLogin }: { onBackToLogin: () => vo
   return (
     <>
       <AuthHeader
-        media={{ glass: 'glass-danger' }}
-        title="Bloqueamos tu ingreso a UBITS temporalmente"
-        description="Detectamos actividad inusual en tu cuenta y, como medida de seguridad, bloqueamos el acceso por un tiempo. Solicita ayuda y te acompañamos a resolverlo."
+        media={{ glass: 'glass-lock' }}
+        title="Ingreso bloqueado temporalmente"
+        description="Hemos detectado actividad inusual en tu cuenta y, como medida de seguridad, hemos bloqueado temporalmente el acceso. Solicita ayuda, estamos para resolver tu inconveniente."
       />
 
       {ayudaSolicitada ? (
@@ -43,7 +43,7 @@ export function BlockedAccountPanel({ onBackToLogin }: { onBackToLogin: () => vo
           onClick={onBackToLogin}
         >
           <HugeiconsIcon icon={ArrowLeft02Icon} size={16} aria-hidden="true" />
-          Volver al inicio de sesión
+          Volver a iniciar sesión
         </Button>
       </div>
     </>

@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import {  LibraryIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
-import { Button, Empty, EmptyHeader, EmptyTitle, EmptyDescription, Text } from '@ubits/flux-ui'
+import { PlusSignIcon } from '@hugeicons/core-free-icons'
+import { Button } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { createBlankObjective, type CicloDraft, type Objective } from '../../../modelo/constructor/cicloBuilderTypes'
 import { unalignFromCompanyObjective } from '../../../modelo/constructor/objectiveSets'
-import { BancoObjetivos } from '../banco/banco-objetivos'
 import { ListaObjetivos } from '../objetivo/lista-objetivos'
+import { MARGEN_BARRA, useMostrarAlAbrir } from '../mostrar-al-abrir'
 
 // Paso · Objetivos de la empresa: los resultados de la compañía en este ciclo. No se asignan a nadie ni llevan peso; el
-// resto de los objetivos puede colgar de ellos. Mismo armado que «Secciones y preguntas» en Encuestas: arriba una fila
-// con lo que se puede traer ya hecho (el banco); debajo, una tarjeta por objetivo que se
-// edita en el sitio, con una sola abierta a la vez. Borrar uno desalinea todo lo que colgaba de él.
+// resto de los objetivos puede colgar de ellos. Una tarjeta por objetivo que se edita en el sitio, con una sola
+// abierta a la vez (el banco de objetivos se quitó de la creación el 20-oct). Borrar uno desalinea todo lo que colgaba de él.
 
 export function PasoEmpresa({
   borrador,
@@ -28,7 +28,6 @@ export function PasoEmpresa({
   agenteAbierto: boolean
 }) {
   const [abierta, setAbierta] = useState<string | null>(borrador.companyObjectives[0]?.id ?? null)
-  const [banco, setBanco] = useState(false)
   const objetivos = borrador.companyObjectives
       
   const agregar = (nuevos: Objective[], abrir = false) => {
@@ -37,11 +36,33 @@ export function PasoEmpresa({
   }
   const cambiarObjetivo = (id: string, cambio: Partial<Objective>) => onCambio((actual) => ({ companyObjectives: actual.companyObjectives.map((objetivo) => (objetivo.id === id ? { ...objetivo, ...cambio } : objetivo)) }))
   const eliminar = (id: string) => onCambio((actual) => ({ companyObjectives: actual.companyObjectives.filter((objetivo) => objetivo.id !== id), objectiveSets: unalignFromCompanyObjective(actual.objectiveSets, id) }))
-  const crearManual = () => agregar([createBlankObjective(0)], true)
+  // Cuando la IA agrega objetivos, la pantalla baja sola hasta que «Agregar objetivo» se vea (Elkin, 21-oct). Vale con el panel
+  // de Orbit abierto o ya cerrado. Los que crea la persona a mano (o el en blanco con el que arranca el paso) ya se abren a
+  // la vista y no mueven la pantalla: se marcan en `propio` antes de entrar a la lista.
+  const [finLista, mostrarFin] = useMostrarAlAbrir()
+  const cantidadAntes = useRef(objetivos.length)
+  const propio = useRef(false)
+  useEffect(() => {
+    if (objetivos.length > cantidadAntes.current && !propio.current) {
+      // Dos intentos: la tarjeta nueva se abre con animación y el botón sigue bajando después del primero.
+      mostrarFin()
+      const retraso = window.setTimeout(mostrarFin, 450)
+      cantidadAntes.current = objetivos.length
+      return () => window.clearTimeout(retraso)
+    }
+    propio.current = false
+    cantidadAntes.current = objetivos.length
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [objetivos.length])
+  const crearManual = () => {
+    propio.current = true
+    agregar([createBlankObjective(0)], true)
+  }
 
   useEffect(() => {
     if (objetivos.length === 0 && !agenteAbierto) {
       const nuevo = createBlankObjective(0)
+      propio.current = true
       onCambio((actual) => (actual.companyObjectives.length > 0 ? {} : { companyObjectives: [nuevo] }))
     }
   }, [objetivos.length, agenteAbierto, onCambio])
@@ -55,24 +76,15 @@ export function PasoEmpresa({
   }, [objetivos])
 
   return (
-    <section className="flex flex-col gap-4" aria-label="Objetivos de la empresa">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Text as="p" size="sm" variant="muted">Trae objetivos ya hechos desde el catálogo.</Text>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setBanco(true)}>
-            <HugeiconsIcon icon={LibraryIcon} aria-hidden="true" />
-            Elegir del banco
-          </Button>
-        </div>
-      </div>
-
+    <section data-objetivos className="flex flex-col gap-4" aria-label="Objetivos de la empresa">
       {agenteAbierto && objetivos.length === 0 ? (
-        <Empty className="border">
-          <EmptyHeader>
-            <EmptyTitle>Creando objetivos con IA</EmptyTitle>
-            <EmptyDescription>Cuéntale a Orbit Flow qué resultados necesita la empresa en este ciclo. Los objetivos que proponga aparecerán aquí para que los revises.</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        // Con la pieza de vacío del sistema y su ilustración glass (13-oct).
+        <PrimeraVez
+          icono="glass-message"
+          titulo="Creando objetivos con IA"
+          descripcion="Cuéntale a Orbit qué resultados necesita la empresa en este ciclo. Los objetivos que proponga aparecerán aquí para que los revises."
+          className="py-8 border"
+        />
       ) : (
         <>
           <ListaObjetivos
@@ -92,17 +104,15 @@ export function PasoEmpresa({
             resaltados={propuesta}
           />
           {objetivos.length > 0 && (
-            <div className="flex justify-end pt-2">
+            <div ref={finLista} data-fin-objetivos className={`flex justify-end pt-2 ${MARGEN_BARRA}`}>
               <Button variant="outline" onClick={crearManual}>
                 <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
-                Añadir objetivo
+                Agregar objetivo
               </Button>
             </div>
           )}
         </>
       )}
-
-      <BancoObjetivos abierto={banco} onAbiertoChange={setBanco} alcance="empresa" pesoLibre={0} destino="los objetivos de la empresa" onAgregar={(nuevos) => agregar(nuevos.map((objetivo) => ({ ...objetivo, weight: 0 })))} />
     </section>
   )
 }

@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, useState } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import {
   Add01Icon,
   Archive02Icon,
@@ -31,10 +31,14 @@ import { Persona } from '../../data-grid/casos/seguimiento'
 import { SIN_ARRASTRE } from '../../data-grid/casos/sin-arrastre'
 import { TablaDatos } from '../../data-grid/tabla-datos'
 import { WS } from '../../drawers/components/drawer-styles'
+import { DialogoConfirmar, RegistroConfirmar } from '../../estados/confirmaciones'
 import { CaseFrame } from '../components/case-frame'
 import { AREA_OPTIONS, PEOPLE, type Person } from './components/data'
 
 type Filtro = { id: string; value: unknown }
+
+// Lo que pregunta la ventana antes de una acción masiva.
+type Pregunta = { titulo: string; descripcion: string; accion: string; aviso: string; destructiva?: boolean; icono: IconSvgElement }
 
 const icon = (svg: typeof Mail01Icon) => <HugeiconsIcon icon={svg} size={16} />
 
@@ -85,9 +89,9 @@ function MenuPersona({ persona }: { persona: Person }) {
         <HugeiconsIcon icon={MoreHorizontalIcon} size={16} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={() => notify(`Perfil de ${persona.name}`)}>Ver perfil</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => notify(`Mensaje para ${persona.name}`)}>Enviar mensaje</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => notify(`Curso asignado a ${persona.name}`)}>Asignar curso</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify(`Perfil de ${persona.name}`, undefined, 'info')}>Ver perfil</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify(`Mensaje para ${persona.name}`, undefined, 'info')}>Enviar mensaje</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => notify(`Curso asignado a ${persona.name}`, undefined, 'success')}>Asignar curso</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -179,6 +183,7 @@ export function Component() {
   // Cambia para volver a montar la tabla: así «Limpiar» también vacía su buscador y sus filtros.
   const [version, setVersion] = useState(0)
   const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [pregunta, setPregunta] = useState<Pregunta | null>(null)
 
   const filtered = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
@@ -224,7 +229,11 @@ export function Component() {
   const toggle = (id: number) => update((next) => (next.has(id) ? next.delete(id) : next.add(id)))
   const togglePage = () => update((next) => rows.forEach((row) => (allOnPage ? next.delete(row.id) : next.add(row.id))))
   const clear = () => setSelected(new Set())
-  const act = (label: string) => () => notify(`${label} · ${selected.size} ${selected.size === 1 ? 'persona' : 'personas'}`)
+  const personasTexto = `${selected.size} ${selected.size === 1 ? 'persona' : 'personas'}`
+  const act = (label: string) => () => notify(`${label} · ${personasTexto}`, undefined, 'success')
+  // 13-oct (regla «preguntar-antes»): lo que le llega a otras personas, o las desactiva, pregunta antes con DialogoConfirmar
+  // y la tarjeta de lo que se toca, que dice a cuántas personas. Exportar no afecta a nadie: va directo.
+  const pedir = (nueva: Pregunta) => () => setPregunta(nueva)
 
   const filtrosPuestos = filtros.filter((f) => Array.isArray(f.value) && f.value.length > 0).length
   const filtrando = Boolean(busqueda.trim()) || filtrosPuestos > 0
@@ -267,7 +276,7 @@ export function Component() {
               icono="glass-profile"
               titulo="Todavía no hay colaboradores"
               descripcion="Agrega a las personas de tu empresa una por una o impórtalas desde Excel."
-              accion={{ texto: 'Agregar colaborador', icono: Add01Icon, onClick: () => notify('Agregar colaborador') }}
+              accion={{ texto: 'Agregar colaborador', icono: Add01Icon, onClick: () => notify('Agregar colaborador', undefined, 'info') }}
             />
           ),
         },
@@ -282,11 +291,11 @@ export function Component() {
           description="Todas las personas de Meta Colombia. Selecciona varias para asignarles cursos, escribirles o moverlas de grupo."
           actions={
             <>
-              <Button data-region="Botón secundario" variant="outline" className={WS} onClick={() => notify('Importar colaboradores desde Excel')}>
+              <Button data-region="Botón secundario" variant="outline" className={WS} onClick={() => notify('Importar colaboradores desde Excel', undefined, 'info')}>
                 <HugeiconsIcon icon={Download04Icon} size={16} />
                 Importar
               </Button>
-              <Button data-region="Botón primario" className={WS} onClick={() => notify('Agregar colaborador')}>
+              <Button data-region="Botón primario" className={WS} onClick={() => notify('Agregar colaborador', undefined, 'info')}>
                 <HugeiconsIcon icon={Add01Icon} size={16} />
                 Agregar colaborador
               </Button>
@@ -354,27 +363,57 @@ export function Component() {
           moreActions: 'Más acciones',
           actionWithCount: (label, count) => `${label} (${count})`,
         }}
-        primaryAction={{ id: 'curso', label: 'Asignar curso', icon: icon(Mortarboard02Icon), onClick: act('Curso asignado') }}
+        primaryAction={{
+          id: 'curso',
+          label: 'Asignar curso',
+          icon: icon(Mortarboard02Icon),
+          onClick: pedir({ titulo: '¿Asignar el curso?', descripcion: `Lo ven ${personasTexto} en su Zona de estudio desde hoy.`, accion: `Asignar a ${personasTexto}`, aviso: 'Curso asignado', icono: Mortarboard02Icon }),
+        }}
         items={[
-          { id: 'mensaje', label: 'Enviar mensaje', icon: icon(Mail01Icon), onClick: act('Mensaje enviado') },
+          {
+            id: 'mensaje',
+            label: 'Enviar mensaje',
+            icon: icon(Mail01Icon),
+            onClick: pedir({ titulo: '¿Enviar el mensaje?', descripcion: `Les llega por correo a ${personasTexto}. Un correo enviado no se puede recoger.`, accion: `Enviar a ${personasTexto}`, aviso: 'Mensaje enviado', icono: Mail01Icon }),
+          },
           {
             id: 'grupo',
             label: 'Agregar a grupo',
             icon: icon(UserGroupIcon),
             options: [
-              { id: 'lideres', title: 'Programa de líderes', description: '24 personas', onClick: act('Agregadas a Programa de líderes') },
-              { id: 'induccion', title: 'Inducción 2026', description: '58 personas', onClick: act('Agregadas a Inducción 2026') },
+              { id: 'lideres', title: 'Programa de líderes', description: '24 personas', onClick: pedir({ titulo: '¿Agregar al grupo?', descripcion: `Entran a Programa de líderes y reciben sus planes de formación.`, accion: `Agregar a ${personasTexto}`, aviso: 'Agregadas a Programa de líderes', icono: UserGroupIcon }) },
+              { id: 'induccion', title: 'Inducción 2026', description: '58 personas', onClick: pedir({ titulo: '¿Agregar al grupo?', descripcion: `Entran a Inducción 2026 y reciben sus planes de formación.`, accion: `Agregar a ${personasTexto}`, aviso: 'Agregadas a Inducción 2026', icono: UserGroupIcon }) },
             ],
           },
           { type: 'separator', id: 'sep' },
           { id: 'exportar', label: 'Exportar', icon: icon(Download04Icon), onClick: act('Exportadas') },
         ]}
         overflowActions={[
-          { id: 'responsable', label: 'Cambiar jefe directo', icon: icon(UserSwitchIcon), onClick: act('Jefe directo actualizado') },
-          { id: 'desactivar', label: 'Desactivar', icon: icon(Archive02Icon), variant: 'destructive', onClick: act('Desactivadas') },
+          { id: 'responsable', label: 'Cambiar jefe directo', icon: icon(UserSwitchIcon), onClick: pedir({ titulo: '¿Cambiar el jefe directo?', descripcion: `Cambia quién ve el avance de ${personasTexto} y les avisa por correo.`, accion: `Cambiar a ${personasTexto}`, aviso: 'Jefe directo actualizado', icono: UserSwitchIcon }) },
+          { id: 'desactivar', label: 'Desactivar', icon: icon(Archive02Icon), variant: 'destructive', onClick: pedir({ titulo: '¿Desactivar a las personas?', descripcion: `Dejan de entrar a la plataforma. Su avance se conserva y se pueden reactivar después.`, accion: `Desactivar a ${personasTexto}`, aviso: 'Personas desactivadas', destructiva: true, icono: Archive02Icon }) },
         ]}
       />
       </div>
+
+      <DialogoConfirmar
+        abierto={pregunta !== null}
+        onAbiertoChange={(abrir) => {
+          if (!abrir) setPregunta(null)
+        }}
+        icono={pregunta?.icono}
+        titulo={pregunta?.titulo ?? ''}
+        descripcion={pregunta?.descripcion ?? ''}
+        cancelar="Todavía no"
+        accion={pregunta?.accion ?? ''}
+        destructiva={pregunta?.destructiva}
+        onConfirmar={() => {
+          const hecha = pregunta
+          setPregunta(null)
+          if (hecha) notify(hecha.aviso, personasTexto, 'success')
+        }}
+      >
+        <RegistroConfirmar nombre="Colaboradores seleccionados" detalle={`${personasTexto} de ${filtered.length}`} estado={personasTexto} tono="neutro" icono={UserGroupIcon} />
+      </DialogoConfirmar>
     </CaseFrame>
   )
 }

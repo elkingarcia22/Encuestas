@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Download01Icon, UserMultiple02Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Empty,
   EmptyDescription,
@@ -15,7 +14,9 @@ import {
   Text,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
+import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
 import { AdjuntoCsv, type Subida } from '@/modules/design-system/estados/procesos'
 import { useTemporizadores } from '@/modules/design-system/estados/temporizadores'
@@ -110,16 +111,8 @@ const COLUMNAS_GRUPOS: DataGridListConfig<FilaGrupo>['columns'] = [
     header: 'Nombre',
     size: 520,
     ...SIN_ARRASTRE,
-    cell: ({ row }) => (
-      <div className="flex min-w-0 flex-col gap-1">
-        <Text as="span" size="sm" weight="medium" className="truncate">
-          {row.original.nombre}
-        </Text>
-        <Text as="span" variant="muted" size="xs" className="truncate">
-          {row.original.descripcion || 'Sin descripción'}
-        </Text>
-      </div>
-    ),
+    // La fila que nombra algo es CeldaTitulo: el nombre y, debajo en gris, la descripción.
+    cell: ({ row }) => <CeldaTitulo titulo={row.original.nombre} detalle={row.original.descripcion || 'Sin descripción'} />,
   },
   {
     accessorKey: 'usuarios',
@@ -206,6 +199,7 @@ export function ListaParticipantes({
                   : 'Subiendo…'
             }
             porcentaje={valor.archivo === 'uploading' ? 60 : 100}
+            // El adjunto de la librería mide lo que su nombre y no se estira sin «!» (diferencias.json › attachment-ancho-y-arrastre).
             className="w-full!"
             onElegir={subir}
             onQuitar={() => onCambio({ ...valor, archivo: 'idle' })}

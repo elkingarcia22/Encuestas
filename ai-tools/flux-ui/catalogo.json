@@ -1,12 +1,12 @@
 {
   "$comentario": "Generado por ai-tools/flux-ui/generar-catalogo.mjs. No editar a mano: se regenera.",
-  "generado": "2026-10-15T14:19:25.697Z",
+  "generado": "2026-10-21T16:35:56.982Z",
   "libreria": {
     "paquete": "@ubits/flux-ui",
     "version": "0.5.5",
     "importarDesde": "@ubits/flux-ui"
   },
-  "huellaReglas": "1ea087572b32a84f9c14f7071f975a253771ddff",
+  "huellaReglas": "a6ec30049af82db703865bc3b4a0979d5ed92774",
   "storybook": {
     "url": "https://libraries-ui.dev.sandteck.com/flux-ui",
     "consultado": true
@@ -27,6 +27,7 @@
     "@hugeicons/core-free-icons",
     "@base-ui/react",
     "recharts",
+    "motion",
     "react",
     "react-dom",
     "react-router"

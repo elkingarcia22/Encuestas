@@ -2,7 +2,6 @@ import { createContext, useContext, useMemo, useState, type Dispatch, type SetSt
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { Calendar03Icon, Delete02Icon, Download01Icon, Notification01Icon, TaskDone01Icon, UserSwitchIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Field,
   FieldLabel,
@@ -17,6 +16,9 @@ import {
   toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
+import { Badge } from '@/shared/components/Badge'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
@@ -232,17 +234,17 @@ export function PestanaPlanes({
     onCambiarFecha: (p, fecha) => {
       const iso = aFechaIso(fecha)
       actualizar([p.id], () => ({ fin: iso, estado: 'Activo' }))
-      toast.add({ type: 'success', title: 'Plan reabierto', description: `Ahora termina el ${fechaCorta(iso)}.` })
+      notify('Plan reabierto', `Ahora termina el ${fechaCorta(iso)}.`, 'success')
     },
     onRecordatorio: (p) => {
       const pendientes = tareas.filter((t) => t.plan === p.nombre && t.estado !== 'Finalizada')
       const personas = new Set(pendientes.map((t) => t.asignado)).size
-      if (!personas) return notify('No hay tareas pendientes')
+      if (!personas) return notify('No hay tareas pendientes', undefined, 'info')
       setPorRecordar({ plan: p, personas, tareas: pendientes.length })
     },
     onCopiarEnlace: (p) => {
       copiarEnlace(`/admin/tareas?plan=${p.id}`)
-      notify('Enlace copiado', 'Quien lo abra verá el detalle del plan.')
+      notify('Enlace copiado', 'Quien lo abra verá el detalle del plan.', 'success')
     },
     onEliminar: (p) => {
       setPorEliminar([p])
@@ -263,15 +265,15 @@ export function PestanaPlanes({
     if (cambio.tipo === 'reasignar') {
       const area = PERSONAS.find((p) => p.nombre === valorCambio)?.area ?? ''
       actualizar(ids, () => ({ responsable: valorCambio, area }))
-      toast.add({ type: 'success', title: `Nuevo responsable en ${cuantos}`, description: `Ahora los lleva ${valorCambio}.` })
+      notify(`Nuevo responsable en ${cuantos}`, `Ahora los lleva ${valorCambio}.`, 'success')
     }
     if (cambio.tipo === 'estado') {
       actualizar(ids, () => ({ estado: valorCambio as EstadoPlan }))
-      toast.add({ type: 'success', title: `${cuantos} en ${valorCambio}` })
+      notify(`${cuantos} en ${valorCambio}`, undefined, 'success')
     }
     if (cambio.tipo === 'fecha') {
       actualizar(ids, (p) => ({ fin: valorCambio, estado: p.estado === 'Vencido' ? 'Activo' : p.estado }))
-      toast.add({ type: 'success', title: `Nueva fecha de fin en ${cuantos}`, description: `Terminan el ${fechaCorta(valorCambio)}.` })
+      notify(`Nueva fecha de fin en ${cuantos}`, `Terminan el ${fechaCorta(valorCambio)}.`, 'success')
     }
     setCambio(null)
     onLimpiarSeleccion()
@@ -330,16 +332,26 @@ export function PestanaPlanes({
     },
     emptyState: sinBusqueda
       ? {
+          // Vacíos con su ilustración glass (13-oct): nada en el período, o sin resultados con «Limpiar».
           type: 'empty',
-          title: 'Nada en este período',
-          description: `No hay planes en ${etiquetaPeriodo}. Cambia el período para ver más.`,
-          action: { id: 'periodo', label: 'Cambiar período', variant: 'outline', onClick: () => setPeriodo('365') },
+          customComponent: (
+            <PrimeraVez
+              icono="glass-calendar"
+              titulo="Nada en este período"
+              descripcion={`No hay planes en ${etiquetaPeriodo}. Cambia el período para ver más.`}
+              accion={{ texto: 'Cambiar período', onClick: () => setPeriodo('365') }}
+            />
+          ),
         }
       : {
           type: 'no-results',
-          title: 'No se encontraron resultados',
-          description: 'Revisa lo que escribiste o quita alguno de los filtros.',
-          action: { id: 'limpiar', label: 'Limpiar búsqueda y filtros', variant: 'outline', onClick: limpiar },
+          customComponent: (
+            <SinResultados
+              busqueda={busqueda}
+              filtrosActivos={filtros.filter((f) => Array.isArray(f.value) && f.value.length > 0).length}
+              onLimpiar={limpiar}
+            />
+          ),
         },
     frame: { title: 'Planes', toolbar: 'header' },
     layout: { reorderable: false, dense: true },
@@ -452,6 +464,7 @@ export function PestanaPlanes({
             notify(
               `Recordatorio enviado a ${personas} ${plural(personas, 'persona', 'personas')}`,
               `Quienes tienen tareas abiertas en «${p.nombre}» reciben el aviso.`,
+              'success',
             )
           }
           setPorRecordar(null)
@@ -485,10 +498,7 @@ export function PestanaPlanes({
             setElegido(resultado.find((p) => !ids.has(p.id))?.id)
             setEnPanel(false)
           }
-          toast.add({
-            type: 'success',
-            title: `${porEliminar.length} ${plural(porEliminar.length, 'plan eliminado', 'planes eliminados')}`,
-          })
+          notify(`${porEliminar.length} ${plural(porEliminar.length, 'plan eliminado', 'planes eliminados')}`, undefined, 'success')
           setEliminando(false)
           onLimpiarSeleccion()
         }}

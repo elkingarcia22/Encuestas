@@ -5,7 +5,6 @@ import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
 import {
   Avatar,
   AvatarImage,
-  Badge,
   Button,
   Field,
   FieldDescription,
@@ -19,6 +18,7 @@ import {
   ItemTitle,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import { BotonIa } from '@/shared/components/BotonIa'
 import { Orb } from '@/shared/components/Orb'
@@ -80,7 +80,7 @@ function TarjetaRoleplay({ item, onElegir }: { item: RoleplayGuardado; onElegir:
 type Props = {
   abierto: boolean
   onCerrar: () => void
-  /** «Volver» a «Añadir página»; sin él no se muestra la flecha. */
+  /** «Volver» a «Agregar página»; sin él no se muestra la flecha. */
   onVolver?: () => void
   /** Se reusó un roleplay ya armado y la página quedó creada. */
   onListo: (paginaId: string) => void

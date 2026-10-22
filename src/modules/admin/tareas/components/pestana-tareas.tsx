@@ -10,7 +10,6 @@ import {
   UserSwitchIcon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Field,
   FieldLabel,
@@ -23,6 +22,9 @@ import {
   toast,
   type DataGridListConfig,
 } from '@ubits/flux-ui'
+import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { SinResultados } from '@/shared/components/SinResultados'
+import { Badge } from '@/shared/components/Badge'
 import { TablaDatos } from '@/modules/design-system/data-grid/tabla-datos'
 
 import { SIN_ARRASTRE } from '@/modules/design-system/data-grid/casos/sin-arrastre'
@@ -237,16 +239,16 @@ export function PestanaTareas({
   const acciones: AccionesTarea = {
     onFinalizar: (t) => {
       actualizar([t.id], () => ({ estado: 'Finalizada' }), (x) => `cambió el estado de ${x.estado} a Finalizada`)
-      toast.add({ type: 'success', title: 'Tarea finalizada', description: t.titulo })
+      notify('Tarea finalizada', t.titulo, 'success')
     },
     onReabrir: (t) => {
       actualizar([t.id], () => ({ estado: 'Activo' }), () => 'reabrió la tarea: cambió el estado de Finalizada a Activo')
-      toast.add({ type: 'success', title: 'Tarea reabierta', description: t.titulo })
+      notify('Tarea reabierta', t.titulo, 'success')
     },
     onCambiarFecha: (t, fecha) => {
       const iso = aFechaIso(fecha)
       actualizar([t.id], () => ({ finaliza: iso, estado: 'Activo' }), () => `cambió la fecha de finalización al ${fechaCorta(iso)} y reabrió la tarea`)
-      toast.add({ type: 'success', title: 'Tarea reabierta', description: `Ahora finaliza el ${fechaCorta(iso)}.` })
+      notify('Tarea reabierta', `Ahora finaliza el ${fechaCorta(iso)}.`, 'success')
     },
     onSubtarea: (t, subId, hecha) => {
       const sub = t.subtareas.find((s) => s.id === subId)
@@ -269,7 +271,7 @@ export function PestanaTareas({
     onRecordatorio: (t) => setPorRecordar(t),
     onCopiarEnlace: (t) => {
       copiarEnlace(`/admin/tareas?tarea=${t.id}`)
-      notify('Enlace copiado', 'Quien lo abra verá el detalle de la tarea.')
+      notify('Enlace copiado', 'Quien lo abra verá el detalle de la tarea.', 'success')
     },
     onEliminar: (t) => {
       setPorEliminar([t])
@@ -290,24 +292,24 @@ export function PestanaTareas({
     if (cambio.tipo === 'reasignar') {
       const area = PERSONAS.find((p) => p.nombre === valorCambio)?.area ?? ''
       actualizar(ids, () => ({ asignado: valorCambio, area }), () => `reasignó la tarea a ${valorCambio}`)
-      toast.add({ type: 'success', title: `${cuantas} ${plural(n, 'reasignada', 'reasignadas')}`, description: `Ahora las tiene ${valorCambio}.` })
+      notify(`${cuantas} ${plural(n, 'reasignada', 'reasignadas')}`, `Ahora las tiene ${valorCambio}.`, 'success')
     }
     if (cambio.tipo === 'prioridad') {
       actualizar(ids, () => ({ prioridad: valorCambio as Prioridad }), (t) => `cambió la prioridad de ${t.prioridad} a ${valorCambio}`)
-      toast.add({ type: 'success', title: `Prioridad ${valorCambio.toLowerCase()} en ${cuantas}` })
+      notify(`Prioridad ${valorCambio.toLowerCase()} en ${cuantas}`, undefined, 'success')
     }
     if (cambio.tipo === 'estado') {
       // Las de Aprendizaje no se finalizan a mano (RN-04 del detalle).
       const validas = cambio.filas.filter((t) => !(valorCambio === 'Finalizada' && t.tipo === 'Aprendizaje')).map((t) => t.id)
       actualizar(validas, () => ({ estado: valorCambio as EstadoTarea }), (t) => `cambió el estado de ${t.estado} a ${valorCambio}`)
       const omitidas = n - validas.length
-      toast.add({
-        type: 'success',
-        title: `${validas.length} ${plural(validas.length, 'tarea', 'tareas')} en ${valorCambio}`,
-        description: omitidas
+      notify(
+        `${validas.length} ${plural(validas.length, 'tarea', 'tareas')} en ${valorCambio}`,
+        omitidas
           ? `${omitidas} de aprendizaje no ${plural(omitidas, 'cambió', 'cambiaron')}: se finalizan al completar el contenido.`
           : undefined,
-      })
+        'success',
+      )
     }
     if (cambio.tipo === 'fecha') {
       actualizar(
@@ -315,7 +317,7 @@ export function PestanaTareas({
         (t) => ({ finaliza: valorCambio, estado: t.estado === 'Vencida' ? 'Activo' : t.estado }),
         () => `cambió la fecha de finalización al ${fechaCorta(valorCambio)}`,
       )
-      toast.add({ type: 'success', title: `Nueva fecha en ${cuantas}`, description: `Finalizan el ${fechaCorta(valorCambio)}.` })
+      notify(`Nueva fecha en ${cuantas}`, `Finalizan el ${fechaCorta(valorCambio)}.`, 'success')
     }
     setCambio(null)
     onLimpiarSeleccion()
@@ -375,16 +377,26 @@ export function PestanaTareas({
     },
     emptyState: sinBusqueda
       ? {
+          // Vacíos con su ilustración glass (13-oct): nada en el período, o sin resultados con «Limpiar».
           type: 'empty',
-          title: 'Nada en este período',
-          description: `No hay tareas en ${etiquetaPeriodo}. Cambia el período para ver más.`,
-          action: { id: 'periodo', label: 'Cambiar período', variant: 'outline', onClick: () => setPeriodo('365') },
+          customComponent: (
+            <PrimeraVez
+              icono="glass-calendar"
+              titulo="Nada en este período"
+              descripcion={`No hay tareas en ${etiquetaPeriodo}. Cambia el período para ver más.`}
+              accion={{ texto: 'Cambiar período', onClick: () => setPeriodo('365') }}
+            />
+          ),
         }
       : {
           type: 'no-results',
-          title: 'No se encontraron resultados',
-          description: 'Revisa lo que escribiste o quita alguno de los filtros.',
-          action: { id: 'limpiar', label: 'Limpiar búsqueda y filtros', variant: 'outline', onClick: limpiar },
+          customComponent: (
+            <SinResultados
+              busqueda={busqueda}
+              filtrosActivos={filtros.filter((f) => Array.isArray(f.value) && f.value.length > 0).length}
+              onLimpiar={limpiar}
+            />
+          ),
         },
     frame: { title: 'Tareas', toolbar: 'header' },
     layout: { reorderable: false, dense: true },
@@ -489,7 +501,7 @@ export function PestanaTareas({
         accion="Enviar a 1 persona"
         onConfirmar={() => {
           if (porRecordar) {
-            notify(`Recordatorio enviado a ${porRecordar.asignado}`, `Le avisamos por correo y en la plataforma sobre «${porRecordar.titulo}».`)
+            notify(`Recordatorio enviado a ${porRecordar.asignado}`, `Le avisamos por correo y en la plataforma sobre «${porRecordar.titulo}».`, 'success')
           }
           setPorRecordar(null)
         }}
@@ -516,10 +528,7 @@ export function PestanaTareas({
             setElegida(resultado.find((t) => !ids.has(t.id))?.id)
             setEnPanel(false)
           }
-          toast.add({
-            type: 'success',
-            title: `${porEliminar.length} ${plural(porEliminar.length, 'tarea eliminada', 'tareas eliminadas')}`,
-          })
+          notify(`${porEliminar.length} ${plural(porEliminar.length, 'tarea eliminada', 'tareas eliminadas')}`, undefined, 'success')
           setEliminando(false)
           onLimpiarSeleccion()
         }}

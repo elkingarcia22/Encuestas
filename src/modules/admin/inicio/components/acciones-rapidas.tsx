@@ -28,7 +28,7 @@ const ACCIONES: Accion[] = [
   { id: 'encuesta', titulo: 'Crear encuesta', glass: 'glass-document', ruta: '/admin/desempeno-cultura/encuestas/crear', ia: true },
   { id: 'tarea', titulo: 'Asignar tarea', glass: 'glass-calendar', ruta: '/admin/tareas' },
   { id: 'usuarios', titulo: 'Gestionar usuarios', glass: 'glass-profile', ruta: '/design-system/templates/gestion-usuarios' },
-  { id: 'anuncio', titulo: 'Lanzar un anuncio', glass: 'glass-volume', ruta: '/admin/avisos-internos' },
+  { id: 'anuncio', titulo: 'Publicar aviso', glass: 'glass-volume', ruta: '/admin/avisos-internos' },
 ]
 
 // `entrada`: animación de llegada de cada tarjeta (la clase y los retrasos los pone el Inicio).
@@ -55,7 +55,7 @@ export function AccionesRapidas({ entrada }: { entrada?: { clase: string; desde:
               <Card
                 size="sm"
                 className={cn(
-                  accion.conHalo && [halo.vars, halo.halo, halo.haloSuave, 'overflow-hidden'],
+                  accion.conHalo && [halo.vars, halo.halo, 'overflow-hidden'],
                   'relative h-full transition-[translate,box-shadow,border-color] duration-200 ease-out group-hover:-translate-y-0.5 group-hover:border-primary/30 group-hover:shadow-md! group-focus-visible:border-primary/30 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0',
                 )}
               >

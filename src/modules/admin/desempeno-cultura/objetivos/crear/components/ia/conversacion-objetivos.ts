@@ -87,7 +87,7 @@ export function resumenPropuesta(generados: readonly Objective[], brief: ParsedB
 
 /** Los de la empresa no llevan peso; los asignados se reparten el peso libre del set (34/33/33). */
 export function conPesos(generados: readonly Objective[], pedido: PedidoIa): Objective[] {
-  if (pedido.alcance === 'empresa') return generados.map((objetivo) => ({ ...objetivo, weight: 0, alignedTo: null }))
+  if (pedido.alcance === 'empresa') return generados.map((objetivo) => ({ ...objetivo, weight: 0, alignedTo: [] }))
   const pesos = distributeWeights(generados.length, pedido.pesoLibre ?? 0)
   return generados.map((objetivo, indice) => ({ ...objetivo, weight: pesos[indice] ?? 0 }))
 }

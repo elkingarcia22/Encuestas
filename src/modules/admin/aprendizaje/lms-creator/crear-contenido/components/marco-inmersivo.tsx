@@ -64,7 +64,8 @@ export function MarcoInmersivo(props: MarcoProps) {
 /** Los editores de tres columnas: todo el alto, sin panel de modal, con la cabecera del editor. */
 function PantallaCompleta({ titulo, subtitulo, insignia, guardado, tokens, volver, cerrar, acciones, pasos, barra, pie, ancho = 'wide', children }: MarcoProps) {
   return (
-    <FullscreenTemplate>
+    // Con el margen de la plantilla de pantalla completa del sistema (regla «pantalla-completa», 13-oct).
+    <FullscreenTemplate margen>
       <TooltipProvider delay={300}>
         <div className="flex h-full flex-col text-foreground">
           <header className="shrink-0 border-b bg-background">
@@ -136,7 +137,7 @@ export function InsigniaIA({ className }: { className?: string }) {
   )
 }
 
-/** Instrucción grande y centrada de los modales de recurso: «Sube el **archivo PDF** que quieres añadir». */
+/** Instrucción grande y centrada de los modales de recurso: «Sube el **archivo PDF** que quieres agregar». */
 export function InstruccionGrande({ antes, clave, despues }: { antes: string; clave: string; despues: string }) {
   return (
     <TextoResaltado className="text-center">

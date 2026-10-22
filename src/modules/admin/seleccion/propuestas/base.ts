@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react'
 import type { Candidato } from '../vacantes/detalle/components/data'
 import {
   CANDIDATURAS,
+  ESPERANDO_ACCION,
   VACANTES_UI,
   ajusteDe,
   cumplidosDe,
@@ -571,8 +572,13 @@ export type FiltrosBase = {
   origen: string
   // Entró en los últimos 30 días.
   recientes: boolean
-  // Espera algo de quien recluta en alguna vacante (la «acción requerida» del producto).
+  // Espera algo de quien recluta en alguna vacante (la «acción requerida» del producto): «Esperando acción».
   esperan: boolean
+  // 13 oct (reunión con la PM y el TL): la ubicación es país y ciudad, en ese orden; y en vez de los grupos de abajo
+  // (libres, descartadas, contratadas), dos casillas en «Filtros»: en algún proceso y posibles duplicados.
+  pais: string
+  enProceso: boolean
+  duplicados: boolean
   // Compararlas con una vacante: la IA dice qué tanto sirve cada una.
   paraVacante: string | null
   orden: Orden
@@ -588,6 +594,9 @@ export const SIN_FILTROS: FiltrosBase = {
   origen: 'todas',
   recientes: false,
   esperan: false,
+  pais: 'todas',
+  enProceso: false,
+  duplicados: false,
   paraVacante: null,
   orden: 'recientes',
   sentido: 'normal',
@@ -597,11 +606,14 @@ export const hayFiltros = (filtros: FiltrosBase) =>
   Boolean(filtros.texto.trim()) ||
   filtros.situacion !== 'todas' ||
   filtros.etiquetas.length > 0 ||
+  filtros.pais !== 'todas' ||
   filtros.ciudad !== 'todas' ||
   filtros.experiencia !== 'todas' ||
   filtros.origen !== 'todas' ||
   filtros.recientes ||
   filtros.esperan ||
+  filtros.enProceso ||
+  filtros.duplicados ||
   Boolean(filtros.paraVacante)
 
 // Las palabras que no buscan nada en una frase: «Analista con SQL en Medellín» busca «analista», «sql» y «medellín» (MC-29).
@@ -650,17 +662,25 @@ export type PersonaViva = Persona & {
 
 // Lo que cada candidatura espera del equipo, leído al momento; si después se la movió o se le escribió, ya se atendió y
 // deja de esperar (MC-19).
-const accionDe = (candidaturaId: string) => CANDIDATURAS.find((c) => c.id === candidaturaId)?.candidato.accion
-
+// Solo lo que espera al equipo («Esperando acción»): lo que le falta hacer a la persona, como agendar con Serena, no.
 function esperaDe(vivos: Proceso[], registro: Movimiento[]): PersonaViva['espera'] {
   for (const proceso of vivos) {
     if (proceso.estado !== 'En proceso' || !proceso.candidaturaId) continue
-    const accion = accionDe(proceso.candidaturaId)
+    const candidatura = CANDIDATURAS.find((c) => c.id === proceso.candidaturaId)
+    const accion = candidatura && ESPERANDO_ACCION(candidatura) ? candidatura.candidato.accion : undefined
     if (accion && !registro.some((movimiento) => movimiento.candidaturaId === proceso.candidaturaId))
       return { accion, vacante: proceso.vacante, candidaturaId: proceso.candidaturaId }
   }
   return undefined
 }
+
+// El país de una ciudad: la ubicación se filtra por país y después por ciudad (13 oct, PM). Lo que no está en la lista
+// es de Colombia, donde vive casi toda la base de la maqueta.
+const PAISES: Record<string, string> = { 'ciudad de mexico': 'México', monterrey: 'México', guadalajara: 'México', lima: 'Perú', santiago: 'Chile', quito: 'Ecuador' }
+export const paisDe = (ciudad: string) => PAISES[sinTildes(ciudad)] ?? 'Colombia'
+
+// Dónde vive, con su país, para la cabecera de la ficha: «Bogotá, Colombia».
+export const ubicacionDe = (ciudad: string) => (ciudad ? `${ciudad}, ${paisDe(ciudad)}` : 'Sin ciudad registrada')
 
 // Las personas con lo que hace falta para mostrarlas: sus procesos al día, su situación, si parece duplicada y, si se
 // está comparando con una vacante, qué tanto sirve.
@@ -688,7 +708,10 @@ export function filtrarBase(todas: PersonaViva[], filtros: FiltrosBase, sin?: ke
     if (pasa('situacion') && filtros.situacion === 'duplicados' && !persona.duplicadoDe) return false
     if (pasa('situacion') && filtros.situacion !== 'todas' && filtros.situacion !== 'duplicados' && persona.situacion !== filtros.situacion) return false
     if (pasa('etiquetas') && filtros.etiquetas.length && !filtros.etiquetas.every((etiqueta) => persona.etiquetas.includes(etiqueta))) return false
+    if (pasa('pais') && filtros.pais !== 'todas' && paisDe(persona.ciudad) !== filtros.pais) return false
     if (pasa('ciudad') && filtros.ciudad !== 'todas' && persona.ciudad !== filtros.ciudad) return false
+    if (pasa('enProceso') && filtros.enProceso && persona.situacion !== 'proceso') return false
+    if (pasa('duplicados') && filtros.duplicados && !persona.duplicadoDe) return false
     // Sin años registrados no cae en «Hasta 2 años» (MC-15).
     if (pasa('experiencia') && (filtros.experiencia === 'todas' ? false : persona.aniosDesconocidos || !enRango(persona.anios, filtros.experiencia))) return false
     if (pasa('origen') && filtros.origen !== 'todas' && persona.origen !== filtros.origen) return false
@@ -849,11 +872,13 @@ export function describirFiltros(filtros: FiltrosBase) {
     filtros.texto.trim() ? `«${filtros.texto.trim()}»` : null,
     filtros.situacion !== 'todas' ? (filtros.situacion === 'duplicados' ? 'Posibles duplicados' : SITUACION_TEXTO[filtros.situacion]) : null,
     ...filtros.etiquetas,
-    filtros.ciudad !== 'todas' ? filtros.ciudad : null,
+    filtros.ciudad !== 'todas' ? filtros.ciudad : filtros.pais !== 'todas' ? filtros.pais : null,
     filtros.experiencia !== 'todas' ? EXPERIENCIAS.find((una) => una.valor === filtros.experiencia)?.texto : null,
     filtros.origen !== 'todas' ? filtros.origen : null,
     filtros.recientes ? 'Entraron este mes' : null,
-    filtros.esperan ? 'Esperan algo de ti' : null,
+    filtros.esperan ? 'Esperando acción' : null,
+    filtros.enProceso ? 'En algún proceso' : null,
+    filtros.duplicados ? 'Posibles duplicados' : null,
     filtros.paraVacante ? `Para ${VACANTES_UI.find((una) => una.id === filtros.paraVacante)?.titulo ?? 'una vacante'}` : null,
   ].filter(Boolean)
   return partes.length ? partes.join(' · ') : 'Toda la base'

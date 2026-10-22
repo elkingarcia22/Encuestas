@@ -45,20 +45,20 @@ const GROUPS: { label: string; description: string; cases: AgentCase[] }[] = [
 ]
 
 const GUIDE = [
-  { title: 'Usa Orbit Flow para', text: 'trabajar sobre lo que tienes abierto: un registro, un campo, una selección o un dato. No te saca de la pantalla.' },
+  { title: 'Usa Orbit para', text: 'trabajar sobre lo que tienes abierto: un registro, un campo, una selección o un dato. No te saca de la pantalla.' },
   { title: 'Mejor el chat de Orbit cuando', text: 'la pregunta es abierta, cruza varios módulos o todavía no sabes en qué pantalla está la respuesta.' },
   { title: 'Reglas que no cambian', text: 'El panel dice qué está mirando · nada se guarda sin que lo apliques · todo se puede deshacer · lo que tiene impacto pide confirmación.' },
 ]
 
 const ANATOMY = [
-  { part: 'Cabecera', text: 'Orbe, «Orbit Flow» y cerrar. Nada más: el panel se abre y se cierra.' },
+  { part: 'Cabecera', text: 'Orbe, «Orbit» y cerrar. Nada más: el panel se abre y se cierra.' },
   { part: 'Contexto', text: 'Franja gris con lo que está mirando. Cambia si seleccionas otra cosa.' },
   { part: 'Pedido y respuesta', text: 'Burbuja gris de la persona; el agente responde en texto, sin burbuja.' },
   { part: 'Propuesta', text: 'Tarjeta «Actual / Propuesta» o bloque de resultado con fuentes.' },
   { part: 'Acciones', text: 'Pastillas: principal llena, secundaria con borde. Después, fila «Deshacer».' },
   { part: 'Atajos', text: '«Sobre este contenido»: dos o tres pedidos frecuentes para esa pantalla.' },
   { part: 'Caja para pedir cambios', text: 'Adjuntar, controles del caso (tono, alcance) y enviar.' },
-  { part: 'Estados', text: 'Abierto a 452px · cerrado, con «Orbit Flow» al final de los botones de la pantalla para volver a abrirlo. Entra y sale deslizándose por la derecha y la pantalla se ensancha con él: nunca aparece ni desaparece de golpe.' },
+  { part: 'Estados', text: 'Abierto a 452px · cerrado, con «Orbit» al final de los botones de la pantalla para volver a abrirlo. Entra y sale deslizándose por la derecha y la pantalla se ensancha con él: nunca aparece ni desaparece de golpe.' },
 ]
 
 // Design system › Agente contextual: casos de uso del panel del agente sobre pantallas del Workspace.
@@ -69,7 +69,7 @@ export function Component() {
     <PageShell>
       <PageHeader
         kicker="Design system · Orbit"
-        title="Orbit Flow"
+        title="Orbit"
         description="El agente que acompaña una pantalla del Workspace desde el borde derecho: entiende lo que tienes abierto, propone y actúa con tu permiso. Cada caso es un ejemplo navegable."
         media={<Orb className="size-14" />}
         actions={

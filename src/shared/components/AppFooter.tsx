@@ -3,38 +3,21 @@ import { useLocation } from 'react-router'
 import { Separator } from '@ubits/flux-ui'
 import { UbitsLogo } from '@/shared/components/UbitsLogo'
 import { notify } from '@/shared/components/notify'
-import { getSectionId } from '@/shared/layouts/nav-config'
 
 const LINKS = ['Términos y condiciones de uso de la plataforma', 'Política de privacidad']
 
-/**
- * Las pantallas donde **se está creando algo** tampoco lo llevan: son pantallas de trabajo que ocupan todo el alto
- * —índice, vista previa y barra de acciones—, así que el pie o empuja el contenido o aparece al final de un scroll
- * que no debería existir. Los legales siguen donde se consultan: listas y pantallas de detalle (Dave, 8-oct).
- */
-const CREACION = ['/lms-creator/crear-contenido', '/lms-creator/crear-ruta', '/lms-creator/agregar-', '/lms-creator/vista-colaborador']
-// Los resultados de un contenido tampoco: es una subvista, no un inicio (el jefe de Dave, 13-oct).
-const SIN_PIE = [...CREACION, /\/lms-creator\/contenidos\/[^/]+\/resultados/]
+// El pie solo vive en los inicios (regla «footer-solo-home», war room del 13-oct: Carlos se lo asignó a Cristian). En el
+// resto de pantallas —listas, detalles, creaciones, Suite AI— no existe, para que no choque con las barras fijas ni sume
+// un scroll que no debería existir. Antes era al revés: una lista de pantallas sin pie que crecía con cada caso.
+const INICIOS = ['/admin', '/portal-colaborador', '/design-system']
+const esInicio = (ruta: string) => INICIOS.includes(ruta.replace(/\/+$/, '') || '/')
 
-// En estos módulos el pie va solo en su inicio (la pantalla que abre el menú), no en los procesos (crear, editar, cargar)
-// ni en las vistas internas (resultados, comparativo, detalle): pedido de Elkin, 13-oct, para Encuestas y Objetivos.
-const SOLO_EN_EL_INICIO = [
-  '/admin/desempeno-cultura/encuestas',
-  '/admin/desempeno-cultura/objetivos',
-  '/portal-colaborador/desempeno-cultura/encuestas',
-  '/portal-colaborador/desempeno-cultura/objetivos',
-]
-const esVistaInterna = (ruta: string) => SOLO_EN_EL_INICIO.some((inicio) => ruta.startsWith(`${inicio}/`) && ruta !== `${inicio}/`)
-
-// Pie al final de cada pantalla: «Con la tecnología de UBITS» y los legales, todo en gris y centrado.
-// Suite AI no lo lleva (el chat y la voz ocupan toda la altura), ni Selección. Encuestas y Objetivos solo en su inicio.
-export function AppFooter() {
+// Pie de los inicios: «Con la tecnología de UBITS» y los legales, todo en gris y centrado. `siempre` es para las
+// demostraciones del design system que enseñan el marco con su pie.
+export function AppFooter({ siempre = false }: { siempre?: boolean }) {
   const { pathname } = useLocation()
-  if (getSectionId(pathname) === 'suite-ai' || esVistaInterna(pathname)) return null
-  if (SIN_PIE.some((ruta) => (typeof ruta === 'string' ? pathname.includes(ruta) : ruta.test(pathname)))) return null
-  // Selección no lo lleva (8 oct, Nicolás: «quitemos esto de todo lado en selección, solo va a estar en el home»).
   // Sin pie queda solo su aire: 24px debajo de lo último, también en páginas largas (con scroll se pierde el del marco).
-  if (pathname.startsWith('/admin/seleccion')) return <div aria-hidden="true" className="-mb-6 shrink-0 pb-6" />
+  if (!siempre && !esInicio(pathname)) return <div aria-hidden="true" className="-mb-6 shrink-0 pb-6" />
 
   return (
     // pb-6 con -mb-6: en páginas largas el margen de abajo del marco se pierde al hacer scroll; así el pie

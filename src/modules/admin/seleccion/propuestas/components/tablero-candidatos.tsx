@@ -9,12 +9,11 @@ import {
   Copy01Icon,
   FileImportIcon,
   LockIcon,
+  Mail01Icon,
   MoreHorizontalIcon,
   Search01Icon,
   Settings01Icon,
   Tick02Icon,
-  UserAccountIcon,
-  UserAdd01Icon,
   UserMultipleIcon,
   UserRemove01Icon,
   UserSwitchIcon,
@@ -65,13 +64,11 @@ import {
   KanbanOverlay,
   ScrollArea,
   ScrollBar,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Skeleton,
   Spinner,
+  Tabs,
+  TabsList,
+  TabsTrigger,
   Text,
   cn,
   Separator,
@@ -82,10 +79,9 @@ import { Hint } from '@/shared/components/Hint'
 import { notify } from '@/shared/components/notify'
 import { IconoIA } from '@/modules/design-system/ia/icono-ia'
 import {
+  ESPERA_AL_CANDIDATO,
+  ESPERANDO_ACCION,
   ESPERA_RESPUESTA,
-  cumplidosDe,
-  fueEmpleado,
-  pasoPorLaEmpresa,
   primeraEtapaDe,
   siguienteEtapaDe,
   tituloEtapa,
@@ -95,15 +91,19 @@ import {
   type VacanteUI,
   CANDIDATURAS,
 } from '../datos'
-import { plural } from '@/modules/design-system/patrones/formato'
 import { quienDe } from '../rechazos'
-import { QUIEN_MUEVE, useMovimientos } from '../movimientos'
+import { QUIEN_MUEVE, movimientosDe, useMovimientos, useSinInvitacion } from '../movimientos'
 import { simulado } from '../simular'
 import { diasDesdeQueAplico, resumenDeEvaluaciones } from '../perfil-candidato'
 import { delLote } from '../importacion'
-import { FiltroChip } from './filtro-chip'
+import { FiltroChip } from '@/modules/design-system/navegacion/filtro-chip'
 import type { Proceso, Transito } from './use-proceso'
-import { ErrorDeCarga, Esqueleto, LineaEsqueleto, useCargaConError } from './carga'
+import { ErrorDeCarga, Esqueleto, LineaEsqueleto, useCargaConError } from '@/modules/design-system/estados/carga'
+import { CifraAnimada } from './cifra-animada'
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react'
+import { CURVA, entrada } from './movimiento'
+import { Flotar, POP, RESORTE } from './animacion'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 // «Candidatos › Tablero Kanban de candidatos», completo, para las tres exploraciones (24 sep, Nicolás: «completa
 // tooodo el flujo… que lo que haya alrededor, casos de uso y demás, queden construidos»).
@@ -130,33 +130,41 @@ import { ErrorDeCarga, Esqueleto, LineaEsqueleto, useCargaConError } from './car
 type Columnas = Record<string, Candidatura[]>
 
 // 29 sep, reunión con Elkin: los filtros del tablero tenían demasiadas opciones (ex empleados con tres caminos, origen
-// con casillas). Quedan búsqueda, «Esperan respuesta» y «Ex empleados» como chip de encender y apagar. El origen se
-// fue el 8 oct (VP de producto: no se sabe por dónde llega cada persona).
+// con casillas). El origen se fue el 8 oct (VP de producto: no se sabe por dónde llega cada persona).
+// 13 oct (reunión con la PM y el TL): tres vistas del embudo, como pestañas del propio tablero —«Candidatos» (todos),
+// «Esperando acción» (lo que tiene que mover el equipo) y «En proceso» (lo que le falta hacer a la persona: la entrevista
+// con Serena, la psicométrica)— y la búsqueda. Sin «Ex empleados» («no es un filtro que me interese tener») ni «Cualquier
+// requisito» (la evaluación de CV da un puntaje, no cuenta requisitos) ni «Agregar candidatos»: a una vacante solo se
+// importan CVs; a alguien de la base se le postula desde Mis candidatos, donde están los filtros para buscarlo.
 // `lote`: quienes entraron con un lote de hojas de vida (1 oct, Nicolás: la gente de un lote se ve aquí, en el
 // tablero, no en la pestaña «CVs importados», que es solo el registro de las cargas). Llega desde «Ver a quiénes» del
 // lote y se quita con su chip.
-// `minCumple`: cuántos requisitos tiene que cumplir como mínimo (VA-24: con 300 en una etapa se empieza por las que más
-// cumplen). Null = cualquiera.
+export type VistaTablero = 'todos' | 'espera' | 'proceso'
 type Filtros = {
   busqueda: string
-  soloEspera: boolean
-  soloExEmpleados: boolean
+  vista: VistaTablero
   lote: { id: string; nombre: string } | null
-  minCumple: number | null
 }
 
-const SIN_FILTROS: Filtros = { busqueda: '', soloEspera: false, soloExEmpleados: false, lote: null, minCumple: null }
+const SIN_FILTROS: Filtros = { busqueda: '', vista: 'todos', lote: null }
+
+const EN_VISTA: Record<VistaTablero, (c: Candidatura) => boolean> = {
+  todos: () => true,
+  espera: ESPERANDO_ACCION,
+  proceso: ESPERA_AL_CANDIDATO,
+}
 
 // Cómo se ordena cada columna (VA-24). Por defecto, primero quien espera y después quien lleva más días: la prioridad del
-// tablero. Con mucha gente sirve más empezar por quien más cumple o por quien llegó último.
+// tablero. Con mucha gente sirve más empezar por el mejor puntaje (15 oct: el que dice la tarjeta; antes, cuántos
+// requisitos cumplía) o por quien llegó último.
 export type OrdenColumna = 'prioridad' | 'ajuste' | 'recientes'
 const ORDENES: { valor: OrdenColumna; texto: string }[] = [
   { valor: 'prioridad', texto: 'Primero quien espera' },
-  { valor: 'ajuste', texto: 'Más requisitos cumplidos' },
+  { valor: 'ajuste', texto: 'Mayor puntaje' },
   { valor: 'recientes', texto: 'Aplicaron más recientemente' },
 ]
-
-const CUALQUIERA = 'cualquiera'
+// El puntaje de la tarjeta, para ordenar: quien no tiene evaluaciones con puntaje va al final.
+const puntajeDe = (c: Candidatura) => resumenDeEvaluaciones(c, movimientosDe(c.id)).promedio ?? -1
 
 const personas = (n: number) => `${n} ${n === 1 ? 'persona' : 'personas'}`
 
@@ -181,17 +189,14 @@ export function useTablero(vacante: VacanteUI, proceso: Proceso) {
   const [orden, setOrden] = useState<Record<string, string[]>>({})
   const [criterio, setCriterio] = useState<Record<string, OrdenColumna>>({})
 
-  const activos =
-    Boolean(filtros.busqueda) || filtros.soloEspera || filtros.soloExEmpleados || filtros.lote !== null || filtros.minCumple !== null
+  const activos = Boolean(filtros.busqueda) || filtros.vista !== 'todos' || filtros.lote !== null
 
   const { dentro, enTransito, recien, nuevas } = proceso
 
   const columnas = useMemo(() => {
     const pasa = (c: Candidatura) => {
-      if (filtros.soloEspera && !ESPERA_RESPUESTA(c)) return false
-      if (filtros.soloExEmpleados && !fueEmpleado(c)) return false
+      if (!EN_VISTA[filtros.vista](c)) return false
       if (filtros.lote && !delLote(filtros.lote.id)(c)) return false
-      if (filtros.minCumple !== null && cumplidosDe(c.criterios) < filtros.minCumple) return false
       if (filtros.busqueda) {
         const texto = `${c.candidato.nombre} ${c.candidato.cargo} ${c.candidato.empresa}`.toLowerCase()
         if (!texto.includes(filtros.busqueda.toLowerCase())) return false
@@ -215,7 +220,7 @@ export function useTablero(vacante: VacanteUI, proceso: Proceso) {
       const como = criterio[etapa] ?? 'prioridad'
       const porCriterio = (a: Candidatura, b: Candidatura) =>
         como === 'ajuste'
-          ? cumplidosDe(b.criterios) - cumplidosDe(a.criterios) || prioridad(a, b)
+          ? puntajeDe(b) - puntajeDe(a) || prioridad(a, b)
           : como === 'recientes'
             ? diasDesdeQueAplico(a) - diasDesdeQueAplico(b) || prioridad(a, b)
             : prioridad(a, b)
@@ -254,18 +259,20 @@ export type Tablero = ReturnType<typeof useTablero>
 // ══════════════════════════════════════════════════════════════════════════════════════════════════════
 
 export function BarraTablero({
-  vacante,
   proceso,
   tablero,
-  onAgregar,
   inicio,
   fin,
+  enMarco = false,
+  vistas = true,
 }: {
-  vacante: VacanteUI
   proceso: Proceso
   tablero: Tablero
-  // Sin permiso para sumar gente (VA-11) no se pasa y el botón no aparece.
-  onAgregar?: () => void
+  // En la cabecera gris del marco «Candidatos»: sin el relleno propio, que ya lo pone el marco.
+  enMarco?: boolean
+  // Sin las vistas: en la página van arriba del marco, junto al cambio Lista/Tablero (`VistasTablero`), y aquí queda la
+  // búsqueda. A pantalla completa la barra lleva todo.
+  vistas?: boolean
   // A pantalla completa la barra es la única franja de arriba: el nombre de la vacante al principio y «Cerrar» al final
   // (8 oct, Nicolás: «ya ampliado no debería estar encerrado… un cerrar a la derecha arriba»).
   inicio?: ReactNode
@@ -273,32 +280,22 @@ export function BarraTablero({
 }) {
   const { filtros, cambiar } = tablero
   const { dentro } = proceso
-  const esperan = dentro.filter(ESPERA_RESPUESTA).length
-  const exEmpleados = dentro.filter(fueEmpleado).length
   const visibles = tablero.enOrden.length
-  // Cuántos requisitos pide la vacante (el máximo que tiene alguien evaluado) y cuántas personas cumplen al menos N.
-  const requisitos = Math.max(0, ...dentro.map((c) => c.criterios.length))
-  const alMenos = (n: number) => dentro.filter((c) => cumplidosDe(c.criterios) >= n).length
 
-  // Sin nadie en el proceso no hay qué buscar ni filtrar: solo la acción de sumar gente (VA-43).
+  // Sin nadie en el proceso no hay qué buscar ni filtrar (VA-43): a pantalla completa queda la franja con el nombre.
   if (!dentro.length && !proceso.rechazadas.length)
-    return vacante.estado !== 'Cerrada' && onAgregar ? (
+    return inicio || fin ? (
       <div className="flex flex-wrap items-center gap-2 px-5 py-3">
         {inicio}
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" onClick={onAgregar}>
-            <HugeiconsIcon icon={UserAdd01Icon} size={16} />
-            Agregar candidatos
-          </Button>
-          {fin}
-        </div>
+        <div className="ml-auto flex items-center gap-2">{fin}</div>
       </div>
     ) : null
 
   return (
-    <div className="flex flex-wrap items-center gap-2 px-5 py-3">
+    <div className={cn('flex flex-wrap items-center gap-x-3 gap-y-2', !enMarco && 'px-5 py-3')}>
       {inicio}
-      <InputGroup className="w-full sm:w-52">
+      {vistas ? <VistasTablero proceso={proceso} tablero={tablero} /> : null}
+      <InputGroup className={cn('w-full sm:w-52', !vistas && 'order-last sm:w-64')}>
         <InputGroupAddon>
           <HugeiconsIcon icon={Search01Icon} size={16} />
         </InputGroupAddon>
@@ -309,55 +306,6 @@ export function BarraTablero({
           aria-label="Buscar candidatos en el tablero"
         />
       </InputGroup>
-
-      <FiltroChip
-        activo={filtros.soloEspera}
-        onCambiar={(valor) => cambiar({ soloEspera: valor })}
-        icono={Alert02Icon}
-        texto="Esperan respuesta"
-        cuenta={esperan}
-        ayuda="Ver solo a quien espera una respuesta"
-      />
-
-      {/* El filtro que ya tiene la pestaña de hoy («Candidatos que han trabajado en la compañía anteriormente»), como
-          chip: prendido muestra solo a quien trabajó aquí. Si nadie en la vacante trabajó aquí, no aparece. */}
-      {exEmpleados || filtros.soloExEmpleados ? (
-        <FiltroChip
-          activo={filtros.soloExEmpleados}
-          onCambiar={(valor) => cambiar({ soloExEmpleados: valor })}
-          icono={UserAccountIcon}
-          texto="Ex empleados"
-          cuenta={exEmpleados}
-          ayuda="Ver solo a quien ya trabajó en la empresa"
-        />
-      ) : null}
-
-      {/* Sin filtro de origen (8 oct, VP de producto): todos aplican por el portal de empleo; de dónde vio cada persona
-          la vacante no se sabe y no se va a saber. */}
-
-      {/* Con mucha gente se empieza por quien más cumple (VA-24): «Cumplen los 4», «Al menos 3 de 4»… */}
-      {requisitos > 1 ? (
-        <Select
-          value={filtros.minCumple === null ? CUALQUIERA : String(filtros.minCumple)}
-          onValueChange={(valor) => cambiar({ minCumple: valor === CUALQUIERA ? null : Number(valor) })}
-        >
-          <SelectTrigger className="w-52" aria-label="Cuántos requisitos cumplen">
-            <SelectValue>
-              {(valor: string) =>
-                valor === CUALQUIERA ? 'Cualquier requisito' : Number(valor) === requisitos ? `Cumplen los ${requisitos}` : `Cumplen ${valor} de ${requisitos} o más`
-              }
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={CUALQUIERA}>Cualquier requisito</SelectItem>
-            {Array.from({ length: requisitos }, (_, i) => requisitos - i).map((n) => (
-              <SelectItem key={n} value={String(n)}>
-                {n === requisitos ? `Cumplen los ${requisitos}` : `Cumplen ${n} de ${requisitos} o más`} · {alMenos(n)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : null}
 
       {/* El lote solo sale cuando se llegó desde «Ver a quiénes»: prendido, con su «×» para volver a todo el tablero. */}
       {filtros.lote ? (
@@ -371,31 +319,51 @@ export function BarraTablero({
         />
       ) : null}
 
-      {tablero.activos ? (
-        <Button variant="ghost" onClick={tablero.limpiar}>
-          Quitar filtros
-        </Button>
-      ) : null}
-
-      {/* Cuántas quedan solo mientras se filtra: sin filtros, cada columna ya dice las suyas. */}
-      {tablero.activos ? (
-        <Text as="span" role="status" variant="muted" size="sm" className="tabular-nums">
-          {visibles} de {personas(dentro.length)}
-        </Text>
-      ) : null}
-      {/* El secundario, a la derecha. «Ampliar» ya no va aquí: flota en la esquina del propio tablero (8 oct). */}
-      <div className="ml-auto flex items-center gap-2">
-        {vacante.estado !== 'Cerrada' && onAgregar ? (
-          <Button variant="outline" onClick={onAgregar}>
-            <HugeiconsIcon icon={UserAdd01Icon} size={16} />
-            Agregar candidatos
+      {/* Cuántas quedan solo mientras se busca o se mira un lote: las pestañas ya dicen cuántas hay en cada vista. Sin las
+          vistas, la cuenta va a la izquierda del marco, como en la tabla del sistema. */}
+      {filtros.busqueda || filtros.lote ? (
+        <>
+          <Button variant="ghost" onClick={tablero.limpiar}>
+            Quitar filtros
           </Button>
-        ) : null}
-        {fin}
-      </div>
+          {vistas ? (
+            <Text as="span" role="status" variant="muted" size="sm" className="tabular-nums">
+              {visibles} de {personas(dentro.length)}
+            </Text>
+          ) : null}
+        </>
+      ) : null}
+      {fin ? <div className="ml-auto flex items-center gap-2">{fin}</div> : null}
     </div>
   )
 }
+
+// Las tres caras del embudo, como pestañas: todo, lo que espera al equipo y lo que espera a la persona. En el celular se
+// deslizan en vez de cortarse (VA-22). Sirven igual para el tablero y para la lista.
+export function VistasTablero({ proceso, tablero }: { proceso: Proceso; tablero: Tablero }) {
+  const cuantos = (vista: VistaTablero) => proceso.dentro.filter(EN_VISTA[vista]).length
+  return (
+    <Tabs value={tablero.filtros.vista} onValueChange={(valor) => tablero.cambiar({ vista: valor as VistaTablero })} className="min-w-0 max-w-full">
+      <TabsList variant="view" className="max-w-full overflow-x-auto">
+        {VISTAS.map((vista) => (
+          <TabsTrigger key={vista.valor} value={vista.valor}>
+            {vista.texto}
+            <Badge variant="secondary" className="tabular-nums">
+              <CifraAnimada valor={cuantos(vista.valor)} duracion={0.6} />
+            </Badge>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  )
+}
+
+const VISTAS: { valor: VistaTablero; texto: string }[] = [
+  // «Todos» y no «Candidatos»: el marco ya se llama así (15 oct).
+  { valor: 'todos', texto: 'Todos' },
+  { valor: 'espera', texto: 'Esperando acción' },
+  { valor: 'proceso', texto: 'En proceso' },
+]
 
 // ══════════════════════════════════════════════════════════════════════════════════════════════════════
 // El aviso de vacante cerrada y el pie con cómo se usa
@@ -406,16 +374,19 @@ export function AvisoVacanteCerrada({
   onReabrir,
   siguen = 0,
   onRechazarQuienesSiguen,
+  sinMargen = false,
 }: {
   vacante: VacanteUI
   onReabrir?: () => void
+  // Fuera del marco del tablero (en la vista «Lista»), sin el margen que lo separa del borde del marco.
+  sinMargen?: boolean
   // Quienes siguen en el proceso de la vacante cerrada: se les cierra con un rechazo y su correo (VA-10).
   siguen?: number
   onRechazarQuienesSiguen?: () => void
 }) {
   if (vacante.estado !== 'Cerrada') return null
   return (
-    <div className="px-5 pt-4">
+    <div className={sinMargen ? undefined : 'px-5 pt-4'}>
       <Alert>
         <HugeiconsIcon icon={LockIcon} size={16} />
         <AlertTitle>La vacante está cerrada</AlertTitle>
@@ -488,10 +459,8 @@ export function TableroColumnas({
   onMarcadas,
   abiertaId,
   onAbrir,
-  onAgregar,
   onImportar,
   accionesColumna,
-  accionEsperan,
   tope,
   onEditarEtapas,
   ampliado = false,
@@ -506,12 +475,9 @@ export function TableroColumnas({
   // La tarjeta cuya ficha está abierta: se marca en gris.
   abiertaId?: string | null
   onAbrir: (candidatura: Candidatura) => void
-  onAgregar: (etapa?: string) => void
   onImportar: () => void
   // Lo propio de cada exploración en el menú de la columna («Ver en el pipeline», «Revisar a quien espera»…).
   accionesColumna?: (etapa: EtapaVacante, gente: Candidatura[]) => ReactNode
-  // Junto a «N esperan una respuesta»: el atajo para ir a resolverlo (la 3 manda a Revisar).
-  accionEsperan?: { etiqueta: string; onClick: (etapa: string) => void }
   // Cuántas tarjetas se ven por columna antes de mandar al resto (la 2 corta en diez, como Greenhouse).
   tope?: Tope
   // Las columnas son las etapas de la vacante (decisión 11: se configuran por vacante): se cambian desde aquí.
@@ -530,6 +496,15 @@ export function TableroColumnas({
   // de cambiar de columna, la tarjeta se queda ahí al menos 120 ms: corta el bucle y nadie cruza una columna tan rápido.
   const arrastrada = useRef<string | null>(null)
   const ultimoCambioDeColumna = useRef(0)
+  // La que se acaba de soltar no vuela: el tablero ya la dejó en su lugar. Medio segundo después, vuelve a volar (si una
+  // ventana pide decidir antes de moverla, al confirmar sí vuela a su etapa).
+  const [soltada, setSoltada] = useState<string | null>(null)
+  useEffect(() => {
+    if (!soltada) return
+    const pausa = window.setTimeout(() => setSoltada(null), 600)
+    return () => window.clearTimeout(pausa)
+  }, [soltada])
+  const volar = (id: string) => arrastre === null && soltada !== id
   const { dentro, rechazadas } = proceso
   // Las columnas que se abrieron enteras con «Ver N más» (cuando el tope no manda a otra vista).
   const [enteras, setEnteras] = useState<string[]>([])
@@ -551,24 +526,22 @@ export function TableroColumnas({
     return (
       <Empty className="h-full py-14">
         <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <HugeiconsIcon icon={UserMultipleIcon} size={24} />
+          <EmptyMedia variant="default">
+            <Flotar>
+              <ImagenGlass nombre="glass-profile" />
+            </Flotar>
           </EmptyMedia>
           <EmptyTitle>Todavía no hay nadie en el proceso</EmptyTitle>
           <EmptyDescription>
             {vacante.estado === 'Borrador'
-              ? 'Mientras esté en borrador no recibe aplicaciones. Puedes traer gente de tu base o de un lote de CVs.'
+              ? 'Mientras esté en borrador no recibe aplicaciones. Puedes importar CVs de gente que no está en tu base.'
               : vacante.estado === 'Cerrada'
                 ? 'La vacante se cerró sin nadie en el proceso.'
-                : `Las aplicaciones entran a «${tituloEtapa(primeraEtapaDe(vacante.etapas))}». También puedes traer gente de tu base o de un lote de CVs.`}
+                : `Las aplicaciones entran a «${tituloEtapa(primeraEtapaDe(vacante.etapas))}». También puedes importar CVs; a alguien de tu base se le postula desde Mis candidatos.`}
           </EmptyDescription>
         </EmptyHeader>
         {!soloLectura ? (
           <EmptyContent className="flex-row! justify-center gap-2">
-            <Button variant="outline" onClick={() => onAgregar()}>
-              <HugeiconsIcon icon={UserAdd01Icon} size={16} />
-              Agregar desde Mis candidatos
-            </Button>
             <Button onClick={onImportar}>
               <HugeiconsIcon icon={FileImportIcon} size={16} />
               Importar CVs
@@ -584,8 +557,10 @@ export function TableroColumnas({
     return (
       <Empty className="h-full py-14">
         <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <HugeiconsIcon icon={Search01Icon} size={24} />
+          <EmptyMedia variant="default">
+            <Flotar>
+              <ImagenGlass nombre="glass-search" />
+            </Flotar>
           </EmptyMedia>
           <EmptyTitle>Nadie coincide con lo que buscas</EmptyTitle>
           <EmptyDescription>Prueba con otra palabra o quita algún filtro.</EmptyDescription>
@@ -634,13 +609,12 @@ export function TableroColumnas({
       onMarcadas={onMarcadas}
       abiertaId={abiertaId ?? null}
       onAbrir={onAbrir}
-      onAgregar={onAgregar}
       accionesColumna={accionesColumna}
-      accionEsperan={accionEsperan}
       tope={tope}
       entera={enteras.includes(etapa.id)}
       onAlternarEntera={() => alternarEntera(etapa.id)}
       onEditarEtapas={onEditarEtapas}
+      volar={volar}
     />
   ))
 
@@ -648,6 +622,8 @@ export function TableroColumnas({
     // Con desplazamiento propio en las dos direcciones: cinco o seis etapas no caben siempre, y una columna llena no
     // puede empujar la página entera (la barra horizontal quedaría lejísimos).
     <ScrollArea className="h-full w-full">
+      {/* Un solo grupo para que una tarjeta pueda volar de una columna a otra. */}
+      <LayoutGroup id={`tablero-${vacante.id}`}>
       <div className="p-5">
         {soloLectura ? (
           <div className="grid items-start gap-3" style={rejilla}>
@@ -688,8 +664,14 @@ export function TableroColumnas({
               ultimoCambioDeColumna.current = 0
               setArrastre(recortadas)
             }}
-            onDragEnd={() => setArrastre(null)}
-            onDragCancel={() => setArrastre(null)}
+            onDragEnd={() => {
+              setSoltada(arrastrada.current)
+              setArrastre(null)
+            }}
+            onDragCancel={() => {
+              setSoltada(arrastrada.current)
+              setArrastre(null)
+            }}
             onValueCommit={(soltadas, meta) => {
               if (meta.kind !== 'item') return
               tablero.ordenar(meta.overContainer, (soltadas[meta.overContainer] ?? []).map((c) => c.id))
@@ -705,6 +687,7 @@ export function TableroColumnas({
           </Kanban>
         )}
       </div>
+      </LayoutGroup>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
   )
@@ -728,18 +711,19 @@ function Columna({
   onMarcadas,
   abiertaId,
   onAbrir,
-  onAgregar,
   accionesColumna,
-  accionEsperan,
   tope,
   entera,
   onAlternarEntera,
   onEditarEtapas,
+  volar,
 }: {
   vacante: VacanteUI
   proceso: Proceso
   etapa: EtapaVacante
   indice: number
+  // Qué tarjetas vuelan al cambiar de etapa (todas menos la que se está arrastrando o se acaba de soltar).
+  volar: (id: string) => boolean
   // Abierta entera con «Ver N más» (solo cuando el tope no manda a otra vista).
   entera: boolean
   onAlternarEntera: () => void
@@ -760,13 +744,10 @@ function Columna({
   onMarcadas: (ids: string[]) => void
   abiertaId: string | null
   onAbrir: (candidatura: Candidatura) => void
-  onAgregar: (etapa?: string) => void
   accionesColumna?: (etapa: EtapaVacante, gente: Candidatura[]) => ReactNode
-  accionEsperan?: { etiqueta: string; onClick: (etapa: string) => void }
   tope?: Tope
   onEditarEtapas?: () => void
 }) {
-  const esperan = gente.filter(ESPERA_RESPUESTA).length
   const fuera = proceso.rechazadas.filter((r) => r.candidatura.etapa === etapa.id)
   const todasMarcadas = todas.length > 0 && todas.every((c) => marcadas.includes(c.id))
   const resto = total - gente.length
@@ -778,9 +759,14 @@ function Columna({
       ))}
     </Esqueleto>
   ) : gente.length ? (
-    gente.map((candidatura) => (
+    // Las que ya no pasan un filtro se van con su salida; las demás se reacomodan.
+    <AnimatePresence initial={false}>
+    {gente.map((candidatura, puesto) => (
       <Tarjeta
         key={candidatura.id}
+        volar={volar(candidatura.id)}
+        // Entran en diagonal: columna por columna y, dentro de cada una, de arriba abajo.
+        orden={indice + puesto}
         vacante={vacante}
         proceso={proceso}
         candidatura={candidatura}
@@ -794,10 +780,16 @@ function Columna({
           onMarcadas(marcada ? [...marcadas, candidatura.id] : marcadas.filter((id) => id !== candidatura.id))
         }
       />
-    ))
+    ))}
+    </AnimatePresence>
   ) : (
     // La columna vacía sigue siendo un lugar donde soltar: lo dice, sin dibujar una caja aparte.
-    <div className="flex min-h-24 flex-col items-center justify-center gap-1 px-3 text-center">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, delay: 0.1, ease: CURVA }}
+      className="flex min-h-24 flex-col items-center justify-center gap-1 px-3 text-center"
+    >
       <Text as="span" variant="muted" size="sm">
         {filtrando && enProceso ? 'Nadie con esos filtros' : 'Nadie en esta etapa'}
       </Text>
@@ -806,11 +798,18 @@ function Columna({
           Suelta aquí una tarjeta para moverla
         </Text>
       ) : null}
-    </div>
+    </motion.div>
   )
 
   const cuerpo = (
-    // `data-etapa`: Orbit Flow trae esta columna a la vista con «Ver» (OF-19).
+    // Las columnas entran de izquierda a derecha, en el orden del proceso; las tarjetas las siguen en diagonal.
+    <motion.div
+      className="h-full"
+      initial={{ opacity: 0, x: 18 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5, delay: Math.min(indice, 8) * 0.05, ease: CURVA }}
+    >
+    {/* `data-etapa`: Orbit Flow trae esta columna a la vista con «Ver» (OF-19). */}
     <Frame spacing="sm" className="h-full" data-etapa={etapa.id}>
       <FrameHeader className="flex flex-row items-center gap-2">
         <Text as="span" variant="muted" size="sm" className="tabular-nums">
@@ -828,7 +827,8 @@ function Columna({
           className="ms-auto shrink-0 tabular-nums"
           aria-label={filtrando ? `${total} de ${enProceso} en esta etapa` : `${total} en esta etapa`}
         >
-          {total}
+          {/* Cuenta hacia arriba o hacia abajo cuando alguien entra o sale de la etapa. */}
+          <CifraAnimada valor={total} duracion={0.45} />
         </Badge>
         <DropdownMenu>
           <Hint label="Acciones de la etapa" side="top">
@@ -852,12 +852,6 @@ function Columna({
                 <HugeiconsIcon icon={Tick02Icon} size={16} />
                 {todasMarcadas ? 'Quitar la selección de esta etapa' : `Seleccionar a ${todas.length === 1 ? 'la persona' : `las ${todas.length}`} de esta etapa`}
               </DropdownMenuItem>
-              {arrastrable ? (
-                <DropdownMenuItem onClick={() => onAgregar(etapa.id)}>
-                  <HugeiconsIcon icon={UserAdd01Icon} size={16} />
-                  Agregar candidatos a esta etapa
-                </DropdownMenuItem>
-              ) : null}
               {accionesColumna?.(etapa, gente)}
             </DropdownMenuGroup>
             {todas.length > 1 ? (
@@ -890,19 +884,8 @@ function Columna({
         </DropdownMenu>
       </FrameHeader>
 
-      {/* Cuántos esperan en la etapa: dice dónde se atasca el proceso sin contar tarjetas. */}
-      {esperan ? (
-        <div className="mx-3 -mt-1 mb-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <Badge variant="warning-light" className="tabular-nums">
-            {esperan} {esperan === 1 ? 'espera' : 'esperan'}
-          </Badge>
-          {accionEsperan ? (
-            <Button variant="link" size="sm" className="h-auto! p-0!" onClick={() => accionEsperan.onClick(etapa.id)}>
-              {accionEsperan.etiqueta}
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
+      {/* Sin «N esperan» bajo el nombre de la etapa (13 oct, información repetida): quien espera ya se marca en su
+          tarjeta y se filtra con «Esperan respuesta». */}
 
       {arrastrable ? (
         <KanbanColumnContent value={etapa.id} className="flex min-h-24 flex-col gap-2 p-0.5">
@@ -935,6 +918,7 @@ function Columna({
 
       <Rechazados etapa={etapa} fuera={fuera} abiertaId={abiertaId} onAbrir={(rechazada) => onAbrir(rechazada.candidatura)} />
     </Frame>
+    </motion.div>
   )
 
   return arrastrable ? <KanbanColumn value={etapa.id}>{cuerpo}</KanbanColumn> : <div>{cuerpo}</div>
@@ -1034,11 +1018,8 @@ const soloAqui = {
   onKeyDown: (evento: { stopPropagation: () => void }) => evento.stopPropagation(),
 }
 
-// Cuatro líneas, siempre las mismas en todas las tarjetas para que la columna se lea pareja: quién es, qué hace hoy,
-// cuánto cumple (y si espera o es nueva), y cuánto lleva en la etapa. Mientras se mueve, la última dice «Pasando a…»
-// y después «Pasó a…».
-// La silueta de la tarjeta: las mismas cuatro líneas en los mismos altos (quién es y qué hace hoy, cuánto cumple, sus
-// evaluaciones y el pie), dentro del mismo marco. Si la tarjeta cambia de forma, esto cambia con ella.
+// La silueta de la tarjeta: las mismas líneas en los mismos altos (quién es y qué hace hoy, y el puntaje con los días en
+// la etapa), dentro del mismo marco. Si la tarjeta cambia de forma, esto cambia con ella (15 oct: de cinco líneas a tres).
 function TarjetaCargando({ conCasilla }: { conCasilla: boolean }) {
   return (
     <Frame variant="ghost" spacing="sm" className="p-0">
@@ -1054,12 +1035,8 @@ function TarjetaCargando({ conCasilla }: { conCasilla: boolean }) {
             <LineaEsqueleto tamano="chico" ancho="w-full" />
           </div>
         </div>
-        <div className="flex h-6 items-center">
-          <Skeleton className="h-5 w-24" />
-        </div>
-        <LineaEsqueleto ancho="w-3/5" />
         <div className="-mb-1 flex min-h-6 flex-col justify-center">
-          <LineaEsqueleto tamano="chico" ancho="w-4/5" />
+          <LineaEsqueleto ancho="w-1/2" />
         </div>
       </FramePanel>
     </Frame>
@@ -1077,7 +1054,14 @@ function Tarjeta({
   nueva,
   onAbrir,
   onMarcar,
+  orden = 0,
+  volar = true,
 }: {
+  // En qué turno entra al aparecer (13 oct, PM: más movimiento): las tarjetas entran una tras otra.
+  orden?: number
+  // Si vuela a su nueva etapa al moverse. No mientras se arrastra ni justo al soltar: de eso se encarga el tablero, y
+  // las dos cosas a la vez se pelean.
+  volar?: boolean
   vacante: VacanteUI
   proceso: Proceso
   candidatura: Candidatura
@@ -1089,18 +1073,15 @@ function Tarjeta({
   onAbrir: () => void
   onMarcar: (marcada: boolean) => void
 }) {
-  const { candidato, criterios, dias } = candidatura
-  const cumple = cumplidosDe(criterios)
-  // El ajuste con color, como en la lista de la 1: verde si cumple todo, ámbar desde la mitad, neutro por debajo.
-  const ajuste = cumple === criterios.length ? 'success-light' : cumple * 2 >= criterios.length ? 'warning-light' : 'outline'
-  const espera = ESPERA_RESPUESTA(candidatura)
+  const { candidato, dias } = candidatura
+  // Solo lo que espera al equipo: lo que le falta hacer a la persona (agendar con Serena) se ve en «En proceso».
+  const espera = ESPERANDO_ACCION(candidatura)
   const moviendo = transito?.tipo === 'moviendo'
-  // Sus evaluaciones en esta vacante (las mismas cifras de su ficha) y cuándo aplicó.
+  // Su puntaje en esta vacante: el promedio de sus evaluaciones, con las mismas cifras de su ficha.
   const movimientos = useMovimientos(candidatura.id)
   const evaluaciones = useMemo(() => resumenDeEvaluaciones(candidatura, movimientos), [candidatura, movimientos])
-  const aplico = diasDesdeQueAplico(candidatura)
-  const cuandoAplico =
-    candidatura.importada || candidatura.postulada ? 'Entró hoy' : aplico === 1 ? 'Aplicó ayer' : `Aplicó hace ${aplico} días`
+  const cuantoAqui =
+    candidatura.importada || candidatura.postulada ? 'Entró hoy' : dias === 0 ? 'Llegó hoy aquí' : `${dias} ${dias === 1 ? 'día' : 'días'} aquí`
 
   // La tarjeta abierta se trae a la vista: al recorrer con J/K o con las flechas de la ficha puede estar en una
   // columna que no se ve.
@@ -1109,7 +1090,22 @@ function Tarjeta({
     if (abierta) caja.current?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
   }, [abierta])
 
+  const aparece = entrada(orden, 8)
   const panel = (
+    <motion.div
+      initial={aparece.initial}
+      animate={aparece.animate}
+      // Cuando cambia de etapa con el menú, desde su ficha, en lote o con Orbit Flow, la tarjeta vuela de una columna a la
+      // otra y las demás se corren para hacerle sitio (15 oct, glow up de movimiento): se ve a dónde se fue.
+      layout={volar ? 'position' : false}
+      layoutId={volar ? `tarjeta-${candidatura.id}` : undefined}
+      transition={{ ...aparece.transition, layout: RESORTE }}
+      // Al filtrar, la que ya no entra se encoge y se va; las demás suben a ocupar su lugar.
+      exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.16, ease: CURVA } }}
+      // Se levanta un poco al pasar el cursor y cede al apretar: se siente que se puede tomar.
+      whileHover={arrastrable ? { y: -2, transition: { duration: 0.18, ease: CURVA } } : undefined}
+      whileTap={{ scale: 0.985, transition: { duration: 0.12 } }}
+    >
     <Frame ref={caja} variant="ghost" spacing="sm" className="p-0">
       <FramePanel
         aria-busy={moviendo || undefined}
@@ -1145,73 +1141,35 @@ function Tarjeta({
               </Text>
             )}
           </div>
+          {/* El menú arriba, junto al nombre: abajo queda solo cómo va. */}
+          <MenuTarjeta vacante={vacante} proceso={proceso} candidatura={candidatura} arrastrable={arrastrable} onAbrir={onAbrir} />
         </div>
 
-        <div className="flex h-6 items-center gap-1.5">
-          {/* Cuántos requisitos de la vacante cumple, según la IA al leer su hoja de vida: lleva el icono de IA y lo dice
-              con palabras («4/4» solo no se entendía, 24 sep; «Cumple 0/4» tampoco decía qué contaba, 1 oct: «¿qué es
-              eso?»). El color: verde si cumple todos, ámbar desde la mitad, gris por debajo. El detalle, al pasar el
-              cursor. */}
-          <Hint
-            label={
-              criterios.length
-                ? `Cumple ${cumple} de ${criterios.length} requisitos de la vacante, según la IA. En su ficha está la evidencia de cada uno.`
-                : 'La vacante no tiene requisitos: la IA no tiene contra qué medir. Se agregan desde «Editar».'
-            }
-            side="top"
-          >
-            {/* Una vacante sin requisitos no tiene contra qué medir: se dice en gris, no «0 de 0» en verde (VA-42). */}
-            {criterios.length ? (
-              <Badge variant={ajuste} className="shrink-0 tabular-nums" aria-label={`Cumple ${cumple} de ${criterios.length} requisitos, según la IA`}>
-                <IconoIA />
-                {cumple} de {criterios.length} {plural(criterios.length, 'requisito', 'requisitos')}
+        {/* 15 oct, Nicolás: «esto tiene demasiada información». La tarjeta dice quién es, de dónde viene y cómo va; lo
+            demás está en su ficha. Salieron el «N de 4 requisitos» (13 oct, la PM: «la rúbrica que vota la evaluación
+            de CV no es Camila cumple 5 de los 10 requerimientos»: da un puntaje), cuántas evaluaciones lleva, cuándo
+            aplicó y si fue empleado. Lo único con color de aviso sigue siendo «Esperando acción». */}
+        {/* Aparecen con un pequeño rebote cuando llegan (se movió y ahora espera algo, o acaba de entrar). */}
+        <AnimatePresence initial={false}>
+          {moviendo || transito?.tipo === 'fallo' || transito?.tipo === 'movida' ? null : nueva ? (
+            <motion.span key="nueva" {...POP} className="flex w-fit max-w-full origin-left">
+              <Badge variant="info-light" className="max-w-full truncate">
+                {nueva === 'volvio' ? 'Volvió' : 'Nueva'}
               </Badge>
-            ) : (
-              <Badge variant="secondary" className="shrink-0">
-                Sin requisitos para medir
-              </Badge>
-            )}
-          </Hint>
-          {nueva ? (
-            <Badge variant="info-light" className="min-w-0 truncate">
-              {nueva === 'volvio' ? 'Volvió' : 'Nueva'}
-            </Badge>
+            </motion.span>
           ) : espera ? (
-            <Hint label={candidato.accion} side="top">
-              <Badge variant="warning-light" className="min-w-0 truncate">
-                Espera
-              </Badge>
-            </Hint>
+            <motion.span key="espera" {...POP} className="flex w-fit max-w-full origin-left">
+              <Hint label={candidato.accion} side="top">
+                <Badge variant="warning-light" className="max-w-full truncate">
+                  Esperando acción
+                </Badge>
+              </Hint>
+            </motion.span>
           ) : null}
-        </div>
+        </AnimatePresence>
 
-        {/* Sus evaluaciones: el promedio de las que tienen puntaje y cuántas lleva. El detalle, al pasar el cursor. */}
-        <Hint
-          label={
-            evaluaciones.puntajes.length
-              ? `Promedio de ${evaluaciones.puntajes.map((uno) => `${uno.etapa} (${uno.puntaje})`).join(', ')}. El detalle está en cada etapa, en el «Resumen» de su ficha.`
-              : evaluaciones.cuantas
-                ? 'Sus evaluaciones no tienen puntaje sobre 100. El detalle está en cada etapa, en el «Resumen» de su ficha.'
-                : 'Todavía no tiene evaluaciones en esta vacante.'
-          }
-          side="top"
-        >
-          {/* Sin cortar: en columnas angostas baja a una segunda línea antes que esconder la mitad. */}
-          <Text as="span" variant="muted" size="sm" className="block w-fit max-w-full tabular-nums">
-            {/* Cada dato entero: si no cabe, baja completo a la segunda línea. */}
-            {evaluaciones.promedio !== null ? (
-              <>
-                <span className="whitespace-nowrap">Promedio {evaluaciones.promedio}/100</span> ·{' '}
-              </>
-            ) : null}
-            <span className="whitespace-nowrap">
-              {evaluaciones.cuantas === 0 ? 'Sin evaluaciones todavía' : evaluaciones.cuantas === 1 ? '1 evaluación' : `${evaluaciones.cuantas} evaluaciones`}
-            </span>
-          </Text>
-        </Hint>
-
-        {/* El pie: cuándo aplicó y cuánto lleva aquí (o «Pasando a…» / «Pasó a…» mientras se mueve) y el menú. */}
-        <div className="-mb-1 flex min-h-6 min-w-0 items-center gap-1 text-xs">
+        {/* Cómo va: su puntaje y cuánto lleva en la etapa (o «Pasando a…» / «Pasó a…» mientras se mueve). */}
+        <div className="-mb-1 flex min-h-6 min-w-0 items-center text-xs">
           <span className="flex min-w-0 flex-1 items-center">
             {moviendo ? (
               <span role="status" className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
@@ -1220,46 +1178,55 @@ function Tarjeta({
               </span>
             ) : transito?.tipo === 'fallo' ? (
               // No se guardó: sigue en esta columna, y la tarjeta lo dice mientras el aviso ofrece «Reintentar».
-              <span role="status" className="flex min-w-0 items-center">
+              <motion.span role="status" {...POP} className="flex min-w-0 origin-left items-center">
                 <Badge variant="destructive-outline" className="min-w-0">
                   <HugeiconsIcon icon={Alert02Icon} size={12} aria-hidden />
                   <span className="truncate">No se pudo mover</span>
                 </Badge>
-              </span>
+              </motion.span>
             ) : transito?.tipo === 'movida' ? (
-              <span role="status" className="flex min-w-0 items-center">
+              <motion.span role="status" {...POP} className="flex min-w-0 origin-left items-center">
                 {/* La movió otra persona del equipo (VA-23): se dice quién, para que nadie la mueva encima sin saberlo. */}
-                <Badge variant={transito.por ? 'info-light' : 'success-light'} className="min-w-0 animate-in fade-in zoom-in-95 duration-300">
+                <Badge variant={transito.por ? 'info-light' : 'success-light'} className="min-w-0">
                   <HugeiconsIcon icon={transito.por ? UserSwitchIcon : Tick02Icon} size={12} aria-hidden />
                   <span className="truncate">
                     {transito.por ? `${transito.por} la movió a` : transito.atras ? 'Volvió a' : 'Pasó a'} {tituloEtapa(transito.destino)}
                   </span>
                 </Badge>
-              </span>
+              </motion.span>
             ) : (
-              <Text as="span" variant="muted" size="xs" className="min-w-0">
-                {fueEmpleado(candidatura) ? (
-                  <>
-                    <span className="whitespace-nowrap">
-                      {pasoPorLaEmpresa(candidatura.personaId, candidatura.candidato.cargo)?.tipo === 'interno' ? 'Interno' : 'Ex empleado'}
-                    </span>{' '}
-                    ·{' '}
-                  </>
-                ) : null}
-                <span className="whitespace-nowrap">{cuandoAplico}</span>
-                {candidatura.importada || candidatura.postulada ? null : (
-                  <>
-                    {' '}·{' '}
-                    <span className="whitespace-nowrap">{dias === 0 ? 'llegó hoy aquí' : `${dias} ${dias === 1 ? 'día' : 'días'} aquí`}</span>
-                  </>
-                )}
+              <Text as="span" variant="muted" size="sm" className="min-w-0 tabular-nums">
+                {/* El puntaje, con de qué sale al pasar el cursor; sin evaluaciones con puntaje, se dice así. */}
+                <Hint
+                  label={
+                    evaluaciones.puntajes.length
+                      ? `Promedio de ${evaluaciones.puntajes.map((uno) => `${uno.etapa} (${uno.puntaje})`).join(', ')}. El detalle está en cada etapa, en el «Resumen» de su ficha.`
+                      : 'Todavía no tiene evaluaciones con puntaje en esta vacante.'
+                  }
+                  side="top"
+                >
+                  <span className="whitespace-nowrap">
+                    {evaluaciones.promedio !== null ? (
+                      <>
+                        Puntaje{' '}
+                        <Text as="span" size="sm" weight="medium">
+                          {/* Sube hasta su valor al llegar, como las cifras de arriba (13 oct, PM: «que esos numeritos se muevan»). */}
+                          <CifraAnimada valor={evaluaciones.promedio} duracion={0.7} />
+                        </Text>
+                      </>
+                    ) : (
+                      'Sin puntaje'
+                    )}
+                  </span>
+                </Hint>{' '}
+                · <span className="whitespace-nowrap">{cuantoAqui}</span>
               </Text>
             )}
           </span>
-          <MenuTarjeta vacante={vacante} proceso={proceso} candidatura={candidatura} arrastrable={arrastrable} onAbrir={onAbrir} />
         </div>
       </FramePanel>
     </Frame>
+    </motion.div>
   )
 
   if (!arrastrable) {
@@ -1277,7 +1244,7 @@ function Tarjeta({
     <KanbanItem
       value={candidatura.id}
       /* Con «Espera», también qué espera (VA-40): el globo solo abre con el cursor. */
-      aria-label={`${candidatura.candidato.nombre}, ${tituloEtapa(candidatura.etapa)}${candidatura.criterios.length ? `, cumple ${cumplidosDe(candidatura.criterios)} de ${candidatura.criterios.length} requisitos` : ''}${espera && candidato.accion ? `, espera: ${candidato.accion}` : ''}. Enter abre su ficha; barra espaciadora para moverla.`}
+      aria-label={`${candidatura.candidato.nombre}, ${tituloEtapa(candidatura.etapa)}${evaluaciones.promedio !== null ? `, puntaje ${evaluaciones.promedio}` : ''}${espera && candidato.accion ? `, espera: ${candidato.accion}` : ''}. Enter abre su ficha; barra espaciadora para moverla.`}
       onKeyDown={(evento) => {
         if (evento.key === 'Enter') {
           evento.preventDefault()
@@ -1293,7 +1260,8 @@ function Tarjeta({
 
 // El menú de la tarjeta: todo lo que se puede hacer con una persona sin abrir su ficha, y la forma de moverla sin
 // arrastrar.
-function MenuTarjeta({
+// También es el «⋯» de cada fila en la vista «Lista» de la vacante (`lista-candidatos.tsx`).
+export function MenuTarjeta({
   vacante,
   proceso,
   candidatura,
@@ -1310,6 +1278,8 @@ function MenuTarjeta({
   const siguiente = siguienteEtapaDe(vacante.etapas, candidatura.etapa)
   const moviendo = proceso.enTransito.has(candidatura.id)
   const moverA = (destino: string) => proceso.pedirMover([{ candidatura, destino }])
+  // Entró a una etapa con IA sin invitación («Solo moverla» o sin créditos): se le envía desde aquí (13 oct, PM).
+  const sinInvitacion = useSinInvitacion(candidatura)
 
   return (
     <span {...soloAqui} className="-mr-1 flex shrink-0">
@@ -1326,6 +1296,12 @@ function MenuTarjeta({
               <HugeiconsIcon icon={ViewIcon} size={16} />
               Ver ficha
             </DropdownMenuItem>
+            {arrastrable && sinInvitacion ? (
+              <DropdownMenuItem disabled={moviendo} onClick={() => proceso.pedirInvitacion(candidatura)}>
+                <HugeiconsIcon icon={Mail01Icon} size={16} />
+                Enviar la invitación…
+              </DropdownMenuItem>
+            ) : null}
             {arrastrable && siguiente ? (
               <DropdownMenuItem disabled={moviendo} onClick={() => moverA(siguiente)}>
                 <HugeiconsIcon icon={ArrowRight01Icon} size={16} />

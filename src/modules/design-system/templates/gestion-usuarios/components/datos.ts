@@ -1,4 +1,4 @@
-import { generador, isoHaceDias } from '../../../patrones/formato'
+import { generador, isoHaceDias, plural } from '../../../patrones/formato'
 import { GESTION_USUARIOS } from '../../admin-compartido/rutas'
 
 // Template «Gestión de usuarios»: calca /admin-hr/users de la plataforma de hoy (recorrido del
@@ -169,9 +169,9 @@ export const MASIVAS: Record<AccionMasiva, { titulo: string; menu: string; descr
     menu: 'Crear varios usuarios',
     descripcion:
       'Llena los campos requeridos para crear nuevos usuarios en el sistema, recuerda completar todos los campos para una mejor experiencia. Los campos de área y líder son necesarios para crear tu organigrama.',
-    boton: (n) => `Crear ${n} usuarios`,
-    enCurso: (n) => `Creando ${n} usuarios`,
-    hecho: (n) => `Se crearon ${n} usuarios`,
+    boton: (n) => `Crear ${n} ${plural(n, 'usuario', 'usuarios')}`,
+    enCurso: (n) => `Creando ${n} ${plural(n, 'usuario', 'usuarios')}`,
+    hecho: (n) => `${plural(n, 'Se creó', 'Se crearon')} ${n} ${plural(n, 'usuario', 'usuarios')}`,
     columnas: ['Username', 'Nombres', 'Apellidos', 'Correo', 'Área', 'Rol'],
     archivo: 'usuarios-cohorte-septiembre.csv',
   },
@@ -180,29 +180,29 @@ export const MASIVAS: Record<AccionMasiva, { titulo: string; menu: string; descr
     menu: 'Editar varios usuarios',
     descripcion:
       'Edita la información de tus usuarios de forma masiva importando un archivo CSV. Al asignar un área y un líder para cada usuario se creará automáticamente tu organigrama.',
-    boton: (n) => `Editar ${n} usuarios`,
-    enCurso: (n) => `Editando ${n} usuarios`,
-    hecho: (n) => `Se editaron ${n} usuarios`,
+    boton: (n) => `Editar ${n} ${plural(n, 'usuario', 'usuarios')}`,
+    enCurso: (n) => `Editando ${n} ${plural(n, 'usuario', 'usuarios')}`,
+    hecho: (n) => `${plural(n, 'Se editó', 'Se editaron')} ${n} ${plural(n, 'usuario', 'usuarios')}`,
     columnas: ['Username', 'Nombres', 'Apellidos', 'Correo', 'Área', 'Rol'],
     archivo: 'edicion-areas-lideres.csv',
   },
   suspender: {
-    titulo: 'Suspensión masiva de usuarios',
+    titulo: 'Suspender varios usuarios',
     menu: 'Suspender varios usuarios',
     descripcion: 'Suspende el acceso de varias personas a la vez importando un archivo CSV con su username y su correo. Todos los campos son obligatorios.',
-    boton: (n) => `Suspender ${n} usuarios`,
-    enCurso: (n) => `Suspendiendo ${n} usuarios`,
-    hecho: (n) => `Se suspendieron ${n} usuarios`,
+    boton: (n) => `Suspender ${n} ${plural(n, 'usuario', 'usuarios')}`,
+    enCurso: (n) => `Suspendiendo ${n} ${plural(n, 'usuario', 'usuarios')}`,
+    hecho: (n) => `${plural(n, 'Se suspendió', 'Se suspendieron')} ${n} ${plural(n, 'usuario', 'usuarios')}`,
     columnas: ['Username', 'Correo'],
     archivo: 'retiros-agosto.csv',
   },
   activar: {
-    titulo: 'Activación masiva de usuarios',
+    titulo: 'Activar varios usuarios',
     menu: 'Activar varios usuarios',
     descripcion: 'Devuelve el acceso a varias personas a la vez importando un archivo CSV con su username y su correo. Todos los campos son obligatorios.',
-    boton: (n) => `Activar ${n} usuarios`,
-    enCurso: (n) => `Activando ${n} usuarios`,
-    hecho: (n) => `Se activaron ${n} usuarios`,
+    boton: (n) => `Activar ${n} ${plural(n, 'usuario', 'usuarios')}`,
+    enCurso: (n) => `Activando ${n} ${plural(n, 'usuario', 'usuarios')}`,
+    hecho: (n) => `${plural(n, 'Se activó', 'Se activaron')} ${n} ${plural(n, 'usuario', 'usuarios')}`,
     columnas: ['Username', 'Correo'],
     archivo: 'reintegros-septiembre.csv',
   },

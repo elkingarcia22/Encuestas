@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { HugeiconsIcon } from '@hugeicons/react'
-import { Message01Icon, Settings02Icon, Target02Icon } from '@hugeicons/core-free-icons'
 import {
   Button,
   Field,
@@ -21,6 +19,7 @@ import {
   Text,
 } from '@ubits/flux-ui'
 import { notify } from '@/shared/components/notify'
+import { BotonCancelarPanel } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { BotonIaSecundario } from '@/shared/components/BotonIaSecundario'
 import { AiThinking } from '@/shared/components/AiThinking'
@@ -36,6 +35,7 @@ import {
 } from './etapas'
 import { CampoNumero, CampoOpcion } from './piezas'
 import { AvisoPropuestaIa, CampoTexto, DistribucionPuntos, FilaCriterio, SelectorVoz } from './piezas-ia'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Plazo máximo para presentar la sesión, en días: el mismo tope que la entrevista con Serena.
 const DIAS_MAX = 30
@@ -111,19 +111,18 @@ export function PanelAgente({ abierto, onAbiertoChange, tipo, nombreVacante, aju
       ai
       title={titulo}
       description="Define el personaje que atiende al candidato y cómo se le pone nota."
+      // 13-oct (I-021): con cambios sin guardar (o la propuesta de la IA), no se cierra al tocar fuera y pregunta antes de descartar.
+      conCambios={llenadoConIa || generando || JSON.stringify(borrador) !== JSON.stringify(ajustes)}
       headerExtra={
         <div className="border-b px-5">
           <TabsList variant="line" className="w-full justify-start">
             <TabsTrigger value="personaje" className="flex-none">
-              <HugeiconsIcon icon={Message01Icon} size={18} aria-hidden="true" />
               Personaje y prompt
             </TabsTrigger>
             <TabsTrigger value="sesion" className="flex-none">
-              <HugeiconsIcon icon={Settings02Icon} size={18} aria-hidden="true" />
               Sesión y voz
             </TabsTrigger>
             <TabsTrigger value="evaluacion" className="flex-none">
-              <HugeiconsIcon icon={Target02Icon} size={18} aria-hidden="true" />
               Evaluación
             </TabsTrigger>
           </TabsList>
@@ -131,9 +130,7 @@ export function PanelAgente({ abierto, onAbiertoChange, tipo, nombreVacante, aju
       }
       footer={
         <>
-          <Button variant="outline" onClick={() => onAbiertoChange(false)}>
-            Cancelar
-          </Button>
+          <BotonCancelarPanel alCerrar={() => onAbiertoChange(false)} />
           <Button disabled={generando} onClick={guardar}>
             Guardar configuración
           </Button>
@@ -275,12 +272,12 @@ export function PanelAgente({ abierto, onAbiertoChange, tipo, nombreVacante, aju
           <TabsContent value="evaluacion" className="flex flex-col gap-4">
             {/* El reparto se queda pegado arriba al bajar por los criterios, como en el panel de Serena. */}
             <div className="sticky -top-4 z-10 -mt-4 bg-popover pt-4">
-              <DistribucionPuntos total={totalPesos} detalle={`${borrador.criterios.length} criterios`} />
+              <DistribucionPuntos total={totalPesos} detalle={`${borrador.criterios.length} ${plural(borrador.criterios.length, 'criterio', 'criterios')}`} />
             </div>
 
             <FieldSet>
               <FieldLegend>Cómo se reparte la nota</FieldLegend>
-              <FieldDescription>Cuánto pesa cada criterio en la nota final. Entre todos suman 100%.</FieldDescription>
+              <FieldDescription>Cuánto pesa cada criterio en la nota final. Entre todos suman 100 %.</FieldDescription>
               <div className="flex flex-col gap-5">
                 {borrador.criterios.map((criterio) => (
                   <FilaCriterio

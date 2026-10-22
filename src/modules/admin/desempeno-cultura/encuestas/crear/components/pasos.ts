@@ -25,7 +25,7 @@ export const FALTA_PARA_CONTINUAR: Record<PasoId, string> = {
   general: 'Completa el nombre, el tipo y las fechas de la encuesta para continuar.',
   participants: 'Selecciona al menos un participante para continuar.',
   demographics: 'Completa los datos demográficos que agregaste para continuar.',
-  sections: 'Añade al menos una sección con preguntas para continuar.',
+  sections: 'Agrega al menos una sección con preguntas para continuar.',
   pages: 'Completa los pasos anteriores para desbloquear este paso.',
 }
 
@@ -38,7 +38,7 @@ export const FALTA_PARA_FINALIZAR: Record<PasoId, string> = {
   general: 'Completa el nombre, el tipo y las fechas de la encuesta',
   participants: 'Selecciona al menos un participante para finalizar',
   demographics: 'Completa los datos demográficos que agregaste',
-  sections: 'Añade al menos una sección con preguntas',
+  sections: 'Agrega al menos una sección con preguntas',
   pages: '',
 }
 

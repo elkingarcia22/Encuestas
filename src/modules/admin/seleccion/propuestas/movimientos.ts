@@ -18,6 +18,10 @@ import { simulado } from './simular'
 // 7. **Vacante cerrada**: nadie cambia de etapa hasta reabrirla (en `use-proceso.tsx`).
 // 8. **Varias con casos mezclados**: la ventana dice qué le pasa a cada una antes de confirmar.
 // 9. **Cuando no se guarda**: una persona por vacante falla la primera vez, para ver el error y «Reintentar».
+// 10. **Entrar a una etapa con IA** (13 oct, PM: «si yo muevo una persona a Serena, de una vez la estoy agendando… y no
+//    hay vuelta atrás»): arrastrar sigue funcionando, pero antes se pregunta. Se elige entre que la IA le escriba (con lo
+//    que cuesta en créditos) o solo moverla: queda ahí sin invitación, sin gastar, «Esperando acción», y la invitación
+//    se le envía después desde su tarjeta o su ficha.
 
 // Quien tiene la sesión abierta: la reclutadora de las vacantes de ejemplo.
 export const QUIEN_MUEVE = 'Laura Martínez'
@@ -30,7 +34,8 @@ export type Movimiento = {
   // se quedó); «vuelve», volver a considerarla (desde la etapa donde se quedó hacia la que vuelve).
   // «entra», que entró directo a una etapa (desde la base o por un lote): desde y hacia son esa etapa (VA-08).
   // «correo», que se le escribió sin moverla (desde la barra de varias o la ficha): desde y hacia son su etapa (VA-34).
-  tipo?: 'rechazo' | 'retiro' | 'vuelve' | 'entra' | 'correo'
+  // «invita», que se le envió la invitación de su etapa con IA después de entrar sin ella: desde y hacia son esa etapa.
+  tipo?: 'rechazo' | 'retiro' | 'vuelve' | 'entra' | 'correo' | 'invita'
   motivo?: string
   candidaturaId: string
   desde: string
@@ -44,14 +49,15 @@ export type Movimiento = {
   saltadas: string[]
   // Al entrar a una etapa de IA: le llegó la invitación, se le pidió repetirla o conservó la que ya tenía.
   // `en-espera`: entró a una etapa con IA con la vacante en borrador; la invitación sale al publicar (VA-45).
-  ia?: 'invitada' | 'reinvitada' | 'conservada' | 'en-espera'
+  // `sin-invitar`: se eligió «Solo moverla»; está en la etapa sin invitación y no gastó créditos.
+  ia?: 'invitada' | 'reinvitada' | 'conservada' | 'en-espera' | 'sin-invitar'
   // La invitación esperó al borrador y salió cuando se publicó la vacante (VA-45).
   alPublicar?: boolean
   // Al salir de una etapa de IA sin terminar la entrevista: se canceló.
   cancelada?: { etapa: string; respondidas?: number; total?: number }
   // La plantilla del correo que se le escribió, si se le escribió.
   aviso?: string
-  // Se aprobó a propuesta de Orbit Flow, con la razón que dio (OF-55): queda en su historial.
+  // Se aprobó a propuesta de Orbit, con la razón que dio (OF-55): queda en su historial.
   porAgente?: string
 }
 
@@ -116,8 +122,9 @@ export function esperasDe(vacanteId: string): { personas: number; etapa: string 
 }
 
 // Al publicar un borrador salen las invitaciones que esperaban (VA-45): quien está en una etapa con IA la recibe ahora y
-// su historial lo dice. Deshacer la publicación las vuelve a dejar esperando.
-export function soltarEsperas(vacanteId: string): { personas: number; etapa: string; deshacer: () => void } | null {
+// su historial lo dice. Deshacer la publicación las vuelve a dejar esperando. `soltadas` son esas invitaciones, ya
+// salidas: quien publica aparta con ellas los créditos (`invitaciones.ts`).
+export function soltarEsperas(vacanteId: string): { personas: number; etapa: string; soltadas: Movimiento[]; deshacer: () => void } | null {
   const cuantas = esperasDe(vacanteId)
   if (!cuantas) return null
   const ids = new Set(esperanEn(vacanteId).map((movimiento) => movimiento.id))
@@ -125,6 +132,7 @@ export function soltarEsperas(vacanteId: string): { personas: number; etapa: str
   avisar()
   return {
     ...cuantas,
+    soltadas: registro.filter((movimiento) => ids.has(movimiento.id)),
     deshacer: () => {
       registro = registro.map((movimiento) => (ids.has(movimiento.id) ? { ...movimiento, ia: 'en-espera' as const, alPublicar: undefined } : movimiento))
       avisar()
@@ -181,11 +189,13 @@ export function entrevistaDe(
   movimientos: Movimiento[],
 ): EstadoEntrevista | null {
   if (!etapa.ia) return null
-  const entradas = movimientos.filter((movimiento) => movimiento.hacia === etapa.id)
+  // Lo último que pasó con la IA al entrar (o la invitación enviada después): un correo a mano no lo cambia.
+  const entradas = movimientos.filter((movimiento) => movimiento.hacia === etapa.id && movimiento.ia)
   const ultimaEntrada = entradas[entradas.length - 1]
   const estaAqui = candidatura.etapa === etapa.id
-  // En un borrador la invitación todavía no sale: no hay entrevista que mostrar ni que cancelar (VA-45).
-  if (ultimaEntrada?.ia === 'en-espera') return null
+  // En un borrador la invitación todavía no sale, y con «Solo moverla» no salió: no hay entrevista que mostrar ni que
+  // cancelar (VA-45).
+  if (ultimaEntrada?.ia === 'en-espera' || ultimaEntrada?.ia === 'sin-invitar') return null
   // Entró en la sesión con invitación: la tiene sin abrir.
   if (ultimaEntrada && (ultimaEntrada.ia === 'invitada' || ultimaEntrada.ia === 'reinvitada')) return estaAqui ? { tipo: 'sin-abrir', dias: 0 } : null
   // Si se canceló al moverla, no hay entrevista que conservar.
@@ -255,10 +265,29 @@ export function consecuenciasDe(candidatura: Candidatura, destino: string, etapa
   }
 }
 
-// Si hay algo que decir o decidir antes de mover. Lo demás (avanzar un paso, arrastrar a la columna de al lado) se
-// mueve en el acto y se deshace desde el aviso.
+// Si hay algo que decir o decidir antes de mover. Entrar a una etapa con IA siempre pregunta: le escribe a la persona y
+// puede costar créditos (13 oct, PM: «todas las validaciones de movimiento estén presentes»). Lo demás (avanzar un paso
+// a una etapa sin IA, arrastrar a la columna de al lado) se mueve en el acto y se deshace desde el aviso.
 export const pideDecision = (pasa: Consecuencias) =>
-  pasa.atras || pasa.saltadas.length > 0 || Boolean(pasa.deja) || pasa.ultima || pasa.entra?.hecha !== undefined
+  pasa.atras || pasa.saltadas.length > 0 || Boolean(pasa.deja) || pasa.ultima || Boolean(pasa.entra)
+
+// La etapa con IA donde está sin invitación porque se eligió «Solo moverla»; `null` si no es el caso. Deja de estarlo
+// cuando se le envía la invitación (`tipo: 'invita'`) o cuando sale de esa etapa.
+export function sinInvitacionEn(candidatura: Candidatura, etapas: EtapaVacante[], movimientos: Movimiento[]) {
+  const etapa = etapas.find((una) => una.id === candidatura.etapa)
+  if (!etapa?.ia) return null
+  const conIa = movimientos.filter((movimiento) => movimiento.hacia === etapa.id && movimiento.ia)
+  return conIa[conIa.length - 1]?.ia === 'sin-invitar' ? etapa : null
+}
+
+export function useSinInvitacion(candidatura: Candidatura) {
+  const suyos = useMovimientos(candidatura.id)
+  return sinInvitacionEn(candidatura, candidatura.vacante.etapas, suyos)
+}
+
+// Lo que espera del equipo quien entró sin invitación: va en `accion`, así cuenta como «Esperando acción» en el
+// tablero, sus pestañas y su ficha.
+export const accionSinInvitacion = (etapa: string) => `Enviarle la invitación a ${etapa}`
 
 /* Cuando no se guarda ---------------------------------------------------------------------------------------- */
 
@@ -357,12 +386,14 @@ export function marcasDe(movimiento: Movimiento): MarcaCambio[] {
           : 'Invitación cancelada sin abrir',
       tono: 'aviso',
     })
-  if (movimiento.ia === 'invitada') marcas.push({ texto: movimiento.alPublicar ? 'La invitación salió al publicar la vacante' : 'Se le envió la invitación', tono: 'info' })
+  if (movimiento.ia === 'invitada' && movimiento.tipo !== 'invita')
+    marcas.push({ texto: movimiento.alPublicar ? 'La invitación salió al publicar la vacante' : 'Se le envió la invitación', tono: 'info' })
+  if (movimiento.ia === 'sin-invitar') marcas.push({ texto: 'Entró sin invitación: no usó créditos', tono: 'neutro' })
   if (movimiento.ia === 'en-espera') marcas.push({ texto: 'La invitación sale al publicar la vacante', tono: 'info' })
   if (movimiento.ia === 'reinvitada') marcas.push({ texto: 'Repite la entrevista', tono: 'info' })
   if (movimiento.ia === 'conservada') marcas.push({ texto: 'Conservó su entrevista', tono: 'neutro' })
   if (movimiento.aviso) marcas.push({ texto: `Se le escribió: ${movimiento.aviso}`, tono: 'info' })
-  if (movimiento.porAgente) marcas.push({ texto: `Propuesta de Orbit Flow: ${movimiento.porAgente}`, tono: 'info' })
+  if (movimiento.porAgente) marcas.push({ texto: `Propuesta de Orbit: ${movimiento.porAgente}`, tono: 'info' })
   return marcas
 }
 
@@ -376,6 +407,7 @@ function tituloDe(movimiento: Movimiento, etapas: EtapaVacante[]) {
   if (movimiento.tipo === 'vuelve') return `Volvió a considerarse: a ${tituloEtapa(movimiento.hacia)}`
   if (movimiento.tipo === 'entra') return `Entró a ${tituloEtapa(movimiento.hacia)}`
   if (movimiento.tipo === 'correo') return `Se le escribió en ${tituloEtapa(movimiento.hacia)}`
+  if (movimiento.tipo === 'invita') return `Se le envió la invitación a ${tituloEtapa(movimiento.hacia)}`
   const volvio = indiceDe(etapas, movimiento.hacia) < indiceDe(etapas, movimiento.desde)
   return `${volvio ? 'Volvió' : 'Pasó'} de ${tituloEtapa(movimiento.desde)} a ${tituloEtapa(movimiento.hacia)}`
 }
@@ -475,7 +507,9 @@ export function cambiosDeEtapa(
 // El último cambio de la sesión, dicho en una línea para la ficha: «Llegó hoy a las 8:12 a. m. desde Evaluación CV ·
 // la moviste tú».
 export function ultimoCambio(movimientos: Movimiento[], etapas: EtapaVacante[]) {
-  const ultimo = movimientos[movimientos.length - 1]
+  // Un correo o una invitación enviada después no son un cambio de etapa: la línea sigue diciendo cómo llegó.
+  const cambios = movimientos.filter((movimiento) => movimiento.tipo !== 'correo' && movimiento.tipo !== 'invita')
+  const ultimo = cambios[cambios.length - 1]
   if (!ultimo) return null
   const volvio = indiceDe(etapas, ultimo.hacia) < indiceDe(etapas, ultimo.desde)
   const alas = new Date(ultimo.cuando).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })

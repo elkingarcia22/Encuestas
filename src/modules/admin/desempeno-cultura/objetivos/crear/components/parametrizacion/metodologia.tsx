@@ -1,4 +1,5 @@
-import { Field, FieldError, FieldLabel, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge, IconTile, Item, ItemContent, ItemDescription, ItemMedia, ItemTitle, Text } from '@ubits/flux-ui'
+import { Field, FieldError, FieldLabel, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, IconTile, Item, ItemContent, ItemDescription, ItemMedia, ItemTitle, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { type CicloDraft } from '../../../modelo/constructor/cicloBuilderTypes'
 import { setupModelOptions } from '../../../modelo/constructor/cicloSetup'
@@ -8,6 +9,7 @@ import { norteSegun, type Contestadas } from './preguntas'
 
 const COMPLETA = 'Completa este campo'
 
+// Icono en el color de su tono: la baldosa «soft» lo pinta en gris y la clase sola no le gana (diferencias.json › instalacion-estilos-sin-capa).
 const TEXTO_FIJO_POR_TONO: Record<string, string> = {
   brand: 'text-primary!',
   positive: 'text-success!',
@@ -76,7 +78,7 @@ export function BloqueMetodologia({
                       <HugeiconsIcon icon={OBJECTIVE_MODEL_META[id].icon} aria-hidden="true" />
                     </IconTile>
                     <div className="flex flex-col whitespace-normal">
-                      <span className="font-medium">{OBJECTIVE_MODEL_META[id].label}</span>
+                      <Text as="span" size="sm" weight="medium">{OBJECTIVE_MODEL_META[id].label}</Text>
                       <Text as="span" size="xs" variant="muted">{OBJECTIVE_MODEL_META[id].tagline}</Text>
                     </div>
                   </div>
@@ -105,12 +107,12 @@ export function BloqueMetodologia({
             <SelectContent>
               <SelectItem value="si">
                 <div className="flex flex-col whitespace-normal py-1">
-                  <span className="font-medium">Sí, incluir objetivos de la empresa</span>
+                  <Text as="span" size="sm" weight="medium">Sí, incluir objetivos de la empresa</Text>
                 </div>
               </SelectItem>
               <SelectItem value="no">
                 <div className="flex flex-col whitespace-normal py-1">
-                  <span className="font-medium">No, no incluir objetivos de la empresa</span>
+                  <Text as="span" size="sm" weight="medium">No, no incluir objetivos de la empresa</Text>
                 </div>
               </SelectItem>
             </SelectContent>
@@ -133,6 +135,7 @@ export function BloqueMetodologia({
                 Elegido
               </Badge>
             </ItemTitle>
+            {/* La explicación del modelo entera y en letra pequeña: el tema la corta a dos líneas (diferencias.json › item-descripcion-corta-a-dos-lineas). */}
             <ItemDescription className="line-clamp-none! text-xs!">{vista === 'custom' ? metaVista.help : `${metaVista.fullName}. ${metaVista.structure}`}</ItemDescription>
             <Text as="span" size="xs" weight="semibold" className="mt-1">
               Reglas fijas que aplicará el sistema

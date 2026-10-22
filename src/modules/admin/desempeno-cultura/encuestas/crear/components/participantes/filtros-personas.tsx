@@ -1,7 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { FilterIcon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Field,
   FieldLabel,
@@ -17,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import type { CampoFiltro } from '../../../modelo/filtrosPersona'
 
 // El botón «Filtros» que va al lado de un buscador de personas o grupos, con el mismo armado que «Filtros» de
@@ -48,6 +48,8 @@ export function BotonFiltros({
           </Badge>
         ) : null}
       </PopoverTrigger>
+      {/* «!»: el globo más ancho que el suyo, para que quepan rótulo y selector en fila; la clase sola no le gana a la
+          librería (diferencias.json › instalacion-estilos-sin-capa). */}
       <PopoverContent align="end" className="w-96!">
         <PopoverHeader>
           <PopoverTitle>Filtrar</PopoverTitle>
@@ -57,11 +59,14 @@ export function BotonFiltros({
           {campos.map((campo) => {
             const items = [{ value: TODOS, label: campo.todos }, ...campo.opciones.map((opcion) => ({ value: opcion, label: opcion }))]
             return (
+              // «!»: el rótulo de ancho fijo y el selector estirado y con fondo sólido; la clase sola no le gana a la librería
+              // (diferencias.json › instalacion-estilos-sin-capa y select-trigger-fondo-solido).
               <Field key={campo.id} orientation="horizontal">
                 <FieldLabel htmlFor={`filtro-${campo.id}`} className="w-24 flex-none!">
                   {campo.etiqueta}
                 </FieldLabel>
                 <Select value={campo.valor || TODOS} onValueChange={(nuevo) => onCambio(campo.id, nuevo === TODOS ? '' : (nuevo as string))} items={items}>
+                  {/* «!»: selector estirado y con fondo sólido (diferencias.json › select-trigger-fondo-solido e instalacion-estilos-sin-capa). */}
                   <SelectTrigger id={`filtro-${campo.id}`} size="sm" className="min-w-0 w-full! flex-1 bg-background!">
                     <SelectValue />
                   </SelectTrigger>

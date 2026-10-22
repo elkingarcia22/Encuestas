@@ -1,7 +1,8 @@
 import { useRef, useState, type FocusEvent } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowRight01Icon } from '@hugeicons/core-free-icons'
-import { Alert, AlertDescription, Badge, Field, FieldDescription, FieldError, FieldLabel, FieldTitle, Item, ItemContent, Text } from '@ubits/flux-ui'
+import { Alert, AlertDescription, Field, FieldDescription, FieldError, FieldLabel, FieldTitle, Item, ItemContent, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { MEASURE_META, formatMeasureValue, parseAmount, type MeasureType, type Objective, type ObjectiveDirection } from '../../../modelo/constructor/cicloBuilderTypes'
 import { resolveStartLine, trackBlockingIssue } from '../../../modelo/constructor/complianceRules'
 import { CampoCifra } from './piezas'
@@ -57,7 +58,7 @@ export function CampoValores({
                 Opcional
               </Badge>
             </div>
-            <CampoCifra id={`${id}-inicial`} simbolo={simbolo} valor={objetivo.initialValue} placeholder="Sin definir" autoFocus onCambio={(valor) => onCambio({ initialValue: valor })} />
+            <CampoCifra id={`${id}-inicial`} simbolo={simbolo} valor={objetivo.initialValue} placeholder="Sin definir" autoFocus={!objetivo.initialValue && !objetivo.targetValue} onCambio={(valor) => onCambio({ initialValue: valor })} />
             <FieldDescription>Dónde estás hoy (opcional).</FieldDescription>
           </Field>
           <Field data-invalid={errorMeta ? true : undefined}>
@@ -72,6 +73,7 @@ export function CampoValores({
           <div className="flex h-6 items-center">
             <FieldTitle>Resumen</FieldTitle>
           </div>
+          {/* El resumen mide lo mismo que un campo y su texto va en fila: el tema del Item fija su relleno y apila el contenido (diferencias.json › instalacion-estilos-sin-capa). */}
           <Item variant="muted" size="sm" className="h-[var(--alto-campo)] py-2!">
             <ItemContent className="flex-row! flex-wrap items-center gap-x-2 gap-y-0.5">
               <Text as="span" size="sm" weight="semibold" className="tabular-nums">

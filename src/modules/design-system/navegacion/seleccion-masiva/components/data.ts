@@ -27,7 +27,7 @@ const ROLES: [string, string][] = [
 ]
 const SITES = ['Bogotá', 'Medellín', 'Cali', 'Barranquilla']
 const STATUSES: Person['status'][] = ['Activo', 'Activo', 'Activo', 'En vacaciones', 'Activo', 'Incapacidad']
-const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic']
 
 const slug = (text: string) =>
   text

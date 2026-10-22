@@ -14,13 +14,15 @@ import {
   ItemContent,
   ItemDescription,
   ItemTitle,
+  Text,
 } from '@ubits/flux-ui'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { SinResultados } from '@/shared/components/SinResultados'
 import catalogo from '../../../../ai-tools/flux-ui/flux-ui-para-ia.json'
 import { SectionIntro } from '../patrones/piezas'
 
-// Componentes › Flux tal cual: las piezas de @ubits/flux-ui leídas del mismo archivo que usan la IA y el equipo
+// Componentes › Flux tal cual: la librería sin tocar (muchas piezas tienen su versión del proyecto, que la tarjeta nombra),
+// leída del mismo archivo que usan la IA y el equipo
 // (ai-tools/flux-ui/flux-ui-para-ia.json), así la página no se desactualiza cuando sube la versión.
 // Las categorías del Storybook (Core, ReUI…) no le dicen nada a diseño: aquí se agrupan por uso.
 
@@ -53,8 +55,27 @@ const normalizar = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u
 // Cuántas opciones de variante trae una pieza (p. ej. Button: 6 variantes y 8 tamaños).
 const opciones = (pieza: Pieza) => Object.values(pieza.variantes).reduce((total, props) => total + Object.values(props ?? {}).flat().length, 0)
 
+// Piezas de la librería que en las pantallas se usan envueltas por una del proyecto (13-oct: salen de «piezas › en_vez_de»
+// de ai-tools/reglas/reglas.json). Si una pieza está aquí, la tarjeta dice cuál usar.
+const EN_LAS_PANTALLAS: Record<string, string> = {
+  sheet: 'DrawerShell',
+  drawer: 'DrawerShell',
+  toast: 'notify',
+  sonner: 'notify',
+  table: 'TablaDatos',
+  'data-grid': 'TablaDatos',
+  'data-grid-list': 'TablaDatos',
+  'alert-dialog': 'DialogoConfirmar (preguntar) o ActionDialog (con contenido)',
+  dialog: 'ActionDialog',
+  empty: 'PrimeraVez, SinResultados o ErrorDeCarga',
+  tooltip: 'Hint (o BotonAyuda si abre con clic)',
+  badge: 'Badge del proyecto (10,5 px mínimo)',
+  'floating-action-bar': 'la barra de acciones de la tabla',
+}
+
 function Tarjeta({ pieza }: { pieza: Pieza }) {
   const cuantas = opciones(pieza)
+  const envoltura = EN_LAS_PANTALLAS[pieza.slug]
   return (
     <Item variant="outline" className="h-full items-start">
       <ItemContent>
@@ -63,6 +84,11 @@ function Tarjeta({ pieza }: { pieza: Pieza }) {
           {cuantas ? <Badge variant="secondary">{cuantas} opciones</Badge> : null}
         </ItemTitle>
         <ItemDescription>{pieza.usar_para}</ItemDescription>
+        {envoltura ? (
+          <Text as="span" size="xs" weight="medium">
+            En las pantallas: {envoltura}
+          </Text>
+        ) : null}
       </ItemContent>
       {pieza.storybook?.docs ? (
         <ItemActions>

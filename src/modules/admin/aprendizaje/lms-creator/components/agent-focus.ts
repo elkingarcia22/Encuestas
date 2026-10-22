@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react'
 
 // Foco del teclado en el agente contextual (panel del editor y casos del design system).
-// Al abrir, cerrar o deshacer, el botón que tenía el foco desaparece (la X, «Orbit Flow», la fila «Deshacer») y el foco
+// Al abrir, cerrar o deshacer, el botón que tenía el foco desaparece (la X, «Orbit», la fila «Deshacer») y el foco
 // se iría al inicio de la página. Estas ayudas lo llevan a donde sigue el trabajo. Si la persona usó otro control
 // que sigue en pantalla (una pestaña, «Preguntar» en un dato), el foco se queda donde estaba.
 

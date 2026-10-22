@@ -1,12 +1,11 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Alert02Icon, ArrowDown01Icon, Delete02Icon, File01Icon, Logout01Icon } from '@hugeicons/core-free-icons'
+import { Alert02Icon, ArrowDown01Icon, Delete02Icon, File01Icon } from '@hugeicons/core-free-icons'
 import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Checkbox,
   DropdownMenu,
@@ -30,13 +29,15 @@ import {
   Text,
 } from '@ubits/flux-ui'
 import { AiThinking } from '@/shared/components/AiThinking'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
-import { notify } from '@/shared/components/notify'
+import { notify, notifyAction } from '@/shared/components/notify'
+import { TextoCompleto } from '@/shared/components/TextoCompleto'
 import { FilasSeparadas, MarcoLista } from '../../../components/marco-lista'
 import { EncabezadoPaso } from '../../../components/pasos-drawer'
 import { ListaDatos } from '@/modules/admin/seleccion/vacantes/crear/components/piezas-resumen'
 import { AdjuntoCsv } from '@/modules/design-system/estados/procesos'
-import { DialogoConfirmar } from '@/modules/design-system/estados/confirmaciones'
+import { DialogoSalir } from '@/modules/design-system/estados/confirmaciones'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { PILL } from '@/modules/design-system/drawers/components/drawer-styles'
 import { Persona } from '@/modules/design-system/data-grid/casos/seguimiento'
@@ -125,13 +126,18 @@ function FilasConProblemas({ descartadas }: { descartadas: readonly FilaDescarta
         <AlertDescription>{`${resumenDescartes(descartadas)}.`}</AlertDescription>
       </Alert>
       <MarcoLista titulo="Filas con problemas" descripcion="Corrígelas en el archivo y vuelve a importarlo si quieres sumarlas.">
+      {/* «!»: el panel del marco no deja cambiar su relleno con una clase normal (diferencias.json › frame-panel-relleno-no-se-quita),
+          ni la fila quitar el suyo para quedar a ras del panel (diferencias.json › instalacion-estilos-sin-capa). */}
       <FramePanel className="py-1!">
         <FilasSeparadas>
           {descartadas.map((fila) => (
+            // «!»: la fila a ras del panel, sin su relleno (diferencias.json › instalacion-estilos-sin-capa).
             <Item key={fila.fila} size="sm" className="gap-3 px-0!">
               <ItemContent>
                 <ItemTitle>Fila {fila.fila}</ItemTitle>
-                <ItemDescription className="truncate">{fila.detalle}</ItemDescription>
+                <TextoCompleto texto={fila.detalle}>
+                  <ItemDescription className="truncate">{fila.detalle}</ItemDescription>
+                </TextoCompleto>
               </ItemContent>
               <ItemActions>
                 <Badge variant="warning-light" size="xs">
@@ -184,7 +190,7 @@ export function DrawerImportar({ open, onOpenChange, onCargar }: { open: boolean
       return
     }
     if (lectura.status === 'rejected') {
-      notify('No pudimos leer el archivo', `«${archivo.name}» parece estar corrupto o no ser una planilla válida.`)
+      notify('No pudimos leer el archivo', `«${archivo.name}» parece estar corrupto o no ser una planilla válida.`, 'error')
       return
     }
     const { usuarios, demograficos, descartadas } = participantesDeFilas(lectura.value)
@@ -194,6 +200,7 @@ export function DrawerImportar({ open, onOpenChange, onCargar }: { open: boolean
         descartadas.length > 0
           ? `Ninguna fila de «${archivo.name}» se puede cargar: ${resumenDescartes(descartadas)}.`
           : `«${archivo.name}» es válido, pero no tiene una columna «name» o «username» con datos.`,
+        'error',
       )
       return
     }
@@ -272,13 +279,18 @@ export function DrawerImportar({ open, onOpenChange, onCargar }: { open: boolean
           </Text>
         </div>
       ) : fallido ? (
-        // Como las demás fallas de la IA (FallaIa): el vacío con «Reintentar», y el archivo sigue elegido.
-        <FallaIa
-          titulo="No pudimos analizar el archivo"
-          descripcion={`La IA no respondió al leer «${fallido.name}». El archivo sigue elegido: puedes reintentar sin volver a subirlo.`}
-          otra={{ texto: 'Elegir otro archivo', onClick: () => setFallido(null) }}
-          onReintentar={() => void leer(fallido)}
-        />
+        // Como las demás fallas de la IA (FallaIa): el vacío con «Reintentar», y el archivo sigue elegido. FallaIa ya no
+        // lleva segunda salida, así que «Elegir otro archivo» va debajo, como secundario.
+        <div className="flex flex-col items-center gap-2">
+          <FallaIa
+            titulo="No pudimos analizar el archivo"
+            descripcion={`La IA no respondió al leer «${fallido.name}». El archivo sigue elegido: puedes reintentar sin volver a subirlo.`}
+            onReintentar={() => void leer(fallido)}
+          />
+          <Button variant="outline" onClick={() => setFallido(null)}>
+            Elegir otro archivo
+          </Button>
+        </div>
       ) : !revision ? (
         <section className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
@@ -288,7 +300,7 @@ export function DrawerImportar({ open, onOpenChange, onCargar }: { open: boolean
           extensiones={EXTENSIONES_PARTICIPANTES}
           maximoBytes={TAMANO_MAXIMO_PARTICIPANTES}
           onArchivo={(archivo) => void leer(archivo)}
-          onRechazo={(rechazo) => notify(rechazo.titulo, rechazo.detalle)}
+          onRechazo={(rechazo) => notify(rechazo.titulo, rechazo.detalle, 'error')}
         />
           </div>
           {/* Qué columnas lee, como la guía de «Importar con IA» de secciones: una fila por columna. */}
@@ -306,6 +318,7 @@ export function DrawerImportar({ open, onOpenChange, onCargar }: { open: boolean
         </section>
       ) : (
         <div className="flex flex-col gap-4">
+          {/* «!»: el adjunto mide lo que su nombre y no se estira sin forzarlo (diferencias.json › attachment-ancho-y-arrastre). */}
           <AdjuntoCsv
             estado="done"
             className="w-full!"
@@ -334,6 +347,7 @@ export function DrawerImportar({ open, onOpenChange, onCargar }: { open: boolean
               ))}
             </FramePanel>
           ) : null}
+          {/* «!»: relleno de abajo del panel del marco (diferencias.json › frame-panel-relleno-no-se-quita). */}
           <FramePanel className="flex flex-col gap-1 pb-1!">
           <Tabs value={filtro} onValueChange={(valor) => setFiltro(valor as typeof filtro)}>
             <TabsList variant="line">
@@ -355,6 +369,7 @@ export function DrawerImportar({ open, onOpenChange, onCargar }: { open: boolean
             </Text>
           ) : (
             <FilasSeparadas>
+              {/* «!»: las filas sin su relleno lateral, a ras del panel (diferencias.json › instalacion-estilos-sin-capa). */}
               <Item size="sm" className="gap-3 px-0!" render={<label />}>
                 <Checkbox checked={todasVisibles} onCheckedChange={alternarVisibles} aria-label="Marcar todas las de esta lista" />
                 <Text as="span" size="sm" variant="muted">
@@ -367,6 +382,7 @@ export function DrawerImportar({ open, onOpenChange, onCargar }: { open: boolean
                   <FilaImportada
                     key={`${clave}-${indice}`}
                     fila={fila}
+                    // «!»: la fila a ras del panel, sin su relleno (diferencias.json › instalacion-estilos-sin-capa).
                     className="px-0!"
                     control={<Checkbox checked={elegidas.has(clave)} onCheckedChange={() => alternar(clave)} aria-label={`Cargar a ${fila.user.name || fila.user.username}`} />}
                   />
@@ -379,15 +395,13 @@ export function DrawerImportar({ open, onOpenChange, onCargar }: { open: boolean
         </div>
       )}
     </DrawerShell>
-    <DialogoConfirmar
+    {/* La ventana de salir del sistema (DialogoSalir): «¿Salir de la importación?», «Seguir aquí» y «Salir de la importación». */}
+    <DialogoSalir
       abierto={confirmarSalida}
       onAbiertoChange={setConfirmarSalida}
-      icono={Logout01Icon}
-      titulo="¿Salir de la importación?"
+      salida="Salir de la importación"
       descripcion={`Se pierde lo que leímos de «${archivoActual ?? ''}» y no se carga a nadie como participante.`}
-      cancelar="Seguir aquí"
-      accion="Salir de la importación"
-      onConfirmar={salirDelTodo}
+      onSalir={salirDelTodo}
     />
     </>
   )
@@ -419,8 +433,16 @@ export function ParticipantesCargados({ seleccion, onCambio }: { seleccion: Part
     if (visibles.length === claves.size && actual > 1) setActual(actual - 1)
   }
   const quitarMarcadas = () => {
+    // Lo de antes de quitar, para «Deshacer»: vuelve la carga tal como estaba.
+    const { importedFileName, importedUsers, importedCount, importedNewCount, importedDemographics } = seleccion
+    const antes = { importedFileName, importedUsers, importedCount, importedNewCount, importedDemographics }
     quitar(new Set(marcadasAhora))
-    notify(marcadasAhora.length === 1 ? 'Quitamos a 1 persona' : `Quitamos a ${personas(marcadasAhora.length)}`, 'Ya no responderán la encuesta por esta carga.')
+    notifyAction(
+      marcadasAhora.length === 1 ? 'Quitamos a 1 persona' : `Quitamos a ${personas(marcadasAhora.length)}`,
+      'Ya no responderán la encuesta por esta carga.',
+      { label: 'Deshacer', onClick: () => onCambio(antes) },
+      'success',
+    )
   }
 
   return (
@@ -449,7 +471,7 @@ export function ParticipantesCargados({ seleccion, onCambio }: { seleccion: Part
             aria-label="Seleccionar las personas de esta página"
           />
           <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="icon-xs" aria-label="Opciones de selección" />}>
+            <DropdownMenuTrigger render={<BotonIcono size="icon-xs" aria-label="Opciones de selección" />}>
               <HugeiconsIcon icon={ArrowDown01Icon} aria-hidden="true" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-64">
@@ -492,6 +514,7 @@ export function ParticipantesCargados({ seleccion, onCambio }: { seleccion: Part
         )}
       </div>
 
+      {/* «!»: el grupo sin el espacio entre filas de la librería, que las separa la línea (diferencias.json › instalacion-estilos-sin-capa). */}
       <ItemGroup className="gap-0! rounded-xl border">
         {visibles.map((fila, indice) => {
           const clave = claveImportado(fila.user)
@@ -503,6 +526,7 @@ export function ParticipantesCargados({ seleccion, onCambio }: { seleccion: Part
                 fila={fila}
                 control={<Checkbox checked={marcadas.has(clave)} onCheckedChange={() => alternar(clave)} aria-label={`Seleccionar a ${nombre}`} />}
                 accion={
+                  // «!»: BotonIcono en rojo para quitar; el ghost de la librería no trae tono rojo (diferencias.json › button-ghost-tonos).
                   <BotonIcono aria-label={`Quitar a ${nombre}`} className="text-destructive!" onClick={() => quitar(new Set([clave]))}>
                     <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
                   </BotonIcono>

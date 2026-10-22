@@ -1,6 +1,7 @@
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { Calendar03Icon, CheckListIcon, Clock01Icon, Layers01Icon, SquareLock02Icon, ViewIcon } from '@hugeicons/core-free-icons'
-import { Badge, Frame, FrameHeader, FramePanel, FrameTitle, Heading, IconTile, Text } from '@ubits/flux-ui'
+import { Frame, FrameHeader, FramePanel, FrameTitle, Heading, IconTile, Text } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { formatPreviewDate, type PreviewOutlineRow, type PreviewPage, type PreviewSummary } from '../../modelo/previewModel'
 import { SURVEY_KIND_LABELS, SURVEY_VISIBILITY_LABELS, type SurveyDraft } from '../../modelo/surveyBuilderTypes'
 import { enBlanco } from '../../modelo/textoPagina'

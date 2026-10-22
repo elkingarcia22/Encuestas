@@ -12,7 +12,10 @@ import { TOTAL_RECURSOS } from './temario'
 const encabezado = (resultados: Resultados, titulo: string) => [
   titleRow(titulo),
   hintRow(`${resultados.contenido.titulo} · ${resultados.contenido.tipo}`),
-  hintRow(`Generado el ${fecha(new Date().toISOString().slice(0, 10))} · ${resultados.inscritos} personas inscritas`),
+  hintRow(`Generado el ${fecha(new Date().toISOString().slice(0, 10))} · ${resultados.iniciaron} personas lo han iniciado`),
+  // El periodo va en la hoja, no solo en la pantalla: un archivo sacado con un mes puesto llega al correo de alguien
+  // que no vio el filtro, y sin esta línea lo lee como si fuera todo (Dave, 14-oct).
+  hintRow(`Periodo: ${resultados.periodo.etiqueta}`),
   blankRow,
 ]
 

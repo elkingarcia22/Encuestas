@@ -8,7 +8,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -17,10 +16,11 @@ import {
   Text,
   ToggleGroup,
   ToggleGroupItem,
-  toast,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 
-import { rutaGlass } from '../icons/glass'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
+import { notify } from '@/shared/components/notify'
 import { SectionIntro } from '../patrones/piezas'
 import { EJEMPLOS_ERROR, type ErrorDeSistema } from './errores-sistema-datos'
 
@@ -36,15 +36,8 @@ export function PantallaDeError({ error, onAccion }: { error: ErrorDeSistema; on
     // RN-01: ilustración a la izquierda y texto con acción a la derecha; en móvil se apilan y el texto va centrado. El
     // bloque se centra en el espacio disponible (antes quedaba pegado a la izquierda).
     <div className="mx-auto grid w-full max-w-2xl flex-1 content-center items-center gap-8 px-2 py-10 md:grid-cols-[auto_minmax(0,1fr)]">
-      {/* Ilustración Glass del error mientras llega la de Figma Errores. */}
-      <img
-        src={rutaGlass(error.ilustracion, '1x')}
-        srcSet={`${rutaGlass(error.ilustracion, '1x')} 1x, ${rutaGlass(error.ilustracion, '2x')} 2x`}
-        alt=""
-        width={144}
-        height={144}
-        className="mx-auto size-36"
-      />
+      {/* Ilustración glass del error mientras llega la de Figma Errores; ImagenGlass trae las densidades (13-oct). */}
+      <ImagenGlass nombre={error.ilustracion.nombre} tamano={144} className="mx-auto size-36" />
       <div className="flex flex-col items-center gap-3 text-center md:items-start md:text-left">
         <div className="flex flex-col gap-1">
           <Heading as="h4" level={3}>
@@ -76,7 +69,7 @@ export function PantallaDeError({ error, onAccion }: { error: ErrorDeSistema; on
                 setTimeout(() => setReintentando(false), 1500)
                 return
               }
-              toast.add({ type: 'info', title: error.accion?.efecto ?? '' })
+              notify(error.accion?.efecto ?? '', undefined, 'info')
             }}
           >
             {reintentando ? <Spinner /> : <HugeiconsIcon icon={error.accion.icono} aria-hidden="true" />}
@@ -153,7 +146,7 @@ export function EstadosErroresSistema() {
           </Badge>
         </AlertTitle>
         <AlertDescription>
-          La ilustración de cada error vive en Figma y aquí la reemplaza un icono de la librería. Los
+          Mientras llega la ilustración de Figma Errores, cada error usa una ilustración glass. Los
           cuerpos son provisionales: la historia pide usar el copy acordado sin parafrasearlo. Hoy la
           plataforma tiene dos páginas de «no encontrado» con diseños distintos; este patrón sirve para
           las dos.

@@ -40,7 +40,7 @@ const riskStyle = (risk: number | null): StyleId => {
   }
 }
 
-const percent = (value: number): string => `${Math.round(value)}%`
+const percent = (value: number): string => `${Math.round(value)} %`
 
 const shareOf = (part: number, total: number): string => (total === 0 ? '—' : percent((part / total) * 100))
 
@@ -161,7 +161,7 @@ const participationSheet = (results: SurveyResults, segment: SegmentDefinition):
     columns: [240, 90, 100, 90, 100],
     rows: [
       titleRow(`Participación por ${segment.label.toLowerCase()}`),
-      hintRow(`La norma exige el ${NOM035_REQUIRED_PARTICIPATION}% de participación: los grupos por debajo son el hueco que hay que cerrar.`),
+      hintRow(`La norma exige el ${NOM035_REQUIRED_PARTICIPATION} % de participación: los grupos por debajo son el hueco que hay que cerrar.`),
       blankRow,
       headRow([segment.label, 'Invitados', 'Completadas', 'En progreso', 'Participación']),
       ...rows.map((row, index) => dataRow(index, [{ value: row.label }, { value: row.invited }, { value: row.completed }, { value: row.inProgress }, { value: percent(row.rate) }])),

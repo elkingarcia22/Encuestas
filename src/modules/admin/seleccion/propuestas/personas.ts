@@ -1,6 +1,7 @@
 import { CANDIDATURAS, RECHAZADAS, fueEmpleado, tituloEtapa } from './datos'
 import { familiaDe } from './familias'
 import { VACANTES, type Origen } from '../vacantes/detalle/components/data'
+import { fechaCorta } from '@/modules/design-system/patrones/formato'
 
 // La base global de candidatos: «Mis candidatos», 533 personas.
 //
@@ -307,8 +308,7 @@ export const hace = (dias: number) => {
 }
 
 // La fecha en que entró, para el globo de «En la base».
-export const fechaDeEntrada = (dias: number) =>
-  new Date(Date.now() - dias * 86_400_000).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+export const fechaDeEntrada = (dias: number) => fechaCorta(new Date(Date.now() - dias * 86_400_000).toLocaleDateString('en-CA'))
 
 export const enProceso = (persona: Persona) => persona.procesos.some((p) => p.estado === 'En proceso')
 

@@ -32,7 +32,7 @@ export interface SurveyAnalysis {
 }
 
 const percent = (value: number): string =>
-  `${(Math.round(value * 10) / 10).toString().replace(".", ",")}%`;
+  `${(Math.round(value * 10) / 10).toString().replace(".", ",")} %`;
 
 /**
  * A difference between two percentages, in points.
@@ -217,7 +217,7 @@ function buildRecommendations(results: SurveyResults): readonly SurveyInsight[] 
       kind: "recommendation",
       title: "Leer los comentarios de detractores antes del próximo ciclo",
       body:
-        `${detractorShare}% de quienes respondieron el eNPS están en la banda de detractores y dejaron ` +
+        `${detractorShare} % de quienes respondieron el eNPS están en la banda de detractores y dejaron ` +
         `escrito qué tendría que cambiar. Es la fuente más directa que tiene la medición y no requiere ` +
         `interpretación.`,
       evidence: `eNPS ${results.nps && results.nps.score > 0 ? "+" : ""}${results.nps?.score} · ${results.nps?.detractors} detractores`,
@@ -282,7 +282,7 @@ function buildEnpsAnalysis(results: SurveyResults): SurveyAnalysis {
       kind: "finding",
       title: "Cómo se reparten las respuestas",
       body:
-        `${share(nps.promoters)}% son promotores, ${share(nps.passives)}% neutros y ${share(nps.detractors)}% detractores. ` +
+        `${share(nps.promoters)} % son promotores, ${share(nps.passives)} % neutros y ${share(nps.detractors)} % detractores. ` +
         "Los neutros son los más fáciles de mover: no están en contra, solo no lo recomiendan sin dudar.",
       evidence: `${nps.promoters} promotores · ${nps.passives} neutros · ${nps.detractors} detractores`,
       confidence: "high",
@@ -306,7 +306,7 @@ function buildEnpsAnalysis(results: SurveyResults): SurveyAnalysis {
       kind: "risk",
       title: "Uno de cada cinco o más no recomendaría la empresa",
       body:
-        `${share(nps.detractors)}% de quienes respondieron son detractores. Cuando esta banda crece suele anticipar ` +
+        `${share(nps.detractors)} % de quienes respondieron son detractores. Cuando esta banda crece suele anticipar ` +
         "rotación voluntaria en los meses siguientes.",
       evidence: `${nps.detractors} detractores de ${nps.n}`,
       confidence: "high",
@@ -352,7 +352,7 @@ function buildEnpsAnalysis(results: SurveyResults): SurveyAnalysis {
       `La medición cierra con un eNPS de ${signed(nps.score)} y ${percent(results.participation.rate)} de participación ` +
       `(${results.participation.completed} de ${results.participation.invited} personas). Frente a la medición anterior ` +
       `${delta >= 0 ? "sube" : "baja"} ${Math.abs(Math.round(delta))} puntos. ` +
-      `${share(nps.promoters)}% son promotores y ${share(nps.detractors)}% detractores.`,
+      `${share(nps.promoters)} % son promotores y ${share(nps.detractors)} % detractores.`,
     insights,
   };
 }

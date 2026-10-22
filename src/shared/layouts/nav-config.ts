@@ -17,7 +17,6 @@ import {
   Folder01Icon,
   GitMergeIcon,
   GridViewIcon,
-  HierarchySquare01Icon,
   Home02Icon,
   CheckmarkBadge01Icon,
   Layout01Icon,
@@ -33,19 +32,16 @@ import {
   PaintBoardIcon,
   PaletteIcon,
   Plant02Icon,
-  PuzzleIcon,
   Rocket01Icon,
   Route01Icon,
   RulerIcon,
   ScrollTextIcon,
-  SecurityCheckIcon,
   Settings02Icon,
   SidebarLeftIcon,
   SidebarRightIcon,
   StethoscopeIcon,
   StudyDeskIcon,
   Target02Icon,
-  Task01Icon,
   TaskDone01Icon,
   TextFontIcon,
   TextSelectionIcon,
@@ -53,7 +49,6 @@ import {
   UserGroupIcon,
   UserMultipleIcon,
   Wallet01Icon,
-  WorkflowSquare03Icon,
 } from '@hugeicons/core-free-icons'
 
 // El orbe de la IA en el menú (decisión 8 de la auditoría, 5-oct: nada de varitas ni estrellas para marcar la IA). El
@@ -71,7 +66,13 @@ export type NavLeaf = {
   status?: ChatStatus
   // Bajada corta (para qué sirve), se muestra en el panel de una sección con tercer nivel.
   description?: string
+  // Etiqueta junto al nombre, como el «Nuevo» de Selección. Hoy solo «Próximamente» (pantallas sin maquetar).
+  badge?: string
 }
+
+// La etiqueta de las pantallas que todavía no están maquetadas (regla «pantallas-pendientes», 13-oct): abren
+// PantallaProximamente. Va en el menú del producto; las plantillas del design system tienen sus propias pantallas.
+const PROXIMAMENTE = 'Próximamente'
 
 // Segundo nivel del menú: se despliega bajo su producto. Si tiene páginas propias (tercer nivel,
 // p. ej. LMS Creator › Contenidos), en la barra abre su propio panel con «volver», como Vercel.
@@ -125,31 +126,33 @@ const navsBase: Record<Exclude<SectionId, 'plantilla-admin' | 'plantilla-colabor
             path: '/portal-colaborador/aprendizaje',
             icon: Mortarboard02Icon,
             children: [
-              { title: 'Modo estudio AI', path: '/portal-colaborador/aprendizaje/modo-estudio-ai', icon: ICONO_IA },
-              { title: 'Catálogo', path: '/portal-colaborador/aprendizaje/catalogo', icon: LibraryIcon },
+              { title: 'Modo estudio AI', path: '/portal-colaborador/aprendizaje/modo-estudio-ai', icon: ICONO_IA, badge: PROXIMAMENTE },
+              { title: 'Catálogo', path: '/portal-colaborador/aprendizaje/catalogo', icon: LibraryIcon, badge: PROXIMAMENTE },
               { title: 'Universidad corporativa', path: '/portal-colaborador/aprendizaje/universidad-corporativa', icon: UniversityIcon },
               { title: 'Zona de estudio', path: '/portal-colaborador/aprendizaje/zona-de-estudio', icon: StudyDeskIcon },
               { title: 'Progreso', path: '/portal-colaborador/aprendizaje/progreso', icon: ChartIncreaseIcon },
-              { title: 'Métricas', path: '/portal-colaborador/aprendizaje/metricas', icon: Analytics01Icon },
-              { title: 'Diagnóstico', path: '/portal-colaborador/aprendizaje/diagnostico', icon: StethoscopeIcon },
+              { title: 'Métricas', path: '/portal-colaborador/aprendizaje/metricas', icon: Analytics01Icon, badge: PROXIMAMENTE },
+              { title: 'Diagnóstico', path: '/portal-colaborador/aprendizaje/diagnostico', icon: StethoscopeIcon, badge: PROXIMAMENTE },
             ],
           },
           {
             title: 'Desempeño y cultura',
             path: '/portal-colaborador/desempeno-cultura',
             icon: Analytics01Icon,
+            // Las cuatro pantallas están sin maquetar: el producto entero espera.
+            badge: PROXIMAMENTE,
             children: [
-              { title: 'Evaluaciones 360', path: '/portal-colaborador/desempeno-cultura/evaluaciones-360', icon: UserMultipleIcon },
-              { title: 'Objetivos', path: '/portal-colaborador/desempeno-cultura/objetivos', icon: Target02Icon },
-              { title: 'Matriz de talento', path: '/portal-colaborador/desempeno-cultura/matriz-de-talento', icon: GridViewIcon },
-              { title: 'Encuestas', path: '/portal-colaborador/desempeno-cultura/encuestas', icon: Comment01Icon },
+              { title: 'Evaluaciones 360', path: '/portal-colaborador/desempeno-cultura/evaluaciones-360', icon: UserMultipleIcon, badge: PROXIMAMENTE },
+              { title: 'Objetivos', path: '/portal-colaborador/desempeno-cultura/objetivos', icon: Target02Icon, badge: PROXIMAMENTE },
+              { title: 'Matriz de talento', path: '/portal-colaborador/desempeno-cultura/matriz-de-talento', icon: GridViewIcon, badge: PROXIMAMENTE },
+              { title: 'Encuestas', path: '/portal-colaborador/desempeno-cultura/encuestas', icon: Comment01Icon, badge: PROXIMAMENTE },
             ],
           },
         ],
       },
       {
         label: 'Herramientas',
-        items: [{ title: 'Tareas', path: '/portal-colaborador/tareas', icon: Note05Icon }],
+        items: [{ title: 'Tareas', path: '/portal-colaborador/tareas', icon: Note05Icon, badge: PROXIMAMENTE }],
       },
     ],
   },
@@ -185,9 +188,10 @@ const navsBase: Record<Exclude<SectionId, 'plantilla-admin' | 'plantilla-colabor
             icon: Briefcase06Icon,
             badge: 'Nuevo',
             children: [
-              // «Onboarding» salió del menú el 7 oct (Nicolás). El 8 oct «Dashboard» pasó a ser «AI Insights» (VP de
-              // producto): la IA lee los datos y arma los dashboards que se le pidan. Las direcciones viejas llevan a él.
-              { title: 'AI Insights', path: '/admin/seleccion/ai-insights', icon: DashboardSquare01Icon },
+              // «Onboarding» salió del menú el 7 oct (Nicolás). El 8 oct «Dashboard» pasó a ser «AI Insights» y el 16 oct
+              // «Orbit Data» (VP de producto: «AI Insights no es la palabra… que tú puedas hablar con tu data»): una
+              // conversación con Orbit que arma los tableros que se le pidan. Las direcciones viejas llevan a ella.
+              { title: 'Orbit Data', path: '/admin/seleccion/orbit-data', icon: DashboardSquare01Icon },
               // La exploración elegida del recorrido completo (30 sep). El 1 oct Nicolás dejó solo esta: se borraron la 2 y la
               // 3 (con sus «Candidatos») y salió del menú la «Vacantes» de Elkin (su pantalla sigue en `/admin/seleccion/vacantes`
               // y la 1 usa su creación por dentro). Desde el 27 sep, como en el producto, «Vacantes» y «Mis candidatos» son dos
@@ -214,17 +218,13 @@ const navsBase: Record<Exclude<SectionId, 'plantilla-admin' | 'plantilla-colabor
                 description: 'Crea y organiza tus cursos',
                 children: [
                   { title: 'Contenidos', path: '/admin/aprendizaje/lms-creator/contenidos', icon: BookOpen01Icon },
-                  // Tres exploraciones de toda la experiencia de crear contenidos (27 sep): cada una, su lista y su editor.
-                  { title: 'Contenidos 1 · Paso a paso', path: '/admin/aprendizaje/lms-creator/uno', icon: Task01Icon },
-                  { title: 'Contenidos 2 · Estudio', path: '/admin/aprendizaje/lms-creator/dos', icon: Layout01Icon },
-                  { title: 'Contenidos 3 · Con IA', path: '/admin/aprendizaje/lms-creator/tres', icon: BubbleChatIcon },
-                  { title: 'Categorías', path: '/admin/aprendizaje/lms-creator/categorias', icon: Folder01Icon },
-                  { title: 'Universidad corporativa', path: '/admin/aprendizaje/lms-creator/universidad-corporativa', icon: UniversityIcon },
-                  { title: 'LMS AI', path: '/admin/aprendizaje/lms-creator/lms-ai', icon: ICONO_IA },
+                  { title: 'Categorías', path: '/admin/aprendizaje/lms-creator/categorias', icon: Folder01Icon, badge: PROXIMAMENTE },
+                  { title: 'Universidad corporativa', path: '/admin/aprendizaje/lms-creator/universidad-corporativa', icon: UniversityIcon, badge: PROXIMAMENTE },
+                  { title: 'LMS AI', path: '/admin/aprendizaje/lms-creator/lms-ai', icon: ICONO_IA, badge: PROXIMAMENTE },
                 ],
               },
               {
-                title: 'Planes de Formación',
+                title: 'Planes de formación',
                 path: '/admin/aprendizaje/planes-de-formacion',
                 icon: Route01Icon,
                 description: 'Rutas por cargo y grupos',
@@ -240,12 +240,12 @@ const navsBase: Record<Exclude<SectionId, 'plantilla-admin' | 'plantilla-colabor
                 description: 'Emite y descarga certificados',
                 children: [
                   { title: 'Descarga', path: '/admin/aprendizaje/certificados/descarga', icon: Download04Icon },
-                  { title: 'Configuración', path: '/admin/aprendizaje/certificados/configuracion', icon: Settings02Icon },
+                  { title: 'Configuración', path: '/admin/aprendizaje/certificados/configuracion', icon: Settings02Icon, badge: PROXIMAMENTE },
                 ],
               },
               { title: 'Diagnóstico', path: '/admin/aprendizaje/diagnostico', icon: StethoscopeIcon },
-              { title: 'Reportes', path: '/admin/aprendizaje/reportes', icon: File02Icon },
-              { title: 'Métricas', path: '/admin/aprendizaje/metricas', icon: Analytics01Icon },
+              { title: 'Reportes', path: '/admin/aprendizaje/reportes', icon: File02Icon, badge: PROXIMAMENTE },
+              { title: 'Métricas', path: '/admin/aprendizaje/metricas', icon: Analytics01Icon, badge: PROXIMAMENTE },
             ],
           },
           {
@@ -253,10 +253,10 @@ const navsBase: Record<Exclude<SectionId, 'plantilla-admin' | 'plantilla-colabor
             path: '/admin/desempeno-cultura',
             icon: Analytics01Icon,
             children: [
-              { title: 'Evaluaciones 360', path: '/admin/desempeno-cultura/evaluaciones-360', icon: UserMultipleIcon },
+              { title: 'Evaluaciones 360', path: '/admin/desempeno-cultura/evaluaciones-360', icon: UserMultipleIcon, badge: PROXIMAMENTE },
               { title: 'Objetivos', path: '/admin/desempeno-cultura/objetivos', icon: Target02Icon },
-              { title: 'Matriz de talento', path: '/admin/desempeno-cultura/matriz-de-talento', icon: GridViewIcon },
-              { title: 'PDI', path: '/admin/desempeno-cultura/pdi', icon: Plant02Icon },
+              { title: 'Matriz de talento', path: '/admin/desempeno-cultura/matriz-de-talento', icon: GridViewIcon, badge: PROXIMAMENTE },
+              { title: 'PDI', path: '/admin/desempeno-cultura/pdi', icon: Plant02Icon, badge: PROXIMAMENTE },
               { title: 'Encuestas', path: '/admin/desempeno-cultura/encuestas', icon: Comment01Icon },
             ],
           },
@@ -273,19 +273,18 @@ const navsBase: Record<Exclude<SectionId, 'plantilla-admin' | 'plantilla-colabor
   },
   'design-system': {
     home: { title: 'Inicio', path: '/design-system', icon: Home02Icon },
-    // Ordenado por lo que se busca (7-oct, Cristian): cómo arrancar, las bases, las piezas (todas en Componentes, con
-    // «Todos los componentes» primero), cómo se arma una pantalla (Patrones), las pantallas completas y la revisión
-    // pendiente. Flux tal cual, las reglas globales, lo del dev de flux y las fichas viven dentro de «Todos los
-    // componentes», no en el menú.
+    // Ordenado por lo que se busca (7-oct, Cristian; reordenado el 13-oct): cómo arrancar, las bases, las piezas sueltas
+    // (Componentes, con «Todos los componentes» primero), las piezas combinadas para armar una pantalla (Patrones), las
+    // pantallas completas y la revisión pendiente. El grupo de cada página es el mismo que dice su antetítulo. Flux tal
+    // cual, las reglas globales, lo del dev de flux y las fichas viven dentro de «Todos los componentes»; el Grafo, dentro
+    // de «Trabajar con la IA»; la IA, en la pestaña Orbit.
     groups: [
       {
         label: 'Empezar',
         items: [
           { title: 'Manifiesto', path: '/design-system/manifiesto', icon: ScrollTextIcon },
           { title: 'Cómo usar el sistema', path: '/design-system/get-started', icon: Rocket01Icon },
-          { title: 'Flujo de trabajo', path: '/design-system/flujo-de-trabajo', icon: WorkflowSquare03Icon },
           { title: 'Trabajar con la IA', path: '/design-system/trabajar-con-ia', icon: ICONO_IA },
-          { title: 'Grafo', path: '/design-system/grafo', icon: HierarchySquare01Icon },
         ],
       },
       {
@@ -304,9 +303,7 @@ const navsBase: Record<Exclude<SectionId, 'plantilla-admin' | 'plantilla-colabor
           { title: 'Botones', path: '/design-system/botones', icon: Cursor01Icon },
           { title: 'Ventanas', path: '/design-system/modales', icon: Layout01Icon },
           { title: 'Paneles laterales', path: '/design-system/drawers', icon: SidebarRightIcon },
-          { title: 'Estados y avisos', path: '/design-system/estados', icon: Notification03Icon },
           { title: 'Tablas', path: '/design-system/data-grid', icon: LayoutTable01Icon },
-          { title: 'Formularios', path: '/design-system/formularios', icon: TaskDone01Icon },
           { title: 'Métricas', path: '/design-system/metricas', icon: Analytics01Icon },
         ],
       },
@@ -314,7 +311,9 @@ const navsBase: Record<Exclude<SectionId, 'plantilla-admin' | 'plantilla-colabor
         label: 'Patrones',
         items: [
           { title: 'Marco', path: '/design-system/marco', icon: SidebarLeftIcon },
-          { title: 'Navegación', path: '/design-system/navegacion', icon: Navigation03Icon },
+          { title: 'Estructura de página', path: '/design-system/navegacion', icon: Navigation03Icon },
+          { title: 'Formularios', path: '/design-system/formularios', icon: TaskDone01Icon },
+          { title: 'Estados y avisos', path: '/design-system/estados', icon: Notification03Icon },
         ],
       },
       {
@@ -333,23 +332,12 @@ const navsBase: Record<Exclude<SectionId, 'plantilla-admin' | 'plantilla-colabor
               { title: 'Encuestas', path: '/design-system/templates/encuestas', icon: Comment01Icon },
             ],
           },
-          {
-            // Pantallas nuevas que viven en el producto (/admin), no como plantilla: al abrirlas se pasa al menú del admin.
-            title: 'En el producto',
-            path: '/design-system/templates/producto',
-            icon: Settings02Icon,
-            children: [
-              { title: 'Tareas', path: '/admin/tareas', icon: Note05Icon },
-              { title: 'Avisos internos', path: '/admin/avisos-internos', icon: MarketingIcon },
-              { title: 'Detalle de vacante', path: '/admin/seleccion/vacantes/analista-de-datos', icon: Briefcase06Icon },
-              { title: 'Datos de empresa', path: '/admin/configuracion/datos-empresa', icon: Settings02Icon },
-              { title: 'Personalización', path: '/admin/configuracion/personalizacion', icon: Settings02Icon },
-            ],
-          },
+          // «En el producto» (Tareas, Avisos internos, vacante, Configuración) salió del menú el 13-oct: llevaba a /admin y
+          // cambiaba el menú sin avisar. Sigue en «Todas las pantallas», que dice que esas se abren en el producto.
           { title: 'Colaborador', path: '/design-system/templates/colaborador', icon: Mortarboard02Icon },
           { title: 'Inicio de sesión', path: '/design-system/templates/auth', icon: CircleLock01Icon },
           // Los errores de sistema y la carga ocupando la pantalla entera, cada uno en su dirección:
-          // la documentación de esos estados está en Componentes › Estados y avisos.
+          // la documentación de esos estados está en Patrones › Estados y avisos.
           { title: 'Estados a pantalla completa', path: '/design-system/templates/estados', icon: Loading03Icon },
           // «Archivo» (Dashboard, Dashboard RR.HH., App shell 2 y 3, Shell test) salió del menú el 22 sep: son marcos
           // viejos con su header de entonces y se leían como vigentes. Siguen en «Todas las pantallas», como archivo.
@@ -358,20 +346,8 @@ const navsBase: Record<Exclude<SectionId, 'plantilla-admin' | 'plantilla-colabor
       {
         label: 'Por revisar',
         items: [
-          {
-            // Solo agrupa: se despliega y deja ver sus seis páginas.
-            title: 'Unificación',
-            path: '/design-system/unificacion/grupo',
-            icon: GitMergeIcon,
-            children: [
-              { title: 'Resumen', path: '/design-system/unificacion', icon: GitMergeIcon },
-              { title: 'Fundamentos por revisar', path: '/design-system/unificacion/fundamentos', icon: PaletteIcon },
-              { title: 'Componentes', path: '/design-system/unificacion/componentes', icon: PuzzleIcon },
-              { title: 'Iconos', path: '/design-system/unificacion/iconos', icon: PaintBoardIcon },
-              { title: 'Marcos y espaciado', path: '/design-system/unificacion/marcos', icon: SidebarLeftIcon },
-              { title: 'Qué no revisa el check', path: '/design-system/unificacion/check', icon: SecurityCheckIcon },
-            ],
-          },
+          // Una sola entrada desde el 13-oct: sus partes son las pestañas de la página.
+          { title: 'Unificación', path: '/design-system/unificacion', icon: GitMergeIcon },
         ],
       },
     ],
@@ -404,6 +380,8 @@ const PROPIAS_ADMIN: Record<string, string> = {
 const NOMBRE_EN_PLANTILLA: Record<string, string> = {
   dashboard: 'dashboard-seleccion',
   'ai-insights': 'dashboard-seleccion',
+  'tus-datos': 'dashboard-seleccion',
+  'orbit-data': 'dashboard-seleccion',
   descarga: 'descarga-certificados',
   configuracion: 'configuracion-certificados',
 }
@@ -414,7 +392,9 @@ const rutaPlantillaColaborador = (path: string) =>
   path === '/portal-colaborador' ? PLANTILLA_COLABORADOR : `${PLANTILLA_COLABORADOR}/${ultimo(path)}`
 
 function comoPlantilla(nav: SidebarNav, ruta: (path: string) => string, extra: NavGroup[]): SidebarNav {
-  const hoja = (leaf: NavLeaf): NavLeaf => ({ ...leaf, path: ruta(leaf.path) })
+  // «Próximamente» es del producto: en las plantillas cada entrada lleva a su pantalla de ejemplo, así que no se copia.
+  const sinProximamente = (badge: string | undefined) => (badge === PROXIMAMENTE ? undefined : badge)
+  const hoja = (leaf: NavLeaf): NavLeaf => ({ ...leaf, path: ruta(leaf.path), badge: sinProximamente(leaf.badge) })
   return {
     base: PLANTILLAS,
     home: { ...nav.home, path: ruta(nav.home.path) },
@@ -424,6 +404,7 @@ function comoPlantilla(nav: SidebarNav, ruta: (path: string) => string, extra: N
         items: group.items.map((item) => ({
           ...item,
           path: ruta(item.path),
+          badge: sinProximamente(item.badge),
           children: item.children?.map((child) => ({ ...hoja(child), children: child.children?.map(hoja) })),
         })),
       })),
@@ -455,11 +436,8 @@ export const CONFIGURACION_ADMIN: Record<string, string> = {
 // **No se borran**: siguen escritas arriba, con su comentario de quién las hizo y cuándo, se llega a ellas por URL y
 // conservan su nombre en las migas. Selección no entra aquí: su menú (Vacantes, Mis candidatos y
 // Créditos) se queda a la vista como lo dejó Nicolás (1 oct, al traer staging: «déjame selección como está»).
-const EXPLORACIONES = new Set([
-  '/admin/aprendizaje/lms-creator/uno',
-  '/admin/aprendizaje/lms-creator/dos',
-  '/admin/aprendizaje/lms-creator/tres',
-])
+// 13-oct (I-402): las tres de Contenidos se quitaron (no tenían ruta); queda el mecanismo para la próxima exploración.
+const EXPLORACIONES = new Set<string>([])
 
 const enElMenu = (path: string) => !EXPLORACIONES.has(path)
 
@@ -514,7 +492,7 @@ export const sidebarNavs: Record<SectionId, SidebarNav> = {
             icon: BubbleChatIcon,
           },
           {
-            title: 'Orbit Flow',
+            title: 'Orbit',
             path: '/design-system/agente-contextual/configurador',
             icon: ICONO_IA,
           },
@@ -573,6 +551,13 @@ function buildPathLabels() {
 
 // Pantallas que no están en la barra lateral pero sí tienen nombre propio en las migas.
 const NOMBRES_SIN_MENU: [string, string][] = [
+  ['/design-system/grafo', 'Grafo'],
+  ['/design-system/unificacion/fundamentos', 'Fundamentos por revisar'],
+  ['/design-system/unificacion/componentes', 'Componentes'],
+  ['/design-system/unificacion/iconos', 'Iconos'],
+  ['/design-system/unificacion/marcos', 'Marcos y espaciado'],
+  ['/design-system/unificacion/check', 'Qué no revisa el check'],
+  ['/design-system/unificacion/pendientes', 'Pendientes de otras personas'],
   ['/design-system/marco/barra-lateral', 'Barra lateral'],
   ['/design-system/marco/header', 'Header'],
   ['/design-system/marco/capturas', 'Piezas en vivo'],
@@ -587,7 +572,7 @@ const NOMBRES_SIN_MENU: [string, string][] = [
   ['/admin/configuracion', 'Configuración'],
   ['/admin/configuracion/datos-empresa', 'Datos de empresa'],
   ['/admin/configuracion/personalizacion', 'Personalización'],
-  ['/admin/avisos-internos/nuevo', 'Nuevo aviso'],
+  ['/admin/avisos-internos/crear', 'Nuevo aviso'],
   ['/admin/aprendizaje/diagnostico/crear', 'Crear assessment'],
   ['/admin/desempeno-cultura/objetivos/crear', 'Crear ciclo'],
   // El editor de un contenido: cuelga de LMS Creator › Contenidos, que sí está en el menú.
@@ -694,10 +679,6 @@ const CON_SUBPAGINAS = new Set([
   '/admin/seleccion/vacantes',
   // La lista de vacantes es un recorrido: dentro de una vacante, su entrada sigue marcada.
   '/admin/seleccion/exploraciones/uno',
-  // Las exploraciones de LMS Creator: dentro de un contenido, su entrada sigue marcada.
-  '/admin/aprendizaje/lms-creator/uno',
-  '/admin/aprendizaje/lms-creator/dos',
-  '/admin/aprendizaje/lms-creator/tres',
   '/admin/aprendizaje/lms-creator/contenidos',
   // Crear, editar y los resultados de una encuesta siguen marcando «Encuestas».
   '/admin/desempeno-cultura/encuestas',

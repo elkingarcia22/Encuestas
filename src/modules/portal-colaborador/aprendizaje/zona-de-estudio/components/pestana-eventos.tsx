@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { useNavigate } from 'react-router'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import {
   AppleIcon,
@@ -8,11 +7,9 @@ import {
   Download04Icon,
   GoogleIcon,
   Mail01Icon,
-  Search01Icon,
   UserGroupIcon,
 } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   Button,
   Frame,
   FramePanel,
@@ -24,10 +21,11 @@ import {
   IconTile,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { Hint } from '@/shared/components/Hint'
 import { CajaCarrusel } from './carrusel'
-import { abrirContenido, descargarIcs, enlaceCalendario, horario, mesCorto, PROVEEDOR_EVENTO, proximasSesiones, type Sesion } from './datos'
+import { descargarIcs, enlaceCalendario, horario, mesCorto, PROVEEDOR_EVENTO, proximasSesiones, type Sesion } from './datos'
 import { TarjetaContenido } from '@/shared/components/TarjetaContenido'
 
 // Pestaña Eventos (HU-APR-011): las sesiones que vienen, en «Mis eventos» y «Eventos públicos». Es de solo lectura:
@@ -67,10 +65,10 @@ function AnadirCalendario({ sesion }: { sesion: Sesion }) {
   const opciones = opcionesCalendario(sesion)
   return (
     <DropdownMenu>
-      <Hint label="Añadir a mi calendario">
+      <Hint label="Agregar a mi calendario">
         {/* El secundario de solo icono (`outline`), no el terciario: el ghost es transparente y sobre la foto no se
             lee, y pintarle fondo con `!` es repintar un componente oficial (Dave, 2-oct). */}
-        <DropdownMenuTrigger render={<Button variant="outline" size="icon-sm" aria-label="Añadir a mi calendario" />}>
+        <DropdownMenuTrigger render={<Button variant="outline" size="icon-sm" aria-label="Agregar a mi calendario" />}>
           <HugeiconsIcon icon={CalendarAdd01Icon} size={14} />
         </DropdownMenuTrigger>
       </Hint>
@@ -108,7 +106,6 @@ export function TarjetaSesion({ sesion }: { sesion: Sesion }) {
       competencia={sesion.evento}
       competenciaIcono={Calendar03Icon}
       duracion={horario(sesion)}
-      onClick={abrirContenido}
       className="h-full"
       encimaIzquierda={
         <div className="flex min-w-14 flex-col items-center rounded-md border bg-card px-2 py-1">
@@ -165,7 +162,6 @@ function Seccion({ titulo, icono, sesiones }: { titulo: string; icono: IconSvgEl
 }
 
 export function PestanaEventos({ sinEventos }: { sinEventos: boolean }) {
-  const navigate = useNavigate()
   // La hora se toma al entrar a la pestaña, como en el prototipo.
   const { mis, publicos } = useMemo(() => (sinEventos ? { mis: [], publicos: [] } : proximasSesiones()), [sinEventos])
 
@@ -177,7 +173,6 @@ export function PestanaEventos({ sinEventos }: { sinEventos: boolean }) {
           icono="glass-calendar"
           titulo="Todavía no tienes eventos"
           descripcion="Aquí van a aparecer las formaciones en vivo o en sitio a las que te inscriban, con su fecha y su hora."
-          accion={{ texto: 'Explorar catálogo', icono: Search01Icon, onClick: () => navigate('/portal-colaborador/aprendizaje/catalogo') }}
         />
         </FramePanel>
       </Frame>

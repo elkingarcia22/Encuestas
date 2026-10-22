@@ -22,6 +22,7 @@ import {
   StepperTitle,
   StepperTrigger,
 } from '@ubits/flux-ui'
+import { BotonCancelarPanel } from '@/modules/design-system/drawers/components/boton-cancelar-panel'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 
 import { AdjuntoCsv, type Subida } from '../../../estados/procesos'
@@ -87,6 +88,8 @@ export function AgregarAsignacion({
     setError(undefined)
   }
 
+  const hayCambios = alcance !== '' || personas.length > 0 || grupos.length > 0 || archivo !== 'idle' || items.length > 0
+
   const cuantos =
     alcance === 'empresa'
       ? PERSONAS_EMPRESA
@@ -146,23 +149,30 @@ export function AgregarAsignacion({
           ? `${cuantos.toLocaleString('es-CO')} ${plural(cuantos, 'persona', 'personas')} hasta ahora.`
           : 'A quién le llega el plan y con qué ' + textos.items + '.'
       }
+      // 13-oct (I-018): con algo elegido, no se cierra al tocar fuera y pregunta «Seguir editando · Descartar».
+      conCambios={hayCambios}
       footerClassName="justify-between!"
       footer={
         <>
-          <Button
-            variant="outline"
-            onClick={() => {
-              if (paso > 1) {
+          {paso > 1 ? (
+            <Button
+              variant="outline"
+              onClick={() => {
                 setPaso(paso - 1)
                 setError(undefined)
-              } else {
+              }}
+            >
+              Atrás
+            </Button>
+          ) : (
+            // Pasa por la misma pregunta que la X; al descartar, onOpenChange(false) limpia.
+            <BotonCancelarPanel
+              alCerrar={() => {
                 onAbiertoChange(false)
                 limpiar()
-              }
-            }}
-          >
-            {paso > 1 ? 'Atrás' : 'Cancelar'}
-          </Button>
+              }}
+            />
+          )}
           <Button onClick={siguiente}>{paso < 3 ? 'Siguiente' : 'Agregar'}</Button>
         </>
       }

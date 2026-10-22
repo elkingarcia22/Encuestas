@@ -38,7 +38,7 @@ const aNodo = (nodo: ComparativeTreeNode): NodoComparativo => ({
   children: nodo.children.filter((hija) => hija.kind !== 'question').map(aNodo),
 })
 
-const formatoDe = (metrica: ComparativeTreeMetric) => (valor: number) => (metrica === 'nps' ? `${valor > 0 ? '+' : ''}${Math.round(valor)}` : metrica === 'positividad' ? `${Math.round(valor)}%` : formatPercent(valor))
+const formatoDe = (metrica: ComparativeTreeMetric) => (valor: number) => (metrica === 'nps' ? `${valor > 0 ? '+' : ''}${Math.round(valor)}` : metrica === 'positividad' ? `${Math.round(valor)} %` : formatPercent(valor))
 const unidadDe = (metrica: ComparativeTreeMetric): Unidad => (metrica === 'nps' ? 'pts' : 'pp')
 
 
@@ -145,6 +145,8 @@ export function TablaSecciones({ arbol, columnas, metrica, niveles, participacio
                     {indice + 1}
                   </Text>
                 </TableCell>
+                {/* whitespace-normal!: el enunciado largo se parte en renglones; la celda de la librería no deja cambiar su
+                    nowrap con una clase normal (ficha instalacion-estilos-sin-capa en ai-tools/flux-ui/diferencias.json). */}
                 <TableCell className="whitespace-normal!">
                   <Text as="span" size="sm" weight="medium">
                     {pregunta.label}

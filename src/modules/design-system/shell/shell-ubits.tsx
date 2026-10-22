@@ -15,7 +15,6 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-  Badge,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -61,6 +60,7 @@ import {
   SidebarTrigger,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { ImagenGlass } from '@/shared/components/ImagenGlass'

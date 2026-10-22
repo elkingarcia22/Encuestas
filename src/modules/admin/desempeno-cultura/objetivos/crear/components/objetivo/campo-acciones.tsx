@@ -1,6 +1,8 @@
+import { useEffect, useRef } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Delete02Icon, Flag02Icon, HashtagIcon, PlusSignIcon } from '@hugeicons/core-free-icons'
-import { Badge, Button, Field, FieldLabel, Input, InputGroup, InputGroupAddon, InputGroupInput, InputGroupText, Item, ItemGroup, ItemSeparator, Switch, Text, ToggleGroup, ToggleGroupItem } from '@ubits/flux-ui'
+import { Button, Field, FieldLabel, Input, InputGroup, InputGroupAddon, InputGroupInput, InputGroupText, Item, ItemGroup, ItemSeparator, Switch, Text, ToggleGroup, ToggleGroupItem } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { BotonIcono } from '@/shared/components/BotonIcono'
 import { Hint } from '@/shared/components/Hint'
 import { CampoFecha } from '@/modules/design-system/formularios/rango-de-fechas'
@@ -42,12 +44,14 @@ function FilaAccion({
   const sinNombre = conErrores && accion.title.trim() === ''
   const sinCantidad = conErrores && accion.kind === 'cantidad' && accion.targetCount.trim() === ''
   return (
+    // La acción en columna, a todo el ancho: el tema del Item centra sus partes (diferencias.json › instalacion-estilos-sin-capa).
     <Item size="sm" className="flex-col items-stretch! gap-2">
       <div className="flex items-center gap-2">
         <Badge variant="secondary" radius="full" size="xs" className="shrink-0 tabular-nums">
           {posicion}
         </Badge>
         <Input
+          // Fondo blanco: el campo es transparente y se pierde sobre el gris (diferencias.json › input-group-fondo-solido).
           className="min-w-0 flex-1 bg-background!"
           value={accion.title}
           aria-label={`${hijo} ${posicion}`}
@@ -55,6 +59,7 @@ function FilaAccion({
           placeholder="Qué hay que hacer: “Cerrar 10 demos con clientes nuevos”"
           onChange={(evento) => onCambio({ title: evento.target.value })}
         />
+        {/* Rojo de borrar: los botones sin borde no traen tono rojo (diferencias.json › button-ghost-tonos). */}
         <Hint label="Eliminar acción">
           <BotonIcono aria-label={`Eliminar ${hijo.toLowerCase()} ${posicion}`} className="text-destructive!" onClick={onQuitar}>
             <HugeiconsIcon icon={Delete02Icon} aria-hidden="true" />
@@ -62,7 +67,10 @@ function FilaAccion({
         </Hint>
       </div>
       <div className="flex flex-wrap items-center gap-2 sm:ps-8">
-        <ToggleGroup aria-label="Cómo se verifica" value={[accion.kind]} onValueChange={(valor) => valor.length && onCambio({ kind: valor[0] as KeyActionKind })} variant="outline" size="sm" spacing={0}>
+        {/* Hito / Cantidad, la meta (si es cantidad) y la fecha, en una sola línea (Elkin, 21-oct): la fecha es la que se
+            encoge —con el placeholder corto— cuando el ancho aprieta, en lugar de bajar a otro renglón. */}
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+        <ToggleGroup className="shrink-0" aria-label="Cómo se verifica" value={[accion.kind]} onValueChange={(valor) => valor.length && onCambio({ kind: valor[0] as KeyActionKind })} variant="outline" size="sm" spacing={0}>
           {(Object.keys(KEY_ACTION_KIND_META) as KeyActionKind[]).map((tipo) => (
             <Hint key={tipo} label={KEY_ACTION_KIND_META[tipo].tagline}>
               <ToggleGroupItem value={tipo} className="px-3">
@@ -73,11 +81,12 @@ function FilaAccion({
           ))}
         </ToggleGroup>
         {accion.kind === 'cantidad' ? (
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Text as="span" size="sm" variant="muted">
               Meta
             </Text>
             <Input
+              // Fondo blanco: el campo es transparente y se pierde sobre el gris (diferencias.json › input-group-fondo-solido).
               className="w-16 bg-background! text-center tabular-nums"
               inputMode="numeric"
               value={accion.targetCount}
@@ -91,8 +100,9 @@ function FilaAccion({
             </Text>
           </div>
         ) : null}
-        <div className="w-52">
-          <CampoFecha valor={aFecha(accion.dueDate)} onCambio={(fecha) => onCambio({ dueDate: aTexto(fecha) })} placeholder="Fecha límite: sin definir" />
+        <div className="min-w-32 max-w-52 flex-1">
+          <CampoFecha valor={aFecha(accion.dueDate)} onCambio={(fecha) => onCambio({ dueDate: aTexto(fecha) })} placeholder="Fecha límite" />
+        </div>
         </div>
         {mueve ? (
           <div className="ms-auto flex items-center gap-2">
@@ -100,6 +110,7 @@ function FilaAccion({
               Aporta
             </Text>
             <div className="w-20">
+              {/* Fondo blanco: el campo es transparente y se pierde sobre el gris (diferencias.json › input-group-fondo-solido). */}
               <InputGroup className="bg-background!">
                 <InputGroupInput
                   inputMode="numeric"
@@ -128,12 +139,15 @@ export function CampoAcciones({
   onCambio,
   vocab,
   modo,
+  obligatorio = false,
   conErrores,
 }: {
   objetivo: Objective
   onCambio: (cambio: Partial<Objective>) => void
   vocab: ObjectiveModelVocab
   modo: ModoAvance
+  /** El modelo los exige (OKR, MBO…): el primero ya viene abierto para escribirlo, sin tocar «Agregar». */
+  obligatorio?: boolean
   conErrores: boolean
 }) {
   const acciones = objetivo.keyActions
@@ -143,6 +157,26 @@ export function CampoAcciones({
   const hijos = (vocab.children ?? 'Acciones clave').toLowerCase()
   const masculino = vocab.childrenGender === 'm'
   const mueve = modo === 'siempre' ? true : modo === 'nunca' ? false : objetivo.keyActionsDriveProgress
+
+  // Si el modelo los exige y no hay ninguno, el primero aparece solo (Elkin, 20-oct): es lo siguiente que hay que hacer.
+  const lista = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (obligatorio && acciones.length === 0) onCambio({ keyActions: [createKeyAction(mueve ? TOTAL_WEIGHT : 0)] })
+    // Solo al aparecer el paso: si alguien borra el último a propósito, no vuelve a salir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  // Al agregar uno, la vista baja a la fila nueva (la barra del panel la tapaba) y el cursor queda en su nombre.
+  const agregar = () => {
+    onCambio({ keyActions: [...acciones, createKeyAction(mueve ? Math.max(0, TOTAL_WEIGHT - total) : 0)] })
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const filas = lista.current?.querySelectorAll<HTMLElement>('[data-fila-accion]')
+        const nueva = filas?.[filas.length - 1]
+        nueva?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        nueva?.querySelector('input')?.focus({ preventScroll: true })
+      }),
+    )
+  }
 
   const cambiarAccion = (id: string, cambio: Partial<KeyAction>) => onCambio({ keyActions: acciones.map((accion) => (accion.id === id ? { ...accion, ...cambio } : accion)) })
   const repartir = () => {
@@ -162,6 +196,7 @@ export function CampoAcciones({
   return (
     <>
       {modo === 'eleccion' ? (
+        // Campo en fila que ocupa solo lo suyo: el tema le da ancho completo y la clase sola no le gana (diferencias.json › instalacion-estilos-sin-capa).
         <Field orientation="horizontal" className="w-auto!">
           <Switch id={`objetivo-${objetivo.id}-avance`} checked={objetivo.keyActionsDriveProgress} onCheckedChange={cambiarAvance} />
           <FieldLabel htmlFor={`objetivo-${objetivo.id}-avance`}>
@@ -176,9 +211,10 @@ export function CampoAcciones({
       </Text>
 
       {acciones.length > 0 ? (
-        <ItemGroup className="gap-0! rounded-lg border">
+        // Filas pegadas, separadas por su divisor: el gap del tema no se quita sin «!» (diferencias.json › instalacion-estilos-sin-capa).
+        <ItemGroup ref={lista} className="gap-0! rounded-lg border">
           {acciones.map((accion, indice) => (
-            <div key={accion.id}>
+            <div key={accion.id} data-fila-accion className="scroll-mb-4">
               {indice > 0 ? <ItemSeparator /> : null}
               <FilaAccion
                 accion={accion}
@@ -195,9 +231,9 @@ export function CampoAcciones({
       ) : null}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button variant="outline" size="sm" onClick={() => onCambio({ keyActions: [...acciones, createKeyAction(mueve ? Math.max(0, TOTAL_WEIGHT - total) : 0)] })}>
+        <Button variant="outline" size="sm" onClick={agregar}>
           <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} aria-hidden="true" />
-          {acciones.length === 0 ? `Añadir ${masculino ? 'un' : 'una'} ${hijo.toLowerCase()}` : `Añadir ${masculino ? 'otro' : 'otra'} ${hijo.toLowerCase()}`}
+          {acciones.length === 0 ? `Agregar ${masculino ? 'un' : 'una'} ${hijo.toLowerCase()}` : `Agregar ${masculino ? 'otro' : 'otra'} ${hijo.toLowerCase()}`}
         </Button>
         {mueve && acciones.length > 0 ? (
           <div className="flex items-center gap-2">

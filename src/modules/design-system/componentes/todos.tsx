@@ -28,8 +28,9 @@ export function Component() {
   return (
     <div className="flex flex-col gap-8">
       <EncabezadoPatron antetitulo="Design system · Componentes" titulo="Todos los componentes" etiqueta={null}>
-        Todo lo que hay para armar una pantalla, en dos niveles: lo que el equipo customizó sobre la librería (flux) y lo
-        que se usa tal como viene. Antes de armar algo, se busca aquí: si ya está customizado, se usa esa pieza.
+        Todo lo que hay para armar una pantalla, en dos niveles: lo que el equipo customizó sobre la librería (flux) y la
+        librería sin tocar, de la que muchas piezas ya tienen su versión del proyecto. Antes de armar algo, se busca aquí:
+        si ya está customizado, se usa esa pieza.
       </EncabezadoPatron>
 
       <Indicadores

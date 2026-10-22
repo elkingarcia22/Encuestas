@@ -156,7 +156,7 @@ function armar(base: Base, vacante: { rango: [number, number]; requisitos: strin
   if (base.pretension > vacante.rango[1]) {
     const exceso = Math.round((base.pretension / vacante.rango[1] - 1) * 100)
     riesgos.push({
-      texto: `Pide ${pesos(base.pretension)}: ${exceso}% por encima del tope del rango.`,
+      texto: `Pide ${pesos(base.pretension)}: ${exceso} % por encima del tope del rango.`,
       fuentes: [{ etiqueta: 'Datos · pretensión', seccion: 'datos' }],
     })
   }
@@ -233,7 +233,7 @@ const CANDIDATOS_ANALISTA: Candidato[] = [
       serena: 88,
       requisitos: ['Cumple', 'Cumple', 'Parcial', 'Por validar'],
       resumen:
-        'Analista de producto con 4 años en analítica. En Rappi lidera el tablero de retención de usuarios Prime y diseñó el experimento de precios que subió la conversión 6%.',
+        'Analista de producto con 4 años en analítica. En Rappi lidera el tablero de retención de usuarios Prime y diseñó el experimento de precios que subió la conversión 6 %.',
       trayectoria: [
         { cargo: 'Analista de producto sr', empresa: 'Rappi', periodo: 'Mar 2023 – hoy' },
         { cargo: 'Analista de reportería de riesgo', empresa: 'Bancolombia', periodo: 'Feb 2021 – feb 2023' },
@@ -241,11 +241,11 @@ const CANDIDATOS_ANALISTA: Candidato[] = [
       respuestas: [
         {
           pregunta: ANALISTA.preguntas[0],
-          respuesta: 'El tablero de retención Prime: mostró que el 40% de las bajas pasaba en la semana 3 y el equipo movió el primer beneficio a esa semana.',
+          respuesta: 'El tablero de retención Prime: mostró que el 40 % de las bajas pasaba en la semana 3 y el equipo movió el primer beneficio a esa semana.',
         },
         {
           pregunta: ANALISTA.preguntas[1],
-          respuesta: 'Cruza el dato con la fuente original y con un corte de la semana anterior; si la diferencia pasa del 2%, no lo publica.',
+          respuesta: 'Cruza el dato con la fuente original y con un corte de la semana anterior; si la diferencia pasa del 2 %, no lo publica.',
         },
         {
           pregunta: ANALISTA.preguntas[2],
@@ -272,7 +272,7 @@ const CANDIDATOS_ANALISTA: Candidato[] = [
           fuentes: [{ etiqueta: 'CV · habilidades', seccion: 'cv' }],
         },
         {
-          texto: 'Pide $7,8 M: 11% por encima del tope del rango. Dice que negocia si hay bono.',
+          texto: 'Pide $7,8 M: 11 % por encima del tope del rango. Dice que negocia si hay bono.',
           fuentes: [
             { etiqueta: 'Datos · pretensión', seccion: 'datos' },
             { etiqueta: 'Notas', seccion: 'notas' },
@@ -739,7 +739,7 @@ export type Criterio = { etiqueta: string; valor: (c: Candidato, v: Vacante) => 
 
 // puntaje: más alto es mejor; con él se marca «Mejor» en cada fila.
 export const CRITERIOS: Criterio[] = [
-  { etiqueta: 'Ajuste con el cargo', valor: (c) => ({ texto: `${c.ajuste}%`, puntaje: c.ajuste }) },
+  { etiqueta: 'Ajuste con el cargo', valor: (c) => ({ texto: `${c.ajuste} %`, puntaje: c.ajuste }) },
   { etiqueta: 'Experiencia', valor: (c) => ({ texto: `${c.anios} ${plural(c.anios, 'año', 'años')}`, puntaje: c.anios }) },
   {
     etiqueta: 'Serena AI',

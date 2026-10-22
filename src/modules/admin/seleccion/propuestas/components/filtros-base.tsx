@@ -14,7 +14,6 @@ import {
   Notification01Icon,
   NotificationOff01Icon,
   Search01Icon,
-  Tag01Icon,
   UserMultipleIcon,
   Alert02Icon,
 } from '@hugeicons/core-free-icons'
@@ -66,12 +65,14 @@ import {
   coincideTexto,
   describirFiltros,
   filtrarBase,
+  paisDe,
   vacantesAbiertas,
   type FiltroSituacion,
   type FiltrosBase,
   type PersonaViva,
 } from '../base'
-import { FiltroChip } from './filtro-chip'
+import { FiltroChip } from '@/modules/design-system/navegacion/filtro-chip'
+import { CampoFiltro } from '@/modules/design-system/navegacion/campo-filtro'
 import type { Base, CuentasBase } from './use-base'
 
 // Las piezas para consultar la base global («Mis candidatos»). Todas leen y cambian los filtros de `useBase`, así que
@@ -113,9 +114,10 @@ export function BuscadorBase({ base, className }: { base: Base; className?: stri
 
 /* La situación: los segmentos ---------------------------------------------------------------------------------- */
 
-const SEGMENTOS: { valor: Exclude<FiltroSituacion, 'todas'>; texto: string; ayuda: string; cuenta: keyof CuentasBase }[] = [
-  { valor: 'proceso', texto: 'En proceso', ayuda: 'Ver solo a quien está en una vacante abierta', cuenta: 'proceso' },
-  { valor: 'libre', texto: 'Libres', ayuda: 'Ver solo a quien no está ni estuvo en ningún proceso', cuenta: 'libre' },
+// «En proceso» y «Libres» van sin número (13 oct, información repetida): sus cifras están arriba, en «Cómo va tu base».
+const SEGMENTOS: { valor: Exclude<FiltroSituacion, 'todas'>; texto: string; ayuda: string; cuenta?: keyof CuentasBase }[] = [
+  { valor: 'proceso', texto: 'En proceso', ayuda: 'Ver solo a quien está en una vacante abierta' },
+  { valor: 'libre', texto: 'Libres', ayuda: 'Ver solo a quien no está ni estuvo en ningún proceso' },
   { valor: 'descartada', texto: 'Se descartaron', ayuda: 'Ver solo a quien se descartó en un proceso y no está en otro', cuenta: 'descartada' },
   { valor: 'contratada', texto: 'Contratadas', ayuda: 'Ver solo a quien ya contrataron', cuenta: 'contratada' },
   { valor: 'duplicados', texto: 'Posibles duplicados', ayuda: 'Ver solo a quien parece estar dos veces en la base', cuenta: 'duplicados' },
@@ -134,7 +136,7 @@ export function ChipsSituacion({ base, size }: { base: Base; size?: 'default' | 
           onCambiar={(activo) => base.cambiar({ situacion: activo ? segmento.valor : 'todas' })}
           icono={segmento.valor === 'duplicados' ? UserMultipleIcon : undefined}
           texto={segmento.texto}
-          cuenta={base.cuentas[segmento.cuenta]}
+          cuenta={segmento.cuenta ? base.cuentas[segmento.cuenta] : undefined}
           ayuda={segmento.ayuda}
         />
       ))}
@@ -146,31 +148,11 @@ export function ChipsSituacion({ base, size }: { base: Base; size?: 'default' | 
 
 type Opcion = { value: string; label: string }
 
+// El campo de «Filtros» vive en el design system desde el 14 oct; se sigue exportando desde aquí.
+export { CampoFiltro }
+
 const conTodas = (todas: string, valores: string[]): Opcion[] => [{ value: 'todas', label: todas }, ...valores.map((valor) => ({ value: valor, label: valor }))]
 
-// Un campo del globo: el nombre a la izquierda y la lista a la derecha, que abre con «Todas…» (el patrón de «Filtros» de
-// los resultados de Encuestas). Lo usa también el historial de Créditos (5 oct).
-export function CampoFiltro({ id, nombre, valor, opciones, onCambiar }: { id: string; nombre: string; valor: string; opciones: Opcion[]; onCambiar: (valor: string) => void }) {
-  return (
-    <Field orientation="horizontal">
-      <FieldLabel htmlFor={id} className="w-24 flex-none!">
-        {nombre}
-      </FieldLabel>
-      <Select value={valor} onValueChange={(nuevo) => onCambiar(String(nuevo))} items={opciones}>
-        <SelectTrigger id={id} size="sm" className="min-w-0 flex-1!">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {opciones.map((opcion) => (
-            <SelectItem key={opcion.value} value={opcion.value}>
-              {opcion.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </Field>
-  )
-}
 
 // Un atajo que se prende y se apaga, con cuántas personas hay. Lo usa también el historial de Créditos (5 oct).
 export function CasillaFiltro({ id, marcada, onCambiar, texto, cuenta }: { id: string; marcada: boolean; onCambiar: (marcada: boolean) => void; texto: string; cuenta: number }) {
@@ -187,22 +169,39 @@ export function CasillaFiltro({ id, marcada, onCambiar, texto, cuenta }: { id: s
   )
 }
 
-// Cuántos de los del globo están puestos: es el número del botón y lo que quita «Quitar estos filtros».
+// Cuántos de los del globo están puestos: es el número del botón y lo que quita «Quitar estos filtros». Etiqueta y
+// experiencia ya no están en el globo (13 oct, PM: las etiquetas de una persona son sus habilidades, y «dos años de
+// experiencia» sin decir en qué no dice nada: eso se le pide al agente), pero si el agente las puso se ven y se quitan.
 const DEL_GLOBO: Partial<FiltrosBase> = {
   etiquetas: [],
+  pais: 'todas',
   ciudad: 'todas',
   experiencia: 'todas',
   origen: 'todas',
   esperan: false,
+  enProceso: false,
   recientes: false,
+  duplicados: false,
 }
 const puestosEnElGlobo = (filtros: FiltrosBase) =>
-  [filtros.etiquetas.length > 0, filtros.ciudad !== 'todas', filtros.experiencia !== 'todas', filtros.esperan, filtros.recientes].filter(Boolean)
-    .length
+  [
+    filtros.etiquetas.length > 0,
+    filtros.pais !== 'todas' || filtros.ciudad !== 'todas',
+    filtros.experiencia !== 'todas',
+    filtros.esperan,
+    filtros.enProceso,
+    filtros.recientes,
+    filtros.duplicados,
+  ].filter(Boolean).length
 
+// 13 oct (reunión con la PM y el TL): la bolsa es para buscar gente, no para seguir procesos. Queda la ubicación (país y
+// después ciudad: «si me pones ciudad, me tienes que poner país») y cuatro casillas: esperando acción, en algún proceso,
+// entraron este mes y posibles duplicados. Sin los grupos de abajo (libres, descartadas, contratadas: el producto no
+// tiene esos estados de la persona).
 export function BotonFiltros({ base }: { base: Base }) {
   const { filtros } = base
   const puestos = puestosEnElGlobo(filtros)
+  const ciudades = filtros.pais === 'todas' ? [] : base.ciudades.filter((ciudad) => paisDe(ciudad) === filtros.pais)
   return (
     <Popover>
       <PopoverTrigger render={<Button variant="outline" />}>
@@ -214,48 +213,32 @@ export function BotonFiltros({ base }: { base: Base }) {
           </Badge>
         ) : null}
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[22rem]">
+      <PopoverContent align="start" className="w-[22rem]">
         <PopoverHeader>
           <PopoverTitle>Filtrar a las personas</PopoverTitle>
-          <PopoverDescription>Se suman a lo que buscas y al grupo que elegiste.</PopoverDescription>
+          <PopoverDescription>Se suman a lo que buscas.</PopoverDescription>
         </PopoverHeader>
         <div className="flex flex-col gap-3">
           <CampoFiltro
-            id="filtro-etiqueta"
-            nombre="Etiqueta"
-            valor={filtros.etiquetas[0] ?? 'todas'}
-            opciones={conTodas('Todas las etiquetas', base.disponibles)}
-            onCambiar={(valor) => base.cambiar({ etiquetas: valor === 'todas' ? [] : [valor] })}
+            id="filtro-pais"
+            nombre="País"
+            valor={filtros.pais}
+            opciones={conTodas('Todos los países', base.paises)}
+            onCambiar={(pais) => base.cambiar({ pais, ciudad: 'todas' })}
           />
+          {/* La ciudad, después del país: sin país no se elige ciudad. */}
           <CampoFiltro
             id="filtro-ciudad"
             nombre="Ciudad"
             valor={filtros.ciudad}
-            opciones={conTodas('Todas las ciudades', base.ciudades)}
+            opciones={conTodas(filtros.pais === 'todas' ? 'Primero elige el país' : `Todas las de ${filtros.pais}`, ciudades)}
             onCambiar={(ciudad) => base.cambiar({ ciudad })}
           />
-          <CampoFiltro
-            id="filtro-experiencia"
-            nombre="Experiencia"
-            valor={filtros.experiencia}
-            opciones={EXPERIENCIAS.map((una) => ({ value: una.valor, label: una.texto }))}
-            onCambiar={(valor) => base.cambiar({ experiencia: valor as FiltrosBase['experiencia'] })}
-          />
           <Separator />
-          <CasillaFiltro
-            id="filtro-esperan"
-            marcada={filtros.esperan}
-            onCambiar={(esperan) => base.cambiar({ esperan })}
-            texto="Esperan algo de ti"
-            cuenta={base.cuentas.esperan}
-          />
-          <CasillaFiltro
-            id="filtro-recientes"
-            marcada={filtros.recientes}
-            onCambiar={(recientes) => base.cambiar({ recientes })}
-            texto="Entraron este mes"
-            cuenta={base.cuentas.recientes}
-          />
+          <CasillaFiltro id="filtro-esperan" marcada={filtros.esperan} onCambiar={(esperan) => base.cambiar({ esperan })} texto="Esperando acción" cuenta={base.cuentas.esperan} />
+          <CasillaFiltro id="filtro-proceso" marcada={filtros.enProceso} onCambiar={(enProceso) => base.cambiar({ enProceso })} texto="En algún proceso" cuenta={base.cuentas.enProceso} />
+          <CasillaFiltro id="filtro-recientes" marcada={filtros.recientes} onCambiar={(recientes) => base.cambiar({ recientes })} texto="Entraron este mes" cuenta={base.cuentas.recientes} />
+          <CasillaFiltro id="filtro-duplicados" marcada={filtros.duplicados} onCambiar={(duplicados) => base.cambiar({ duplicados })} texto="Posibles duplicados" cuenta={base.cuentas.duplicados} />
           {puestos ? (
             <Button variant="ghost" size="sm" className="self-start" onClick={() => base.cambiar(DEL_GLOBO)}>
               <HugeiconsIcon icon={FilterResetIcon} size={16} />
@@ -269,31 +252,43 @@ export function BotonFiltros({ base }: { base: Base }) {
 }
 
 // Lo que está puesto, a la vista: un chip por filtro con su «x», y «Limpiar filtros» al final. Solo aparece si hay algo
-// del globo o un lote; los grupos y la búsqueda ya se ven puestos donde están.
+// del globo o un lote; la búsqueda ya se ve puesta donde está.
 export function FiltrosPuestos({ base }: { base: Base }) {
   const { filtros } = base
-  if (!puestosEnElGlobo(filtros) && !base.loteFiltro) return null
+  if (!puestosEnElGlobo(filtros) && !base.loteFiltro && !base.paraVacante) return null
   const experiencia = EXPERIENCIAS.find((una) => una.valor === filtros.experiencia)?.texto
+  const ubicacion = filtros.ciudad !== 'todas' ? `${filtros.ciudad}, ${paisDe(filtros.ciudad)}` : filtros.pais !== 'todas' ? filtros.pais : null
   return (
     <div role="group" aria-label="Filtros puestos" className="flex w-full flex-wrap items-center gap-2">
-      {filtros.etiquetas.map((etiqueta) => (
+      {ubicacion ? (
         <FiltroChip
-          key={etiqueta}
           activo
-          onCambiar={() => base.quitar('etiquetas')}
-          icono={Tag01Icon}
-          texto={`Etiqueta: ${etiqueta}`}
-          ayuda={`Ver solo a quien tiene la etiqueta «${etiqueta}»`}
+          onCambiar={() => base.cambiar({ pais: 'todas', ciudad: 'todas' })}
+          icono={Location01Icon}
+          texto={`Ubicación: ${ubicacion}`}
+          ayuda={`Ver solo a quien vive en ${ubicacion}`}
         />
-      ))}
-      {filtros.ciudad !== 'todas' ? (
-        <FiltroChip activo onCambiar={() => base.quitar('ciudad')} icono={Location01Icon} texto={`Ciudad: ${filtros.ciudad}`} ayuda={`Ver solo a quien vive en ${filtros.ciudad}`} />
       ) : null}
       {filtros.experiencia !== 'todas' && experiencia ? (
         <FiltroChip activo onCambiar={() => base.quitar('experiencia')} icono={Briefcase01Icon} texto={experiencia} ayuda={`Ver solo a quien tiene ${experiencia.toLowerCase()} de experiencia`} />
       ) : null}
       {filtros.esperan ? <ChipEsperan base={base} /> : null}
+      {filtros.enProceso ? (
+        <FiltroChip activo onCambiar={() => base.quitar('enProceso')} texto="En algún proceso" cuenta={base.cuentas.enProceso} ayuda="Ver solo a quien sigue en al menos una vacante abierta" />
+      ) : null}
       {filtros.recientes ? <ChipRecientes base={base} /> : null}
+      {filtros.duplicados ? (
+        <FiltroChip activo onCambiar={() => base.quitar('duplicados')} icono={UserMultipleIcon} texto="Posibles duplicados" cuenta={base.cuentas.duplicados} ayuda="Ver solo a quien parece estar dos veces en la base" />
+      ) : null}
+      {/* La búsqueda para una vacante que armó Orbit Flow: la lista va de la que más encaja a la que menos. */}
+      {base.paraVacante ? (
+        <FiltroChip
+          activo
+          onCambiar={() => base.cambiar({ paraVacante: null })}
+          texto={`Para ${base.paraVacante.titulo}`}
+          ayuda="Dejar de ordenar por lo que pide esta vacante"
+        />
+      ) : null}
       <ChipLote base={base} />
       <LimpiarFiltros base={base} />
     </div>
@@ -316,14 +311,14 @@ export function ChipRecientes({ base, size }: { base: Base; size?: 'default' | '
   )
 }
 
-// «Espera» junto a quien espera algo del equipo en una vacante, con qué y dónde al pasar el cursor (igual que en la
-// bandeja de la vacante).
+// «Esperando acción» junto a quien espera algo del equipo en una vacante, con qué y dónde al pasar el cursor (igual que
+// en el tablero de la vacante).
 export function InsigniaEspera({ persona }: { persona: PersonaViva }) {
   if (!persona.espera) return null
   return (
     <Hint label={`${persona.espera.accion} · ${persona.espera.vacante}`} side="top">
       <Badge variant="warning-light" className="shrink-0">
-        Espera
+        Esperando acción
       </Badge>
     </Hint>
   )
@@ -337,7 +332,7 @@ export function ChipEsperan({ base, size }: { base: Base; size?: 'default' | 'sm
       activo={base.filtros.esperan}
       onCambiar={(esperan) => base.cambiar({ esperan })}
       icono={Alert02Icon}
-      texto="Esperan algo de ti"
+      texto="Esperando acción"
       cuenta={base.cuentas.esperan}
       ayuda="Ver solo a quien espera una respuesta tuya en alguna vacante"
     />
@@ -507,12 +502,16 @@ function nombreDelFiltro(campo: keyof FiltrosBase, filtros: FiltrosBase) {
   if (campo === 'situacion') return filtros.situacion === 'duplicados' ? '«Posibles duplicados»' : `«${SITUACION_TEXTO[filtros.situacion as keyof typeof SITUACION_TEXTO]}»`
   if (campo === 'etiquetas') return `la etiqueta «${filtros.etiquetas.join(', ')}»`
   if (campo === 'ciudad') return `«${filtros.ciudad}»`
+  if (campo === 'pais') return `«${filtros.pais}»`
+  if (campo === 'esperan') return '«Esperando acción»'
+  if (campo === 'enProceso') return '«En algún proceso»'
+  if (campo === 'duplicados') return '«Posibles duplicados»'
   if (campo === 'experiencia') return `«${EXPERIENCIAS.find((una) => una.valor === filtros.experiencia)?.texto}»`
   if (campo === 'origen') return `el origen «${filtros.origen}»`
   return '«Entraron este mes»'
 }
 
-const CAMPOS_QUE_FILTRAN: (keyof FiltrosBase)[] = ['texto', 'situacion', 'etiquetas', 'ciudad', 'experiencia', 'origen', 'recientes']
+const CAMPOS_QUE_FILTRAN: (keyof FiltrosBase)[] = ['texto', 'situacion', 'etiquetas', 'pais', 'ciudad', 'experiencia', 'origen', 'recientes', 'esperan', 'enProceso', 'duplicados']
 
 // Tres vacíos distintos, cada uno con su salida:
 // · La base no tiene a nadie (el primer día): importar.

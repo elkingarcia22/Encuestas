@@ -6,7 +6,7 @@ import { Orb } from '@/shared/components/Orb'
 import styles from './tarjeta-ia.module.css'
 
 // Tarjeta de invitación a la IA: aparece dentro de una pantalla normal para ofrecer que la IA haga el trabajo.
-// En el Inicio es «Crear un curso». El color va difuminado en las esquinas (halo), no rellenando la tarjeta,
+// En el Inicio es «Crear un curso». El color va como luz en el borde de arriba (halo), no rellenando la tarjeta,
 // y el botón lleva el degradado de marca. Se documenta en /design-system/tarjeta-ia.
 export type AiCardProps = {
   title: string

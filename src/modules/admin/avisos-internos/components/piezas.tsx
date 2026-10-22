@@ -11,7 +11,6 @@ import {
   AspectRatio,
   Avatar,
   AvatarFallback,
-  Badge,
   Button,
   Card,
   CardContent,
@@ -36,6 +35,7 @@ import {
   TimelineSeparator,
   TimelineTitle,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { DrawerShell } from '@/modules/design-system/drawers/components/drawer-shell'
 import { ActionDialog } from '@/shared/components/ActionDialog'
 import { fechaHora, iniciales } from '@/modules/design-system/patrones/formato'

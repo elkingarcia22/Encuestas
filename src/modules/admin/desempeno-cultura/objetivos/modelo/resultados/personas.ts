@@ -1,5 +1,5 @@
 import { startOfToday } from '../../../encuestas/modelo/surveyListDates'
-import { NIVELES, type Etapa, type Medida, type NivelId, type PersonaSeguida, type Riesgo } from './seguimiento'
+import type { Etapa, Medida, PersonaSeguida, Riesgo } from './seguimiento'
 
 // Lo que la pestaña Colaboradores y la ficha de cada persona necesitan leer de una persona del ciclo (portado del
 // prototipo «configuración objetivos», 9-oct): los tonos de su estado y su riesgo, su última actualización, los tramos
@@ -7,8 +7,6 @@ import { NIVELES, type Etapa, type Medida, type NivelId, type PersonaSeguida, ty
 
 type Tono = 'success-light' | 'warning-light' | 'destructive-light' | 'info-light' | 'outline'
 
-export const TONO_NIVEL: Record<NivelId, Tono> = { 'por-iniciar': 'outline', 'por-mejorar': 'destructive-light', bueno: 'warning-light', excelente: 'success-light' }
-export const etiquetaNivel = (nivel: NivelId) => NIVELES.find((opcion) => opcion.id === nivel)?.etiqueta ?? ''
 
 export const RIESGOS: readonly { id: Riesgo; etiqueta: string; tono: Tono }[] = [
   { id: 'alto', etiqueta: 'Alto', tono: 'destructive-light' },
@@ -74,7 +72,7 @@ export function filaDe(persona: PersonaSeguida): FilaPersona {
     nombre: persona.colaborador.name,
     objetivos: persona.objetivos.length,
     avance: persona.avance ?? -1,
-    estado: etiquetaNivel(persona.nivel),
+    estado: persona.nivel.etiqueta,
     lider: persona.colaborador.leader ?? 'Sin líder',
     riesgo: PESO_RIESGO[persona.riesgo],
     actualizacion: ultima?.getTime() ?? 0,

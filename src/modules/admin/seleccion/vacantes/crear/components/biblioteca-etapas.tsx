@@ -6,8 +6,6 @@ import {
   PencilEdit02Icon,
   PlusSignIcon,
   Search01Icon,
-  SearchRemoveIcon,
-  Tick02Icon,
 } from '@hugeicons/core-free-icons'
 import {
   Badge,
@@ -51,6 +49,7 @@ import { BotonIcono } from '@/shared/components/BotonIcono'
 import { CATEGORIAS, type EtapaCatalogo } from './etapas'
 import { iconoDeCategoria } from './iconos-etapas'
 import { EtiquetaIA } from '@/modules/design-system/ia/etiqueta-ia'
+import { ImagenGlass } from '@/shared/components/ImagenGlass'
 
 type Props = {
   // Solo las etapas que todavía no están en el flujo.
@@ -206,8 +205,8 @@ function ListaEtapas({ etapas, filtrando, todasEnElFlujo, onAgregar, onEditar, o
     return (
       <Empty>
         <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <HugeiconsIcon icon={porFiltro ? SearchRemoveIcon : Tick02Icon} aria-hidden="true" />
+          <EmptyMedia variant="default">
+            <ImagenGlass nombre={porFiltro ? 'glass-search' : 'glass-tick'} tamano={56} />
           </EmptyMedia>
           <EmptyTitle>{porFiltro ? 'No hay etapas disponibles con este filtro' : 'Ya están todas en el flujo'}</EmptyTitle>
           <EmptyDescription>

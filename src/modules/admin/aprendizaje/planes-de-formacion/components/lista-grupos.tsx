@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Delete02Icon, Edit02Icon, PlusSignIcon } from '@hugeicons/core-free-icons'
-import { Badge, Button, Text, type DataGridListConfig } from '@ubits/flux-ui'
+import { Button, Text, type DataGridListConfig } from '@ubits/flux-ui'
 import { ReopenAgentButton } from '@/modules/design-system/agente-contextual/components/agent-kit'
+import { Badge } from '@/shared/components/Badge'
+import { CeldaTitulo } from '@/modules/design-system/data-grid/celda-titulo'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
 import { SinResultados } from '@/shared/components/SinResultados'
 import { notify } from '@/shared/components/notify'
@@ -32,22 +34,15 @@ export const planesConGrupo = (planes: Plan[], grupo: Grupo) =>
 
 type FilaGrupo = Grupo & { cuantos: number; enPlanes: number }
 
-function CeldaGrupo({ grupo }: { grupo: FilaGrupo }) {
-  const navigate = useNavigate()
-  return (
-    <div className="flex min-w-0 flex-col items-start gap-1">
-      <Button variant="link" size="sm" className="max-w-full px-0!" onClick={() => navigate(rutaGrupo(grupo.id))}>
-        <span className="truncate">{grupo.nombre}</span>
-      </Button>
-      <Text as="span" variant="muted" size="xs" className="max-w-full truncate">
-        {grupo.descripcion || 'Sin descripción'}
-      </Text>
-    </div>
-  )
-}
-
 const COLUMNAS: DataGridListConfig<FilaGrupo>['columns'] = [
-  { accessorKey: 'nombre', header: 'Nombre', size: 660, ...SIN_ARRASTRE, cell: ({ row }) => <CeldaGrupo grupo={row.original} /> },
+  // La fila que nombra algo es CeldaTitulo: el nombre lleva a «Edición de grupo» y la descripción va debajo, en gris.
+  {
+    accessorKey: 'nombre',
+    header: 'Nombre',
+    size: 660,
+    ...SIN_ARRASTRE,
+    cell: ({ row }) => <CeldaTitulo titulo={row.original.nombre} detalle={row.original.descripcion || 'Sin descripción'} to={rutaGrupo(row.original.id)} />,
+  },
   {
     accessorKey: 'cuantos',
     header: 'Integrantes',
@@ -60,7 +55,8 @@ const COLUMNAS: DataGridListConfig<FilaGrupo>['columns'] = [
           {row.original.cuantos.toLocaleString('es-CO')} {plural(row.original.cuantos, 'persona', 'personas')}
         </Text>
       ) : (
-        <Badge variant="warning-outline" size="sm">
+        // El contorno amarillo no llega al contraste mínimo: la versión clara sí se lee.
+        <Badge variant="warning-light" size="sm">
           Sin integrantes
         </Badge>
       ),
@@ -122,6 +118,7 @@ export function ListaGrupos() {
     notify(
       nombres.length === 1 ? 'Grupo eliminado' : `${nombres.length} grupos eliminados`,
       'Los planes que ya los tenían asignados conservan a sus personas.',
+      'success',
     )
   }
 

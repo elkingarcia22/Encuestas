@@ -2,7 +2,6 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Message01Icon } from '@hugeicons/core-free-icons'
 import {
-  Badge,
   cn,
   Frame,
   FrameDescription,
@@ -17,6 +16,7 @@ import {
   TableRow,
   Text,
 } from '@ubits/flux-ui'
+import { Badge } from '@/shared/components/Badge'
 import { Hint } from '@/shared/components/Hint'
 import { EncabezadoOrdenable } from '../../components/tabla-piezas'
 import { FAVORABILITY_FLOOR, FAVORABILITY_TARGET, THREE_TIER_FAVORABILITY_LEGEND, formatPercent } from '../../modelo/favorabilityScale'
@@ -26,6 +26,7 @@ import { ChipsFiltro, Filtros, LeyendaEscala, Personalizar, TotalOculto } from '
 import { numero } from './escala'
 import { nivelDe, type FiltrosResultados, type Nivel } from './filtros'
 import { PrimeraVez } from '@/shared/components/PrimeraVez'
+import { plural } from '@/modules/design-system/patrones/formato'
 
 // Favorabilidad › Secciones: el mapa completo con la jerarquía de la encuesta. Cada fila trae el
 // reparto (favorables, neutrales, desfavorables y NS/NR) y su favorabilidad. Una pregunta sin
@@ -102,9 +103,9 @@ function Reparto({ valores, lectura, gris }: { valores: ReturnType<typeof repart
         const apagado = gris || (lectura.grupos.size > 0 && !lectura.grupos.has(grupo.id))
         // El detalle, en el globo del producto (Hint) y no en el del navegador (decisión 16 de la auditoría).
         return (
-          <Hint key={grupo.id} label={`${grupo.corto} · ${numero(valores[grupo.id])} respuestas`}>
+          <Hint key={grupo.id} label={`${grupo.corto} · ${numero(valores[grupo.id])} ${plural(valores[grupo.id], 'respuesta', 'respuestas')}`}>
             <Text as="span" size="xs" weight="semibold" className={cn('w-16 text-right tabular-nums', apagado ? 'text-muted-foreground' : grupo.texto)}>
-              {valores.total > 0 ? Math.round((valores[grupo.id] / valores.total) * 100) : 0}%
+              {valores.total > 0 ? Math.round((valores[grupo.id] / valores.total) * 100) : 0} %
             </Text>
           </Hint>
         )
@@ -178,6 +179,7 @@ function TablaPreguntas({ preguntas, lectura }: { preguntas: readonly QuestionRe
                   {indice + 1}
                 </Text>
               </TableCell>
+              {/* El texto largo se parte en varias líneas: la celda de la librería no deja cambiar su estilo sin «!». Ficha: diferencias.json › table-relleno-celdas-forzado. */}
               <TableCell className="whitespace-normal!">
                 <Text as="span" size="sm" weight="medium" variant={gris ? 'muted' : 'default'}>
                   {pregunta.statement || 'Pregunta sin enunciado'}
@@ -207,6 +209,7 @@ export function DetalleSecciones({ resultados, estado, extra }: { resultados: Su
 
   return (
     <Frame spacing="sm" className="[--frame-gap:0px]">
+      {/* Cabecera del marco en fila (título a la izquierda, controles a la derecha): con el tema sin capa solo obedece con «!». Ficha: diferencias.json › instalacion-estilos-sin-capa. */}
       <FrameHeader className="flex-row! flex-wrap! items-center! justify-between! gap-3! [--frame-panel-header-gap:--spacing(1)]">
         <div>
           <FrameTitle>Detalle por secciones</FrameTitle>

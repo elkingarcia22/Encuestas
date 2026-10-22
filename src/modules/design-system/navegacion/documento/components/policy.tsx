@@ -195,7 +195,7 @@ export function PolicyArticle() {
             <span className="text-sm font-medium">Sara Gómez</span>
             <span className="text-sm text-muted-foreground">Gestión humana · responde en 1 día hábil</span>
           </div>
-          <Button variant="outline" className={WS} onClick={() => notify('Mensaje para Gestión humana')}>
+          <Button variant="outline" className={WS} onClick={() => notify('Mensaje para Gestión humana', undefined, 'info')}>
             <HugeiconsIcon icon={Mail01Icon} size={16} />
             Escribir
           </Button>

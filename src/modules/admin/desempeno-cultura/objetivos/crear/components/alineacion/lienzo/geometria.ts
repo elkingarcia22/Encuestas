@@ -24,6 +24,9 @@ export const ZOOM_MIN = 0.25
 export const ZOOM_MAX = 1.8
 /** El encuadre automático no baja de aquí: un mapa entero pero ilegible es una miniatura, no un encuadre. */
 const ZOOM_MIN_ENCUADRE = 0.45
+// Al encuadrar solo, el mapa no pasa del tamaño real: con pocas tarjetas y mucho sitio (pantalla completa) llegaba al
+// 180 % y las tarjetas se veían enormes (20-oct). Con «+» se sigue pudiendo acercar hasta ZOOM_MAX.
+const ZOOM_MAX_ENCUADRE = 1
 const MARGEN_ENCUADRE = 40
 /** Al soltar una tarjeta se ajusta a esta rejilla, para que las columnas vuelvan a quedar alineadas sin esfuerzo. */
 export const REJILLA = 8
@@ -44,7 +47,7 @@ export function encuadrar(nodos: readonly AlignmentNode[], ancho: number, alto: 
   const minY = Math.min(...nodos.map((n) => n.y))
   const anchoMapa = Math.max(1, Math.max(...nodos.map((n) => n.x + n.width)) - minX)
   const altoMapa = Math.max(1, Math.max(...nodos.map((n) => n.y + n.height)) - minY)
-  const k = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN_ENCUADRE, Math.min((ancho - MARGEN_ENCUADRE * 2) / anchoMapa, (alto - MARGEN_ENCUADRE * 2) / altoMapa)))
+  const k = Math.min(ZOOM_MAX_ENCUADRE, Math.max(ZOOM_MIN_ENCUADRE, Math.min((ancho - MARGEN_ENCUADRE * 2) / anchoMapa, (alto - MARGEN_ENCUADRE * 2) / altoMapa)))
   // Lo que cabe se centra; lo que no, arranca pegado al margen: centrar un mapa más alto que el marco esconde su principio.
   const sobraX = ancho - anchoMapa * k
   const sobraY = alto - altoMapa * k

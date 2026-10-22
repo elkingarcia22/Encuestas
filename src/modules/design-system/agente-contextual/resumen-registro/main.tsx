@@ -65,7 +65,7 @@ export function Component() {
   const undoNote = () => {
     setNotes((current) => current.filter((note) => note.id !== savedId))
     setSavedId(null)
-    notify('Nota eliminada de la ficha')
+    notify('Nota eliminada de la ficha', undefined, 'success')
   }
 
   const reply = (question: string) => {
@@ -114,7 +114,7 @@ export function Component() {
       </AgentCard>
 
       <div className="mt-4 flex flex-wrap items-center gap-2.5">
-        <Button className={PILL} onClick={() => notify('Resumen copiado · listo para pegar en el acta del comité')}>
+        <Button className={PILL} onClick={() => notify('Resumen copiado · listo para pegar en el acta del comité', undefined, 'success')}>
           Copiar para el comité
         </Button>
         <Button data-undo-focus="" variant="outline" className={PILL} onClick={saveNote}>
@@ -173,7 +173,7 @@ export function Component() {
       hint="El agente resume con fuentes y señala en la ficha de dónde sale cada dato"
       width="default"
       anatomy={false}
-      back={{ label: 'Casos de Orbit Flow', to: '/design-system/agente-contextual' }}
+      back={{ label: 'Casos de Orbit', to: '/design-system/agente-contextual' }}
     >
       <AgentStage state={panel} onOpen={() => setPanel('open')} panel={agentPanel}>
         <div className="px-8 py-6">

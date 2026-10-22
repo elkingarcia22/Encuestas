@@ -158,6 +158,17 @@ export const needsRatingType = (kind: ScaleType | null): boolean => kind === "li
 export const supportsFollowUps = (kind: ScaleType | null): boolean =>
   kind === "nps" || kind === "stars" || kind === "emoji" || kind === "linear";
 
+/** Opción única, múltiple y desplegable pueden sumar la opción «Otro» con campo para escribirla. */
+export const supportsOther = (type: QuestionType): boolean => hasOptions(type);
+
+/** Pregunta de profundidad de una sola línea («¿por qué?»): las de opciones y el Likert. Las demás escalas ya traen las suyas por banda. */
+export const supportsDepthWhy = (question: SurveyQuestion): boolean =>
+  hasOptions(question.type) || (question.type === "scale" && question.scale.kind === "likert");
+
+export const DEPTH_WHY_DEFAULT = "¿Por qué elegiste esa opción?";
+export const OTHER_OPTION_ID = "__otro__";
+export const OTHER_OPTION_LABEL = "Otro";
+
 /** Only Likert offers an explicit "no sabe / no responde" step. */
 export const supportsDontKnow = (kind: ScaleType | null): boolean =>
   kind === "likert" || kind === "likert-nom035";
@@ -262,6 +273,14 @@ export function isSameQuestion(a: SurveyQuestion, b: SurveyQuestion): boolean {
   }
 
   if (
+    Boolean(a.allowOther) !== Boolean(b.allowOther) ||
+    Boolean(a.depthWhyEnabled) !== Boolean(b.depthWhyEnabled) ||
+    (a.depthWhyText ?? "") !== (b.depthWhyText ?? "")
+  ) {
+    return false;
+  }
+
+  if (
     a.scale.kind !== b.scale.kind ||
     a.scale.ratingType !== b.scale.ratingType ||
     a.scale.minLabel !== b.scale.minLabel ||
@@ -311,6 +330,8 @@ export function isQuestionComplete(question: SurveyQuestion): boolean {
       if ([detractors, neutrals, promoters].some((text) => text.trim() === "")) return false;
     }
   }
+
+  if (question.depthWhyEnabled && supportsDepthWhy(question) && (question.depthWhyText ?? "").trim() === "") return false;
 
   if (hasOptions(question.type)) {
     if (question.options.length < MIN_OPTIONS) return false;

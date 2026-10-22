@@ -49,7 +49,7 @@ export function PreviewDrawer({ open, onOpenChange }: Props) {
         <Button
           className={`w-full ${WS}`}
           onClick={() => {
-            notify('Abriendo la lección 3 como colaborador')
+            notify('Abriendo la lección 3 como colaborador', undefined, 'info')
             onOpenChange(false)
           }}
         >
